@@ -431,27 +431,17 @@
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/2acu5nrdDYl",
    "note": ""
-  },
-  {
-   "credit": "\"Moonstone\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/",
-   "license": "CC-BY 4.0",
-   "url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100145",
-   "note": "Night music; unmodified (crossfaded at the loop point)."
-  },
-  {
-   "credit": "\"Lively Meadow (Victory Fanfare and Song)\" by Matthew Pablo (https://opengameart.org/content/lively-meadow-victory-fanfare-and-song), licensed CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/).",
-   "license": "CC-BY 3.0",
-   "url": "https://opengameart.org/content/lively-meadow-victory-fanfare-and-song",
-   "note": "Daytime music; unmodified."
   }
  ],
  "cc0": [
+  "Apple Cider (Zane Little Music) — Zane Little Music",
   "Bat (Quaternius) — Quaternius",
   "Bear (Pixor, rigged) — Frakassets (Pixor library)",
   "Bee (Quaternius) — Quaternius",
   "Beehive skep (Pixor, reused) — Frakassets (Pixor library)",
   "Beetle Grub (Gobkit, animated) — Gobkit",
   "Bird House — CreativeTrio",
+  "Blue Meadow In Green Sky (yd) — yd",
   "Blue Meadow In Green Sky — yd",
   "Branch (AssetQuest, reused) — AssetQuest",
   "Bush with Berries — Quaternius",
@@ -466,6 +456,7 @@
   "Flower Group — Quaternius",
   "Flower Single — Quaternius",
   "Flowers — Quaternius",
+  "Forget Me Not (Kistol) — Kistol",
   "Garden Ambience with BEES (48/24) — neilraouf",
   "Hollow log (Pixor, reused) — Frakassets (Pixor library)",
   "Honey Comb (hat_my_guy, reused) — hat_my_guy",
@@ -477,19 +468,16 @@
   "Raccoon (Quaternius, animated) — Quaternius",
   "Rock Large (Quaternius, reused) — Quaternius",
   "Rock Medium (Quaternius, reused) — Quaternius",
+  "Snowfall (Kistol) — Kistol",
+  "SummerTown (LushoGames) — LushoGames",
   "Tree Branch (AssetQuest, reused) — AssetQuest",
   "Tree Stump with Moss (reused) — Quaternius",
   "Twig (Kenney, reused) — Kenney",
+  "Wintery loop (Emma_MA) — Emma_MA",
   "Wood Log (Quaternius, reused) — Quaternius",
   "Wood Log with Moss (reused) — Quaternius",
   "ambientCG Grass001 — ambientCG (Lennart Demes)",
-  "star (Kenney Platformer Kit) — Kenney",
-  "Music — \"Blue Meadow In Green Sky\" by yd (opengameart.org/content/blue-meadow-in-green-sky)",
-  "Music — \"Bird in Hand Night\" by Fupi (opengameart.org/content/bird-in-hand-night)",
-  "Music — \"Sunrise\" by Sudocolon (opengameart.org/content/sunrise)",
-  "Music — \"Sunset Walk / Ambient / Quiet / Sweet / Loop\" by KiluaBoy (opengameart.org/content/sunset-walk-ambient-quiet-sweet-loop)",
-  "Music — \"Cozy Puzzle In-Game 1\", \"Cozy Puzzle Title\" and the Cozy Puzzle Clear jingle by MintoDog (opengameart.org/content/cozy-puzzle-in-game-1)",
-  "Jingle — Pizzicato 03 from Music Jingles by Kenney (kenney.nl/assets/music-jingles)"
+  "star (Kenney Platformer Kit) — Kenney"
  ],
- "footer": "All models are scaled, merged into instanced meshes and compressed for mobile; the wing-flap animation is procedural. Music: see the lists above (OpenGameArt, Kevin MacLeod / incompetech, Kenney). Ambience: Freesound #484371. Sky: Kloofendal 48d Partly Cloudy (Poly Haven). Particles: Kenney. See CREDITS.md for the full list."
+ "footer": "All models are scaled, merged into instanced meshes and compressed for mobile; the wing-flap animation is procedural. Music: \"Blue Meadow in Green Sky\" (OpenGameArt). Ambience: Freesound #484371. Sky: Kloofendal 48d Partly Cloudy (Poly Haven). Particles: Kenney. See CREDITS.md for the full list."
 }
