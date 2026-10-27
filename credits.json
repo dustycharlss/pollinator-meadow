@@ -7,9 +7,21 @@
    "note": ""
   },
   {
+   "credit": "\"Acorn\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cQ-FnrdHHVw",
+   "note": ""
+  },
+  {
    "credit": "\"Aloe plant\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/6hYjnEpV-CC",
+   "note": ""
+  },
+  {
+   "credit": "\"Ant (jeremy, static)\" by jeremy",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9x6pGMV83jt",
    "note": ""
   },
   {
@@ -157,6 +169,12 @@
    "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
   },
   {
+   "credit": "\"Earthworm (Poly by Google, static)\" by Poly by Google",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9xOaiLvBLF-",
+   "note": ""
+  },
+  {
    "credit": "\"Flower\" by jeremy (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/4EPkHRlINP6",
@@ -199,7 +217,7 @@
    "note": ""
   },
   {
-   "credit": "\"Honeycomb\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "credit": "\"Honeycomb (Poly by Google #2, reused)\" by Poly by Google",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/6Mqdrv1n3Oo",
    "note": ""
@@ -325,6 +343,12 @@
    "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
   },
   {
+   "credit": "\"Robin (jeremy, static)\" by jeremy",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/53HOg-b1F4r",
+   "note": ""
+  },
+  {
    "credit": "\"Rose bush\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/8nGNoyvVuI5",
@@ -340,6 +364,12 @@
    "credit": "\"Simple red flower\" by Karlien (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/3cOdxZNnZjY",
+   "note": ""
+  },
+  {
+   "credit": "\"Strawberry\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4W3g1NixX1K",
    "note": ""
   },
   {
@@ -405,35 +435,43 @@
  ],
  "cc0": [
   "Bat (Quaternius) — Quaternius",
+  "Bear (Pixor, rigged) — Frakassets (Pixor library)",
   "Bee (Quaternius) — Quaternius",
-  "Beehive / straw skep (Pixor) — Frakassets (Pixor library)",
+  "Beehive skep (Pixor, reused) — Frakassets (Pixor library)",
+  "Beetle Grub (Gobkit, animated) — Gobkit",
   "Bird House — CreativeTrio",
   "Blue Meadow In Green Sky — yd",
-  "Branch (AssetQuest) — AssetQuest",
+  "Branch (AssetQuest, reused) — AssetQuest",
   "Bush with Berries — Quaternius",
   "Bush with Flowers — Quaternius",
   "Cactus Flowers — Quaternius",
   "Cactus — Quaternius",
-  "Cave entrance (Pixor) — Frakassets (Pixor library)",
+  "Cave entrance (Pixor, reused) — Frakassets (Pixor library)",
   "Clover — Quaternius",
   "Dragonfly (AssetQuest) — AssetQuest",
+  "Egg — Quaternius",
+  "Fallen log (Pixor, reused) — Frakassets (Pixor library)",
   "Flower Group — Quaternius",
   "Flower Single — Quaternius",
   "Flowers — Quaternius",
   "Garden Ambience with BEES (48/24) — neilraouf",
-  "Hollow log (Pixor) — Frakassets (Pixor library)",
-  "Honey Comb — hat_my_guy",
+  "Hollow log (Pixor, reused) — Frakassets (Pixor library)",
+  "Honey Comb (hat_my_guy, reused) — hat_my_guy",
   "Kenney Particle Pack — Kenney",
-  "Moss patch (Pixor) — Frakassets (Pixor library)",
-  "Mossy fallen log (Pixor) — Frakassets (Pixor library)",
-  "Mushroom — Kenney",
+  "Moss patch (Pixor, reused) — Frakassets (Pixor library)",
+  "Mushroom (80 tri, reused) — Kenney",
+  "Planks (Kay Lousberg / KayKit) — Kay Lousberg",
   "Poly Haven HDRI: Kloofendal 48d Partly Cloudy (Pure Sky) — Greg Zaal / Jarod Guest",
-  "Rock Large — Quaternius",
-  "Rock Medium — Quaternius",
-  "Tree Stump with Moss — Quaternius",
-  "Wood Log with Moss — Quaternius",
-  "Wood Log — Quaternius",
-  "ambientCG Grass001 — ambientCG (Lennart Demes)"
+  "Raccoon (Quaternius, animated) — Quaternius",
+  "Rock Large (Quaternius, reused) — Quaternius",
+  "Rock Medium (Quaternius, reused) — Quaternius",
+  "Tree Branch (AssetQuest, reused) — AssetQuest",
+  "Tree Stump with Moss (reused) — Quaternius",
+  "Twig (Kenney, reused) — Kenney",
+  "Wood Log (Quaternius, reused) — Quaternius",
+  "Wood Log with Moss (reused) — Quaternius",
+  "ambientCG Grass001 — ambientCG (Lennart Demes)",
+  "star (Kenney Platformer Kit) — Kenney"
  ],
  "footer": "All models are scaled, merged into instanced meshes and compressed for mobile; the wing-flap animation is procedural. Music: \"Blue Meadow in Green Sky\" (OpenGameArt). Ambience: Freesound #484371. Sky: Kloofendal 48d Partly Cloudy (Poly Haven). Particles: Kenney. See CREDITS.md for the full list."
 }
