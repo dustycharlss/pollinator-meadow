@@ -1,0 +1,319 @@
+{
+  "name": "Pollinator Meadow screen UI",
+  "generator": "src/build-screens.mjs",
+  "format": "PNG RGBA (transparent), drawn at 2x for phones: show at half size in CSS px",
+  "style": "matches assets/ui/icons: 8px ink outline #3b2614, gradient fills, top gloss, ink drop shadow; text in Fredoka 600",
+  "font": "Fredoka (Google Fonts, OFL)",
+  "groups": {
+    "goal-card": [
+      {
+        "id": "goal-card-frame",
+        "file": "goal-card-frame.png",
+        "svg": "src/svg/goal-card-frame.svg",
+        "size": [
+          360,
+          480
+        ],
+        "note": "empty card frame; draw title/icon/body/reward on the slots (px, top-left x,y,w,h)",
+        "slots": {
+          "title": [
+            36,
+            34,
+            288,
+            60
+          ],
+          "icon": [
+            124,
+            112,
+            112,
+            112
+          ],
+          "body": [
+            40,
+            240,
+            280,
+            110
+          ],
+          "reward": [
+            36,
+            366,
+            288,
+            76
+          ]
+        }
+      },
+      {
+        "id": "goal-card-frame-done",
+        "file": "goal-card-frame-done.png",
+        "svg": "src/svg/goal-card-frame-done.svg",
+        "size": [
+          360,
+          480
+        ],
+        "note": "completed state (green tick stamp at top right, beside the icon)",
+        "slots": {
+          "title": [
+            36,
+            34,
+            288,
+            60
+          ],
+          "icon": [
+            124,
+            112,
+            112,
+            112
+          ],
+          "body": [
+            40,
+            240,
+            280,
+            110
+          ],
+          "reward": [
+            36,
+            366,
+            288,
+            76
+          ]
+        }
+      },
+      {
+        "id": "goal-cards-mock",
+        "file": "goal-cards-mock.png",
+        "svg": "src/svg/goal-cards-mock.svg",
+        "size": [
+          1280,
+          720
+        ],
+        "note": "layout mock: toad portrait (guide-happy-blocky) + 3 cards at 0.86 scale, middle card raised; reference only, opaque"
+      }
+    ],
+    "toast": [
+      {
+        "id": "toast-badge-command",
+        "file": "toast-badge-command.png",
+        "svg": "src/svg/toast-badge-command.svg",
+        "size": [
+          256,
+          232
+        ],
+        "note": "Command unlocked medallion (icon glyph + NEW! tag), pops in on its own"
+      },
+      {
+        "id": "toast-unlock-command",
+        "file": "toast-unlock-command.png",
+        "svg": "src/svg/toast-unlock-command.svg",
+        "size": [
+          640,
+          160
+        ],
+        "note": "full toast: medallion + \"Command unlocked!\" text baked in"
+      },
+      {
+        "id": "toast-badge-overview",
+        "file": "toast-badge-overview.png",
+        "svg": "src/svg/toast-badge-overview.svg",
+        "size": [
+          256,
+          232
+        ],
+        "note": "Overview unlocked medallion (icon glyph + NEW! tag), pops in on its own"
+      },
+      {
+        "id": "toast-unlock-overview",
+        "file": "toast-unlock-overview.png",
+        "svg": "src/svg/toast-unlock-overview.svg",
+        "size": [
+          640,
+          160
+        ],
+        "note": "full toast: medallion + \"Overview unlocked!\" text baked in"
+      },
+      {
+        "id": "toast-badge-tech",
+        "file": "toast-badge-tech.png",
+        "svg": "src/svg/toast-badge-tech.svg",
+        "size": [
+          256,
+          232
+        ],
+        "note": "Tech unlocked medallion (icon glyph + NEW! tag), pops in on its own"
+      },
+      {
+        "id": "toast-unlock-tech",
+        "file": "toast-unlock-tech.png",
+        "svg": "src/svg/toast-unlock-tech.svg",
+        "size": [
+          640,
+          160
+        ],
+        "note": "full toast: medallion + \"Tech unlocked!\" text baked in"
+      },
+      {
+        "id": "toast-pill",
+        "file": "toast-pill.png",
+        "svg": "src/svg/toast-pill.svg",
+        "size": [
+          640,
+          160
+        ],
+        "note": "blank toast pill (text area x 170..610); put a toast-badge-* at left, scaled 0.6"
+      }
+    ],
+    "title-button": [
+      {
+        "id": "btn-challenge-idle",
+        "file": "btn-challenge-idle.png",
+        "svg": "src/svg/btn-challenge-idle.svg",
+        "size": [
+          520,
+          168
+        ],
+        "note": "Challenge title button, idle (pressed face drops 10px onto its lip; same canvas)"
+      },
+      {
+        "id": "btn-challenge-pressed",
+        "file": "btn-challenge-pressed.png",
+        "svg": "src/svg/btn-challenge-pressed.svg",
+        "size": [
+          520,
+          168
+        ],
+        "note": "Challenge title button, pressed (pressed face drops 10px onto its lip; same canvas)"
+      },
+      {
+        "id": "btn-relaxed-idle",
+        "file": "btn-relaxed-idle.png",
+        "svg": "src/svg/btn-relaxed-idle.svg",
+        "size": [
+          520,
+          168
+        ],
+        "note": "Relaxed title button, idle (pressed face drops 10px onto its lip; same canvas)"
+      },
+      {
+        "id": "btn-relaxed-pressed",
+        "file": "btn-relaxed-pressed.png",
+        "svg": "src/svg/btn-relaxed-pressed.svg",
+        "size": [
+          520,
+          168
+        ],
+        "note": "Relaxed title button, pressed (pressed face drops 10px onto its lip; same canvas)"
+      }
+    ],
+    "rank": [
+      {
+        "id": "rank-1",
+        "file": "rank-1.png",
+        "svg": "src/svg/rank-1.svg",
+        "size": [
+          256,
+          256
+        ],
+        "note": "results badge 1st"
+      },
+      {
+        "id": "rank-2",
+        "file": "rank-2.png",
+        "svg": "src/svg/rank-2.svg",
+        "size": [
+          256,
+          256
+        ],
+        "note": "results badge 2nd"
+      },
+      {
+        "id": "rank-3",
+        "file": "rank-3.png",
+        "svg": "src/svg/rank-3.svg",
+        "size": [
+          256,
+          256
+        ],
+        "note": "results badge 3rd"
+      },
+      {
+        "id": "rank-4",
+        "file": "rank-4.png",
+        "svg": "src/svg/rank-4.svg",
+        "size": [
+          256,
+          256
+        ],
+        "note": "results badge 4th"
+      }
+    ],
+    "dismantle": [
+      {
+        "id": "dismantle-tap-target",
+        "file": "dismantle-tap-target.png",
+        "svg": "src/svg/dismantle-tap-target.svg",
+        "size": [
+          256,
+          256
+        ],
+        "note": "tap target (centre = 128,128); pulse it with dismantle-tap-ring"
+      },
+      {
+        "id": "dismantle-tap-ring",
+        "file": "dismantle-tap-ring.png",
+        "svg": "src/svg/dismantle-tap-ring.svg",
+        "size": [
+          256,
+          256
+        ],
+        "note": "outer pulse ring, same centre; scale 1.0 to 1.3 and fade"
+      },
+      {
+        "id": "timing-bar",
+        "file": "timing-bar.png",
+        "svg": "src/svg/timing-bar.svg",
+        "size": [
+          640,
+          96
+        ],
+        "note": "timing bar track; inner track (x,y,w,h) = slots.track; place zone and marker in track space",
+        "slots": {
+          "track": [
+            24,
+            20,
+            592,
+            40
+          ]
+        }
+      },
+      {
+        "id": "timing-zone",
+        "file": "timing-zone.png",
+        "svg": "src/svg/timing-zone.svg",
+        "size": [
+          128,
+          48
+        ],
+        "note": "sweet-spot zone, 128x48 with 16px rounded ends; scale X to the zone width, draw over track (y=16)"
+      },
+      {
+        "id": "timing-zone-perfect",
+        "file": "timing-zone-perfect.png",
+        "svg": "src/svg/timing-zone-perfect.svg",
+        "size": [
+          64,
+          48
+        ],
+        "note": "optional inner \"perfect\" strip, centre it in the zone"
+      },
+      {
+        "id": "timing-marker",
+        "file": "timing-marker.png",
+        "svg": "src/svg/timing-marker.svg",
+        "size": [
+          64,
+          128
+        ],
+        "note": "marker: point (x=32) sits on the track centre line at y=48; slide along X"
+      }
+    ]
+  }
+}

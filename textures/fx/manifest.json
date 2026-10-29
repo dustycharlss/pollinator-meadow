@@ -1,0 +1,263 @@
+{
+  "name": "Pollinator Meadow FX textures",
+  "generator": "src/build-fx.mjs (+ src/build-fx-extra.mjs for spritesheets/ui, src/build-fx-breeze.mjs for scrolling)",
+  "alpha": "straight (non-premultiplied); transparent pixels carry bled edge colour so filtering/mipmaps show no dark fringes",
+  "groups": {
+    "particles": [
+      {
+        "id": "water-droplet",
+        "file": "water-droplet.png",
+        "size": 128,
+        "blend": "alpha",
+        "desc": "pale blue-white teardrop; tint for rain/sprinkler"
+      },
+      {
+        "id": "pollen-sparkle",
+        "file": "pollen-sparkle.png",
+        "size": 128,
+        "blend": "additive",
+        "desc": "white-gold 4-point sparkle with glow; tint freely"
+      },
+      {
+        "id": "leaf-flutter",
+        "file": "leaf-flutter.png",
+        "size": 128,
+        "blend": "alpha",
+        "desc": "fresh green leaf with vein; rotate per particle"
+      },
+      {
+        "id": "dust-puff",
+        "file": "dust-puff.png",
+        "size": 128,
+        "blend": "alpha",
+        "desc": "soft cream puff; tint to ground colour"
+      },
+      {
+        "id": "mud-splat",
+        "file": "mud-splat.png",
+        "size": 128,
+        "blend": "alpha",
+        "desc": "brown mud splat with droplets"
+      },
+      {
+        "id": "sneeze-cloud",
+        "file": "sneeze-cloud.png",
+        "size": 128,
+        "blend": "alpha",
+        "desc": "white cartoon puff flecked with pollen"
+      },
+      {
+        "id": "web-strand",
+        "file": "web-strand.png",
+        "size": 128,
+        "blend": "alpha",
+        "desc": "white silk strand with dew beads, fades at both ends; stretch along X"
+      }
+    ],
+    "glow": [
+      {
+        "id": "soft-glow",
+        "file": "soft-glow.png",
+        "size": 256,
+        "blend": "additive or alpha",
+        "desc": "white radial glow, RGB=255 everywhere so straight and premultiplied use match; alpha 0 at the rim"
+      }
+    ],
+    "decals": [
+      {
+        "id": "territory-bloom-1",
+        "file": "territory-bloom-1.png",
+        "size": 512,
+        "tileable": true,
+        "desc": "daisy & clover patches (white/honey)"
+      },
+      {
+        "id": "territory-bloom-2",
+        "file": "territory-bloom-2.png",
+        "size": 512,
+        "tileable": true,
+        "desc": "pink blossom patches"
+      },
+      {
+        "id": "territory-bloom-3",
+        "file": "territory-bloom-3.png",
+        "size": 512,
+        "tileable": true,
+        "desc": "lilac & sky wildflower patches"
+      },
+      {
+        "id": "flower-carpet-1",
+        "file": "flower-carpet-1.png",
+        "size": 512,
+        "tileable": true,
+        "desc": "dense warm flower carpet"
+      },
+      {
+        "id": "flower-carpet-2",
+        "file": "flower-carpet-2.png",
+        "size": 512,
+        "tileable": true,
+        "desc": "dense cool flower carpet"
+      }
+    ],
+    "emblems": [
+      {
+        "id": "emblem-bee",
+        "file": "emblem-bee.png",
+        "size": 256,
+        "colour": "#ffd23f",
+        "shape": "hexagon",
+        "pattern": "honeycomb",
+        "desc": "honey yellow, hexagon, honeycomb"
+      },
+      {
+        "id": "emblem-bumblebee",
+        "file": "emblem-bumblebee.png",
+        "size": 256,
+        "colour": "#f08a24",
+        "shape": "rosette",
+        "pattern": "hstripes",
+        "desc": "orange, scalloped rosette, bands"
+      },
+      {
+        "id": "emblem-butterfly",
+        "file": "emblem-butterfly.png",
+        "size": 256,
+        "colour": "#56b4e9",
+        "shape": "shield",
+        "pattern": "dots",
+        "desc": "sky blue, heater shield, dots"
+      },
+      {
+        "id": "emblem-moth",
+        "file": "emblem-moth.png",
+        "size": 256,
+        "colour": "#7b5ea7",
+        "shape": "diamond",
+        "pattern": "rings",
+        "desc": "violet, diamond, rings"
+      },
+      {
+        "id": "emblem-hummingbird",
+        "file": "emblem-hummingbird.png",
+        "size": 256,
+        "colour": "#00a37a",
+        "shape": "pentagon",
+        "pattern": "diag",
+        "desc": "emerald, pentagon, diagonal stripes"
+      },
+      {
+        "id": "emblem-bat",
+        "file": "emblem-bat.png",
+        "size": 256,
+        "colour": "#23264a",
+        "shape": "triangle",
+        "pattern": "starsky",
+        "desc": "midnight navy, down-pointing pennant, stars"
+      },
+      {
+        "id": "emblem-robin",
+        "file": "emblem-robin.png",
+        "size": 256,
+        "colour": "#d63a2f",
+        "shape": "circle",
+        "pattern": "chevron",
+        "desc": "robin red, circle, chevrons"
+      },
+      {
+        "id": "emblem-raccoon",
+        "file": "emblem-raccoon.png",
+        "size": 256,
+        "colour": "#8d99ae",
+        "shape": "square",
+        "pattern": "vbands",
+        "desc": "slate grey, rounded square, ringed bands"
+      },
+      {
+        "id": "emblem-opossum",
+        "file": "emblem-opossum.png",
+        "size": 256,
+        "colour": "#ffc4da",
+        "shape": "star",
+        "pattern": "hearts",
+        "desc": "light pink, puffy star, hearts"
+      },
+      {
+        "id": "emblem-bear",
+        "file": "emblem-bear.png",
+        "size": 256,
+        "colour": "#6b4226",
+        "shape": "octagon",
+        "pattern": "grid",
+        "desc": "dark brown, octagon, plaid"
+      }
+    ],
+    "spritesheets": [
+      {
+        "id": "wobble-pop",
+        "file": "wobble-pop.png",
+        "size": 512,
+        "frames": 16,
+        "cols": 4,
+        "rows": 4,
+        "frameSize": 128,
+        "order": "row-major: left-to-right, then top-to-bottom; frame 1 top-left = pop starts, frame 16 bottom-right = faded out",
+        "fps": 24,
+        "loop": false,
+        "blend": "normal (straight alpha)",
+        "pivot": [
+          0.5,
+          0.5
+        ],
+        "desc": "Wobble pop: a structure/critter bursts into planks, petals and confetti that fly out, tumble and fade. Play once at ~20-30 fps (0.55-0.8 s)."
+      }
+    ],
+    "ui": [
+      {
+        "id": "progress-ring",
+        "file": "progress-ring.png",
+        "size": 256,
+        "blend": "normal (straight alpha)",
+        "outerRadiusPx": 118,
+        "innerRadiusPx": 92,
+        "method": "radial-fill shader (angle computed from UV; no extra texture needed). Fill = white band, tint it in the shader (multiply) - ink edges stay dark.",
+        "shader": "vec2 d = vUv - 0.5; float a = fract(atan(d.x, d.y) / 6.28318531); // three.js default flipY=true: 0 at 12 o'clock, clockwise\n if (a > uProgress) discard; // or draw the track: col = mix(trackTint, fillTint, step(a, uProgress))  (if flipY=false use atan(d.x, -d.y))",
+        "tints": {
+          "fill": "#ffd23f",
+          "fillAlt": "#7fd36a",
+          "track": "#fff3d8 @ 45% opacity"
+        },
+        "desc": "Goal/progress ring: white tintable band with ink edges on transparent."
+      },
+      {
+        "id": "progress-ring-angle",
+        "file": "progress-ring-angle.png",
+        "size": 256,
+        "blend": "mask (use with progress-ring.png or alone)",
+        "channels": "RGB = clockwise angle from 12 o'clock (0..255 = 0..1), A = ring mask",
+        "method": "alpha-test / threshold fill without trig: show pixel if angle.r <= progress. Use NearestFilter (or skip mipmaps) to avoid a seam where 255 meets 0 at 12 o'clock.",
+        "desc": "Angle-gradient companion map for progress-ring.png."
+      }
+    ],
+    "scrolling": [
+      {
+        "id": "breeze-leaves",
+        "file": "breeze-leaves.png",
+        "size": 512,
+        "blend": "alpha",
+        "tileable": "U (wind direction) and V",
+        "wind": "+U (image left -> right)",
+        "scrolling": "Use on a lane quad/ribbon whose U runs along the wind. wrapS = wrapT = RepeatWrapping; repeat.x = laneLength / 8 (1 tile ~ 8 m), repeat.y = 1 (or laneWidth / 8). Scroll: map.offset.x -= dt * windSpeed / 8 (2 layers at speed x1.0 and x1.6 with repeat 1 and 1.3, the second offset.y 0.37, read as depth). Fade the lane ends with a vertex alpha / alphaMap ramp and fade the whole lane in 0.3 s at gust start, out 0.5 s at stop (4 s gust). depthWrite false, transparent true, side DoubleSide; optional slight vertical bob: offset.y = 0.02*sin(t*1.7). For a gust the other way, rotate the lane 180 deg (do not flip U, the streak heads would point upwind).",
+        "check": {
+          "size": "512x512",
+          "pow2": true,
+          "seamRatioU": 0.77,
+          "seamRatioV": 0.13,
+          "coverage": 0.064,
+          "pass": true
+        },
+        "desc": "Gusty Breeze lane: soft cream wind streaks + 14 blown leaves (greens to autumn orange) with motion trails, ink outlines like leaf-flutter.png. Transparent background; straight alpha with wrap-aware colour bleed."
+      }
+    ]
+  }
+}

@@ -1,483 +1,1138 @@
 {
  "attribution": [
   {
-   "credit": "\"Acacia\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/0j86RMO4kQC",
-   "note": ""
+   "credit": "\"Cocoon (Antonio.Luis)\" by Antonio.Luis (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/cocoon-a25e90a80f95487b8ee56f647c630ad5",
+   "note": "Chrysalis / cocoon"
   },
   {
-   "credit": "\"Acorn\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/cQ-FnrdHHVw",
-   "note": ""
+   "credit": "\"Low Poly American Robin (brysondurham18)\" by brysondurham18 (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/none-288ead434c484df2a395c4ec8d68f2c7",
+   "note": "Robin (static)"
   },
   {
-   "credit": "\"Aloe plant\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "credit": "\"Pimelea Suaveolens\" by Crispy_Prawn (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/6hYjnEpV-CC",
-   "note": ""
-  },
-  {
-   "credit": "\"Ant (jeremy, static)\" by jeremy",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/9x6pGMV83jt",
-   "note": ""
-  },
-  {
-   "credit": "\"Apple Tree\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/ds595Kl_cWH",
-   "note": ""
-  },
-  {
-   "credit": "\"Apple tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/9GU-svgV2_i",
-   "note": ""
-  },
-  {
-   "credit": "\"Beetle (Poly by Google)\" by Poly by Google",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/4yufxgZ1QQ2",
-   "note": ""
-  },
-  {
-   "credit": "\"Bell Flower\" by Zsky (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/1baaAXcdzZ",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Birch tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/b0BZj34bN-K",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Bird House\" by Zsky (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/jSpF4LjoQp",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Birds nest\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/fq_bAKD1Khg",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Birds of paradise potted plant\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/folDA1yLeEF",
-   "note": ""
-  },
-  {
-   "credit": "\"Bloodwood tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/5MenXQd3qRA",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Blue Agave\" by VR XRTIST (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/c0kbzSnieas",
-   "note": ""
+   "url": "https://poly.pizza/m/QLKzgrQGhK",
+   "note": "Evening primrose (night bloomer)"
   },
   {
    "credit": "\"Blue Eyed Grass\" by Daniel Doran (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/d5gKxGLOWFN",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Blueberry\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/0d9SDaJ0Ey9",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Bulb Flower\" by Danni Bittman (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/bMLAy1YLmln",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Bumblebee (Poly by Google)\" by Poly by Google",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/42S5XD_3C4O",
-   "note": ""
-  },
-  {
-   "credit": "\"Butterfly (Poly by Google)\" by Poly by Google",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/2ZwYwkTVnfG",
-   "note": ""
-  },
-  {
-   "credit": "\"Butterfly (Poly by Google)\" by Poly by Google",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/814CINpG3H1",
-   "note": ""
-  },
-  {
-   "credit": "\"Cactus\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/1_3Ur2-LAs8",
-   "note": ""
+   "note": "Borage"
   },
   {
    "credit": "\"California Poppies\" by Daniel Doran (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/6WQobVofm7D",
-   "note": ""
+   "note": "Poppy"
   },
   {
-   "credit": "\"Cherry tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "credit": "\"Bulb Flower\" by Danni Bittman (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/1FSDzk-LRdA",
-   "note": ""
-  },
-  {
-   "credit": "\"Daisy\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/8FovhiSACst",
-   "note": ""
-  },
-  {
-   "credit": "\"Daisy\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/cuayhwWYHet",
-   "note": ""
-  },
-  {
-   "credit": "\"Dandelion\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/dfJS5VaxRGr",
-   "note": ""
-  },
-  {
-   "credit": "\"Dandelions\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/5Cvg9NTvlg2",
-   "note": ""
-  },
-  {
-   "credit": "\"Desert marigold\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/dYQFgjU5Eqx",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Earthworm (Poly by Google, static)\" by Poly by Google",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/9xOaiLvBLF-",
-   "note": ""
-  },
-  {
-   "credit": "\"Flower\" by jeremy (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/4EPkHRlINP6",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Flower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/0V0bSIy2bRe",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Flower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/fg5U0dl1Sd3",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Flower\" by Zoe XR (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/9dubDMkAcZ5",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Flowers\" by Zsky (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/mUhc2WmXHn",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Heliconia flower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/06_hk2bO2Ix",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Hibiscus flower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/fQVeG1obY8u",
-   "note": ""
-  },
-  {
-   "credit": "\"Honeycomb (Poly by Google #2, reused)\" by Poly by Google",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/6Mqdrv1n3Oo",
-   "note": ""
-  },
-  {
-   "credit": "\"Hummingbird (Poly by Google)\" by Poly by Google",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/1HreVSktbPG",
-   "note": ""
-  },
-  {
-   "credit": "\"InktobVR Day02 Little Flowers\" by Kamylle B. Grenier (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/7rniSIUqQri",
-   "note": ""
-  },
-  {
-   "credit": "\"Iris\" by Hugo Gibson (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/8ZqT5p2KoSR",
-   "note": ""
-  },
-  {
-   "credit": "\"Ladybug (Poly by Google)\" by Poly by Google",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/0k_YwE0g_C9",
-   "note": ""
-  },
-  {
-   "credit": "\"Leaf\" by jeremy (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/ekFiuxhSR2i",
-   "note": ""
-  },
-  {
-   "credit": "\"Lil' Moth (Lee Mason)\" by Lee Mason",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/8ojwMQpu6DK",
-   "note": ""
-  },
-  {
-   "credit": "\"log with fungus\" by sirkitree (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/32czhZtc7oY",
-   "note": ""
-  },
-  {
-   "credit": "\"Lotus Flower\" by Sean Tarrant (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/6rLIFNbNTRG",
-   "note": ""
-  },
-  {
-   "credit": "\"Maple tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/8OfF21t6NMa",
-   "note": ""
-  },
-  {
-   "credit": "\"Mushroom\" by jeremy (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/2DAaKHD48ZP",
-   "note": ""
-  },
-  {
-   "credit": "\"Oak tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/0DtsZfSTWzA",
-   "note": ""
-  },
-  {
-   "credit": "\"Orange tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/8zS7mfHS0i7",
-   "note": ""
-  },
-  {
-   "credit": "\"Orchid\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/0gEtIcRV4do",
-   "note": ""
-  },
-  {
-   "credit": "\"Orchid\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/59BuDmuEYIZ",
-   "note": ""
+   "url": "https://poly.pizza/m/bMLAy1YLmln",
+   "note": "Thistle"
   },
   {
    "credit": "\"Pastel Plume Flowers\" by Danni Bittman (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/eLVv17bTyB-",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
+   "note": "Lavender; Salvia / sage"
   },
   {
-   "credit": "\"Pear tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/44lGuM746Zi",
-   "note": ""
+   "credit": "\"Possum chitter\" by digifishmusic (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://freesound.org/people/digifishmusic/sounds/53286/",
+   "note": "Creature call"
   },
   {
-   "credit": "\"Pond\" by jeremy (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/cYUMQWc-BOV",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
+   "credit": "\"Beehive (dom)\" by dom (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/beehive-ec62db5c4f03456ea929057506d073f3",
+   "note": "Beehive"
   },
   {
-   "credit": "\"Prickly pear cactus\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "credit": "\"Thorny Vine (Emmett “TawpShelf” Baber)\" by Emmett “TawpShelf” Baber (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/47Af27jQemx",
-   "note": ""
+   "url": "https://poly.pizza/m/azL1Ln1mCLg",
+   "note": "Bramble vine"
   },
   {
-   "credit": "\"Purpil flower long neck\" by Jakob Hippe (CC-BY 3.0) via Poly Pizza",
+   "credit": "\"Thorny Vine Branching (Emmett “TawpShelf” Baber)\" by Emmett “TawpShelf” Baber (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/1TMHx6tEO8Z",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Raspberry\" by jeremy (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/fnuWrFddqLb",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Robin (jeremy, static)\" by jeremy",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/53HOg-b1F4r",
-   "note": ""
-  },
-  {
-   "credit": "\"Rose bush\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/8nGNoyvVuI5",
-   "note": ""
+   "url": "https://poly.pizza/m/0ch9VWi-_AR",
+   "note": "Bramble vine (branching)"
   },
   {
    "credit": "\"Rose\" by Erbay ÇELIK (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/4UQ29NSK0ir",
-   "note": ""
+   "note": "Rose"
   },
   {
-   "credit": "\"Simple red flower\" by Karlien (CC-BY 3.0) via Poly Pizza",
+   "credit": "\"Iris\" by Hugo Gibson (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/3cOdxZNnZjY",
-   "note": ""
-  },
-  {
-   "credit": "\"Strawberry\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/4W3g1NixX1K",
-   "note": ""
-  },
-  {
-   "credit": "\"Sunflower\" by jeremy (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/a9qW8wSfaaX",
-   "note": ""
-  },
-  {
-   "credit": "\"Sunflower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/ce4GXw3VYE5",
-   "note": ""
-  },
-  {
-   "credit": "\"Tree stump\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/esFOngb0uwl",
-   "note": ""
-  },
-  {
-   "credit": "\"Tree\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/0bUFnd68NWH",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"Tree\" by konta johanna (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/bk19zLgwVAW",
-   "note": ""
-  },
-  {
-   "credit": "\"Tree\" by Zsky (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/VfZbAkek1r",
-   "note": "Used as a closest-match stand-in; scaled and re-lit for this game."
-  },
-  {
-   "credit": "\"tulip 3\" by Hugo Gibson (CC-BY 3.0) via Poly Pizza",
-   "license": "CC-BY 3.0",
-   "url": "https://poly.pizza/m/2zT-C10njmX",
-   "note": ""
+   "url": "https://poly.pizza/m/8ZqT5p2KoSR",
+   "note": "Iris"
   },
   {
    "credit": "\"Tulip\" by Hugo Gibson (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/cQ2ejiIig4n",
-   "note": ""
+   "note": "Tulip"
+  },
+  {
+   "credit": "\"Tulip (Hugo Gibson)\" by Hugo Gibson (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cQ2ejiIig4n",
+   "note": "Tulip (Hugo Gibson)"
+  },
+  {
+   "credit": "\"tulip 3\" by Hugo Gibson (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/2zT-C10njmX",
+   "note": "Tulip"
+  },
+  {
+   "credit": "\"Robin chirp\" by InspectorJ (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://freesound.org/people/InspectorJ/sounds/456440/",
+   "note": "Creature call"
+  },
+  {
+   "credit": "\"Beanie (J-Toastie)\" by J-Toastie (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/WEGNXQAOfy",
+   "note": "Hat (beanie)"
+  },
+  {
+   "credit": "\"Frog Hat (J-Toastie)\" by J-Toastie (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/IBL2UX2eOZ",
+   "note": "Hat (frog)"
+  },
+  {
+   "credit": "\"Grass Platform (J-Toastie)\" by J-Toastie (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/7xmlX1JEkM",
+   "note": "Platform"
+  },
+  {
+   "credit": "\"Greenhouse (J-Toastie)\" by J-Toastie (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/exys3emjr1",
+   "note": "Small greenhouse (alt)"
+  },
+  {
+   "credit": "\"Hose Reel (J-Toastie)\" by J-Toastie (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/R5xHvcRKb2",
+   "note": "Garden hose (sprinkler stand-in)"
+  },
+  {
+   "credit": "\"Planter & Bushes\" by J-Toastie (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/wn85Xr9lM3",
+   "note": "Flower bed / planter"
+  },
+  {
+   "credit": "\"Stone Platform (J-Toastie)\" by J-Toastie (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/BfEpoctX5p",
+   "note": "Platform"
+  },
+  {
+   "credit": "\"Purpil flower long neck\" by Jakob Hippe (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/1TMHx6tEO8Z",
+   "note": "Columbine"
+  },
+  {
+   "credit": "\"Acorns (Jarlan Perez)\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/1UGny0xB4Ll",
+   "note": "Acorn cluster"
+  },
+  {
+   "credit": "\"Apple Tree\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/ds595Kl_cWH",
+   "note": "Apple tree"
+  },
+  {
+   "credit": "\"Daisy\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/8FovhiSACst",
+   "note": "Daisy"
+  },
+  {
+   "credit": "\"Dandelions\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/5Cvg9NTvlg2",
+   "note": "Dandelion"
+  },
+  {
+   "credit": "\"Racoon (Jarlan Perez, static)\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4dAvYh8cBE0",
+   "note": "Raccoon (static)"
+  },
+  {
+   "credit": "\"Tree\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0bUFnd68NWH",
+   "note": "Linden (basswood)"
+  },
+  {
+   "credit": "\"Tree Branch (Jarlan Perez)\" by Jarlan Perez (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4K7ihleoprr",
+   "note": "Branch / large stick"
+  },
+  {
+   "credit": "\"Ant (jeremy, static)\" by jeremy (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9x6pGMV83jt",
+   "note": "Ant (static)"
+  },
+  {
+   "credit": "\"Flower\" by jeremy (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4EPkHRlINP6",
+   "note": "Marigold; Zinnia"
+  },
+  {
+   "credit": "\"Leaf\" by jeremy (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/ekFiuxhSR2i",
+   "note": "Leaf (host plant)"
+  },
+  {
+   "credit": "\"Mushroom\" by jeremy (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/2DAaKHD48ZP",
+   "note": "Mushrooms"
+  },
+  {
+   "credit": "\"Mushroom (Poly by Google, reused)\" by jeremy (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/2DAaKHD48ZP",
+   "note": "Mushroom"
+  },
+  {
+   "credit": "\"Pond\" by jeremy (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cYUMQWc-BOV",
+   "note": "Puddle / pond (mud-puddling)"
+  },
+  {
+   "credit": "\"Raspberry\" by jeremy (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/fnuWrFddqLb",
+   "note": "Raspberry / blueberry shrub"
+  },
+  {
+   "credit": "\"Robin (jeremy, static)\" by jeremy (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/53HOg-b1F4r",
+   "note": "Robin (static)"
+  },
+  {
+   "credit": "\"Sunflower\" by jeremy (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/a9qW8wSfaaX",
+   "note": "Sunflower"
+  },
+  {
+   "credit": "\"lattice large\" by Jeremy Eyring (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9A_U8eZbLGo",
+   "note": "Trellis / lattice"
+  },
+  {
+   "credit": "\"InktobVR Day02 Little Flowers\" by Kamylle B. Grenier (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/7rniSIUqQri",
+   "note": "Wildflower meadow patch"
+  },
+  {
+   "credit": "\"Simple red flower\" by Karlien (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/3cOdxZNnZjY",
+   "note": "Poppy"
+  },
+  {
+   "credit": "\"Evening (Kevin MacLeod)\" by Kevin MacLeod (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2300002",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Midnight Tale (Kevin MacLeod)\" by Kevin MacLeod (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1900004",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Midsummer Sky (Kevin MacLeod)\" by Kevin MacLeod (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100158",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Moonstone (Kevin MacLeod)\" by Kevin MacLeod (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100145",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Morning (Kevin MacLeod)\" by Kevin MacLeod (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2300003",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Rainbows (Kevin MacLeod)\" by Kevin MacLeod (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600063",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Village Dawn (Kevin MacLeod)\" by Kevin MacLeod (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100025",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Winter Chimes (Kevin MacLeod)\" by Kevin MacLeod (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100009",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Tree\" by konta johanna (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/bk19zLgwVAW",
+   "note": "Cherry blossom tree"
+  },
+  {
+   "credit": "\"Nestbox (Kutejnikov)\" by Kutejnikov (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://opengameart.org/content/nestbox",
+   "note": "Nest box"
+  },
+  {
+   "credit": "\"Bee Minecraft (animated)\" by kuzneciv (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/b883baf691204b4d9a618e5e5841adf1",
+   "note": "Bee Minecraft (animated)"
+  },
+  {
+   "credit": "\"Robin Nest (Laurie Annis)\" by Laurie Annis (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/none-0e189096f1aa4996b8afc6c56381529f",
+   "note": "Ground bird nest (photoscan, heavy)"
+  },
+  {
+   "credit": "\"Lil' Moth (Lee Mason)\" by Lee Mason (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/8ojwMQpu6DK",
+   "note": "Lil' Moth (Lee Mason)"
+  },
+  {
+   "credit": "\"Praying Mantis (Lorenzo Cinalli)\" by Lorenzo Cinalli (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/bm9Q0hKjcVC",
+   "note": "Praying Mantis (Lorenzo Cinalli)"
+  },
+  {
+   "credit": "\"Low Poly Tanuki - Animated (LtTim)\" by LtTim (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/none-3beae376b5de415f95e6df638c0f4cda",
+   "note": "Raccoon-dog (animated)"
+  },
+  {
+   "credit": "\"Autumn (MAOU)\" by MAOU (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://opengameart.org/content/autumn-0",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Low Poly Bear (Mathilde_Lea)\" by Mathilde_Lea (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://opengameart.org/content/low-poly-bear",
+   "note": "Black bear (static)"
+  },
+  {
+   "credit": "\"Lively Meadow (song + victory fanfare)\" by Matthew Pablo (CC-BY 3.0)",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/lively-meadow-victory-fanfare-and-song",
+   "note": "Lively Meadow (song + victory fanfare)"
+  },
+  {
+   "credit": "\"Lively Meadow (Victory Fanfare and Song) - Song Loop B (Matthew Pablo)\" by Matthew Pablo (CC-BY 3.0)",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/lively-meadow-victory-fanfare-and-song",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Lively Meadow Victory Fanfare (Matthew Pablo)\" by Matthew Pablo (CC-BY 3.0)",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/lively-meadow-victory-fanfare-and-song",
+   "note": "Jingle"
+  },
+  {
+   "credit": "\"Bat Box (mbhplc)\" by mbhplc (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/bat-box-6cc5617565634c9cb7dbfd2afab1aea9",
+   "note": "Bat box"
+  },
+  {
+   "credit": "\"Sprayer (milanesa0639)\" by milanesa0639 (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/HDfEfa2kHZ",
+   "note": "Sprayer (milanesa0639)"
+  },
+  {
+   "credit": "\"Sprayer (milanesa0639, reused)\" by milanesa0639 (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/HDfEfa2kHZ",
+   "note": "Garden sprayer (sprinkler stand-in)"
+  },
+  {
+   "credit": "\"Spider Webs (p0ss)\" by p0ss (CC-BY 3.0)",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/spider-webs",
+   "note": "Spider webs (3 .blend)"
+  },
+  {
+   "credit": "\"Acacia\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0j86RMO4kQC",
+   "note": "Acacia"
+  },
+  {
+   "credit": "\"Acorn\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cQ-FnrdHHVw",
+   "note": "Oak"
+  },
+  {
+   "credit": "\"Acorn (Poly by Google, reused)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cQ-FnrdHHVw",
+   "note": "Falling acorn"
+  },
+  {
+   "credit": "\"Aloe plant\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/6hYjnEpV-CC",
+   "note": "Aloe"
+  },
+  {
+   "credit": "\"Apple tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9GU-svgV2_i",
+   "note": "Apple tree"
+  },
+  {
+   "credit": "\"Bear Cub (Poly by Google, static)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/dc_78YWzT_R",
+   "note": "Bear cub (static)"
+  },
+  {
+   "credit": "\"Beetle (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4yufxgZ1QQ2",
+   "note": "Beetle (Poly by Google)"
+  },
+  {
+   "credit": "\"Birch tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/b0BZj34bN-K",
+   "note": "Catkin tree (birch / hazel)"
+  },
+  {
+   "credit": "\"Bird house\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/asIp36y3k0t",
+   "note": "Bee hotel / insect hotel"
+  },
+  {
+   "credit": "\"Birds nest\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/fq_bAKD1Khg",
+   "note": "Nest (bumblebee / bird)"
+  },
+  {
+   "credit": "\"Birds nest (Poly by Google, reused)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/fq_bAKD1Khg",
+   "note": "Ground bird nest"
+  },
+  {
+   "credit": "\"Birds of paradise potted plant\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/folDA1yLeEF",
+   "note": "Bird of paradise"
+  },
+  {
+   "credit": "\"Black bear (Poly by Google, static)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/56ym_pyVnel",
+   "note": "Black bear (static)"
+  },
+  {
+   "credit": "\"Bloodwood tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/5MenXQd3qRA",
+   "note": "Eucalyptus"
+  },
+  {
+   "credit": "\"Blueberry\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0d9SDaJ0Ey9",
+   "note": "Raspberry / blueberry shrub"
+  },
+  {
+   "credit": "\"Bumblebee (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/42S5XD_3C4O",
+   "note": "Bumblebee (Poly by Google)"
+  },
+  {
+   "credit": "\"Butterfly (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/2ZwYwkTVnfG",
+   "note": "Butterfly (Poly by Google)"
+  },
+  {
+   "credit": "\"Butterfly (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/814CINpG3H1",
+   "note": "Butterfly (Poly by Google)"
+  },
+  {
+   "credit": "\"Cactus\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/1_3Ur2-LAs8",
+   "note": "Saguaro cactus flower"
+  },
+  {
+   "credit": "\"Caterpillar\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/64T47O5VHAB",
+   "note": "Caterpillar"
+  },
+  {
+   "credit": "\"Caterpillar\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/11rgZ0QxZ-F",
+   "note": "Caterpillar"
+  },
+  {
+   "credit": "\"Caterpillar (reused)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/11rgZ0QxZ-F",
+   "note": "Caterpillar"
+  },
+  {
+   "credit": "\"Cherry tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/1FSDzk-LRdA",
+   "note": "Cherry blossom tree"
+  },
+  {
+   "credit": "\"Crow (Poly by Google, static)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/1MIvWQ5Q3R9",
+   "note": "Blackbird / crow (static)"
+  },
+  {
+   "credit": "\"Daisy\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cuayhwWYHet",
+   "note": "Daisy"
+  },
+  {
+   "credit": "\"Daisy (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cuayhwWYHet",
+   "note": "Daisy (Poly by Google)"
+  },
+  {
+   "credit": "\"Dandelion\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/dfJS5VaxRGr",
+   "note": "Bee balm (bergamot); Dandelion"
+  },
+  {
+   "credit": "\"Desert marigold\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/dYQFgjU5Eqx",
+   "note": "Black-eyed Susan"
+  },
+  {
+   "credit": "\"Earthworm (Poly by Google, static)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9xOaiLvBLF-",
+   "note": "Earthworm (static)"
+  },
+  {
+   "credit": "\"Flower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0V0bSIy2bRe",
+   "note": "Coneflower (echinacea)"
+  },
+  {
+   "credit": "\"Flower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/fg5U0dl1Sd3",
+   "note": "Moonflower (night bloomer); Trumpet vine / honeysuckle"
+  },
+  {
+   "credit": "\"Fountain\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0YTMlW0CUHU",
+   "note": "Birdbath / fountain"
+  },
+  {
+   "credit": "\"Hard hat (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9AMKar2NlkX",
+   "note": "Helmet (hard hat)"
+  },
+  {
+   "credit": "\"Hazelnut\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/78T02Vv48GC",
+   "note": "Catkin tree (birch / hazel)"
+  },
+  {
+   "credit": "\"Heliconia flower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/06_hk2bO2Ix",
+   "note": "Heliconia / fuchsia (hanging tubular)"
+  },
+  {
+   "credit": "\"Hibiscus flower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/fQVeG1obY8u",
+   "note": "Hibiscus"
+  },
+  {
+   "credit": "\"Honey wand\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/5DhrBw4JgWW",
+   "note": "Honey jar / dipper"
+  },
+  {
+   "credit": "\"Honeycomb\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/6Mqdrv1n3Oo",
+   "note": "Honeycomb"
+  },
+  {
+   "credit": "\"Honeycomb\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/fcOXf3x_LgH",
+   "note": "Honeycomb"
+  },
+  {
+   "credit": "\"Honeycomb (Poly by Google #2, reused)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/6Mqdrv1n3Oo",
+   "note": "Honeycomb (bear lick)"
+  },
+  {
+   "credit": "\"Honeycomb (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/6Mqdrv1n3Oo",
+   "note": "Honeycomb (Poly by Google)"
+  },
+  {
+   "credit": "\"Honeycomb (Poly by Google, reused)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/fcOXf3x_LgH",
+   "note": "Honeycomb (bear lick)"
+  },
+  {
+   "credit": "\"Hummingbird (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/1HreVSktbPG",
+   "note": "Hummingbird (Poly by Google)"
+  },
+  {
+   "credit": "\"Ladybug (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0k_YwE0g_C9",
+   "note": "Ladybug (Poly by Google)"
+  },
+  {
+   "credit": "\"Leaf\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4_FetA14dDV",
+   "note": "Leaf (host plant)"
+  },
+  {
+   "credit": "\"Leaf (Poly by Google, reused)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4_FetA14dDV",
+   "note": "Leaf"
+  },
+  {
+   "credit": "\"Log (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/dkRLlPSdgdR",
+   "note": "Small log"
+  },
+  {
+   "credit": "\"Maple tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/8OfF21t6NMa",
+   "note": "Maple"
+  },
+  {
+   "credit": "\"Oak tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0DtsZfSTWzA",
+   "note": "Oak"
+  },
+  {
+   "credit": "\"Olive tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cKHksYy9jPk",
+   "note": "Olive tree"
+  },
+  {
+   "credit": "\"Orange\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4gYKD0I86tg",
+   "note": "Fallen fruit"
+  },
+  {
+   "credit": "\"Orange tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/8zS7mfHS0i7",
+   "note": "Citrus (orange tree)"
+  },
+  {
+   "credit": "\"Orchid\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0gEtIcRV4do",
+   "note": "Orchid (moth orchid)"
+  },
+  {
+   "credit": "\"Orchid\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/59BuDmuEYIZ",
+   "note": "Orchid (moth orchid)"
+  },
+  {
+   "credit": "\"Pear tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/44lGuM746Zi",
+   "note": "Pear tree"
+  },
+  {
+   "credit": "\"Pinecone (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9afIin1wLCy",
+   "note": "Falling pinecone"
+  },
+  {
+   "credit": "\"Pond\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/5rf3YuZfJAW",
+   "note": "Puddle / pond (mud-puddling)"
+  },
+  {
+   "credit": "\"Prickly pear cactus\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/47Af27jQemx",
+   "note": "Prickly pear (flowering)"
+  },
+  {
+   "credit": "\"Rose bush\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/8nGNoyvVuI5",
+   "note": "Rose"
+  },
+  {
+   "credit": "\"Sparrow (Poly by Google, static)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/3rTjKefT184",
+   "note": "Sparrow / starling stand-in (static)"
+  },
+  {
+   "credit": "\"Spider web (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cM0NzColM_0",
+   "note": "Spider web (large)"
+  },
+  {
+   "credit": "\"Strawberry\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4W3g1NixX1K",
+   "note": "Strawberry patch"
+  },
+  {
+   "credit": "\"Sunflower\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/ce4GXw3VYE5",
+   "note": "Sunflower"
+  },
+  {
+   "credit": "\"Sunflower (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/ce4GXw3VYE5",
+   "note": "Sunflower (Poly by Google)"
+  },
+  {
+   "credit": "\"Tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/6pwiq7hSrHr",
+   "note": "Linden (basswood)"
+  },
+  {
+   "credit": "\"Tree branch (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/8w-ed__H6Tl",
+   "note": "Branch / large stick"
+  },
+  {
+   "credit": "\"Tree roots (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/eYfjQLsebfA",
+   "note": "Possum den (under roots)"
+  },
+  {
+   "credit": "\"Tree stump\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/esFOngb0uwl",
+   "note": "Tree stump"
+  },
+  {
+   "credit": "\"Tree stump (Poly by Google, reused)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/esFOngb0uwl",
+   "note": "Stump"
+  },
+  {
+   "credit": "\"Venus flytrap (Poly by Google)\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0y4ZpRcGhoD",
+   "note": "Venus flytrap (Poly by Google)"
+  },
+  {
+   "credit": "\"Vines\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/cnimalnLIEA",
+   "note": "Trumpet vine / honeysuckle"
   },
   {
    "credit": "\"Water lilies\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/birD7XV2A44",
-   "note": ""
+   "note": "Lotus / water lily"
+  },
+  {
+   "credit": "\"Weeping willow\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/74_FuSwEd0E",
+   "note": "Willow"
   },
   {
    "credit": "\"Willow tree\" by Poly by Google (CC-BY 3.0) via Poly Pizza",
    "license": "CC-BY 3.0",
    "url": "https://poly.pizza/m/2acu5nrdDYl",
-   "note": ""
+   "note": "Willow"
+  },
+  {
+   "credit": "\"WGS Music #10 - Autumn [Loops] (Retimer)\" by Retimer (CC-BY 3.0)",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/wgs-music-10-autumn-loops",
+   "note": "Loop track"
+  },
+  {
+   "credit": "\"Lotus Flower\" by Sean Tarrant (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/6rLIFNbNTRG",
+   "note": "Lotus / water lily"
+  },
+  {
+   "credit": "\"Rabbit (Sherkiz, animated)\" by Sherkiz (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/Km89u3twcR",
+   "note": "Rabbit (animated candidate)"
+  },
+  {
+   "credit": "\"Pixel Flower Icons (72 icons, 9 colors each)\" by sicklyseraph (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://opengameart.org/content/pixel-flower-icons",
+   "note": "Pixel Flower Icons (72 icons, 9 colors each)"
+  },
+  {
+   "credit": "\"log with fungus\" by sirkitree (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/32czhZtc7oY",
+   "note": "Rotting log"
+  },
+  {
+   "credit": "\"Log with fungus (reused)\" by sirkitree (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/32czhZtc7oY",
+   "note": "Log with fungus"
+  },
+  {
+   "credit": "\"Yarn Ball v2 (sirkitree)\" by sirkitree (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/0kSphuYy8Or",
+   "note": "String ball"
+  },
+  {
+   "credit": "\"Dragonfly (blockbench)\" by Ssbinguuu (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/dragonfly-blockbench-bc3a4317b16a4e4597221c4667485ac3",
+   "note": "Animated flyer (blocky)"
+  },
+  {
+   "credit": "\"Happy bear grunt (cartoon bear laugh)\" by ultradust (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://freesound.org/people/ultradust/sounds/168150/",
+   "note": "Creature call"
+  },
+  {
+   "credit": "\"Blue Agave\" by VR XRTIST (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/c0kbzSnieas",
+   "note": "Agave flower (bat plant)"
+  },
+  {
+   "credit": "\"Realistic Animated Bear (WildMesh 3D)\" by WildMesh 3D (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/none-bffc3c87d2d148ff8533e1cc8a11c9f1",
+   "note": "Bear (animated, 81 clips)"
+  },
+  {
+   "credit": "\"Low Poly Hen In Nest - Animated (Wonderful Optics Workshop)\" by Wonderful Optics Workshop (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/none-56f517141de54dcda489e0fa5aadefd0",
+   "note": "Bird on nest (animated)"
+  },
+  {
+   "credit": "\"Beehive (Xenoreptire)\" by Xenoreptire (CC-BY 4.0)",
+   "license": "CC-BY 4.0",
+   "url": "https://sketchfab.com/3d-models/beehive-d6a01d7806404249b4bb69afed1ed5b3",
+   "note": "Beehive"
+  },
+  {
+   "credit": "\"Flower\" by Zoe XR (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9dubDMkAcZ5",
+   "note": "Cosmos"
+  },
+  {
+   "credit": "\"Bell Flower\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/1baaAXcdzZ",
+   "note": "Foxglove"
+  },
+  {
+   "credit": "\"Bird House\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/jSpF4LjoQp",
+   "note": "Bee hotel / insect hotel"
+  },
+  {
+   "credit": "\"Bird House (Zsky, reused as bat house)\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/jSpF4LjoQp",
+   "note": "Bat house stand-in"
+  },
+  {
+   "credit": "\"Daisy\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/4r0WBz3RZz",
+   "note": "Aster; Zinnia"
+  },
+  {
+   "credit": "\"Dead Tree Trunk (Zsky)\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/HdJ7JoEvKR",
+   "note": "Dead trunk / fallen log"
+  },
+  {
+   "credit": "\"Flower Bed\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/eUCvK3Oq9z",
+   "note": "Flower bed / planter"
+  },
+  {
+   "credit": "\"Flower Bed\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/9h7pb9nDc1",
+   "note": "Flower bed / planter"
+  },
+  {
+   "credit": "\"Flowers\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/mUhc2WmXHn",
+   "note": "Butterfly bush (buddleia)"
+  },
+  {
+   "credit": "\"Tree\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/VfZbAkek1r",
+   "note": "Magnolia"
+  },
+  {
+   "credit": "\"Water Fountain\" by Zsky (CC-BY 3.0) via Poly Pizza",
+   "license": "CC-BY 3.0",
+   "url": "https://poly.pizza/m/2guUSHGDPZ",
+   "note": "Birdbath / fountain"
+  },
+  {
+   "credit": "\"Lively Meadow (Victory Fanfare and Song)\" by Matthew Pablo (https://opengameart.org/content/lively-meadow-victory-fanfare-and-song), licensed CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/).",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/lively-meadow-victory-fanfare-and-song",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Moonstone\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/",
+   "license": "By Attribution 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Midnight Tale\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/",
+   "license": "By Attribution 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Morning\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/",
+   "license": "By Attribution 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Village Dawn\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/",
+   "license": "By Attribution 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Evening\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/",
+   "license": "By Attribution 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Rainbows\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/",
+   "license": "By Attribution 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Midsummer Sky\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/",
+   "license": "By Attribution 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Autumn\" by MAOU (https://opengameart.org/content/autumn-0), licensed CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/).",
+   "license": "CC-BY 4.0",
+   "url": "https://opengameart.org/content/autumn-0",
+   "note": "Music"
+  },
+  {
+   "credit": "\"WGS Music #10 - Autumn [Loops]\" by Retimer (https://opengameart.org/content/wgs-music-10-autumn-loops), licensed CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Credit requested on the page: WrathGames Studio [ http://wrathgames.com/blog ]",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/wgs-music-10-autumn-loops",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Winter Chimes\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/",
+   "license": "By Attribution 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/",
+   "note": "Music"
+  },
+  {
+   "credit": "\"Broken Water Sprinkler (Antti Luode)\" by Antti Luode (https://commons.wikimedia.org/wiki/File:Broken_Water_Sprinkler_(Antti_Luode).mp3), licensed CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Changes: excerpted, mono, loudness-normalised, loop-crossfaded, re-encoded to OGG.",
+   "license": "CC BY 3.0",
+   "url": "https://commons.wikimedia.org/wiki/File:Broken_Water_Sprinkler_(Antti_Luode",
+   "note": "Sound effect (edited)"
+  },
+  {
+   "credit": "\"Free Crowd Cheering Sounds (05 - Soft cheering - I)\" by Gregor Quendel (https://opengameart.org/content/free-crowd-cheering-sounds), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Changes: excerpted/trimmed, pitched 1.2x, mono, loudness-normalised, faded, re-encoded to OGG.",
+   "license": "CC BY 4.0",
+   "url": "https://opengameart.org/content/free-crowd-cheering-sounds",
+   "note": "Sound effect (edited)"
+  },
+  {
+   "credit": "\"Lively Meadow (Victory Fanfare and Song)\" by Matthew Pablo (https://opengameart.org/content/lively-meadow-victory-fanfare-and-song), licensed CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Changes: trimmed, mono, loudness-normalised, faded, re-encoded to OGG.",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/lively-meadow-victory-fanfare-and-song",
+   "note": "Sound effect (edited)"
+  },
+  {
+   "credit": "\"Raccoon Chatter\" by AntumDeluge, sounds extracted from a video by jnargus (attribution notice: jnargus) (https://opengameart.org/content/raccoon-chatter), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Changes: trimmed, loudness-normalised, faded, re-encoded to OGG.",
+   "license": "CC BY 4.0",
+   "url": "https://opengameart.org/content/raccoon-chatter",
+   "note": "Sound effect (edited)"
+  },
+  {
+   "credit": "\"Anaxyrus americanus - American Toad Vocalization\" by SwampVids (https://commons.wikimedia.org/wiki/File:Anaxyrus_americanus_-_American_Toad_Vocalization.wav), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Changes: excerpted/trimmed, pitched 1.15x, mono, loudness-normalised, faded, re-encoded to OGG.",
+   "license": "CC BY 4.0",
+   "url": "https://commons.wikimedia.org/wiki/File:Anaxyrus_americanus_-_American_Toad_Vocalization.wav",
+   "note": "Sound effect (edited)"
+  },
+  {
+   "credit": "\"Lively Meadow (Victory Fanfare and Song)\" by Matthew Pablo (https://opengameart.org/content/lively-meadow-victory-fanfare-and-song), licensed CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Changes: loudness-normalised, re-encoded to OGG.",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/lively-meadow-victory-fanfare-and-song",
+   "note": "Rounds music (edited)"
+  },
+  {
+   "credit": "\"Lively Meadow (Victory Fanfare and Song)\" by Matthew Pablo (https://opengameart.org/content/lively-meadow-victory-fanfare-and-song), licensed CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Changes: sped up 20%, pitched up 1 semitone, brightened, loudness-normalised, re-encoded to OGG.",
+   "license": "CC-BY 3.0",
+   "url": "https://opengameart.org/content/lively-meadow-victory-fanfare-and-song",
+   "note": "Rounds music (edited)"
+  },
+  {
+   "credit": "\"Wind Loop\" by AntumDeluge (https://opengameart.org/content/wind-loop), looped from a recording by InspectorJ (https://freesound.org/people/InspectorJ/sounds/376415/), licensed CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Changes: excerpted, mono, loudness-normalised, loop-crossfaded, re-encoded to OGG.",
+   "license": "CC BY 3.0",
+   "url": "https://opengameart.org/content/wind-loop",
+   "note": "Rounds music (edited)"
+  },
+  {
+   "credit": "\"263673 ylearkisto mehilainen-tarhamehilainen-parvi-bees-honeybees-a-swarm-of-bees-buzzing-among-the-flowers-apis-mellifera\" by YleArkisto (https://commons.wikimedia.org/wiki/File:263673_ylearkisto_mehilainen-tarhamehilainen-parvi-bees-honeybees-a-swarm-of-bees-buzzing-among-the-flowers-apis-mellifera.wav), licensed CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/). Changes: excerpted, mono, loudness-normalised, loop-crossfaded, re-encoded to OGG.",
+   "license": "CC BY 3.0",
+   "url": "https://commons.wikimedia.org/wiki/File:263673_ylearkisto_mehilainen-tarhamehilainen-parvi-bees-honeybees-a-swarm-of-bees-buzzing-among-the-flowers-apis-mellifera.wav",
+   "note": "Rounds music (edited)"
   }
  ],
  "cc0": [
-  "Apple Cider (Zane Little Music) — Zane Little Music",
-  "Bat (Quaternius) — Quaternius",
-  "Bear (Pixor, rigged) — Frakassets (Pixor library)",
-  "Bee (Quaternius) — Quaternius",
-  "Beehive skep (Pixor, reused) — Frakassets (Pixor library)",
-  "Beetle Grub (Gobkit, animated) — Gobkit",
-  "Bird House — CreativeTrio",
-  "Blue Meadow In Green Sky (yd) — yd",
-  "Blue Meadow In Green Sky — yd",
-  "Branch (AssetQuest, reused) — AssetQuest",
-  "Bush with Berries — Quaternius",
-  "Bush with Flowers — Quaternius",
-  "Cactus Flowers — Quaternius",
-  "Cactus — Quaternius",
-  "Cave entrance (Pixor, reused) — Frakassets (Pixor library)",
-  "Clover — Quaternius",
-  "Dragonfly (AssetQuest) — AssetQuest",
-  "Egg — Quaternius",
-  "Fallen log (Pixor, reused) — Frakassets (Pixor library)",
-  "Flower Group — Quaternius",
-  "Flower Single — Quaternius",
-  "Flowers — Quaternius",
-  "Forget Me Not (Kistol) — Kistol",
-  "Garden Ambience with BEES (48/24) — neilraouf",
-  "Hollow log (Pixor, reused) — Frakassets (Pixor library)",
-  "Honey Comb (hat_my_guy, reused) — hat_my_guy",
-  "Kenney Particle Pack — Kenney",
-  "Moss patch (Pixor, reused) — Frakassets (Pixor library)",
-  "Mushroom (80 tri, reused) — Kenney",
-  "Planks (Kay Lousberg / KayKit) — Kay Lousberg",
-  "Poly Haven HDRI: Kloofendal 48d Partly Cloudy (Pure Sky) — Greg Zaal / Jarod Guest",
-  "Raccoon (Quaternius, animated) — Quaternius",
-  "Rock Large (Quaternius, reused) — Quaternius",
-  "Rock Medium (Quaternius, reused) — Quaternius",
-  "Snowfall (Kistol) — Kistol",
-  "SummerTown (LushoGames) — LushoGames",
-  "Tree Branch (AssetQuest, reused) — AssetQuest",
-  "Tree Stump with Moss (reused) — Quaternius",
-  "Twig (Kenney, reused) — Kenney",
-  "Wintery loop (Emma_MA) — Emma_MA",
-  "Wood Log (Quaternius, reused) — Quaternius",
-  "Wood Log with Moss (reused) — Quaternius",
-  "ambientCG Grass001 — ambientCG (Lennart Demes)",
-  "star (Kenney Platformer Kit) — Kenney"
+  "Quaternius (https://quaternius.com), CC0 models via Poly Pizza",
+  "Kenney (https://kenney.nl), CC0 packs: Nature Kit, Food Kit, Particle Pack, Game Icons, UI Pack Adventure, UI Audio, Music Jingles",
+  "Poly Haven (https://polyhaven.com), CC0 HDRIs: meadow_2, kloofendal_48d_partly_cloudy_puresky",
+  "ambientCG (https://ambientcg.com), CC0 texture Grass001",
+  "Music batch (CC0): OpenGameArt tracks by Écrivain, yd, Tozan, pebonius, Sudocolon, KiluaBoy, Yoiyami, Kistol, LushoGames, Zane Little Music, Emma_MA, MintoDog, Fupi, Spring Spring; Kenney Music Jingles (https://kenney.nl). See the Music section of README.md",
+  "OpenGameArt CC0 items: Butterfly (animated, rigged), Spring VFX pack, Meadow Thoughts, Blue Meadow in Green Sky",
+  "Freesound CC0 sounds (low-quality previews only; originals are manual download): Breviceps, fthgurdy, kalhan, FunWithSound, neilraouf, richwise, Gammelsmurfen778",
+  "Pixor free library (https://pixor.art/library/license/), CC0 by Frakassets: Bee, Butterfly, Beetle, Bat, Beehive, Hollow log, Fallen log, Cave entrance, Moss patch, Mud pool, Bamboo, Honey jar (credit appreciated, not required)",
+  "Platformer batch (CC0): Kenney Platformer Kit 4.1 and Cube Pets 2.0 (https://kenney.nl) plus Nature Kit pieces, Gobkit free pack (https://gobkit.com/freebies, CC0 1.0), more Pixor library creatures/rocks/pickups, Quaternius (Raccoon, Chick, Birb, Worm, Platform, Mushroom, Wood, Logs), Kay Lousberg / KayKit (Planks), Voxel_dev, KelecikDev",
+  "Meadow update (CC0): Kenney Survival Kit, Fantasy Town Kit, Furniture Kit, Holiday Kit and Mini Characters (https://kenney.nl), KayKit Dungeon Remastered by Kay Lousberg (https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0, credit Kay Lousberg appreciated), more Pixor library hazards/buildings/items/gear (Frakassets), Quaternius, CreativeTrio, iPoly3D, Isa Lousberg, Kay Lousberg, reyshapes, hat_my_guy via Poly Pizza",
+  "Sound effects (CC0): Kenney Interface Sounds, Impact Sounds, RPG Audio, Casino Audio and Music Jingles (https://kenney.nl); OpenGameArt AntumDeluge (Bat Screeches); MintoDog (cozy puzzle clear, reused); Freesound HQ previews by ; plus original generated sounds (Project Pollinator, CC0). See the Sound effects section of README.md",
+  "Audio fixes and upgrades (CC0 / public domain, data/add_audio_fixes.py): Aeva, AntumDeluge, Dawn VanDeman, isaiah658, Kenney, Mysid, National Park Service, OwlishMedia, qubodup, remaxim, rubberduck, Thimras, Wolfgang_, Ylmir (OpenGameArt, Wikimedia Commons, Kenney); plus 10 original generated sounds and some generated layers (Project Pollinator, CC0). CC-BY upgrades are listed with their exact credit lines below",
+  "Big basket (CC0): Kenney Mini Market (https://kenney.nl/assets/mini-market) shopping basket, recoloured to wicker",
+  "Other CC0 creators on Poly Pizza: AssetQuest, CreativeTrio, Isa Lousberg, Kay Lousberg, KelecikDev, Kohyzazi, Voxel_dev, hat_my_guy, iPoly3D, reyshapes",
+  "Team-made originals by Squid (team artist): models, UI icons, emblems, FX textures and hats"
  ],
  "footer": "All models are scaled, merged into instanced meshes and compressed for mobile; the wing-flap animation is procedural. Music: \"Blue Meadow in Green Sky\" (OpenGameArt). Ambience: Freesound #484371. Sky: Kloofendal 48d Partly Cloudy (Poly Haven). Particles: Kenney. See CREDITS.md for the full list."
 }

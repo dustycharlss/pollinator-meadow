@@ -1,0 +1,46 @@
+{
+ "name": "Pollinator Meadow guide portraits",
+ "size": 512,
+ "format": "PNG RGBA (transparent, ink outline ~5px, bottom 20% alpha fade for dialogue boxes)",
+ "character": "meadow guide (old toad with spectacles, satchel and walking stick) = assets/models/animals/meadow-guide.glb",
+ "generator": "src/build-portraits.py [--blocky] (renders assets/models/animals/src/guide.html?mode=portrait&expr=<id> via guide-shot.mjs)",
+ "portraits": [
+  {
+   "id": "guide-happy",
+   "file": "guide-happy.png",
+   "use": "default / goal-card intro",
+   "expr": "warm smile, head tilt, paw on tummy"
+  },
+  {
+   "id": "guide-cheering",
+   "file": "guide-cheering.png",
+   "use": "goal complete / win",
+   "expr": "both arms up (stick raised), eyes squeezed ^ ^, open grin"
+  },
+  {
+   "id": "guide-thinking",
+   "file": "guide-thinking.png",
+   "use": "hint / tip / waiting",
+   "expr": "paw on chin, eyes up-aside, one brow raised, lopsided hmm mouth"
+  },
+  {
+   "id": "guide-happy-blocky",
+   "file": "guide-happy-blocky.png",
+   "use": "default / goal-card intro (blocky toad)",
+   "expr": "smile, head tilt, paw on tummy; square mouth line"
+  },
+  {
+   "id": "guide-cheering-blocky",
+   "file": "guide-cheering-blocky.png",
+   "use": "goal complete / win (blocky toad)",
+   "expr": "both arms up, square ^ ^ eyes, open square grin with tongue"
+  },
+  {
+   "id": "guide-thinking-blocky",
+   "file": "guide-thinking-blocky.png",
+   "use": "hint / tip / waiting (blocky toad)",
+   "expr": "paw on chin, eyes up-aside, brow raised, slanted square hmm mouth"
+  }
+ ],
+ "blocky_character": "square-style toad = assets/models/animals/meadow-guide-blocky.glb (Job 8 uniform blocky look); guide.html blocky=1 swaps in flat-face mouth/eyes"
+}
