@@ -48,7 +48,7 @@ export function createAdmin(X) {
     ...[['bee', '🐝'], ['butterfly', '🦋'], ['hummingbird', '🐦'], ['robin', '🐦‍⬛'], ['raccoon', '🦝'], ['opossum', '🐭'], ['bear', '🐻']].map(([s, e]) => B(`${e} Spawn ${s}`, () => X.spawnHelper(s))),
     S('Helper speed ×', 0.5, 4, 0.25, () => adm.helperSpeed, v => { adm.helperSpeed = v; }, v => '×' + v),
     B('🎓 Train helpers (free)', () => X.trainHelpers()), B('Remove all helpers', () => X.clearHelpers()),
-    B('🚩 Free trail marker', () => X.freeAtFeet('marker')), B('🗺️ Toggle overview', () => X.toggleRts()),
+    B('🚩 Free trail marker', () => X.freeAtFeet('marker')), B('📣 Toggle Command (legacy RTS stub)', () => X.toggleRts()),
   ]);
   if (X.tech) sec('🧬 Species + tech', false, [
     SEL('Lead species (this round)', () => X.speciesList(), i => X.setLead(i)),

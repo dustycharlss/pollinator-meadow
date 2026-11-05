@@ -1380,7 +1380,7 @@ function _enterRtsOld() {
   rts.on = true; const p = P[cur]; rts.x = rts.cx = p.x; rts.z = rts.cz = p.z; rts.ch = 14; rts.h = rts.h || 95;
   document.body.classList.add('rts'); $('bRts').classList.add('on'); syncPause(); input.sx = input.sy = 0;
   if (build.active) build.aim = { x: rts.x, z: rts.z };
-  setSelection([], null); toast(isMobile ? '🗺️ Overview · tap a helper, then tap where to go or what to gather · drag to pan, pinch to zoom' : '🗺️ Overview · click a helper, right-click to command · drag a box to select · WASD pan, wheel zoom', 3600);
+  setSelection([], null); toast(isMobile ? '📣 Command · use the Command wheel to send helpers' : '📣 Command · use the Command wheel (or C) to send helpers', 2800);
 }
 function exitRts(quiet) {
   if (!rts.on) return; rts.on = false; setSelection([], null); boxHide(); rts.ptrs.clear();
