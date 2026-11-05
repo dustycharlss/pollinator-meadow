@@ -225,18 +225,13 @@ export async function createRivals(scene, ctx) {
     return 1;
   }
 
-  R.resetRound = (lead) => {
+  // t145u: rival colonies / competing species disabled. Ambient gatherers stay in creatures.js.
+  R.resetRound = (_lead) => {
     for (const b of R.buildings) { root.remove(b.g); if (b.srcId) terr.remove(b.srcId); }
     R.buildings.length = 0; R.score = 0; R.slotI = 0; R.buildProg = null; R.dismantle = null; R.react = null; R.claimT = 0; R.pileCd = 0; R.startleImm = 0; R.raidHold = 0; R.raidProg = null; R.bank = { n: 24, f: 14, w: 10, h: 8 };
+    R.active = null; R.nextAt = 1e9;
     if (R.ringEl) R.ringEl.style.display = 'none';
-    const sp = pickRival(lead || 'bee');
-    const spot = homeSpot(lead || 'bee');
-    R.active = { sp, color: TEAM[sp], name: COLONY[sp] || SPECIES[sp].name, home: spot, orderI: 0 };
-    R.nextAt = (SLOTS[round.len] || SLOTS[10])[0] || 90;
-    // place rival home immediately as scaffold→built quickly
-    startBuild('home', spot, true);
-    showToast('claimed', `${R.active.name} settled nearby!`, sp);
-    audio?.sample?.('rivals/rival-build-start', 0.4);
+    if (R.toastEl) R.toastEl.style.display = 'none';
   };
 
   async function startBuild(kind, spot, isHome) {

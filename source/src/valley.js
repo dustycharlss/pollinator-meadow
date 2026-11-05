@@ -1,5 +1,6 @@
 // Valley campaign (overhaul-123): 8 patches, save pm-valley-v1, heal → pack-up → wild.
-import { SPECIES } from './data.js';
+import { SPECIES, SPECIES_ORDER } from './data.js';
+import { UNLOCK_ALL_SPECIES } from './crew.js';
 
 export const VALLEY_SAVE_KEY = 'pm-valley-v1';
 export const HEAL_PACKUP = 0.85;
@@ -9,13 +10,13 @@ export const PACKUP_REFUND = 0.5;
 
 export const PATCHES = [
   { id: 'sunny_hollow', name: 'Sunny Hollow', emoji: '☀️', need: ['flyer', 'walker'], neighbor: 'bee', contest: null, blurb: 'Warm octagon clearing: deliver 20 Petals, hire 1, build 1 T1.' },
-  { id: 'creek_bend', name: 'Creek Bend', emoji: '🌊', need: ['bridge', 'flyer'], neighbor: 'robin', contest: 'pollen_relay', blurb: 'U-creek, terraces, crossing + Honey Log; 10-Petal robin relay.' },
-  { id: 'moon_meadow', name: 'Moon Meadow', emoji: '🌙', need: ['night'], neighbor: 'moth', contest: 'decorating', blurb: 'Hollow Oak climb; night every 3 min; collect 12 Dewdrops.' },
-  { id: 'log_jam', name: 'Log Jam', emoji: '🪵', need: ['bear', 'pollinate'], neighbor: 'bear', contest: 'dance_off', blurb: 'Canyon jams: shove log ramps, 3 Honey Logs, Tower Dew Pond.' },
-  { id: 'picnic_lawn', name: 'Picnic Lawn', emoji: '🧺', need: ['raccoon', 'robin'], neighbor: 'raccoon', contest: 'decorating', blurb: 'Picnic grid + lemonade stream; 2 Dew Ponds + Big Table bunch.' },
-  { id: 'cliff_orchard', name: 'Cliff Orchard', emoji: '🍎', need: ['bat', 'hummingbird'], neighbor: 'bat', contest: 'pollen_relay', blurb: '4 ledge rings, Boulder Stair, waterfall Dew Pond, night Moonfruit.' },
-  { id: 'windy_rise', name: 'Windy Rise', emoji: '💨', need: ['butterfly', 'bumblebee'], neighbor: 'butterfly', contest: 'dance_off', blurb: 'Terraces + canopy sky roads, night silk, Fork Tree Honey Log.' },
-  { id: 'festival_glade', name: 'Festival Glade', emoji: '🎉', need: ['crew_all_roles'], neighbor: 'all', contest: 'festival', blurb: 'Full mix: Ribbon Creek, knoll Starheart, every earlier trick.' },
+  { id: 'creek_bend', name: 'Creek Bend', emoji: '🌊', need: ['bridge', 'flyer'], neighbor: 'robin', contest: null, blurb: 'U-creek, terraces, crossing + Honey Log; gather 10 Petals.' },
+  { id: 'moon_meadow', name: 'Moon Meadow', emoji: '🌙', need: ['night'], neighbor: 'moth', contest: null, blurb: 'Hollow Oak climb; night every 3 min; collect 12 Dewdrops.' },
+  { id: 'log_jam', name: 'Log Jam', emoji: '🪵', need: ['bear', 'pollinate'], neighbor: 'bear', contest: null, blurb: 'Canyon jams: shove log ramps, 3 Honey Logs, Tower Dew Pond.' },
+  { id: 'picnic_lawn', name: 'Picnic Lawn', emoji: '🧺', need: ['raccoon', 'robin'], neighbor: 'raccoon', contest: null, blurb: 'Picnic grid + lemonade stream; 2 Dew Ponds + Big Table bunch.' },
+  { id: 'cliff_orchard', name: 'Cliff Orchard', emoji: '🍎', need: ['bat', 'hummingbird'], neighbor: 'bat', contest: null, blurb: '4 ledge rings, Boulder Stair, waterfall Dew Pond, night Moonfruit.' },
+  { id: 'windy_rise', name: 'Windy Rise', emoji: '💨', need: ['butterfly', 'bumblebee'], neighbor: 'butterfly', contest: null, blurb: 'Terraces + canopy sky roads, night silk, Fork Tree Honey Log.' },
+  { id: 'festival_glade', name: 'Festival Glade', emoji: '🎉', need: ['crew_all_roles'], neighbor: 'all', contest: null, blurb: 'Full mix: Ribbon Creek, knoll Starheart, every earlier trick.' },
 ];
 
 const STATES = ['wilted', 'in_progress', 'blooming', 'wild'];
@@ -29,7 +30,8 @@ export function defaultValley() {
     v: 1,
     patches: Object.fromEntries(PATCHES.map(p => [p.id, blankPatch(p)])),
     crew: ['bee', 'robin', 'bear'],
-    unlocked: ['bee', 'robin', 'bear'],
+    // When UNLOCK_ALL_SPECIES, every animal starts unlocked (unlock-by-play later).
+    unlocked: UNLOCK_ALL_SPECIES ? SPECIES_ORDER.slice() : ['bee', 'robin', 'bear'],
     friendship: {}, // neighbor id → 0..3
     hireCount: {},
     festival: false,
@@ -51,6 +53,7 @@ export function loadValley() {
     }
     if (Array.isArray(d.crew) && d.crew.length === 3) base.crew = d.crew.slice(0, 3);
     if (Array.isArray(d.unlocked)) base.unlocked = [...new Set([...base.unlocked, ...d.unlocked.filter(id => SPECIES[id])])];
+    if (UNLOCK_ALL_SPECIES) base.unlocked = SPECIES_ORDER.slice();
     if (d.friendship && typeof d.friendship === 'object') base.friendship = d.friendship;
     if (d.hireCount && typeof d.hireCount === 'object') base.hireCount = d.hireCount;
     base.festival = !!d.festival;

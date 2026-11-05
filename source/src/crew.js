@@ -4,6 +4,8 @@ import { ARCH, priceFor } from './species.js';
 
 export const CREW_SIZE = 3;
 export const STARTER_CREW = ['bee', 'robin', 'bear'];
+/** Beta: every species selectable from the start. Set false later to restore unlock-by-play. */
+export const UNLOCK_ALL_SPECIES = true;
 
 /** Unique skill + role tags per species (json wins) */
 export const SKILLS = {
@@ -72,7 +74,7 @@ export function createCrew(ctx) {
     members: [...STARTER_CREW],
     active: 0, // index into members
     arcade: false, // solo lead-price mode on wild patches
-    unlocked: () => (ctx.valley?.data.unlocked || STARTER_CREW).slice(),
+    unlocked: () => UNLOCK_ALL_SPECIES ? SPECIES_ORDER.slice() : (ctx.valley?.data.unlocked || STARTER_CREW).slice(),
   };
   C.get = () => C.members.slice();
   C.activeId = () => C.members[C.active] || C.members[0];
@@ -81,9 +83,11 @@ export function createCrew(ctx) {
   C.set = (ids) => {
     const v = crewValid(ids);
     if (!v.ok) return v;
-    // must be unlocked
-    const un = new Set(C.unlocked());
-    for (const id of ids) if (!un.has(id)) return { ok: false, why: `${SPECIES[id]?.emoji || ''} not unlocked yet` };
+    // must be unlocked (skipped while UNLOCK_ALL_SPECIES — unlock-by-play later)
+    if (!UNLOCK_ALL_SPECIES) {
+      const un = new Set(C.unlocked());
+      for (const id of ids) if (!un.has(id)) return { ok: false, why: `${SPECIES[id]?.emoji || ''} not unlocked yet` };
+    }
     C.members = ids.slice(0, 3);
     C.active = 0;
     if (ctx.valley) { ctx.valley.data.crew = C.members.slice(); ctx.valley.save(); }

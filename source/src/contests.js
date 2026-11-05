@@ -91,7 +91,9 @@ export function createContests(ctx) {
     }
   };
 
+  // t145u: neighbor contests retired — no competing species / dance-offs / relays vs neighbors.
   S.maybeInvite = (patchDef, heal, relaxed) => {
+    return; // contests disabled
     if (!patchDef || !patchDef.contest || patchDef.contest === 'festival') return;
     if (S.active || S.inviteReady) return;
     const now = performance.now() / 1000;
@@ -265,7 +267,7 @@ export function createContests(ctx) {
     S.maybeInvite(patchDef, heal, relaxed);
   };
 
-  S.forceInvite = (patchDef) => { S.retryAt = 0; S.maybeInvite(patchDef, 1, false); };
+  S.forceInvite = (_patchDef) => { /* contests disabled */ };
 
   return S;
 }

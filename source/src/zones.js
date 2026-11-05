@@ -242,7 +242,7 @@ const MAPS = {
   },
 
   creek_bend: {
-    goal: 'Cross the creek, lift the Honey Log, relay 10 Petals',
+    goal: 'Cross the creek, lift the Honey Log, gather 10 Petals',
     key: 'multi', needNodes: 1, needBuilds: 1,
     terrain: creekTerrain,
     waterFromTerrain: true,
@@ -281,7 +281,7 @@ const MAPS = {
   },
 
   moon_meadow: {
-    goal: 'Collect 12 Dewdrops, lift the Dew Pond, win the contest',
+    goal: 'Collect 12 Dewdrops, lift the Dew Pond',
     night: true, nightCycle: 180, dewWindow: 8,
     key: 'pick', pick: 12, pickTier: 'dew',
     terrain: moonTerrain,
@@ -316,7 +316,7 @@ const MAPS = {
   },
 
   log_jam: {
-    goal: 'Clear 3 jams, finish 3 team picks, win the dance-off',
+    goal: 'Clear 3 jams, finish 3 team picks',
     key: 'multi', needNodes: 3, needBuilds: 0,
     terrain: logJamTerrain,
     waterFromTerrain: false,
@@ -348,7 +348,7 @@ const MAPS = {
   },
 
   picnic_lawn: {
-    goal: 'Finish 2 Dew Ponds, the table bunch, and the contest',
+    goal: 'Finish 2 Dew Ponds and the table bunch',
     key: 'multi', needNodes: 3, needBuilds: 0,
     terrain: picnicTerrain,
     waterFromTerrain: true,
@@ -415,7 +415,7 @@ const MAPS = {
   },
 
   windy_rise: {
-    goal: 'Streamer chain, Fork Log lift, dance-off',
+    goal: 'Streamer chain and Fork Log lift',
     nightCycle: 180, dewWindow: 8,
     key: 'multi', needNodes: 2, needBuilds: 0,
     terrain: windyTerrain,

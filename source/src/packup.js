@@ -27,11 +27,7 @@ export function createPackUp(ctx) {
     const sess = ctx.valleySession?.();
     if (!sess) return false;
     if ((ctx.heal?.() || 0) < (ctx.valley?.healThreshold || 0.85)) return false;
-    const def = ctx.valley?.def?.(sess.patchId);
-    if (def?.contest && def.contest !== 'festival') {
-      const st = ctx.valley.get(sess.patchId);
-      if (!st?.contestDone) return false;
-    }
+    // t145u: neighbor contests removed — pack-up only needs heal threshold.
     return true;
   };
 
@@ -40,7 +36,6 @@ export function createPackUp(ctx) {
       const sess = ctx.valleySession?.();
       const def = sess && ctx.valley?.def?.(sess.patchId);
       if ((ctx.heal?.() || 0) < (ctx.valley?.healThreshold || 0.85)) ctx.toast?.('Heal the patch to 85% first!', 2200);
-      else if (def?.contest && def.contest !== 'festival' && !ctx.valley.get(sess.patchId)?.contestDone) ctx.toast?.('Win the neighbor contest first!', 2400);
       else ctx.toast?.('Not ready to pack up yet', 2000);
       return false;
     }

@@ -986,8 +986,8 @@ function endValleyPatchWild() {
   playing = false; round.running = false; round.over = true;
   document.body.classList.remove('inRound', 'packReady');
   if (packup) packup.cancel();
-  // unlock friendship auto if no neighbor contest required
-  if (def && (!def.contest || def.contest === 'festival') && def.neighbor && def.neighbor !== 'all') {
+  // t145u: contests removed — friendship unlocks when the patch goes wild
+  if (def && def.neighbor && def.neighbor !== 'all') {
     if (valley.friendship(def.neighbor) < 1) valley.addFriendship(def.neighbor, 1);
   }
   if (valley.checkFestival() && !valley.data.festivalSeen) {
@@ -1365,13 +1365,11 @@ function worldTick(dt, st) {
     if (valley) valley.setHeal(valleySession.patchId, healAmt);
     updateHealUi();
     const def = valley?.def(valleySession.patchId);
-    const needContest = def && def.contest && def.contest !== 'festival';
-    const contestOk = !needContest || !!(valley.get(valleySession.patchId)?.contestDone);
-    if (healAmt >= HEAL_PACKUP && contestOk) {
+    if (healAmt >= HEAL_PACKUP) {
       onb?.note?.('healReady');
       onb?.note?.('packup');
     }
-    if (contests) contests.update(dt, { playing, paused, heal: healAmt, patchDef: def, relaxed: round.mode === 'relaxed' });
+    // contests disabled (t145u) — skip invite/update
     if (packup) packup.update(dt, P[cur]);
   }
 
@@ -1909,7 +1907,6 @@ function wheelOpts() {
     int: { el: 'bInt', enabled: () => playing && !paused, tap: () => interactTap(), why: whyToast, options: () => {
       const p = P[cur], opts = [];
       const home = nearHome();
-      const ctxR = (rivals && rivals.context) ? rivals.context(p) : {};
       // Home context
       if (home) {
         opts.push({ icon: '🛠️', ik: 'tool', label: 'Workbench', on: () => openShop() });
@@ -1917,12 +1914,9 @@ function wheelOpts() {
       } else {
         opts.push({ icon: '🛠️', ik: 'tool', label: 'Workbench', dis: true, why: 'Head home for the workbench', on: () => {} });
       }
-      // Neighbor contests supersede Peekaboo / Snack Swipe / Flower Flag / rival Tidy Up on this branch
+      // Rival colonies + neighbor contests removed (t145u). Pack-up stays.
       if (packup && packup.active) opts.push({ icon: '📦', ik: 'packup', label: 'Pack building', on: () => packup.tap(p) });
       else if (packup && packup.canStart()) opts.push({ icon: '📦', ik: 'packup', label: 'Pack Up', on: () => packup.begin() });
-      if (contests && !contests.active && valleySession) opts.push({ icon: '🏅', ik: 'contest', label: 'Ask contest', on: () => {
-        const def = valley?.def(valleySession.patchId); contests.forceInvite(def);
-      } });
       // Emotes (always on Interact wheel; locked ones clearly disabled)
       for (const e of EMOTES) {
         const locked = !(looks && looks.hasEmote && looks.hasEmote(e.id));
