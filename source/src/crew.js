@@ -51,25 +51,20 @@ export function crewValid(crew) {
 }
 
 /**
- * priceForCrew(crew, total) — split catalog total across union of mixes,
- * weighted by w_i = (1/econ_i) / Σ(1/econ). Floor 1 per appearing resource.
+ * priceForCrew(crew, total) — Petals/Dewdrops/Starseeds only.
+ * Old n/f/w/h mix pricing is retired; use average crew econ with the same
+ * split as priceFor so the UI cost matches what pay() deducts.
  */
 export function priceForCrew(crew, total) {
   const ids = (crew || []).filter(id => ARCH[id]);
   if (!ids.length) return priceFor('bee', total);
   if (ids.length === 1) return priceFor(ids[0], total);
-  const inv = ids.map(id => 1 / (ARCH[id].econ || 1));
-  const sum = inv.reduce((a, b) => a + b, 0) || 1;
-  const o = {};
-  for (let i = 0; i < ids.length; i++) {
-    const a = ARCH[ids[i]], w = inv[i] / sum;
-    for (const k in a.mix) {
-      o[k] = (o[k] || 0) + total * w * a.mix[k];
-    }
-  }
-  const out = {};
-  for (const k in o) out[k] = Math.max(1, Math.round(o[k]));
-  return out;
+  const econ = ids.reduce((a, id) => a + (ARCH[id].econ || 1), 0) / ids.length;
+  const v = (total || 0) * econ, o = {};
+  if (!total) return o;
+  if (v <= 20) o.p = Math.max(1, Math.round(v));
+  else { o.p = Math.round(v * 0.75); o.d = Math.max(1, Math.round(v * 0.08)); }
+  return o;
 }
 
 export function createCrew(ctx) {

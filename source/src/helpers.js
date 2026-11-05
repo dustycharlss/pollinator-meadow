@@ -11,24 +11,24 @@ import { ARCH } from './species.js';
 
 /** who you can hire, their specialty and starting price */
 export const HIRE = {
-  bee: { base: { n: 8, f: 4 }, note: 'Quick nectar runs' },
-  butterfly: { base: { n: 8, w: 3 }, note: 'Nectar, drifts far' },
-  hummingbird: { base: { n: 10, w: 4 }, note: 'Fast nectar sipper' },
-  robin: { base: { f: 8, n: 4 }, note: 'Forage: worms & berries' },
-  raccoon: { base: { f: 8, w: 4 }, note: 'Forage, carries lots' },
-  opossum: { base: { f: 6, n: 6 }, note: 'Wood: sticks & twigs' },
-  bear: { base: { n: 10, f: 8, w: 6 }, note: 'Honey, slow but strong' }
+  bee: { base: { p: 12 }, note: 'Quick nectar runs' },
+  butterfly: { base: { p: 11 }, note: 'Nectar, drifts far' },
+  hummingbird: { base: { p: 14 }, note: 'Fast nectar sipper' },
+  robin: { base: { p: 12 }, note: 'Forage: worms & berries' },
+  raccoon: { base: { p: 12 }, note: 'Forage, carries lots' },
+  opossum: { base: { p: 12 }, note: 'Wood: sticks & twigs' },
+  bear: { base: { p: 24 }, note: 'Honey, slow but strong' }
 };
 export const HIRE_ORDER = Object.keys(HIRE);
 /** Visitors (Fern temp-helpers spec): building type -> visiting species, extra bases for non-hireables */
 export const VISIT = { garden: 'butterfly', outpost: 'hummingbird', apiary: 'bee', wormfarm: 'robin', woodpile: 'opossum', honeycave: 'bear', roost: 'bat', stashden: 'raccoon' };
-const VBASE = { bumblebee: { n: 9, f: 4 }, moth: { n: 8, f: 4 }, bat: { n: 9, f: 5 } };
+const VBASE = { bumblebee: { p: 13 }, moth: { p: 12 }, bat: { p: 14 } };
 const AMBER = 0xffb347;
 export const HIRE_MAX = 10;
 const TRAIN_TOTAL = lv => 10 + lv * 8;
 const SPD = {}, CAP = {}; for (const k in ARCH) { SPD[k] = ARCH[k].hSpd; CAP[k] = ARCH[k].hCap; }
 export { SPD as HSPD, CAP as HCAP };
-const JOB_ICON = { gather: null, move: '📍', idle: '💤', possessed: '🎮' };
+const JOB_ICON = { gather: null, move: '📍', idle: '💤', follow: '🧲', possessed: '🎮' };
 
 function textSprite() {
   const c = document.createElement('canvas'); c.width = 256; c.height = 96; const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
@@ -71,7 +71,7 @@ export function createHelpers(scene, ctx) {
     const ring = new THREE.Mesh(ringGeo, ringMat); ring.scale.setScalar(S.size * 0.9 + 0.8); ring.visible = false; ring.renderOrder = 8; scene.add(ring);
     const icon = new THREE.Sprite(iconTex('💤')); icon.scale.set(2.2, 1.1, 1); icon.renderOrder = 9; icon.visible = false; scene.add(icon);
     const carryS = new THREE.Sprite(iconTex(RES_ICON[RES_OF[sp]])); carryS.scale.set(1.4, 0.7, 1); carryS.renderOrder = 9; carryS.visible = false; scene.add(carryS);
-    const h = { uid: rec?.uid || uid++, sp, res: RES_OF[sp], obj, ring, icon, carryS, x, z, y: heightAt(x, z), yaw: 0, carry: rec?.carry || 0, cap: CAP[sp] + 2 * H.lvl, st: 'seek', tgt: -1, tx: x, tz: z, timer: 0, stuck: 0, lx: x, lz: z, speed: 0, sel: false, possessed: false, job: rec?.job || { kind: 'gather', cx: null, cz: null }, depot: rec?.depot || null, phase: Math.random() * 6 };
+    const h = { uid: rec?.uid || uid++, sp, res: RES_OF[sp], obj, ring, icon, carryS, x, z, y: heightAt(x, z), yaw: 0, carry: rec?.carry || 0, cap: CAP[sp] + 2 * H.lvl, st: 'seek', tgt: -1, tx: x, tz: z, timer: 0, stuck: 0, lx: x, lz: z, speed: 0, sel: false, possessed: false, job: rec?.job || { kind: 'follow', cx: null, cz: null }, depot: rec?.depot || null, phase: Math.random() * 6 };
     uid = Math.max(uid, h.uid + 1); list.push(h); return h;
   }
   H.hire = async (sp, at) => {
@@ -82,7 +82,7 @@ export function createHelpers(scene, ctx) {
     if (list.length + 1 > H.max() + 2) { const old = H.visitors().sort((a, b) => a.visitor.born - b.visitor.born)[0]; if (old) farewell(old); }
     const h = await spawn(sp, ax, az); H.hiredTotal++; round.stats.helpers = (round.stats.helpers || 0) + 1;
     fx.burst(ax, heightAt(ax, az) + 2, az, 24, 4); ctx.audio.sample ? ctx.audio.sample('ui2/helper-arrive-whistle', 0.4) : ctx.audio.chime?.(); setTimeout(() => ctx.voice?.(sp, 0.3, 3), 450);
-    toast(`${SPECIES[sp].emoji} A friendly ${SPECIES[sp].name} joins your crew! It will gather ${RES_ICON[h.res]} for you`, 3000); return h;
+    toast(`${SPECIES[sp].emoji} A friendly ${SPECIES[sp].name} joins your crew! It will follow you — use 📣 Command to send it gathering`, 3000); return h;
   };
 
   // ---- visitors: temporary helpers invited from a building
@@ -90,7 +90,7 @@ export function createHelpers(scene, ctx) {
   const RT = () => round.total || 600, kT = () => Math.sqrt(RT() / 600);
   const vLv = p => p.lv || 1;
   H.visitorOf = p => { if (!p) return null; const C = CATALOG[p.type]; const sp = C && C.sp; if (!sp || !SPECIES[sp]) return null; if (C.tier === 1 && vLv(p) < 2) return null; return sp; };
-  H.visitCost = p => { const sp = H.visitorOf(p); if (!sp) return null; const b = HIRE[sp]?.base || VBASE[sp] || { n: 8, f: 4 }; let tot = 0; for (const k in b) tot += b[k];
+  H.visitCost = p => { const sp = H.visitorOf(p); if (!sp) return null; const b = HIRE[sp]?.base || VBASE[sp] || { p: 12 }; let tot = 0; for (const k in b) tot += b[k];
     return ctx.price(Math.max(4, Math.ceil(tot * hireMult(H.perm()) * 0.35 * (1 + 0.25 * (vLv(p) - 1))))); };
   H.visitDur = p => { const lv = vLv(p); const base = round.mode === 'relaxed' || round.free ? 75 : Math.min(75, Math.max(40, 5 * Math.round(60 * kT() / 5))); return (base + 15 * (lv - 1)) * (adm.visitorTime || 1); };
   H.visitWhy = p => {
@@ -175,7 +175,28 @@ export function createHelpers(scene, ctx) {
       const S = SPECIES[h.sp], spd = H.speedOf(h.sp) * (h.visitor?.grace > 0 ? 1.25 : 1); h.cap = capOf(h);
       let moving = false;
       if (running) {
-        if (h.job.kind === 'move' || h.job.kind === 'idle') {
+        if (h.job.kind === 'follow') {
+          const L = ctx.player ? ctx.player() : null;
+          if (L) {
+            const ang = (h.uid * 2.1) % 6.2832, back = 3.4 + (h.uid % 3) * 0.9;
+            const tx = L.x - Math.sin(L.yaw || 0) * back + Math.cos(L.yaw || 0) * Math.cos(ang) * 2.2;
+            const tz = L.z - Math.cos(L.yaw || 0) * back - Math.sin(L.yaw || 0) * Math.cos(ang) * 2.2;
+            const d = Math.hypot(tx - h.x, tz - h.z), dl = Math.hypot(L.x - h.x, L.z - h.z);
+            const needY = (L.y || 0) - h.y;
+            const mv = SPECIES[h.sp].mv || {}, jump = mv.jump || 10, grav = mv.grav || 28;
+            const apex = (jump * jump) / (2 * grav) + (mv.jumps > 1 ? ((mv.jump2 || jump * 0.9) ** 2) / (2 * grav) : 0);
+            if (dl > 40) { h.x = tx; h.z = tz; h.y = Math.max(heightAt(tx, tz), WATER_Y); }
+            else if (d > 1.4) { h.tx = tx; h.tz = tz; moving = true; }
+            // flyers match height; walkers stay on the ground and wait at the bottom of tall ledges (no jump spam)
+            if (!S.ground) {
+              const gy = Math.max(heightAt(h.x, h.z), WATER_Y), ty = Math.max(gy + 2.2, (L.y || gy) + 0.4);
+              h.y += (ty - h.y) * Math.min(1, dt * 3);
+            } else if (needY > apex + 0.6 && d < 3.5) {
+              // close enough under an unreachable ledge — idle here
+              moving = false; h.speed = 0;
+            }
+          }
+        } else if (h.job.kind === 'move' || h.job.kind === 'idle') {
           if (h.job.kind === 'move') { const d = Math.hypot(h.job.cx - h.x, h.job.cz - h.z); if (d > 1.2) { h.tx = h.job.cx; h.tz = h.job.cz; moving = true; } else h.job = { kind: 'idle', cx: h.job.cx, cz: h.job.cz }; }
         } else if (h.st === 'seek') {
           if (h.carry >= h.cap) h.st = 'home';
@@ -213,7 +234,8 @@ export function createHelpers(scene, ctx) {
       } else h.speed = 0;
       const g = Math.max(heightAt(h.x, h.z), WATER_Y);
       if (S.ground) { const fl = world.phys.floor(h.x, h.z, h.y + 1.5, 2); h.y += ((fl.y ?? g) - h.y) * Math.min(1, dt * 12); }
-      else { h.phase += dt; const eat = h.st === 'eat' && h.tgt >= 0; const ty = eat ? B.y[h.tgt] + 0.3 : g + 2.6 + Math.sin(h.phase * 2.1) * 0.5; h.y += (ty - h.y) * Math.min(1, dt * 3); }
+      else if (h.job.kind !== 'follow') { h.phase += dt; const eat = h.st === 'eat' && h.tgt >= 0; const ty = eat ? B.y[h.tgt] + 0.3 : g + 2.6 + Math.sin(h.phase * 2.1) * 0.5; h.y += (ty - h.y) * Math.min(1, dt * 3); }
+      else h.phase += dt;
       place(h, dt, t);
     }
     for (const s of pops) if (s.visible) { s.userData.t += dt; s.position.y += dt * 1.6; s.material.opacity = Math.max(0, 1 - s.userData.t / 1.6); if (s.userData.t > 1.6) s.visible = false; }
@@ -239,12 +261,14 @@ export function createHelpers(scene, ctx) {
   }
   // ---- commands
   H.command = (h, kind, x, z) => {
-    if (kind === 'move') h.job = { kind: 'move', cx: x, cz: z };
+    if (kind === 'follow') { h.job = { kind: 'follow', cx: null, cz: null }; h.st = 'seek'; h.timer = 0; if (h.tgt >= 0) { claimed.delete(h.tgt); h.tgt = -1; } }
+    else if (kind === 'move') h.job = { kind: 'move', cx: x, cz: z };
     else if (kind === 'gather') { h.job = { kind: 'gather', cx: x, cz: z }; h.st = h.carry >= h.cap ? 'home' : 'seek'; h.timer = 0; if (h.tgt >= 0) claimed.delete(h.tgt); }
-    else if (kind === 'depot') { h.depot = x; if (h.job.kind !== 'gather') h.job = { kind: 'gather', cx: null, cz: null }; h.st = h.carry > 0 ? 'home' : 'seek'; }
+    else if (kind === 'depot') { h.depot = x; if (h.job.kind === 'follow' || h.job.kind === 'move' || h.job.kind === 'idle') h.job = { kind: 'gather', cx: null, cz: null }; h.st = h.carry > 0 ? 'home' : 'seek'; }
     else if (kind === 'auto') { h.job = { kind: 'gather', cx: null, cz: null }; h.depot = null; h.st = 'seek'; }
+    else if (kind === 'stay') { h.job = { kind: 'idle', cx: h.x, cz: h.z }; if (h.tgt >= 0) { claimed.delete(h.tgt); h.tgt = -1; } }
   };
-  H.jobText = h => h.possessed ? 'You are playing it' : h.job.kind === 'move' ? 'Walking to a spot' : h.job.kind === 'idle' ? 'Waiting' : h.st === 'home' ? `Taking ${RES_ICON[h.res]} home` : h.st === 'eat' ? `Gathering ${RES_ICON[h.res]}` : `Looking for ${RES_ICON[h.res]}`;
+  H.jobText = h => h.possessed ? 'You are playing it' : h.job.kind === 'follow' ? 'Following you' : h.job.kind === 'move' ? 'Walking to a spot' : h.job.kind === 'idle' ? 'Waiting' : h.st === 'home' ? `Taking ${RES_ICON[h.res]} home` : h.st === 'eat' ? `Gathering ${RES_ICON[h.res]}` : `Looking for ${RES_ICON[h.res]}`;
   H.label = h => `${SPECIES[h.sp].emoji} ${SPECIES[h.sp].name} ${h.visitor ? 'visitor' : 'helper'}`;
   H.timeLeft = h => h.visitor ? Math.max(0, Math.ceil(h.visitor.left)) : null;
   H.at = (x, z) => list.filter(h => !h.possessed && Math.hypot(h.x - x, h.z - z) < 3);

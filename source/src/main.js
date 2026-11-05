@@ -576,8 +576,15 @@ function stepParked(id, dt, t) {
     else if (d > 1.2 && (dl > 3.4 || d > 3)) { const sp2 = Math.min(mv.run * (d > 10 ? 1.25 : 0.85), d * 3); const v = Math.min(d, sp2 * dt); p.x += dx / d * v; p.z += dz / d * v; p.yaw = Math.atan2(dx, dz); p.speed = sp2; }
     else { p.yaw += (Math.atan2(Math.sin(L.yaw - p.yaw), Math.cos(L.yaw - p.yaw))) * Math.min(1, dt * 2); }
     if (mv.fly) { const gy = heightAt(p.x, p.z), ty = Math.max(gy, L.y + (L.grounded ? 0 : 0.6)); if (ty > gy + 0.3 || !p.grounded) { p.y += (ty - p.y) * Math.min(1, dt * 3); p.vy = 0; p.grounded = false; } }
-    else if (L.y > p.y + 2.5 && dl < 6) { p.vy = 9; p.grounded = false; } // hop up after the leader
-    else if (p.grounded && inWater(p.x + Math.sin(p.yaw) * 1.2, p.z + Math.cos(p.yaw) * 1.2, 0)) { p.vy = 9; p.grounded = false; } // walkers hop streams too
+    else {
+      // Walkers: at most one normal jump. If the player is above what a normal jump can reach, wait at the bottom (no infinite hop).
+      const jump = mv.jump || 10, grav = mv.grav || 28;
+      const apex = (jump * jump) / (2 * grav) + (mv.jumps > 1 ? ((mv.jump2 || jump * 0.9) ** 2) / (2 * grav) : 0);
+      const need = L.y - p.y;
+      if (p.grounded && need > 0.7 && need <= apex + 0.5 && dl < 8) { p.vy = jump; p.grounded = false; }
+      else if (p.grounded && need <= apex + 0.5 && inWater(p.x + Math.sin(p.yaw) * 1.2, p.z + Math.cos(p.yaw) * 1.2, 0)) { p.vy = jump; p.grounded = false; }
+      // else: cliff / water too tall — wait at the bottom
+    }
   }
   if (p.goto && playing && !paused) { const dx = p.goto.x - p.x, dz = p.goto.z - p.z, d = Math.hypot(dx, dz); if (d < 1) p.goto = null; else { const v = Math.min(d, mv.run * 0.7 * dt); p.x += dx / d * v; p.z += dz / d * v; p.yaw = Math.atan2(dx, dz); p.speed = mv.run * 0.7; } }
   const wasG = p.grounded, oldY = p.y;
@@ -1304,7 +1311,7 @@ let whyKey = '';
 function updateBuildUi(dt, t) {
   build.aim = bmF.on ? { x: bmF.x, z: bmF.z } : null;
   build.updateGhost(P[cur], cam.yaw, t);
-  const ok = build.valid, txt = trayMode === 'hire' ? `🐾 Tap a friend to hire (${helpers.perm()}/${helpers.max()}${helpers.visitors().length ? ' + ⏳' + helpers.visitors().length : ''}). They gather and deliver on their own.` : ok ? (build.sel === 'home' ? '✓ Tap Home icon (or Place) to upgrade' : '✓ Tap the icon again (or Place) to build here') : '✖ ' + (build.why || '…'); const w = $('bWhy');
+  const ok = build.valid, txt = trayMode === 'hire' ? `🐾 Tap a friend to hire (${helpers.perm()}/${helpers.max()}${helpers.visitors().length ? ' + ⏳' + helpers.visitors().length : ''}). New helpers follow you — 📣 Command to gather.` : ok ? (build.sel === 'home' ? '✓ Tap Home icon (or Place) to upgrade' : '✓ Tap the icon again (or Place) to build here') : '✖ ' + (build.why || '…'); const w = $('bWhy');
   if (whyKey !== txt) { whyKey = txt; w.textContent = txt; } w.classList.toggle('bad', !ok && trayMode !== 'hire'); $('bbPlace').classList.toggle('no', !ok);
   state.bT = (state.bT || 0) - dt; if (state.bT <= 0) { state.bT = 0.25; renderBTray(); updateInfoCard(); }
 }
@@ -1558,7 +1565,7 @@ async function boot() {
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
   zones = createZones(scene, { phys: world.phys, heightAt, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
-  helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g) });
+  helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
     deposit: () => nestCheck(P[cur], SPECIES[cur], state.sT || 0, true), gatherAt: r => gather(P[cur], SPECIES[cur], state.sT || 0, r, true, true),
@@ -1776,9 +1783,9 @@ function helperCmd(kind) {
   if (tiers) tiers.ordered && tiers.ordered();
   const hl = helpers ? helpers.list.filter(h => !h.possessed) : []; if (!hl.length) { toast('🐾 No helpers yet · hire some from 📣 Command or the 🐾 Animals menu', 2600); return; }
   const p = P[cur], n = nests[cur];
-  for (const h of hl) { if (kind === 'follow') helpers.command(h, 'move', p.x, p.z); else if (kind === 'gather') helpers.command(h, 'gather', p.x, p.z); else if (kind === 'home') helpers.command(h, 'depot', { x: n.x, z: n.z, r: 7.5, name: SPECIES[cur].name + ' home' }); else helpers.command(h, 'auto'); }
+  for (const h of hl) { if (kind === 'follow') helpers.command(h, 'follow'); else if (kind === 'gather') helpers.command(h, 'gather', p.x, p.z); else if (kind === 'home') helpers.command(h, 'depot', { x: n.x, z: n.z, r: 7.5, name: SPECIES[cur].name + ' home' }); else if (kind === 'stay') helpers.command(h, 'stay'); else helpers.command(h, 'auto'); }
   ping(p.x, p.z, kind === 'gather' ? 0x7dffb0 : kind === 'home' ? 0xffd27a : 0xffffff); audio.blip(3);
-  toast({ follow: '🧲 Helpers: come to me', gather: '🌼 Helpers: gather around here', home: '🏠 Helpers: deliver home', auto: '🔄 Helpers: work on their own' }[kind], 1800);
+  toast({ follow: '🧲 Helpers: follow you', gather: '🌼 Helpers: gather around here', home: '🏠 Helpers: deliver home', stay: '💤 Helpers: stay here', auto: '🔄 Helpers: work on their own' }[kind], 1800);
   if (hubTab === 'animals' && $('pause').classList.contains('on')) renderAnimals();
 }
 function renderAnimals() {
@@ -1795,7 +1802,7 @@ $('tpAnimals').addEventListener('click', e => {
   if (b.dataset.c) return helperCmd(b.dataset.c);
   if (b.dataset.v) { const p = build.placed.find(q => String(q.id) === b.dataset.v); if (p) helpers.invite(p).then(() => renderAnimals()); return; }
   const q = helpers.list[+b.dataset.i]; if (!q) return; const p = P[cur], n = nests[cur];
-  if (b.dataset.k === 'follow') helpers.command(q, 'move', p.x, p.z); else if (b.dataset.k === 'home') helpers.command(q, 'depot', { x: n.x, z: n.z, r: 7.5, name: 'home' }); else if (b.dataset.k === 'poss') { closeOv('pause'); possessHelper(q); return; }
+  if (b.dataset.k === 'follow') helpers.command(q, 'follow'); else if (b.dataset.k === 'home') helpers.command(q, 'depot', { x: n.x, z: n.z, r: 7.5, name: 'home' }); else if (b.dataset.k === 'poss') { closeOv('pause'); possessHelper(q); return; }
   renderAnimals();
 });
 function renderInv() {
@@ -1835,7 +1842,7 @@ function wheelOpts() {
       { icon: '💪', ik: 'assign', label: 'Help lift', on: () => tiers && tiers.sendHelpers() },
       ...(tiers && tiers.swarmReady && tiers.swarmReady() ? [{ icon: '👑', ik: 'gather-here', label: 'Swarm Call', on: () => tiers.swarm() }] : []),
       { icon: '🎟️', ik: 'assign', label: 'Invite visitor', on: () => inviteNear() },
-      { icon: '🧲', ik: 'follow', label: 'Come to me', on: () => helperCmd('follow') },
+      { icon: '🧲', ik: 'follow', label: 'Follow me', on: () => helperCmd('follow') },
       { icon: '🌼', ik: 'gather-here', label: 'Gather here', on: () => helperCmd('gather') },
       { icon: '🏠', ik: 'return-home', label: 'Home drop', on: () => helperCmd('home') },
       { icon: '🐾', ik: 'assign', label: 'Hire', on: () => { setBuild(true); if (build.active) setTrayMode('hire'); } },
