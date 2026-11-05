@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { SPECIES, SPECIES_ORDER, STAGE_AT, WORLD_R, ZONES, WATER_Y } from './data.js';
+import { SPECIES, SPECIES_ORDER, STAGE_AT, WORLD_R, ZONES, WATER_Y, inWater } from './data.js';
 import { ABILITIES, abilityFx } from './abilities.js';
 import { buildMeadow } from './meadow.js';
 import { buildWorld, heightAt, timeU, POLS, polOf } from './world.js';
@@ -522,10 +522,13 @@ function stepPlayer(dt, t) {
     const dx = tx - p.vx, dz = tz - p.vz, l = Math.hypot(dx, dz), st = acc * dt; if (l <= st || l < 1e-6) { p.vx = tx; p.vz = tz; } else { p.vx += dx / l * st; p.vz += dz / l * st; }
   }
   p.speed = Math.hypot(p.vx, p.vz);
+  const wOx = p.x, wOz = p.z;
   p.x += p.vx * dt; p.z += p.vz * dt; if (onb && p.speed > 1) onb.flags.moved = 1;
   const rr = Math.hypot(p.x, p.z); if (rr > WORLD_LIM) { p.x *= WORLD_LIM / rr; p.z *= WORLD_LIM / rr; if (t - msgT > 4) { msgT = t; toast('🌲 The meadow edge — turn back, there is lots to find!', 2000); } }
   if (playing) coop.tryPush(p, sp, dt, t);
   phys.resolve(p, col.r, col.h, 0.55);
+  // water is a solid edge for walkers on the ground: bump back (jump or fly over it instead)
+  if (!fly && p.grounded && !inWater(wOx, wOz, col.r * 0.5) && inWater(p.x, p.z, col.r * 0.5)) { p.x = wOx; p.z = wOz; p.vx *= -0.35; p.vz *= -0.35; if (t - (p.wBumpT || 0) > 1.2) { p.wBumpT = t; audio.blip(1); fx.burst(p.x, p.y + 0.3, p.z, 6, 2); if (t - msgT > 4) { msgT = t; toast('💧 Water! Jump over it', 1500); } } }
   if (!(fo && fo.lockYaw) && mag > 0.1 && p.speed > 0.6) { const want = Math.atan2(p.vx, p.vz); let d = want - p.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); p.yaw += d * (1 - Math.exp(-14 * dt)); }
   // --- vertical
   const wasG = p.grounded, oldY = p.y, vyBefore = p.vy;
@@ -574,6 +577,7 @@ function stepParked(id, dt, t) {
     else { p.yaw += (Math.atan2(Math.sin(L.yaw - p.yaw), Math.cos(L.yaw - p.yaw))) * Math.min(1, dt * 2); }
     if (mv.fly) { const gy = heightAt(p.x, p.z), ty = Math.max(gy, L.y + (L.grounded ? 0 : 0.6)); if (ty > gy + 0.3 || !p.grounded) { p.y += (ty - p.y) * Math.min(1, dt * 3); p.vy = 0; p.grounded = false; } }
     else if (L.y > p.y + 2.5 && dl < 6) { p.vy = 9; p.grounded = false; } // hop up after the leader
+    else if (p.grounded && inWater(p.x + Math.sin(p.yaw) * 1.2, p.z + Math.cos(p.yaw) * 1.2, 0)) { p.vy = 9; p.grounded = false; } // walkers hop streams too
   }
   if (p.goto && playing && !paused) { const dx = p.goto.x - p.x, dz = p.goto.z - p.z, d = Math.hypot(dx, dz); if (d < 1) p.goto = null; else { const v = Math.min(d, mv.run * 0.7 * dt); p.x += dx / d * v; p.z += dz / d * v; p.yaw = Math.atan2(dx, dz); p.speed = mv.run * 0.7; } }
   const wasG = p.grounded, oldY = p.y;
