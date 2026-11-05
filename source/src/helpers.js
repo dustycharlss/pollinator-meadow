@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { SPECIES, WORLD_R, POND, WATER_Y } from './data.js';
 import { POLS, polOf } from './world.js';
-import { makeGroundRider, animateGround } from './animals.js';
+import { makeGroundRider, animateGround, animateBirdWings, isBird } from './animals.js';
 import { makeFlierModel } from './creatures.js';
 import { RES_OF, RES_ICON, CATALOG } from './build.js';
 import { badge } from './coop.js';
@@ -248,8 +248,11 @@ export function createHelpers(scene, ctx) {
     const S = SPECIES[h.sp], o = h.obj; o.visible = !h.possessed; o.position.set(h.x, h.y, h.z); o.rotation.y = h.yaw;
     if (S.ground) animateGround(o, dt, t, Math.min(1, h.speed / 7), false, false, h.st === 'eat' ? 0.6 : 0);
     else {
-      o.rotation.z = Math.sin(h.phase * 3) * 0.08;
-      if (o.userData.mixer && o.userData.flyAct) {
+      o.rotation.z = isBird(h.sp) ? 0 : Math.sin(h.phase * 3) * 0.08;
+      if (o.userData.birdWings) {
+        const flying = !S.ground && h.job.kind !== 'idle';
+        animateBirdWings(o, t, { air: true, flapping: flying && h.st !== 'eat', grounded: false });
+      } else if (o.userData.mixer && o.userData.flyAct) {
         o.userData.flyAct.timeScale = h.st === 'eat' ? 1.0 : (h.speed > 0.5 ? 1.25 : 0.9);
         o.userData.mixer.update(dt);
       } else if (o.userData.flapMats) {

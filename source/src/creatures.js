@@ -3,7 +3,8 @@ import { SPECIES, AMBIENT, WORLD_R, POND } from './data.js';
 import { loadGLB, bakeParts, lambertFrom, makeFlapMaterial, updateFlaps } from './models.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { heightAt } from './world.js';
-import { makeGroundRider } from './animals.js';
+import { makeGroundRider, BIRD_IDS, attachBirdWings } from './animals.js';
+export { BIRD_IDS, attachBirdWings, animateBirdWings, isBird } from './animals.js';
 export { updateFlaps };
 
 const PI = Math.PI;
@@ -69,13 +70,16 @@ export async function buildRiders(scene) {
         root.userData.mixer = sk.mixer; root.userData.flyAct = sk.flyAct;
       } else {
         const { parts, box } = bakeParts(gltf, { size: sp.size, mode: 'max', rot, ground: false });
-        const flap = sp.flap || BAT_FLAP;
+        const bird = BIRD_IDS.has(id);
+        const flap = bird ? null : (sp.flap || BAT_FLAP);
         for (const p of parts) {
           const span = Math.max(box.max.x, -box.min.x) * 2;
-          const m = flapMat(p.material, flap, span, TINT[sp.model]);
-          const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh); (root.userData.flapMats ||= []).push(m);
+          const m = flap ? flapMat(p.material, flap, span, TINT[sp.model]) : lambertFrom(p.material);
+          const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh);
+          if (flap) (root.userData.flapMats ||= []).push(m);
         }
         body.userData.box = box; root.userData.box = box;
+        if (bird) attachBirdWings(root, body, sp);
       }
     }
     // tiny rider
@@ -214,9 +218,16 @@ export async function makeFlierModel(id) {
       root.userData.mixer = sk.mixer; root.userData.flyAct = sk.flyAct;
     } else {
       const { parts, box } = bakeParts(gltf, { size: sp.size, mode: 'max', rot: MODEL_ROT[sp.model] || [0, 0, 0], ground: false });
-      const flap = sp.flap || BAT_FLAP;
-      for (const p of parts) { const span = Math.max(box.max.x, -box.min.x) * 2; const m = flapMat(p.material, flap, span, TINT[sp.model]); const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh); (root.userData.flapMats ||= []).push(m); }
+      const bird = BIRD_IDS.has(id);
+      const flap = bird ? null : (sp.flap || BAT_FLAP);
+      for (const p of parts) {
+        const span = Math.max(box.max.x, -box.min.x) * 2;
+        const m = flap ? flapMat(p.material, flap, span, TINT[sp.model]) : lambertFrom(p.material);
+        const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh);
+        if (flap) (root.userData.flapMats ||= []).push(m);
+      }
       body.position.y = -box.min.y; root.userData.box = box;
+      if (bird) attachBirdWings(root, body, sp);
     }
   }
   root.userData.body = body; return root;

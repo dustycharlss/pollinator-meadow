@@ -4,7 +4,7 @@ import { ABILITIES, abilityFx } from './abilities.js';
 import { buildMeadow } from './meadow.js';
 import { buildWorld, heightAt, timeU, POLS, polOf } from './world.js';
 import { buildRiders, buildAmbient, updateFlaps } from './creatures.js';
-import { buildGroundAmbient, animateGround } from './animals.js';
+import { buildGroundAmbient, animateGround, animateBirdWings, isBird } from './animals.js';
 import { buildNests } from './nests.js';
 import { createInput } from './input.js';
 import { onAssets, iconUrl, ico } from './assets.js';
@@ -469,6 +469,8 @@ function wingAmp(R, p, dt, k) {
     R.userData.mixer.update(dt);
     return;
   }
+  // Birds use dedicated wing meshes (animateBirdWings) — do not drive vertex body-flap.
+  if (R.userData.birdWings) return;
   for (const m of R.userData.flapMats || []) m.userData.uAmp.value += (k * m.userData.baseAmp - m.userData.uAmp.value) * Math.min(1, dt * 10);
 }
 function stepPlayer(dt, t) {
@@ -556,8 +558,11 @@ function stepPlayer(dt, t) {
   } else {
     const tp = fo && fo.pitch != null ? fo.pitch : (flapping ? 0.2 : (p.grounded ? 0 : -0.1)), tr = fo ? fo.roll : 0, kk = Math.min(1, dt * (sp.id === 'bat' ? 12 : 8));
     R.rotation.x += (tp - R.rotation.x) * kk; R.rotation.z += (tr - R.rotation.z) * kk;
-    const bob = p.grounded ? Math.abs(Math.sin(p.t * 9)) * 0.08 * Math.min(1, p.speed / mv.run) : (sp.id === 'hummingbird' && !flapping ? 0 : Math.sin(p.t * 5.5) * 0.04);
+    // Birds: no whole-body bob — wings flap instead. Other flyers keep a tiny hover bob.
+    const bird = isBird(sp.id);
+    const bob = bird ? 0 : (p.grounded ? Math.abs(Math.sin(p.t * 9)) * 0.08 * Math.min(1, p.speed / mv.run) : Math.sin(p.t * 5.5) * 0.04);
     bodyG.body.position.y = -(bodyG.box ? bodyG.box.min.y : 0) + bob;
+    if (bodyG.birdWings) animateBirdWings(R, t, { air: !p.grounded, flapping, grounded: !!p.grounded });
     wingAmp(R, p, dt, p.grounded ? 0.16 : flapping ? 1 : (sp.id === 'bat' ? 0.1 : 0.3));
   }
   placeShadow(cur, p, sp); updateRing(p, sp, t, dt); updateStamRing(p, sp, t, dt);
@@ -598,7 +603,7 @@ function stepParked(id, dt, t) {
   if (sp.ground) {
     animateGround(R, dt, t, p.speed ? 0.7 : 0, !p.grounded, false, 0);
     if (sp.id === 'robin') wingAmp(R, p, dt, p.grounded ? 0.04 : 0.7);
-  } else { const kk = Math.min(1, dt * 8); R.rotation.x += (0 - R.rotation.x) * kk; R.rotation.z += (0 - R.rotation.z) * kk; U.body.position.y = -(U.box ? U.box.min.y : 0) + (p.grounded ? Math.sin(t * 1.7 + id.length) * 0.015 : 0); wingAmp(R, p, dt, p.grounded ? 0.12 : 0.8); }
+  } else { const kk = Math.min(1, dt * 8); R.rotation.x += (0 - R.rotation.x) * kk; R.rotation.z += (0 - R.rotation.z) * kk; const bird = isBird(id); U.body.position.y = -(U.box ? U.box.min.y : 0) + (bird ? 0 : (p.grounded ? Math.sin(t * 1.7 + id.length) * 0.015 : 0)); if (U.birdWings) animateBirdWings(R, t, { air: !p.grounded, flapping: !p.grounded, grounded: !!p.grounded }); wingAmp(R, p, dt, p.grounded ? 0.12 : 0.8); }
   placeShadow(id, p, sp);
   const m = marks[id]; m.visible = playing; m.position.set(p.x, p.y + sp.size * 0.9 + 2.4 + Math.sin(t * 2 + p.x) * 0.12, p.z);
 }

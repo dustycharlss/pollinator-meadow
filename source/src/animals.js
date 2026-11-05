@@ -4,13 +4,87 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { GROUND_AMBIENT, SPECIES, FOODS, POND, WORLD_R } from './data.js';
 import { POLS } from './world.js';
-import { getGLB, bakeParts, lambertFrom, toFloat, makeFlapMaterial } from './models.js';
+import { getGLB, bakeParts, lambertFrom, toFloat } from './models.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 
 // If real animal GLBs get added later, list them here (key in public/models + target size) and they replace the stand-ins.
 // Real models (Beans Bot's pack). len = target length (nose to tail) in world units at SPECIES.size; skinned ones get animation clips.
 //   raccoon: Quaternius (CC0, skinned: Idle/Walk/Run/Jump/Idle_Eating)   opossum: Squid's opossum.glb on the same raccoon rig
 //   bear: bearB = Squid's bear-blocky.glb (raccoon rig)   robin: Jeremy (CC-BY 3.0, static). Falls back to the primitive stand-ins below if a file is missing.
+
+/** Playable / helper / parked birds that get dedicated blocky wing meshes (not vertex-shader body flap). */
+export const BIRD_IDS = new Set(['hummingbird', 'robin']);
+export function isBird(id) { return BIRD_IDS.has(id); }
+
+/**
+ * Attach left/right blocky wing pivots to a bird body. Wings stay visible at rest (slightly folded)
+ * and rotate while airborne / flapping. Cheap boxes — matches cute square animal style.
+ */
+export function attachBirdWings(root, body, sp) {
+  if (!sp || !BIRD_IDS.has(sp.id) || root.userData.birdWings) return;
+  const box = root.userData.box || body.userData?.box;
+  const size = sp.size || 2;
+  const isHum = sp.id === 'hummingbird';
+  const base = new THREE.Color(sp.color || '#888888');
+  const wingCol = isHum ? new THREE.Color(0x2a8f6a) : new THREE.Color(0x4a3426);
+  wingCol.lerp(base, 0.25);
+  const mat = new THREE.MeshLambertMaterial({ color: wingCol, flatShading: true });
+  const span = isHum ? size * 0.62 : size * 0.55;
+  const chord = isHum ? size * 0.28 : size * 0.42;
+  const thick = isHum ? size * 0.07 : size * 0.1;
+  const geo = new THREE.BoxGeometry(span, thick, chord);
+  const halfX = box ? Math.max(Math.abs(box.max.x), Math.abs(box.min.x)) : size * 0.22;
+  const midY = box ? (box.min.y + box.max.y) * 0.55 : size * 0.12;
+  const midZ = box ? (box.min.z + box.max.z) * 0.15 : 0;
+  const wings = [];
+  for (const side of [-1, 1]) {
+    const pivot = new THREE.Group();
+    pivot.position.set(halfX * 0.55 * side, midY, midZ);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(side * span * 0.48, 0, 0);
+    mesh.frustumCulled = false;
+    pivot.add(mesh);
+    pivot.userData.side = side;
+    pivot.rotation.z = side * 0.35;
+    pivot.rotation.x = 0.15;
+    body.add(pivot);
+    wings.push(pivot);
+  }
+  root.userData.birdWings = wings;
+  root.userData.birdKind = sp.id;
+  root.userData.isBird = true;
+}
+
+/** Animate bird wing pivots. Hummingbirds beat faster while flying / hovering; grounded wings settle. */
+export function animateBirdWings(root, t, { air = false, flapping = false, grounded = true } = {}) {
+  const wings = root.userData.birdWings;
+  if (!wings || !wings.length) return;
+  const isHum = root.userData.birdKind === 'hummingbird';
+  let amp, freq, foldZ, foldX;
+  if (flapping || (air && isHum && !grounded)) {
+    freq = isHum ? 58 : 24;
+    amp = isHum ? 1.05 : 0.9;
+    foldZ = 0.08;
+    foldX = -0.05;
+  } else if (air && !grounded) {
+    freq = isHum ? 28 : 11;
+    amp = isHum ? 0.45 : 0.28;
+    foldZ = 0.12;
+    foldX = 0.05;
+  } else {
+    freq = 2.4;
+    amp = 0.05;
+    foldZ = 0.55;
+    foldX = 0.35;
+  }
+  const beat = Math.sin(t * freq) * amp;
+  for (const w of wings) {
+    const s = w.userData.side || 1;
+    w.rotation.z = (foldZ + beat) * s;
+    w.rotation.x = foldX + Math.abs(beat) * 0.08;
+  }
+}
+
 export const GROUND_MODELS = {
   raccoon: { key: 'raccoonQ', len: 2.3, skinned: true, tint: [1.6, 1.6, 1.7] },
   opossum: { key: 'opossum', len: 2.3, skinned: true }, // real opossum (Squid): same Quaternius raccoon rig + anim names
@@ -18,7 +92,6 @@ export const GROUND_MODELS = {
   robin: { key: 'robinJ', len: 1.7, rot: [0, Math.PI / 2, 0] } // the GLB faces -X: turn it to +Z
 };
 const CLIPS = { idle: 'Idle', walk: 'Walk', run: 'Run', jump: 'Jump_Loop', eat: 'Idle_Eating' };
-const ROBIN_FLAP = { amp: 0.55, freq: 22, body: 0.16, style: 'beat' };
 const modelOf = (kind) => { const m = GROUND_MODELS[kind]; return m && getGLB(m.key) ? m : null; };
 
 /** Pose a (possibly skinned) glTF into plain static meshes (world space), ready for bakeParts / instancing. */
@@ -102,6 +175,11 @@ export function makeGroundRider(kind, size) {
   const k = size / (kind === 'bear' ? 1.75 : 1) * 0; // (size handled via SPEC scale)
   body.scale.setScalar(sp.scale * (size / SPECIES[kind].size));
   root.userData = { body, rig, ground: true, phase: 0 };
+  if (kind === 'robin' && rig.wings && rig.wings.length) {
+    root.userData.birdWings = rig.wings;
+    root.userData.birdKind = 'robin';
+    root.userData.isBird = true;
+  }
   return root;
 }
 function makeRealRider(kind, size, m) {
@@ -120,21 +198,17 @@ function makeRealRider(kind, size, m) {
     for (const [key, name] of Object.entries(CLIPS)) { const clip = gltf.animations.find(a => a.name.endsWith(name)); if (clip) { acts[key] = mixer.clipAction(clip); acts[key].play(); acts[key].weight = key === 'idle' ? 1 : 0; } }
     u.mixer = mixer; u.acts = acts; u.cur = 'idle';
   } else {
-    const parts = realParts(kind);
-    let span = 1;
-    if (kind === 'robin' && parts.length) {
-      const box = new THREE.Box3();
+    const parts = realParts(kind) || [];
+    let box = null;
+    if (parts.length) {
+      box = new THREE.Box3();
       for (const p of parts) { p.geometry.computeBoundingBox(); box.union(p.geometry.boundingBox); }
-      span = Math.max(box.max.x, -box.min.x) * 2 || 1;
     }
     for (const p of parts) {
-      let mat = p.material;
-      if (kind === 'robin') {
-        mat = makeFlapMaterial(p.material, { amp: ROBIN_FLAP.amp, body: ROBIN_FLAP.body, span, style: ROBIN_FLAP.style, freq: ROBIN_FLAP.freq });
-        (u.flapMats ||= []).push(mat);
-      }
-      const mesh = new THREE.Mesh(p.geometry, mat); mesh.frustumCulled = false; body.add(mesh);
+      const mesh = new THREE.Mesh(p.geometry, p.material); mesh.frustumCulled = false; body.add(mesh);
     }
+    if (box) { u.box = box; body.userData.box = box; }
+    if (kind === 'robin') attachBirdWings(root, body, SPECIES.robin);
   }
   root.userData = u; return root;
 }
@@ -153,14 +227,17 @@ export function animateGround(root, dt, t, speed, air, flap, dig) {
   if (air) { const tuck = flap ? 0.2 : 0.7; for (const k in L) { L[k].rotation.x = (k[0] === 'F' || (hop && true) ? -tuck : tuck) * (flap ? 1 : 1); } }
   else if (hop && L.L) { L.L.rotation.x = L.R.rotation.x = sw * 0.8; }
   else { if (L.FL) { L.FL.rotation.x = sw; L.BR.rotation.x = sw; L.FR.rotation.x = -sw; L.BL.rotation.x = -sw; } }
-  if (rig.wings && rig.wings.length) {
+  if (u.birdWings && u.birdWings.length) {
+    animateBirdWings(root, t, { air, flapping: flap, grounded: !air });
+  } else if (rig.wings && rig.wings.length) {
     const a = flap ? Math.sin(t * 26) * 0.95 : air ? Math.sin(t * 9) * 0.25 : Math.sin(t * 3) * 0.06;
     for (const w of rig.wings) w.rotation.z = a * (w.userData.side || 1);
   }
   const bob = air ? 0 : Math.abs(Math.sin(u.phase)) * 0.06 * Math.min(1, speed * 1.5) * (hop ? 2 : 1);
   body.position.y = bob;
   if (!rig.tails.length && !L.FL && !L.L) body.rotation.z = Math.sin(u.phase) * 0.06 * Math.min(1, speed * 1.4);
-  body.rotation.x = (air ? -0.12 : 0) + dig * 0.6 + (flap ? -0.2 + Math.sin(t * 30) * 0.05 : 0);
+  // Birds: no body pitch-bob while flapping — wings do the work
+  body.rotation.x = (air ? -0.12 : 0) + dig * 0.6 + (flap && !u.isBird ? -0.2 + Math.sin(t * 30) * 0.05 : 0);
   for (const tl of rig.tails) tl.rotation.z = Math.sin(t * 2.4 + u.phase * 0.5) * 0.25;
 }
 
