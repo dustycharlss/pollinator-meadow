@@ -60,7 +60,7 @@ export const MIGRATE = { outpost: 'waggle_stage', marker: 'wind_streamer', garde
 const tierName = t => ['', 'T1 · Petals', 'T2 · Dewdrops', 'T3 · Starseeds'][t];
 export function buildInfo(t) {
   const C = CATALOG[t]; if (!C) return [];
-  return [C.blurb, `${tierName(C.tier)} building · levels 1–3 make it stronger. Max ${C.max}.`, `+${C.pts} pts when built.`];
+  return [C.blurb, `${tierName(C.tier)} building · levels 1–3 make it stronger. Max ${C.max}.`, `Helps earn bloom-stars when built.`];
 }
 export const HOME_COST = [10, 18, 28];
 
@@ -242,14 +242,14 @@ export async function createBuild(scene, ctx) {
     const cost = B.cost(t); if (!B.free && !free) round.pay(cost);
     const rec = { id: t + (uid++), type: t, x, z, yaw, t0: round.elapsed, tendAt: round.elapsed };
     rec.paid = cost ? { ...cost } : null; placed.push(rec); addBuilt(rec); round.add('building', CATALOG[t].pts); ctx.audio.sample ? ctx.audio.sample('build/place-thunk', 0.5) : ctx.audio.chime?.(); round.noteBuild(t);
-    rec.lv = 1; toast(`${CATALOG[t].icon} ${CATALOG[t].name} built! +${CATALOG[t].pts}`);
+    rec.lv = 1; toast(`${CATALOG[t].icon} ${CATALOG[t].name} built!`);
     return rec;
   };
   B.upgradeHome = id => {
     const lv = homeLv[id], C = CATALOG.home; if (lv >= C.max) { toast('🏡 Home is fully upgraded'); return false; }
     const cost = B.cost('home', id); if (!B.free && !round.canPay(cost)) { toast('Need more ' + Object.keys(cost).map(k => RES_ICON[k]).join(' ')); return false; }
     if (!B.free) round.pay(cost); homeLv[id] = lv + 1; B.rebuildHome(id); B.refreshHomes(); round.add('building', C.pts * (lv + 1));
-    const n = nests[id]; fx.burst(n.x, (n.y ?? 0) + 3, n.z, 30, 5); ctx.audio.sample ? ctx.audio.sample('build/building-complete-chime', 0.5) : ctx.audio.chime?.(); round.noteBuild('home'); toast(`🏡 ${SPECIES[id].name} home level ${lv + 1}! +${C.pts * (lv + 1)}`); return true;
+    const n = nests[id]; fx.burst(n.x, (n.y ?? 0) + 3, n.z, 30, 5); ctx.audio.sample ? ctx.audio.sample('build/building-complete-chime', 0.5) : ctx.audio.chime?.(); round.noteBuild('home'); toast(`🏡 ${SPECIES[id].name} home level ${lv + 1}!`); return true;
   };
   B.rebuildHome = id => { if (homeObj[id]) { scene.remove(homeObj[id]); homeObj[id] = null; } if (homeLv[id] > 0) { homeObj[id] = modelHome(id, homeLv[id]); scene.add(homeObj[id]); } };
 
@@ -294,7 +294,7 @@ export async function createBuild(scene, ctx) {
         const s = T.get(p.id); if (!s) continue; const need = round.elapsed - p.tendAt > 40; o.userData.tend.visible = need && s.r < s.rMax;
         if (s.tend > 0) s.tend -= dt;
         if (curPos && need && s.r < s.rMax + 0.1 && Math.hypot(curPos.x - p.x, curPos.z - p.z) < 6.5 && !round.over) {
-          p.tendAt = round.elapsed; s.tend = 25; T.grow(p.id, 2); round.add('upkeep', 12); fx.burst(p.x, o.position.y + 3, p.z, 20, 4); ctx.audio.blip?.(); toast('💧 Tended the beacon: it\u2019s blooming wider! +12');
+          p.tendAt = round.elapsed; s.tend = 25; T.grow(p.id, 2); round.add('upkeep', 12); fx.burst(p.x, o.position.y + 3, p.z, 20, 4); ctx.audio.blip?.(); toast('💧 Tended the beacon: it\u2019s blooming wider!');
         }
       }
     }

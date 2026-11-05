@@ -920,6 +920,7 @@ function startValleyPatch(patchId) {
     const p0 = P[cur] || { x: 0, z: 0 };
     // Anchor the map so local (0,0) home sits on the player; then snap onto the new heightfield.
     zones.load(patchId, { x: p0.x, z: p0.z });
+    { const h = zones.homePos ? zones.homePos() : p0; unifyHomes(h.x, h.z, members[0]); p0.x = h.x + 4; p0.z = h.z + 4; }
     const p = P[cur];
     if (p) {
       p.x = p0.x; p.z = p0.z; p.vx = p.vz = p.vy = 0;
@@ -1020,8 +1021,8 @@ function backToValleyFromPause() {
 
 function refreshTitle() {
   const b = bests(), sr = savedRound(); $('cont').style.display = sr ? '' : 'none'; if (sr) $('cont').textContent = `⏩ Continue round · ${fmtT(sr.left)} left`;
-  $('bestTxt').textContent = b[settings.len] ? `🏆 Best score (${settings.len} min): ${b[settings.len].toLocaleString()}` : `No ${settings.len}-minute score yet. Set the first one!`;
-  const L = settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', lb = spBests()[L + ':' + settings.len]; if (lb) $('bestTxt').textContent += ` · ${SPECIES[L].emoji} ${lb.toLocaleString()}`;
+  const L = settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', ls = spStars()[L + ':' + settings.len] || 0;
+  $('bestTxt').textContent = ls ? `${SPECIES[L].emoji} Best (${settings.len} min): ${starStr(ls)}` : `No ${settings.len}-minute stars yet as ${SPECIES[L].name}. Earn up to ⭐⭐⭐!`;
 }
 function saveRound() { if (noSave || !round || !playing || !round.running || round.over || round.free) return; round.save({ tiers: tiers && tiers.serialize(), build: build.serialize(), helpers: helpers && helpers.serialize(), tech: tech && tech.serialize(), lead, roundDone, savedAt: Date.now() }); }
 addEventListener('pagehide', saveRound);
@@ -1041,6 +1042,15 @@ function beginRound() {
   updateHud(); updateRoundHud(true); setActLabel(); state.pT = 0; terr.refresh();
 }
 let pendingStart = null;
+// t148u: one home base per map. Every species deposits at the same home; only the owner's nest model shows.
+let homeOwner = null;
+function unifyHomes(x, z, owner) {
+  if (!nests) return; owner = owner || lead; homeOwner = owner;
+  for (const id in nests) { const n = nests[id]; if (n.ox == null) { n.ox = n.x; n.oz = n.z; }
+    if (x == null) { x = nests[owner].ox; z = nests[owner].oz; }
+    n.x = x; n.z = z; n.y = heightAt(x, z); n.root.position.set(x, n.y, z); n.root.visible = id === owner; }
+  let k = 0; for (const id in P) { if (id === cur || !P[id]) continue; const q = P[id]; if (Math.hypot(q.x - x, q.z - z) > 30) { const a = (k++) * 0.9 + 0.6; q.x = x + Math.cos(a) * 6; q.z = z + Math.sin(a) * 6; q.y = heightAt(q.x, q.z) + 1; q.vx = q.vz = q.vy = 0; } }
+}
 function startNew(len) {
   settings.len = len; saveSettings(settings);
   // Boot may still be loading when the kid taps Start — queue instead of throwing on undefined.reset
@@ -1050,13 +1060,13 @@ function startNew(len) {
     return;
   }
   if (dirty || savedRound()) { try { sessionStorage.setItem('pm-auto', JSON.stringify({ len, lead: settings.lead, mode: settings.mode, patch: valleySession ? valleySession.patchId : null })); } catch (e) {} clearRound(); noSave = true; location.reload(); return; }
-  round.reset(len); round.mode = settings.mode === 'relaxed' ? 'relaxed' : 'challenge'; setLead(settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', true); selectSpecies(lead, true); if (hazards) hazards.resetRound(); if (rivals) rivals.resetRound(lead); tech.reset(); if (tiers) tiers.reset(); for (const k in convAcc) delete convAcc[k]; if (crew) crew.arcade = !valleySession; if (valleySession) { updateHealUi(); } else { document.body.classList.remove('packReady'); } beginRound();
+  round.reset(len); round.mode = settings.mode === 'relaxed' ? 'relaxed' : 'challenge'; setLead(settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', true); selectSpecies(lead, true); if (!valleySession) unifyHomes(null, null, lead); if (hazards) hazards.resetRound(); if (rivals) rivals.resetRound(lead); tech.reset(); if (tiers) tiers.reset(); for (const k in convAcc) delete convAcc[k]; if (crew) crew.arcade = !valleySession; if (valleySession) { updateHealUi(); } else { document.body.classList.remove('packReady'); } beginRound();
 }
 function toTitle() { persist(); saveRound(); noSave = true; try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }
 function openPause() { $('bPause').classList.remove('pulse');
   if (shopOpen) closeShop();
   if (!playing || round.over || $('pause').classList.contains('on')) return;
-  $('pauseInfo').textContent = `${round.free ? '∞ Free play (not saved to best scores)' : `⏱ ${fmtT(round.left)} left`} · ★ ${round.score().toLocaleString()}`; openOv('pause'); hubSet('game');
+  $('pauseInfo').textContent = `${round.free ? '∞ Free play (no stars)' : `⏱ ${fmtT(round.left)} left`} `; openOv('pause'); hubSet('game');
 }
 // title: Challenge / Relaxed set mode then open Valley Map (overhaul primary path)
 for (const [id, mode] of [['tChallenge', 'challenge'], ['tRelaxed', 'relaxed']]) $(id).onclick = () => { settings.mode = mode; saveSettings(settings); openValleyMap(); };
@@ -1099,7 +1109,7 @@ $('mix').addEventListener('input', e => { const el = e.target.closest('input[dat
   audio.set(k, v); saveSettings(settings);
   const now = performance.now(); if (now - mixPrevT > 180 && (k === 'sfx' || k === 'master')) { mixPrevT = now; audio.blip(3); } });
 $('sMute').onchange = () => { settings.mute = $('sMute').checked; audio.setMute(settings.mute); saveSettings(settings); };
-function wipeSave() { confirmDlg('Full reset save?', 'This erases your gear, journal, best scores, saved round and settings, then reloads the game.', 'Erase everything', () => { noSave = true; wipeAll(); try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }); }
+function wipeSave() { confirmDlg('Full reset save?', 'This erases your gear, journal, best stars, saved round and settings, then reloads the game.', 'Erase everything', () => { noSave = true; wipeAll(); try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }); }
 $('sWipe').onclick = wipeSave;
 $('rsAgain').onclick = () => startNew(round.len); $('rsTitle').onclick = toTitle;
 for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => audio.start(), { once: true });
@@ -1114,7 +1124,7 @@ function updateRoundHud(force) {
   if (tiers) $('rS').classList.toggle('carry', !!tiers.carrying);
   if (!round) return;
   setTxt('rbTime', (round.free || round.noTimer) ? '⏱ ∞' : '⏱ ' + fmtT(Math.ceil(round.left))); $('rbMain').classList.toggle('low', !round.free && !round.noTimer && round.running && round.left < 30 && !round.over);
-  setTxt('rbScore', '★ ' + round.score().toLocaleString()); if ($('rbPct')) { $('rbPct').style.display = 'none'; $('rbPct').textContent = ''; }
+  if ($('rbScore')) $('rbScore').style.display = 'none'; if ($('rbPct')) { $('rbPct').style.display = 'none'; $('rbPct').textContent = ''; }
   for (const k of RES_KEYS) { const h = RI(k) + ' ' + round.res[k], id = 'r' + k.toUpperCase(); if (hudCache[id] !== h) { hudCache[id] = h; $(id).innerHTML = h; } }
   if (helpers) setTxt('rHl', crewText()); if (tech) updateTechHud();
   if (round.flashT > 0 && round.flashK) { const s = $('r' + round.flashK.toUpperCase()); s.classList.remove('fl'); void s.offsetWidth; s.classList.add('fl'); round.flashT = 0; }
@@ -1131,9 +1141,11 @@ function showResults() {
   if (rts.possessed) releaseHelper(); if (rts.on) exitRts(true);
   setBuild(false); const score = round.score();
   const prev = bests()[round.len] || 0, isBest = setBest(round.len, score), sprev = spBests()[lead + ':' + round.len] || 0, spBest = setSpBest(lead, round.len, score); clearRound(); dirty = false; closeTech();
-  $('rsLead').innerHTML = `${SPECIES[lead].emoji} Led by the ${SPECIES[lead].name} · ${tech.count()} tech researched<br><small>${spBest ? '🏆 Best ever as ' + SPECIES[lead].name + '!' : `${SPECIES[lead].name} best (${round.len} min): ${sprev.toLocaleString()}`}</small>`;
-  $('rsScore').textContent = score.toLocaleString(); $('rsBest').textContent = isBest ? '🏆 New best score!' : `Best (${round.len} min): ${prev.toLocaleString()}`;
-  $('rsBrk').innerHTML = CATS.filter(([k]) => (k !== 'admin' || round.sc[k] > 0) && (round.sc[k] || 0) > 0).map(([k, ic, nm]) => `<div><span>${ic} ${nm}</span><b>${Math.floor(round.sc[k]).toLocaleString()}</b></div>`).join('');
+  const stars = starsFor(lead, round.len, score), stPrev = spStars()[lead + ':' + round.len] || 0, stBest = setSpStars(lead, round.len, stars);
+  $('rsLead').innerHTML = `${SPECIES[lead].emoji} Led by the ${SPECIES[lead].name} · ${tech.count()} tech researched<br><small>${stBest ? '🏆 New best stars as ' + SPECIES[lead].name + '!' : `${SPECIES[lead].name} best (${round.len} min): ${starStr(stPrev)}`}</small>`;
+  $('rsScore').textContent = starStr(stars); $('rsScore').classList.add('stars'); $('rsBest').textContent = stars >= 3 ? '🌸 Three bloom-stars! Amazing meadow!' : stars === 2 ? '🌼 Two bloom-stars! Gather and build more for the third.' : '🌱 One bloom-star! Deliver more and build to earn more stars.';
+  $('rsBrk').innerHTML = CATS.filter(([k]) => k !== 'admin' && (round.sc[k] || 0) > 0).map(([k, ic, nm]) => `<div><span>${ic} ${nm}</span><b>✓</b></div>`).join('');
+  $('results').dataset.stars = stars;
   const bl = Object.entries(round.stats.builds).map(([t, n]) => `${n} ${CATALOG[t] ? CATALOG[t].name : t}${n > 1 ? 's' : ''}`).join(', ');
   $('rsStats').textContent = `Built: ${bl || 'nothing'} · Delivered ${round.stats.units} gathered items · 🐾 ${helpers ? helpers.perm() : 0} helper${helpers && helpers.perm() === 1 ? '' : 's'} hired, who brought in ${round.stats.helperUnits || 0}${round.stats.visitors ? ` · 🎟️ ${round.stats.visitors} visitor${round.stats.visitors === 1 ? '' : 's'} brought ${round.stats.visitorUnits || 0}` : ''} · ${round.stats.dew} dewdrops`;
   if (goals) { const gl = goals.resultsLine(); if (gl) $('rsStats').textContent += ' · ' + gl; }
@@ -1146,7 +1158,7 @@ function showResults() {
     if (me) $('rsMe').title += ` · #${me.rank}`;
     if (rv) {
       const line = document.createElement('div'); line.style.cssText = 'margin-top:6px;font:800 13px system-ui';
-      line.textContent = `#${rv.rank} ${rv.emoji} ${rv.name}: ${rv.score.toLocaleString()} ★`;
+      line.textContent = `#${rv.rank} ${rv.emoji} ${rv.name}`;
       const host = $('rsBest'); if (host && !host.dataset.rival) { host.dataset.rival = '1'; host.after(line); }
     }
   }
@@ -1183,6 +1195,16 @@ function enterFree(on = true) {
 const SPB_KEY = 'pm-best-sp';
 const spBests = () => { try { return JSON.parse(localStorage.getItem(SPB_KEY) || '{}'); } catch (e) { return {}; } };
 function setSpBest(id, len, score) { const b = spBests(), k = id + ':' + len; if (score > (b[k] || 0)) { b[k] = score; try { localStorage.setItem(SPB_KEY, JSON.stringify(b)); } catch (e) {} return true; } return false; }
+// t147u: bloom-stars (1-3). Points stay internal; thresholds per species & round length.
+// Base points-per-minute bands (2★ good, 3★ excellent) × species pace × short-round ramp. 1★ = any finished round.
+const STAR_BASE = { two: 140, three: 320 };
+const STAR_SP = { bee: 1, bumblebee: 1, butterfly: 0.95, moth: 0.9, hummingbird: 1.05, robin: 0.95, bat: 0.9, raccoon: 0.9, opossum: 0.85, bear: 0.85 };
+const starNeed = (id, len) => { const k = (STAR_SP[id] || 0.9) * len * (len <= 3 ? 0.8 : len <= 5 ? 0.9 : 1); return { two: Math.round(STAR_BASE.two * k), three: Math.round(STAR_BASE.three * k) }; };
+const starsFor = (id, len, score) => { const t = starNeed(id, len); return score >= t.three ? 3 : score >= t.two ? 2 : 1; };
+const STB_KEY = 'pm-stars-sp';
+const spStars = () => { try { return JSON.parse(localStorage.getItem(STB_KEY) || '{}'); } catch (e) { return {}; } };
+function setSpStars(id, len, n) { const b = spStars(), k = id + ':' + len; if (n > (b[k] || 0)) { b[k] = n; try { localStorage.setItem(STB_KEY, JSON.stringify(b)); } catch (e) {} return true; } return false; }
+const starStr = n => '⭐'.repeat(n) + '☆'.repeat(3 - n);
 const payIcons = id => Object.keys(priceFor(id, 100)).map(k => RES_ICON[k]).join('');
 const costLine = (c, free) => Object.keys(c).map(k => `<i class="${free || round.res[k] >= c[k] ? '' : 'no'}">${RI(k)}${c[k]}</i>`).join('');
 function setLead(id, quiet) {
@@ -1195,9 +1217,9 @@ function setLead(id, quiet) {
 // species picker (title ▶ Play)
 let pickSel = 'bee';
 function renderPick() {
-  const b = spBests();
+  const b = spStars();
   $('pkList').innerHTML = SPECIES_ORDER.map(id => { const sp = SPECIES[id], A = ARCH[id], best = b[id + ':' + settings.len];
-    return `<button class="pk ${id === pickSel ? 'on' : ''}" data-s="${id}"><div class="hd"><span>${sp.emoji}</span><div><b>${sp.name}</b><small>${SIZE_NAME[A.size]} · ${sp.mv.fly ? 'flier' : 'ground'} · brings ${RES_ICON[RES_OF[id]]}${A.by ? ' (+' + RES_ICON[A.by.k] + ')' : ''}</small></div></div>${barsHtml(id)}<div class="sw">＋ ${A.str.join(' · ')}</div><div class="wk">－ ${A.weak.join(' · ')}</div><div class="pay">Pays in ${payIcons(id)}${best ? ` · 🏆 ${best.toLocaleString()}` : ''}</div></button>`; }).join('');
+    return `<button class="pk ${id === pickSel ? 'on' : ''}" data-s="${id}"><div class="hd"><span>${sp.emoji}</span><div><b>${sp.name}</b><small>${SIZE_NAME[A.size]} · ${sp.mv.fly ? 'flier' : 'ground'} · brings ${RES_ICON[RES_OF[id]]}${A.by ? ' (+' + RES_ICON[A.by.k] + ')' : ''}</small></div></div>${barsHtml(id)}<div class="sw">＋ ${A.str.join(' · ')}</div><div class="wk">－ ${A.weak.join(' · ')}</div><div class="pay">Pays in ${payIcons(id)}${best ? ` · ${starStr(best)}` : ''}</div></button>`; }).join('');
   if ($('pkTeam') && crew) { crew.loadFromValley(); $('pkTeam').innerHTML = `🐾 Team: ${crew.get().map(id => SPECIES[id].emoji).join(' ')} <button class="pill" id="pkTeamBtn">✏️ Pick team</button>`; $('pkTeamBtn').onclick = () => openTeamPick(renderPick); }
   $('pkGo').textContent = `⏱ Challenge as ${SPECIES[pickSel].emoji}`; $('pkFree').textContent = `🌿 Free roam as ${SPECIES[pickSel].emoji}`;
 }

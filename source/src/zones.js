@@ -493,7 +493,7 @@ const MAPS = {
 export function createZones(scene, ctx) {
   const group = new THREE.Group(); scene.add(group);
   let solids = [], picks = [], nodes = [], builds = [], drafts = [], hoops = [], silks = [], nightDews = [], star = null;
-  let A = { x: 0, z: 0 }, baseY = 0, recipe = null, id = null, picked = 0, keyDone = false, msgT = 0, t = 0;
+  let homeAt = null, A = { x: 0, z: 0 }, baseY = 0, recipe = null, id = null, picked = 0, keyDone = false, msgT = 0, t = 0;
   let nightOn = false, dewPulseT = -99, nodesDone = 0, buildsDone = 0, keyDew = 0;
   let terrainMesh = null, sampleH = null, waterMeshes = [];
   const mats = new Map();
@@ -601,6 +601,7 @@ export function createZones(scene, ctx) {
       G.position.set(A.x + x, g, A.z + z); group.add(G);
     },
     home(x, z) {
+      homeAt = { x: A.x + x, z: A.z + z }; if (1) return; // t148u: the crew nest is the single home (no extra stump)
       const g = gy(x, z), G = new THREE.Group();
       const stump = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.6, 2.6), mat(0xb07a32)); stump.position.y = 0.8; G.add(stump);
       const door = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.0, 0.2), mat(0x5a3b22)); door.position.set(0, 0.7, 1.35); G.add(door);
@@ -848,5 +849,5 @@ export function createZones(scene, ctx) {
       }
     }
   }
-  return { load: (a, b) => { keyDew = 0; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe, NEED, SIZE, MAPS };
+  return { homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe, NEED, SIZE, MAPS };
 }

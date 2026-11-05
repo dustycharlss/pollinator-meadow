@@ -156,7 +156,7 @@ export function createGoals(ctx) {
     const total = 3;
     const list = G.cards.map((c, i) => {
       const p = progress(c.def, snapshot());
-      const reward = parseReward(c.def).label;
+      const reward = String(parseReward(c.def).label).replace(/\s*[+−-]?\d+\s*pts?\b/gi, '').replace(/^\s*[·,]\s*|\s*[·,]\s*$/g, '') || '🌸 Bonus';
       const pct = p.need ? Math.min(100, Math.round(100 * p.cur / p.need)) : 0;
       const tag = (c.def.tags && c.def.tags[0]) || '';
       const ic = ({ gathering: '🌼', building: '🔨', explore: '🗺️', helpers: '🐾', hiring: '🐾', tech: '🧬', territory: '🏳️', visit: '🎟️' }[tag] || '🎯');
@@ -202,7 +202,7 @@ export function createGoals(ctx) {
       else if (k.kind === 'looks') ctx.grantLooks?.(k.n || 1);
       else if (k.kind === 'hat') ctx.grantHat?.(k.id);
     }
-    return info.label;
+    return String(info.label).replace(/\s*[+−-]?\d+\s*pts?\b/gi, '').replace(/^\s*[·,]\s*|\s*[·,]\s*$/g, '') || '🌸 Bonus';
   }
 
   G.resetRound = () => {
