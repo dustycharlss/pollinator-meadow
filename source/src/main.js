@@ -923,8 +923,23 @@ function startValleyPatch(patchId) {
   toast(`${def.emoji} ${def.name} · heal the meadow with your crew!`, 3200);
 }
 function renderCrewDock() {
-  const dock = $('crewDock'); if (!dock || !crew) return;
+  const dock = $('crewDock'); if (!dock) return;
   dock.innerHTML = '';
+  dock.classList.toggle('arc', !valleySession);
+  if (!valleySession) {
+    // arcade / free-roam rounds: species switcher (Relaxed always allows swapping)
+    if (!playing || !swapOK()) return;
+    SPECIES_ORDER.forEach((id, i) => {
+      const sp = SPECIES[id]; if (!sp) return;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = id === cur ? 'on' : '';
+      b.innerHTML = `${sp.emoji}<small>${i + 1}</small>`; b.title = sp.name;
+      b.onpointerup = e => { e.preventDefault(); if (playing && !paused && id !== cur) { selectSpecies(id); renderCrewDock(); } };
+      dock.appendChild(b);
+    });
+    return;
+  }
+  if (!crew) return;
   crew.get().forEach((id, i) => {
     const sp = SPECIES[id], sk = SKILLS[id];
     const b = document.createElement('button');
@@ -1004,7 +1019,7 @@ addEventListener('pagehide', saveRound);
 function beginRound() {
   dirty = true; round.running = true; round.over = false; round.noTimer = !!valleySession && round.mode === 'relaxed';
   if (!swapOK() && cur !== lead && SPECIES[lead]) selectSpecies(lead, true);
-  $('title').classList.remove('on'); document.body.classList.add('inRound'); playing = true; syncPause(); audio.start();
+  $('title').classList.remove('on'); document.body.classList.add('inRound'); playing = true; syncPause(); audio.start(); renderCrewDock();
   cam.zoomT = 1; cam.pitch = 0.35; { const p = P[cur]; cam.yaw = p.yaw; cam.swoop = 1.4; }
   setHint(isMobile ? 'Drag left to move · hold Jump in the air to fly · hold a big button for its wheel' : 'WASD move · Space jump (hold in air = fly) · E action · B build · Esc menu'); setTimeout(() => setHint(''), 10000);
   if (rivals && !rivals.active) rivals.resetRound(lead);
@@ -1025,7 +1040,7 @@ function startNew(len) {
     return;
   }
   if (dirty || savedRound()) { try { sessionStorage.setItem('pm-auto', JSON.stringify({ len, lead: settings.lead, mode: settings.mode, patch: valleySession ? valleySession.patchId : null })); } catch (e) {} clearRound(); noSave = true; location.reload(); return; }
-  round.reset(len); round.mode = settings.mode === 'relaxed' ? 'relaxed' : 'challenge'; setLead(settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', true); selectSpecies(lead, true); if (hazards) hazards.resetRound(); if (rivals) rivals.resetRound(lead); tech.reset(); if (tiers) tiers.reset(); for (const k in convAcc) delete convAcc[k]; if (crew) crew.arcade = !valleySession; if (valleySession) { renderCrewDock(); updateHealUi(); } else { document.body.classList.remove('packReady'); } beginRound();
+  round.reset(len); round.mode = settings.mode === 'relaxed' ? 'relaxed' : 'challenge'; setLead(settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', true); selectSpecies(lead, true); if (hazards) hazards.resetRound(); if (rivals) rivals.resetRound(lead); tech.reset(); if (tiers) tiers.reset(); for (const k in convAcc) delete convAcc[k]; if (crew) crew.arcade = !valleySession; if (valleySession) { updateHealUi(); } else { document.body.classList.remove('packReady'); } beginRound();
 }
 function toTitle() { persist(); saveRound(); noSave = true; try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }
 function openPause() { $('bPause').classList.remove('pulse');

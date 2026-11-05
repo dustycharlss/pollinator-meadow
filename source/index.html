@@ -586,7 +586,8 @@ body.wheelOn #goalWrap,body.wheelOn #pipCard{opacity:.2}
 #healMeter .hmFillWrap{display:none;overflow:hidden}
 #healMeter .hmPill{width:88px;height:32px;background:url(./ui/valley/heal/heal-meter-pill.png) center/contain no-repeat;display:flex;align-items:center;justify-content:center;color:#3b2614;font:700 14px system-ui;text-shadow:0 1px 0 #fff3d8}
 #healMeter.packTick .hmPill{filter:drop-shadow(0 0 4px #ffd23f)}
-#crewDock{position:fixed;right:max(8px,env(safe-area-inset-right));bottom:max(168px,env(safe-area-inset-bottom));z-index:7;display:none;flex-direction:column;gap:6px}
+/* t140: dock sits above the action cluster (#btns ~200px tall incl. Build) so it never covers Build/Jump */
+#crewDock{position:fixed;right:max(8px,env(safe-area-inset-right));bottom:calc(max(12px,env(safe-area-inset-bottom)) + 216px);max-height:calc(100vh - 340px);overflow-y:auto;overflow-x:hidden;padding:4px;z-index:7;display:none;flex-direction:column;gap:6px}
 #crewDock button{width:56px;height:56px;border-radius:16px;border:3px solid #3b2614;background:#fff3d8;font-size:28px;box-shadow:0 3px 0 #3b2614;cursor:pointer;position:relative}
 #crewDock button.on{background:#ffd23f;transform:scale(1.06)}
 #crewDock button small{position:absolute;right:-4px;bottom:-4px;font-size:11px;background:#7fc6e8;border:2px solid #3b2614;border-radius:8px;padding:0 3px;font-weight:800}
@@ -632,6 +633,8 @@ body.wheelOn #goalWrap,body.wheelOn #pipCard{opacity:.2}
 @keyframes packPop{0%{transform:translate(-50%,0) scale(.6);opacity:0}20%{transform:translate(-50%,-12px) scale(1.05);opacity:1}100%{transform:translate(-50%,-40px) scale(1);opacity:0}}
 body.inValley #title{display:none}
 body.inRound #healMeter,body.inRound #crewDock{display:flex}
+body.inRound #crewDock:empty{display:none}
+@media (orientation:landscape) and (max-height:560px){#crewDock{bottom:auto;top:calc(max(8px,env(safe-area-inset-top)) + 104px);right:auto;left:max(6px,env(safe-area-inset-left));flex-direction:row;flex-wrap:wrap;max-height:calc(100vh - 220px);width:min(320px,calc(50vw - 110px))}#crewDock button{width:46px;height:46px;font-size:23px;flex:0 0 auto}}
 body.inRound.packReady #packBtn{display:block}
 
 .zoneNode{position:fixed;transform:translate(-50%,-100%);pointer-events:none;background:rgba(255,255,255,.85);border-radius:12px;padding:2px 8px;font:600 14px system-ui;color:#5a3b22;z-index:20;display:none;white-space:nowrap}
