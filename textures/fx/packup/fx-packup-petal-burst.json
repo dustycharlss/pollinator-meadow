@@ -1,0 +1,31 @@
+{
+  "id": "fx-packup-petal-burst",
+  "strip": "fx-packup-petal-burst-strip.png",
+  "still": "fx-packup-petal-burst-still.png",
+  "frame_w": 192,
+  "frame_h": 192,
+  "frame_count": 10,
+  "fps": 20,
+  "loop": false,
+  "duration_s": 0.5,
+  "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+  "scale": 2,
+  "display_css_px": [
+    96,
+    96
+  ],
+  "anchor_px": [
+    96,
+    150
+  ],
+  "anchor_uv": [
+    0.5,
+    0.78125
+  ],
+  "attach": "building-base (ground point under the building being packed)",
+  "blend": "alpha (straight)",
+  "desc": "Pack Up pop: a tiny stand-in hut squashes (frames 1-3, wobble-pop like status-goodies-pop), then a cream burst ring with petals (pink/honey/lilac/leaf) and wooden planks flying up and falling, sparkles, fade. Scale the strip to the building footprint; hide the real building on frame 2.",
+  "hide_building_on_frame": 2,
+  "refund_popup_on_frame": 4,
+  "source_svg": "assets/ui/valley/src/svg/fx-packup-petal-burst-f4.svg"
+}

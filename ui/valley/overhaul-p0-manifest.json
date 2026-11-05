@@ -1,0 +1,861 @@
+{
+  "id": "overhaul-p0-art",
+  "job": "squid-job18",
+  "branch": "overhaul/valley-crew-neighbors",
+  "spec": "fern-reports/tasks/overhaul-123.md §9 P0, §3.5",
+  "generator": "assets/ui/valley/src/build-overhaul-p0.mjs",
+  "scale": "2x art (px / 2 = CSS px)",
+  "colors": {
+    "ink": "#3b2614",
+    "honey": "#ffd23f",
+    "cream": "#fff3d8"
+  },
+  "files": [
+    {
+      "file": "assets/ui/valley/valley-map-portrait.png",
+      "kind": "valley_map_portrait",
+      "w": 1080,
+      "h": 1920
+    },
+    {
+      "file": "assets/ui/valley/valley-map-landscape.png",
+      "kind": "valley_map_landscape",
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "file": "assets/ui/valley/thumbs/sunny_hollow-wilted.png",
+      "kind": "patch_thumb",
+      "patch": "sunny_hollow",
+      "state": "wilted"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/sunny_hollow-blooming.png",
+      "kind": "patch_thumb",
+      "patch": "sunny_hollow",
+      "state": "blooming"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/sunny_hollow-wild.png",
+      "kind": "patch_thumb",
+      "patch": "sunny_hollow",
+      "state": "wild"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/creek_bend-wilted.png",
+      "kind": "patch_thumb",
+      "patch": "creek_bend",
+      "state": "wilted"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/creek_bend-blooming.png",
+      "kind": "patch_thumb",
+      "patch": "creek_bend",
+      "state": "blooming"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/creek_bend-wild.png",
+      "kind": "patch_thumb",
+      "patch": "creek_bend",
+      "state": "wild"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/moon_meadow-wilted.png",
+      "kind": "patch_thumb",
+      "patch": "moon_meadow",
+      "state": "wilted"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/moon_meadow-blooming.png",
+      "kind": "patch_thumb",
+      "patch": "moon_meadow",
+      "state": "blooming"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/moon_meadow-wild.png",
+      "kind": "patch_thumb",
+      "patch": "moon_meadow",
+      "state": "wild"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/log_jam-wilted.png",
+      "kind": "patch_thumb",
+      "patch": "log_jam",
+      "state": "wilted"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/log_jam-blooming.png",
+      "kind": "patch_thumb",
+      "patch": "log_jam",
+      "state": "blooming"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/log_jam-wild.png",
+      "kind": "patch_thumb",
+      "patch": "log_jam",
+      "state": "wild"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/picnic_lawn-wilted.png",
+      "kind": "patch_thumb",
+      "patch": "picnic_lawn",
+      "state": "wilted"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/picnic_lawn-blooming.png",
+      "kind": "patch_thumb",
+      "patch": "picnic_lawn",
+      "state": "blooming"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/picnic_lawn-wild.png",
+      "kind": "patch_thumb",
+      "patch": "picnic_lawn",
+      "state": "wild"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/cliff_orchard-wilted.png",
+      "kind": "patch_thumb",
+      "patch": "cliff_orchard",
+      "state": "wilted"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/cliff_orchard-blooming.png",
+      "kind": "patch_thumb",
+      "patch": "cliff_orchard",
+      "state": "blooming"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/cliff_orchard-wild.png",
+      "kind": "patch_thumb",
+      "patch": "cliff_orchard",
+      "state": "wild"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/windy_rise-wilted.png",
+      "kind": "patch_thumb",
+      "patch": "windy_rise",
+      "state": "wilted"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/windy_rise-blooming.png",
+      "kind": "patch_thumb",
+      "patch": "windy_rise",
+      "state": "blooming"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/windy_rise-wild.png",
+      "kind": "patch_thumb",
+      "patch": "windy_rise",
+      "state": "wild"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/festival_glade-wilted.png",
+      "kind": "patch_thumb",
+      "patch": "festival_glade",
+      "state": "wilted"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/festival_glade-blooming.png",
+      "kind": "patch_thumb",
+      "patch": "festival_glade",
+      "state": "blooming"
+    },
+    {
+      "file": "assets/ui/valley/thumbs/festival_glade-wild.png",
+      "kind": "patch_thumb",
+      "patch": "festival_glade",
+      "state": "wild"
+    },
+    {
+      "file": "assets/ui/valley/heal/heal-meter-track.png",
+      "kind": "heal_meter"
+    },
+    {
+      "file": "assets/ui/valley/heal/heal-meter-fill.png",
+      "kind": "heal_meter"
+    },
+    {
+      "file": "assets/ui/valley/heal/heal-meter-mask.png",
+      "kind": "heal_meter"
+    },
+    {
+      "file": "assets/ui/valley/heal/heal-meter-pill.png",
+      "kind": "heal_meter"
+    },
+    {
+      "file": "assets/ui/valley/heal/heal-meter-stages-strip.png",
+      "kind": "heal_meter"
+    },
+    {
+      "file": "assets/textures/fx/packup/fx-packup-petal-burst-strip.png",
+      "kind": "packup_fx"
+    },
+    {
+      "file": "assets/textures/fx/packup/fx-packup-petal-burst-still.png",
+      "kind": "packup_fx"
+    },
+    {
+      "file": "assets/textures/fx/packup/fx-packup-petal-burst.json",
+      "kind": "packup_fx"
+    },
+    {
+      "file": "assets/ui/contest/contest-invite-ring-strip.png",
+      "kind": "invite_ring"
+    },
+    {
+      "file": "assets/ui/contest/contest-invite-ring-still.png",
+      "kind": "invite_ring"
+    },
+    {
+      "file": "assets/ui/contest/stamp-dance_off.png",
+      "kind": "contest_stamp",
+      "stamp_id": "dance_off",
+      "kid_name": "Dance-Off"
+    },
+    {
+      "file": "assets/ui/contest/stamp-pollen_relay.png",
+      "kind": "contest_stamp",
+      "stamp_id": "pollen_relay",
+      "kid_name": "Pollen Relay"
+    },
+    {
+      "file": "assets/ui/contest/stamp-decorating.png",
+      "kind": "contest_stamp",
+      "stamp_id": "decorating",
+      "kid_name": "Pretty-Up"
+    },
+    {
+      "file": "assets/ui/contest/stamp-good_game.png",
+      "kind": "contest_stamp",
+      "stamp_id": "good_game",
+      "kid_name": "Good game!"
+    },
+    {
+      "file": "assets/ui/valley/overhaul-p0-manifest.json",
+      "kind": "manifest"
+    }
+  ],
+  "valley_map": {
+    "portrait": {
+      "file": "assets/ui/valley/valley-map-portrait.png",
+      "w": 1080,
+      "h": 1920,
+      "progress_axis": "bottom (wilted) -> top (healed)",
+      "slots": [
+        {
+          "patch": "sunny_hollow",
+          "order": 1,
+          "kid_name": "Sunny Hollow",
+          "rect_px": [
+            216,
+            1562,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.2,
+            0.8135,
+            0.2,
+            0.1125
+          ],
+          "center_px": [
+            324,
+            1670
+          ],
+          "pin_anchor_px": [
+            324,
+            1778
+          ]
+        },
+        {
+          "patch": "creek_bend",
+          "order": 2,
+          "kid_name": "Creek Bend",
+          "rect_px": [
+            648,
+            1370,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.6,
+            0.7135,
+            0.2,
+            0.1125
+          ],
+          "center_px": [
+            756,
+            1478
+          ],
+          "pin_anchor_px": [
+            756,
+            1586
+          ]
+        },
+        {
+          "patch": "moon_meadow",
+          "order": 3,
+          "kid_name": "Moon Meadow",
+          "rect_px": [
+            205,
+            1169,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.1898,
+            0.6089,
+            0.2,
+            0.1125
+          ],
+          "center_px": [
+            313,
+            1277
+          ],
+          "pin_anchor_px": [
+            313,
+            1385
+          ]
+        },
+        {
+          "patch": "log_jam",
+          "order": 4,
+          "kid_name": "Log Jam",
+          "rect_px": [
+            659,
+            967,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.6102,
+            0.5036,
+            0.2,
+            0.1125
+          ],
+          "center_px": [
+            767,
+            1075
+          ],
+          "pin_anchor_px": [
+            767,
+            1183
+          ]
+        },
+        {
+          "patch": "picnic_lawn",
+          "order": 5,
+          "kid_name": "Picnic Lawn",
+          "rect_px": [
+            216,
+            766,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.2,
+            0.399,
+            0.2,
+            0.1125
+          ],
+          "center_px": [
+            324,
+            874
+          ],
+          "pin_anchor_px": [
+            324,
+            982
+          ]
+        },
+        {
+          "patch": "cliff_orchard",
+          "order": 6,
+          "kid_name": "Cliff Orchard",
+          "rect_px": [
+            648,
+            564,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.6,
+            0.2938,
+            0.2,
+            0.1125
+          ],
+          "center_px": [
+            756,
+            672
+          ],
+          "pin_anchor_px": [
+            756,
+            780
+          ]
+        },
+        {
+          "patch": "windy_rise",
+          "order": 7,
+          "kid_name": "Windy Rise",
+          "rect_px": [
+            216,
+            362,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.2,
+            0.1885,
+            0.2,
+            0.1125
+          ],
+          "center_px": [
+            324,
+            470
+          ],
+          "pin_anchor_px": [
+            324,
+            578
+          ]
+        },
+        {
+          "patch": "festival_glade",
+          "order": 8,
+          "kid_name": "Festival Glade",
+          "rect_px": [
+            605,
+            151,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.5602,
+            0.0786,
+            0.2,
+            0.1125
+          ],
+          "center_px": [
+            713,
+            259
+          ],
+          "pin_anchor_px": [
+            713,
+            367
+          ]
+        }
+      ]
+    },
+    "landscape": {
+      "file": "assets/ui/valley/valley-map-landscape.png",
+      "w": 1920,
+      "h": 1080,
+      "progress_axis": "left (wilted) -> right (healed)",
+      "slots": [
+        {
+          "patch": "sunny_hollow",
+          "order": 1,
+          "kid_name": "Sunny Hollow",
+          "rect_px": [
+            65,
+            691,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.0339,
+            0.6398,
+            0.1125,
+            0.2
+          ],
+          "center_px": [
+            173,
+            799
+          ],
+          "pin_anchor_px": [
+            173,
+            907
+          ]
+        },
+        {
+          "patch": "creek_bend",
+          "order": 2,
+          "kid_name": "Creek Bend",
+          "rect_px": [
+            276,
+            302,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.1437,
+            0.2796,
+            0.1125,
+            0.2
+          ],
+          "center_px": [
+            384,
+            410
+          ],
+          "pin_anchor_px": [
+            384,
+            518
+          ]
+        },
+        {
+          "patch": "moon_meadow",
+          "order": 3,
+          "kid_name": "Moon Meadow",
+          "rect_px": [
+            506,
+            691,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.2635,
+            0.6398,
+            0.1125,
+            0.2
+          ],
+          "center_px": [
+            614,
+            799
+          ],
+          "pin_anchor_px": [
+            614,
+            907
+          ]
+        },
+        {
+          "patch": "log_jam",
+          "order": 4,
+          "kid_name": "Log Jam",
+          "rect_px": [
+            737,
+            302,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.3839,
+            0.2796,
+            0.1125,
+            0.2
+          ],
+          "center_px": [
+            845,
+            410
+          ],
+          "pin_anchor_px": [
+            845,
+            518
+          ]
+        },
+        {
+          "patch": "picnic_lawn",
+          "order": 5,
+          "kid_name": "Picnic Lawn",
+          "rect_px": [
+            967,
+            691,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.5036,
+            0.6398,
+            0.1125,
+            0.2
+          ],
+          "center_px": [
+            1075,
+            799
+          ],
+          "pin_anchor_px": [
+            1075,
+            907
+          ]
+        },
+        {
+          "patch": "cliff_orchard",
+          "order": 6,
+          "kid_name": "Cliff Orchard",
+          "rect_px": [
+            1198,
+            302,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.624,
+            0.2796,
+            0.1125,
+            0.2
+          ],
+          "center_px": [
+            1306,
+            410
+          ],
+          "pin_anchor_px": [
+            1306,
+            518
+          ]
+        },
+        {
+          "patch": "windy_rise",
+          "order": 7,
+          "kid_name": "Windy Rise",
+          "rect_px": [
+            1428,
+            691,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.7438,
+            0.6398,
+            0.1125,
+            0.2
+          ],
+          "center_px": [
+            1536,
+            799
+          ],
+          "pin_anchor_px": [
+            1536,
+            907
+          ]
+        },
+        {
+          "patch": "festival_glade",
+          "order": 8,
+          "kid_name": "Festival Glade",
+          "rect_px": [
+            1639,
+            302,
+            216,
+            216
+          ],
+          "rect_norm": [
+            0.8536,
+            0.2796,
+            0.1125,
+            0.2
+          ],
+          "center_px": [
+            1747,
+            410
+          ],
+          "pin_anchor_px": [
+            1747,
+            518
+          ]
+        }
+      ]
+    },
+    "rules": "rect = [x, y, w, h] top-left origin. Draw the patch thumbnail (thumbs/<id>-<state>.png, 256 px) scaled into rect_px; the dashed cream pad under each slot is painted in. in_progress uses the wilted thumb plus a progress ring/heal % (no separate art). Hit-test with rect_norm * screen size when the map is letterboxed/scaled."
+  },
+  "patch_thumbs": {
+    "size_px": 256,
+    "display_css_px": 128,
+    "states": [
+      "wilted",
+      "blooming",
+      "wild"
+    ],
+    "state_note": "in_progress -> wilted thumb + heal %; wild = finished, left to nature (no player buildings)",
+    "patches": {
+      "sunny_hollow": {
+        "wilted": "assets/ui/valley/thumbs/sunny_hollow-wilted.png",
+        "blooming": "assets/ui/valley/thumbs/sunny_hollow-blooming.png",
+        "wild": "assets/ui/valley/thumbs/sunny_hollow-wild.png"
+      },
+      "creek_bend": {
+        "wilted": "assets/ui/valley/thumbs/creek_bend-wilted.png",
+        "blooming": "assets/ui/valley/thumbs/creek_bend-blooming.png",
+        "wild": "assets/ui/valley/thumbs/creek_bend-wild.png"
+      },
+      "moon_meadow": {
+        "wilted": "assets/ui/valley/thumbs/moon_meadow-wilted.png",
+        "blooming": "assets/ui/valley/thumbs/moon_meadow-blooming.png",
+        "wild": "assets/ui/valley/thumbs/moon_meadow-wild.png"
+      },
+      "log_jam": {
+        "wilted": "assets/ui/valley/thumbs/log_jam-wilted.png",
+        "blooming": "assets/ui/valley/thumbs/log_jam-blooming.png",
+        "wild": "assets/ui/valley/thumbs/log_jam-wild.png"
+      },
+      "picnic_lawn": {
+        "wilted": "assets/ui/valley/thumbs/picnic_lawn-wilted.png",
+        "blooming": "assets/ui/valley/thumbs/picnic_lawn-blooming.png",
+        "wild": "assets/ui/valley/thumbs/picnic_lawn-wild.png"
+      },
+      "cliff_orchard": {
+        "wilted": "assets/ui/valley/thumbs/cliff_orchard-wilted.png",
+        "blooming": "assets/ui/valley/thumbs/cliff_orchard-blooming.png",
+        "wild": "assets/ui/valley/thumbs/cliff_orchard-wild.png"
+      },
+      "windy_rise": {
+        "wilted": "assets/ui/valley/thumbs/windy_rise-wilted.png",
+        "blooming": "assets/ui/valley/thumbs/windy_rise-blooming.png",
+        "wild": "assets/ui/valley/thumbs/windy_rise-wild.png"
+      },
+      "festival_glade": {
+        "wilted": "assets/ui/valley/thumbs/festival_glade-wilted.png",
+        "blooming": "assets/ui/valley/thumbs/festival_glade-blooming.png",
+        "wild": "assets/ui/valley/thumbs/festival_glade-wild.png"
+      }
+    }
+  },
+  "heal_meter": {
+    "frame_w": 256,
+    "frame_h": 288,
+    "display_css_px": [
+      128,
+      144
+    ],
+    "placement": "top-center of a patch session, ~12 CSS px from the safe-area top; pill sits under (or right of) it with the % in Fredoka 700, ink #3b2614",
+    "track": "assets/ui/valley/heal/heal-meter-track.png",
+    "fill": "assets/ui/valley/heal/heal-meter-fill.png",
+    "mask": "assets/ui/valley/heal/heal-meter-mask.png",
+    "pill": "assets/ui/valley/heal/heal-meter-pill.png",
+    "pill_text_rect_px": [
+      20,
+      10,
+      136,
+      44
+    ],
+    "reveal": {
+      "mode": "vertical clip, bottom-up",
+      "y_empty_px": 270,
+      "y_full_px": 22,
+      "formula": "clip_top_y = y_empty_px - (y_empty_px - y_full_px) * heal/100; draw fill.png only below clip_top_y (or multiply fill by mask)",
+      "ease_ms": 350
+    },
+    "packup_tick": {
+      "value": 85,
+      "y_px": 59,
+      "note": "honey notch on the track = Pack Up threshold (heal ≥ 85%)"
+    },
+    "stages_strip": {
+      "file": "assets/ui/valley/heal/heal-meter-stages-strip.png",
+      "frame_count": 11,
+      "values": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "pick": "frame = round(heal/10)",
+      "note": "fallback if the engine has no clip/mask; frame 10 adds sparkles"
+    }
+  },
+  "packup_fx": {
+    "id": "fx-packup-petal-burst",
+    "strip": "fx-packup-petal-burst-strip.png",
+    "still": "fx-packup-petal-burst-still.png",
+    "frame_w": 192,
+    "frame_h": 192,
+    "frame_count": 10,
+    "fps": 20,
+    "loop": false,
+    "duration_s": 0.5,
+    "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+    "scale": 2,
+    "display_css_px": [
+      96,
+      96
+    ],
+    "anchor_px": [
+      96,
+      150
+    ],
+    "anchor_uv": [
+      0.5,
+      0.78125
+    ],
+    "attach": "building-base (ground point under the building being packed)",
+    "blend": "alpha (straight)",
+    "desc": "Pack Up pop: a tiny stand-in hut squashes (frames 1-3, wobble-pop like status-goodies-pop), then a cream burst ring with petals (pink/honey/lilac/leaf) and wooden planks flying up and falling, sparkles, fade. Scale the strip to the building footprint; hide the real building on frame 2.",
+    "hide_building_on_frame": 2,
+    "refund_popup_on_frame": 4,
+    "source_svg": "assets/ui/valley/src/svg/fx-packup-petal-burst-f4.svg"
+  },
+  "invite_ring": {
+    "strip": "assets/ui/contest/contest-invite-ring-strip.png",
+    "still": "assets/ui/contest/contest-invite-ring-still.png",
+    "frame_w": 384,
+    "frame_h": 384,
+    "frame_count": 8,
+    "fps": 10,
+    "loop": true,
+    "view": "top-down: lay flat on the ground (world decal, ~2.4 m wide) under the neighbor, or use as a UI ring on the minimap/prompt",
+    "trigger_radius_uv": 0.39,
+    "center_px": [
+      192,
+      192
+    ],
+    "note": "opt-in: accept when the kid walks inside trigger_radius_uv * width; dashes march + 4 pink diamonds orbit; center = two friendly paws + sparkle"
+  },
+  "stamps": {
+    "dance_off": {
+      "file": "assets/ui/contest/stamp-dance_off.png",
+      "kid_name": "Dance-Off",
+      "size_px": [
+        384,
+        384
+      ],
+      "display_css_px": [
+        192,
+        192
+      ],
+      "use": "win result stamp for this contest; animate in with scale 1.4 -> 1 + small rotate, ~250 ms"
+    },
+    "pollen_relay": {
+      "file": "assets/ui/contest/stamp-pollen_relay.png",
+      "kid_name": "Pollen Relay",
+      "size_px": [
+        384,
+        384
+      ],
+      "display_css_px": [
+        192,
+        192
+      ],
+      "use": "win result stamp for this contest; animate in with scale 1.4 -> 1 + small rotate, ~250 ms"
+    },
+    "decorating": {
+      "file": "assets/ui/contest/stamp-decorating.png",
+      "kid_name": "Pretty-Up",
+      "size_px": [
+        384,
+        384
+      ],
+      "display_css_px": [
+        192,
+        192
+      ],
+      "use": "win result stamp for this contest; animate in with scale 1.4 -> 1 + small rotate, ~250 ms"
+    },
+    "good_game": {
+      "file": "assets/ui/contest/stamp-good_game.png",
+      "kid_name": "Good game!",
+      "size_px": [
+        384,
+        384
+      ],
+      "display_css_px": [
+        192,
+        192
+      ],
+      "use": "fail/no-star result (\"Good game!\" + thumbs up), extra beyond the 3 asked"
+    }
+  }
+}
