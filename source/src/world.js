@@ -27,7 +27,8 @@ function rawH(x, z) {
   return h;
 }
 for (const S of SITES) { S.base = rawH(S.x + Math.sin(S.ang) * (S.s0 + S.s1) / 2, S.z + Math.cos(S.ang) * (S.s0 + S.s1) / 2); S.reach = (S.s1 - S.s0) / 2 + S.hw + 10; S.cx = S.x + Math.sin(S.ang) * (S.s0 + S.s1) / 2; S.cz = S.z + Math.cos(S.ang) * (S.s0 + S.s1) / 2; }
-export function heightAt(x, z) {
+/** Base meadow height (ignores active valley map override). */
+export function meadowHeightAt(x, z) {
   let h = rawH(x, z);
   for (const S of SITES) {
     if (Math.abs(x - S.cx) > S.reach || Math.abs(z - S.cz) > S.reach) continue;
@@ -35,6 +36,16 @@ export function heightAt(x, z) {
     const w = 1 - smooth(S.hw, S.hw + 9, d); h += (S.base - h) * w;
   }
   return h;
+}
+/** Active valley level may replace height inside its silhouette. fn(x,z) -> number|null */
+let _zoneH = null;
+export function setZoneHeight(fn) { _zoneH = fn || null; }
+export function heightAt(x, z) {
+  if (_zoneH) {
+    const h = _zoneH(x, z);
+    if (h != null) return h;
+  }
+  return meadowHeightAt(x, z);
 }
 function zoneWeights(x, z, out) {
   let tot = 0.18; out.set(0.22, 0.5, 0.2).multiplyScalar(0.18); // woodland base colour

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { SPECIES, SPECIES_ORDER, STAGE_AT, WORLD_R, ZONES, WATER_Y, inWater } from './data.js';
 import { ABILITIES, abilityFx } from './abilities.js';
 import { buildMeadow } from './meadow.js';
-import { buildWorld, heightAt, timeU, POLS, polOf } from './world.js';
+import { buildWorld, heightAt, meadowHeightAt, setZoneHeight, timeU, POLS, polOf } from './world.js';
 import { buildRiders, buildAmbient, updateFlaps } from './creatures.js';
 import { buildGroundAmbient, animateGround, animateBirdWings, isBird } from './animals.js';
 import { buildNests } from './nests.js';
@@ -916,7 +916,17 @@ function startValleyPatch(patchId) {
   if (contests) contests.resetRound();
   if (packup) packup.cancel();
   startNew(settings.len || 10);
-  if (zones) { const p0 = P[cur] || { x: 0, z: 0 }; zones.load(patchId, { x: p0.x, z: p0.z + 6 }); }
+  if (zones) {
+    const p0 = P[cur] || { x: 0, z: 0 };
+    // Anchor the map so local (0,0) home sits on the player; then snap onto the new heightfield.
+    zones.load(patchId, { x: p0.x, z: p0.z });
+    const p = P[cur];
+    if (p) {
+      p.x = p0.x; p.z = p0.z; p.vx = p.vz = p.vy = 0;
+      p.y = heightAt(p.x, p.z) + 1.0; p.grounded = true; p.coyote = 0.2;
+    }
+    placeFollowers(true);
+  }
   renderCrewDock();
   updateHealUi();
   onb?.note?.('valleyIn');
@@ -1586,7 +1596,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  zones = createZones(scene, { phys: world.phys, heightAt, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
+  zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
   helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
