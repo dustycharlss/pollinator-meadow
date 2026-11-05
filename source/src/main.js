@@ -1781,6 +1781,29 @@ function inviteNear() {
   if (!best) { toast('🎟️ Upgrade a building to Lv2 so a visitor can come', 2200); return; }
   const w = helpers.visitWhy(best); if (w) { toast('🎟️ ' + w, 2000); return; } helpers.invite(best).then(() => updateRoundHud(true));
 }
+
+function canSendLoadHome() {
+  const p = P[cur];
+  if (!helpers || !p || !(p.carried > 0)) return { ok: false, why: 'Gather something first' };
+  const h = helpers.pickCourier(p.x, p.z);
+  if (!h) return { ok: false, why: 'Hire a helper to carry for you' };
+  return { ok: true, h, amt: p.carried };
+}
+function sendLoadHome() {
+  const gate = canSendLoadHome();
+  if (!gate.ok) { toast('🏠 ' + gate.why, 2200); return false; }
+  const p = P[cur], n = nests[cur] || nests[lead] || Object.values(nests)[0];
+  if (!n) { toast('🏠 No nest to deliver to', 2000); return false; }
+  const amt = Math.floor(p.carried);
+  const depot = { x: n.x, z: n.z, r: 7.5, name: (SPECIES[cur]?.nest?.name || 'home') };
+  if (!helpers.sendCourier(gate.h, amt, depot, 'p')) { toast('🏠 Could not send a helper', 2000); return false; }
+  p.carried = 0;
+  updateHud(); updateRoundHud?.(true);
+  const sp = SPECIES[gate.h.sp];
+  ping(p.x, p.z, 0xffd27a); audio.blip(3);
+  toast(`${sp.emoji} Taking your ${amt} home — you keep exploring!`, 2600);
+  return true;
+}
 function helperCmd(kind) {
   if (tiers) tiers.ordered && tiers.ordered();
   const hl = helpers ? helpers.list.filter(h => !h.possessed) : []; if (!hl.length) { toast('🐾 No helpers yet · hire some from 📣 Command or the 🐾 Animals menu', 2600); return; }
@@ -1840,16 +1863,19 @@ function wheelOpts() {
       const L = ['home', ...BUILDS_OF(cur)].map(t => ({ icon: CATALOG[t].icon, ik: BUILD_IK[t], label: t === 'home' ? 'Home' : CATALOG[t].name.split(' ').slice(-1)[0], on: () => pickAndPlaceBuilding(t) }));
       return [...L, { icon: '🧬', ik: 'tech', label: 'Tech tree', on: () => openTech(lead) }];
     } },
-    cmd: { el: 'bRts', enabled: () => playing && !paused, tapOpen: true, options: () => [
+    cmd: { el: 'bRts', enabled: () => playing && !paused, tapOpen: true, options: () => {
+      const courier = canSendLoadHome();
+      return [
       { icon: '💪', ik: 'assign', label: 'Help lift', on: () => tiers && tiers.sendHelpers() },
       ...(tiers && tiers.swarmReady && tiers.swarmReady() ? [{ icon: '👑', ik: 'gather-here', label: 'Swarm Call', on: () => tiers.swarm() }] : []),
       { icon: '🎟️', ik: 'assign', label: 'Invite visitor', on: () => inviteNear() },
+      { icon: '📦', ik: 'return-home', label: 'Take these home', dis: !courier.ok, why: courier.why || 'Need a helper + carried goods', on: () => sendLoadHome() },
       { icon: '🧲', ik: 'follow', label: 'Follow me', on: () => helperCmd('follow') },
       { icon: '🌼', ik: 'gather-here', label: 'Gather here', on: () => helperCmd('gather') },
       { icon: '🏠', ik: 'return-home', label: 'Home drop', on: () => helperCmd('home') },
       { icon: '🐾', ik: 'assign', label: 'Hire', on: () => { setBuild(true); if (build.active) setTrayMode('hire'); } },
       { icon: '📋', ik: 'animals', label: 'Animals', on: () => openHub('animals') },
-    ] },
+    ]; } },
     int: { el: 'bInt', enabled: () => playing && !paused, tap: () => interactTap(), why: whyToast, options: () => {
       const p = P[cur], opts = [];
       const home = nearHome();

@@ -214,9 +214,13 @@ export function createHelpers(scene, ctx) {
           const D = depotFor(h); if (!D) { h.st = 'seek'; continue; } h.tx = D.x; h.tz = D.z;
           if (Math.hypot(D.x - h.x, D.z - h.z) > D.r) moving = true;
           else {
-            const amt = Math.floor(h.carry); h.carry = 0; h.st = 'seek'; h.timer = 0.3;
+            const amt = Math.floor(h.carry); h.carry = 0;
+            const resK = h.courierRes || h.res;
             if (h.visitor && amt > 0) { h.visitor.units += amt; round.stats.visitorUnits = (round.stats.visitorUnits || 0) + amt; }
-            if (amt > 0) { const pts = Math.round(amt * 5 * (1 + 0.12 * build.storageCount())); round.addRes(h.res, amt); round.add('gather', pts); ctx.onDeliver && ctx.onDeliver(h.sp, amt); round.stats.units += amt; if (!h.visitor) round.stats.helperUnits = (round.stats.helperUnits || 0) + amt; H.delivered += amt; round.flash(h.res); fx.burst(h.x, h.y + 2, h.z, 14, 3); pop(h.x, h.y + S.size + 3, h.z, `+${amt} ${RES_ICON[h.res]}`); }
+            if (amt > 0) { const pts = Math.round(amt * 5 * (1 + 0.12 * build.storageCount())); round.addRes(resK, amt); round.add('gather', pts); ctx.onDeliver && ctx.onDeliver(h.sp, amt); round.stats.units += amt; if (!h.visitor) round.stats.helperUnits = (round.stats.helperUnits || 0) + amt; H.delivered += amt; round.flash(resK); fx.burst(h.x, h.y + 2, h.z, 14, 3); pop(h.x, h.y + S.size + 3, h.z, `+${amt} ${RES_ICON[resK] || '🌼'}`); }
+            h.courierRes = null;
+            if (h.resumeFollow) { h.resumeFollow = false; H.command(h, 'follow'); }
+            else { h.st = 'seek'; h.timer = 0.3; }
           }
         }
       }
@@ -257,7 +261,7 @@ export function createHelpers(scene, ctx) {
     const job = h.possessed ? 'possessed' : h.job.kind; const e = V ? '⏳' : job === 'gather' ? RES_ICON[h.res] : JOB_ICON[job]; const m = iconTex(e); if (h.icon.material !== m) h.icon.material = m;
     h.icon.visible = h.sel && !h.possessed; h.icon.position.set(h.x, h.y + S.size * 0.9 + 2.6, h.z);
     if (h.timerS) { const f = V.bye ? 0 : Math.max(0, V.left / V.dur); h.timerS.visible = !V.bye; h.timerS.position.set(h.x, h.y + S.size * 0.9 + 3.1, h.z); const q = Math.round(f * 40); if (q !== h.timerF) { h.timerF = q; h.timerS.userData.draw(f, V.left <= 10); } }
-    h.carryS.visible = h.carry > 0 && !h.possessed; const k = 0.6 + 0.5 * (h.carry / h.cap); h.carryS.scale.set(1.4 * k, 0.7 * k, 1); h.carryS.position.set(h.x, h.y + S.size * 0.9 + (h.sel ? 4 : 1.6), h.z);
+    h.carryS.visible = h.carry > 0 && !h.possessed; const k = 0.6 + 0.5 * Math.min(1.4, h.carry / Math.max(1, h.cap)); h.carryS.scale.set(1.4 * k, 0.7 * k, 1); h.carryS.position.set(h.x, h.y + S.size * 0.9 + (h.sel ? 4 : 1.6), h.z);
   }
   // ---- commands
   H.command = (h, kind, x, z) => {
@@ -278,6 +282,32 @@ export function createHelpers(scene, ctx) {
   H.serialize = () => ({ lvl: H.lvl, uid, vCool: H.vCool, list: list.filter(h => !h.visitor || !h.visitor.bye).map(h => ({ uid: h.uid, sp: h.sp, x: +h.x.toFixed(1), z: +h.z.toFixed(1), carry: h.carry, job: h.job, depot: h.depot, visitor: h.visitor || undefined })) });
   H.restore = async s => { H.clear(); if (!s) return; H.lvl = s.lvl || 0; H.vCool = s.vCool || 0; for (const r of s.list || []) { const h = await spawn(r.sp, r.x, r.z, r); h.carry = r.carry || 0; if (r.visitor) { h.visitor = { ...r.visitor, bye: 0 }; h.ring.material = ringMatV; attachTimer(h); } } uid = Math.max(uid, s.uid || 1); };
   H.spawnFree = async (sp, x, z) => { const prev = H.free; H.free = true; const h = await H.hire(sp, { x, z }); H.free = prev; return h; };
+  /** Hand player's carried load to one helper; they run it to depot then resume follow. */
+  H.courierCandidates = () => list.filter(h => !h.possessed && (!h.visitor || !h.visitor.bye) && h.job && (h.job.kind === 'follow' || h.st !== 'home' || h.resumeFollow));
+  H.pickCourier = (px, pz) => {
+    const cands = list.filter(h => !h.possessed && (!h.visitor || !h.visitor.bye));
+    // Prefer followers, then anyone nearby who isn't already mid-courier
+    const ranked = cands.map(h => {
+      const follow = h.job?.kind === 'follow' ? 0 : 1;
+      const busy = h.resumeFollow || (h.st === 'home' && h.courierRes) ? 2 : 0;
+      const d = Math.hypot(h.x - px, h.z - pz);
+      return { h, score: busy * 1e6 + follow * 1e4 + d };
+    }).sort((a, b) => a.score - b.score);
+    return ranked.length ? ranked[0].h : null;
+  };
+  H.sendCourier = (h, amt, depot, resKey = 'p') => {
+    if (!h || !(amt > 0) || !depot) return false;
+    if (h.tgt >= 0) { claimed.delete(h.tgt); h.tgt = -1; }
+    h.carry = Math.floor(h.carry) + Math.floor(amt);
+    h.courierRes = resKey || 'p';
+    h.resumeFollow = true;
+    h.depot = depot;
+    h.job = { kind: 'gather', cx: null, cz: null };
+    h.st = 'home';
+    h.timer = 0;
+    return true;
+  };
+
   /** Goal reward: temporary visitor that gathers for a while (no building / cost). */
   H.grantVisitor = async (sp, at, dur = 90) => {
     if (!sp) sp = 'butterfly';
