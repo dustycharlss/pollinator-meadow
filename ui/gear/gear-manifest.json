@@ -1,0 +1,393 @@
+{
+  "name": "Pollinator Meadow gear + inventory panel art (job 17)",
+  "generator": "src/build-gear-ui.mjs",
+  "scale": "2x: all px values are PNG pixels; divide by 2 for CSS px",
+  "style": "cream card frames (#fffaf0 -> #f6dfb2), 8px ink #3b2614, white inner ring, top gloss, ink drop shadow dy6 @ .28; inset wells #f1d8a6 -> #f8e7c4; honey #ffd23f highlights. Sits on the hub menu panel rgba(25,50,38,.92).",
+  "gear_slot": {
+    "canvas": [
+      208,
+      208
+    ],
+    "tile_rect": [
+      28,
+      22,
+      152,
+      152
+    ],
+    "tile_radius": 40,
+    "well_rect": [
+      44,
+      38,
+      120,
+      120
+    ],
+    "icon_rect": [
+      52,
+      46,
+      104,
+      104
+    ],
+    "hit_rect": [
+      28,
+      22,
+      152,
+      152
+    ],
+    "overlays_share_origin": true,
+    "slots": {
+      "tool": {
+        "file": "gear-slot-tool.png",
+        "silhouette_from": "assets/ui/icons/glyph/tool.png",
+        "note": "Range gear (code slot \"range\")"
+      },
+      "body": {
+        "file": "gear-slot-body.png",
+        "silhouette_from": "assets/ui/icons/glyph/body.png",
+        "note": "Speed gear (code slot \"speed\")"
+      },
+      "basket": {
+        "file": "gear-slot-basket.png",
+        "silhouette_from": "assets/ui/icons/glyph/big-basket.png",
+        "note": "Capacity gear (code slot \"cap\")"
+      },
+      "head": {
+        "file": "gear-slot-head.png",
+        "silhouette_from": "assets/ui/icons/glyph/head.png",
+        "note": "Hats from goal cards (new slot)"
+      },
+      "charm": {
+        "file": "gear-slot-charm.png",
+        "silhouette_from": "assets/ui/icons/glyph/charm.png",
+        "note": "Charms (new slot)"
+      }
+    },
+    "note": "Every gear-* PNG is the same 208x208 canvas. Draw the frame, then the item icon (assets/ui/icons/glyph/<id>.png scaled into icon_rect), then the equipped glow/badge or the selected ring at the same x,y. CSS: 104x104 per slot."
+  },
+  "consumables_tray": {
+    "height": 168,
+    "tray_rect_y": [
+      8,
+      146
+    ],
+    "slot_size": 112,
+    "gap": 12,
+    "pad_x": 32,
+    "slot_y": 25,
+    "width_for_n": "width = 2*32 + n*112 + (n-1)*12  (6 -> 796, 4 -> 548)",
+    "slot_x_for_i": "x_i = 32 + i*124",
+    "slots_6": [
+      [
+        32,
+        25,
+        112,
+        112
+      ],
+      [
+        156,
+        25,
+        112,
+        112
+      ],
+      [
+        280,
+        25,
+        112,
+        112
+      ],
+      [
+        404,
+        25,
+        112,
+        112
+      ],
+      [
+        528,
+        25,
+        112,
+        112
+      ],
+      [
+        652,
+        25,
+        112,
+        112
+      ]
+    ],
+    "slots_4": [
+      [
+        32,
+        25,
+        112,
+        112
+      ],
+      [
+        156,
+        25,
+        112,
+        112
+      ],
+      [
+        280,
+        25,
+        112,
+        112
+      ],
+      [
+        404,
+        25,
+        112,
+        112
+      ]
+    ],
+    "icon_inset": 12,
+    "count_pill_at": "slot (x + 66, y + 72), pill 64x50 canvas, text centre (32,22) in the pill",
+    "nine_slice": {
+      "left": 60,
+      "right": 60,
+      "top": 56,
+      "bottom": 64,
+      "stretch": "horizontal (centre column); keep height 168, or also stretch the centre row vertically if needed",
+      "css_border_image": "border-image: url(consumables-tray-9slice.png) 56 60 64 60 fill; border-width: 28px 30px 32px 30px (CSS px at 2x)"
+    },
+    "note": "Build any length from consumables-tray-9slice.png (stretch the centre column) and draw consumable-slot.png at each slot rect minus (4,4)."
+  },
+  "assets": [
+    {
+      "id": "gear-slot-tool",
+      "file": "gear-slot-tool.png",
+      "size": [
+        208,
+        208
+      ],
+      "group": "gear-slot",
+      "note": "empty tool slot with a faint tool silhouette hint. Range gear (code slot \"range\")",
+      "svg": "src/svg/gear-slot-tool.svg"
+    },
+    {
+      "id": "gear-slot-body",
+      "file": "gear-slot-body.png",
+      "size": [
+        208,
+        208
+      ],
+      "group": "gear-slot",
+      "note": "empty body slot with a faint body silhouette hint. Speed gear (code slot \"speed\")",
+      "svg": "src/svg/gear-slot-body.svg"
+    },
+    {
+      "id": "gear-slot-basket",
+      "file": "gear-slot-basket.png",
+      "size": [
+        208,
+        208
+      ],
+      "group": "gear-slot",
+      "note": "empty basket slot with a faint big-basket silhouette hint. Capacity gear (code slot \"cap\")",
+      "svg": "src/svg/gear-slot-basket.svg"
+    },
+    {
+      "id": "gear-slot-head",
+      "file": "gear-slot-head.png",
+      "size": [
+        208,
+        208
+      ],
+      "group": "gear-slot",
+      "note": "empty head slot with a faint head silhouette hint. Hats from goal cards (new slot)",
+      "svg": "src/svg/gear-slot-head.svg"
+    },
+    {
+      "id": "gear-slot-charm",
+      "file": "gear-slot-charm.png",
+      "size": [
+        208,
+        208
+      ],
+      "group": "gear-slot",
+      "note": "empty charm slot with a faint charm silhouette hint. Charms (new slot)",
+      "svg": "src/svg/gear-slot-charm.svg"
+    },
+    {
+      "id": "gear-slot-frame",
+      "file": "gear-slot-frame.png",
+      "size": [
+        208,
+        208
+      ],
+      "group": "gear-slot",
+      "note": "plain slot frame (no hint): draw the equipped item icon in icon_rect",
+      "svg": "src/svg/gear-slot-frame.svg"
+    },
+    {
+      "id": "gear-slot-equipped-glow",
+      "file": "gear-slot-equipped-glow.png",
+      "size": [
+        208,
+        208
+      ],
+      "group": "gear-overlay",
+      "note": "equipped highlight: soft honey glow + honey ring hugging the tile + 3 sparkles. Draw over the slot at the same origin; can pulse alpha 0.7-1.0",
+      "svg": "src/svg/gear-slot-equipped-glow.svg"
+    },
+    {
+      "id": "gear-slot-equipped-badge",
+      "file": "gear-slot-equipped-badge.png",
+      "size": [
+        208,
+        208
+      ],
+      "group": "gear-overlay",
+      "note": "optional green tick badge (bottom-right), same canvas/origin as the slot; pairs with the glow",
+      "svg": "src/svg/gear-slot-equipped-badge.svg"
+    },
+    {
+      "id": "gear-slot-selected",
+      "file": "gear-slot-selected.png",
+      "size": [
+        208,
+        208
+      ],
+      "group": "gear-overlay",
+      "note": "selected/focused ring (white + ink), for the slot being changed; same origin",
+      "svg": "src/svg/gear-slot-selected.svg"
+    },
+    {
+      "id": "consumables-tray-9slice",
+      "file": "consumables-tray-9slice.png",
+      "size": [
+        256,
+        168
+      ],
+      "group": "tray",
+      "note": "9-slice source for the tray background: stretch the middle column horizontally only (height is fixed)",
+      "svg": "src/svg/consumables-tray-9slice.svg",
+      "nine_slice": {
+        "left": 60,
+        "right": 60,
+        "top": 56,
+        "bottom": 64,
+        "stretch": "horizontal (centre column); keep height 168, or also stretch the centre row vertically if needed",
+        "css_border_image": "border-image: url(consumables-tray-9slice.png) 56 60 64 60 fill; border-width: 28px 30px 32px 30px (CSS px at 2x)"
+      }
+    },
+    {
+      "id": "consumable-slot",
+      "file": "consumable-slot.png",
+      "size": [
+        120,
+        124
+      ],
+      "group": "tray",
+      "note": "one empty consumable well (draw at slot rect minus 4,4); icon area = slot rect inset 12",
+      "svg": "src/svg/consumable-slot.svg"
+    },
+    {
+      "id": "consumable-count-pill",
+      "file": "consumable-count-pill.png",
+      "size": [
+        64,
+        50
+      ],
+      "group": "tray",
+      "note": "honey count pill for \"x3\" text (Fredoka 600, 24px@2x, ink); text centre = (32,22)",
+      "svg": "src/svg/consumable-count-pill.svg"
+    },
+    {
+      "id": "consumables-tray-6",
+      "file": "consumables-tray-6.png",
+      "size": [
+        796,
+        168
+      ],
+      "group": "tray",
+      "note": "ready-made tray with 6 empty wells",
+      "svg": "src/svg/consumables-tray-6.svg",
+      "slots": [
+        [
+          32,
+          25,
+          112,
+          112
+        ],
+        [
+          156,
+          25,
+          112,
+          112
+        ],
+        [
+          280,
+          25,
+          112,
+          112
+        ],
+        [
+          404,
+          25,
+          112,
+          112
+        ],
+        [
+          528,
+          25,
+          112,
+          112
+        ],
+        [
+          652,
+          25,
+          112,
+          112
+        ]
+      ]
+    },
+    {
+      "id": "consumables-tray-4",
+      "file": "consumables-tray-4.png",
+      "size": [
+        548,
+        168
+      ],
+      "group": "tray",
+      "note": "ready-made tray with 4 empty wells",
+      "svg": "src/svg/consumables-tray-4.svg",
+      "slots": [
+        [
+          32,
+          25,
+          112,
+          112
+        ],
+        [
+          156,
+          25,
+          112,
+          112
+        ],
+        [
+          280,
+          25,
+          112,
+          112
+        ],
+        [
+          404,
+          25,
+          112,
+          112
+        ]
+      ]
+    },
+    {
+      "id": "gear-panel-mock",
+      "file": "gear-panel-mock.png",
+      "size": [
+        1200,
+        760
+      ],
+      "group": "mock",
+      "note": "layout reference only (opaque panel colour): 5 gear slots (tool + head shown equipped) and the 6-well tray with 4 items and count pills",
+      "svg": "src/svg/gear-panel-mock.svg"
+    }
+  ]
+}

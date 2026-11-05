@@ -1,0 +1,29 @@
+{
+  "id": "status-wet-drips",
+  "strip": "status-wet-drips-strip.png",
+  "still": "status-wet-drips-still.png",
+  "frame_w": 128,
+  "frame_h": 128,
+  "frame_count": 8,
+  "fps": 12,
+  "loop": true,
+  "duration_s": 0.667,
+  "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+  "scale": 2,
+  "display_css_px": [
+    64,
+    64
+  ],
+  "anchor_px": [
+    64,
+    64
+  ],
+  "anchor_uv": [
+    0.5,
+    0.5
+  ],
+  "attach": "body-center",
+  "blend": "alpha (straight, edge-bled)",
+  "desc": "three drops dripping off the animal with tiny splash rings; loops while wet/droopy",
+  "source_svg": "src/svg/status/status-wet-drips.svg"
+}

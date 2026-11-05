@@ -1,0 +1,29 @@
+{
+  "id": "status-soot-puff",
+  "strip": "status-soot-puff-strip.png",
+  "still": "status-soot-puff-still.png",
+  "frame_w": 128,
+  "frame_h": 128,
+  "frame_count": 8,
+  "fps": 10,
+  "loop": true,
+  "duration_s": 0.8,
+  "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+  "scale": 2,
+  "display_css_px": [
+    64,
+    64
+  ],
+  "anchor_px": [
+    64,
+    100
+  ],
+  "anchor_uv": [
+    0.5,
+    0.7813
+  ],
+  "attach": "head",
+  "blend": "alpha (straight, edge-bled)",
+  "desc": "little charcoal soot cloud puffing around the head with drifting blocky specks; loops while sooty",
+  "source_svg": "src/svg/status/status-soot-puff.svg"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "status-slow-snail",
+  "strip": "status-slow-snail-strip.png",
+  "still": "status-slow-snail-still.png",
+  "frame_w": 128,
+  "frame_h": 128,
+  "frame_count": 6,
+  "fps": 6,
+  "loop": true,
+  "duration_s": 1,
+  "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+  "scale": 2,
+  "display_css_px": [
+    64,
+    64
+  ],
+  "anchor_px": [
+    64,
+    116
+  ],
+  "anchor_uv": [
+    0.5,
+    0.9063
+  ],
+  "attach": "head-top",
+  "blend": "alpha (straight, edge-bled)",
+  "desc": "snail inching along a slime trail inside a cream speech-bubble badge; show over the head while slowed (mud, puddle, nettle, mist, relaxed-mode slowdowns)",
+  "source_svg": "src/svg/status/status-slow-snail.svg"
+}

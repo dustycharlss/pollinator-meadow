@@ -1,0 +1,336 @@
+{
+ "job": 16,
+ "author": "Squid",
+ "generator": "assets/ui/rivals/src/build-rival-ui.mjs",
+ "style": "assets/ui/icons badge geometry (228 px rounded square rx64, 8 px ink #3b2614, top gloss, white inner ring, ink drop shadow) and the assets/ui/screens toast frame (toast-pill + medallion)",
+ "team_source": "assets/models/buildings/rivals/rival-buildings-manifest.json teams",
+ "emblem_source": "assets/textures/fx/emblem-<species>.png",
+ "badges": {
+  "bee": {
+   "badge": "assets/ui/rivals/badges/rival-badge-bee.png",
+   "team_color": "#ffd23f",
+   "team_name": "honey",
+   "colony_name": "Honey Hive Bees",
+   "emblem": "assets/textures/fx/emblem-bee.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-bee.png"
+  },
+  "bumblebee": {
+   "badge": "assets/ui/rivals/badges/rival-badge-bumblebee.png",
+   "team_color": "#ff8a1f",
+   "team_name": "orange",
+   "colony_name": "Bumble Burrow Bumbles",
+   "emblem": "assets/textures/fx/emblem-bumblebee.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-bumblebee.png"
+  },
+  "butterfly": {
+   "badge": "assets/ui/rivals/badges/rival-badge-butterfly.png",
+   "team_color": "#4aa8ff",
+   "team_name": "sky",
+   "colony_name": "Chrysalis Garden Butterflies",
+   "emblem": "assets/textures/fx/emblem-butterfly.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-butterfly.png"
+  },
+  "moth": {
+   "badge": "assets/ui/rivals/badges/rival-badge-moth.png",
+   "team_color": "#9b6bdc",
+   "team_name": "violet",
+   "colony_name": "Silk Cocoon Moths",
+   "emblem": "assets/textures/fx/emblem-moth.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-moth.png"
+  },
+  "hummingbird": {
+   "badge": "assets/ui/rivals/badges/rival-badge-hummingbird.png",
+   "team_color": "#13b5a5",
+   "team_name": "teal",
+   "colony_name": "Cup Nest Hummingbirds",
+   "emblem": "assets/textures/fx/emblem-hummingbird.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-hummingbird.png"
+  },
+  "bat": {
+   "badge": "assets/ui/rivals/badges/rival-badge-bat.png",
+   "team_color": "#4148c9",
+   "team_name": "indigo",
+   "colony_name": "Bat Roost Bats",
+   "emblem": "assets/textures/fx/emblem-bat.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-bat.png"
+  },
+  "robin": {
+   "badge": "assets/ui/rivals/badges/rival-badge-robin.png",
+   "team_color": "#e23b3b",
+   "team_name": "red",
+   "colony_name": "Shrub Nest Robins",
+   "emblem": "assets/textures/fx/emblem-robin.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-robin.png"
+  },
+  "raccoon": {
+   "badge": "assets/ui/rivals/badges/rival-badge-raccoon.png",
+   "team_color": "#64748b",
+   "team_name": "slate",
+   "colony_name": "Tree-Hollow Den Raccoons",
+   "emblem": "assets/textures/fx/emblem-raccoon.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-raccoon.png"
+  },
+  "opossum": {
+   "badge": "assets/ui/rivals/badges/rival-badge-opossum.png",
+   "team_color": "#ff7eb6",
+   "team_name": "pink",
+   "colony_name": "Stick Den Opossums",
+   "emblem": "assets/textures/fx/emblem-opossum.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-opossum.png"
+  },
+  "bear": {
+   "badge": "assets/ui/rivals/badges/rival-badge-bear.png",
+   "team_color": "#8b5a2b",
+   "team_name": "brown",
+   "colony_name": "Cave Den Bears",
+   "emblem": "assets/textures/fx/emblem-bear.png",
+   "size": [
+    256,
+    256
+   ],
+   "scale": "2x (draw at 128 px or smaller in a leaderboard row)",
+   "glyph": "assets/ui/rivals/badges/glyph/rival-badge-bear.png"
+  }
+ },
+ "toasts": {
+  "frame": "assets/ui/screens/toast-pill.png geometry (pill x70 y26 556x108; text centred at x400: headline 40px y78, sub-line 24px y116)",
+  "generic": {
+   "claimed": {
+    "medallion": "assets/ui/rivals/toasts/toast-badge-claimed.png",
+    "toast": "assets/ui/rivals/toasts/toast-claimed.png",
+    "text": [
+     "Claimed!",
+     "Territory claimed"
+    ],
+    "size": [
+     640,
+     160
+    ]
+   },
+   "dismantled": {
+    "medallion": "assets/ui/rivals/toasts/toast-badge-dismantled.png",
+    "toast": "assets/ui/rivals/toasts/toast-dismantled.png",
+    "text": [
+     "Dismantled!",
+     "Building taken apart"
+    ],
+    "size": [
+     640,
+     160
+    ]
+   }
+  },
+  "species": {
+   "claimed": {
+    "bee": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-bee.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-bee.png",
+     "text": [
+      "Claimed!",
+      "Honey Hive Bees"
+     ]
+    },
+    "bumblebee": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-bumblebee.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-bumblebee.png",
+     "text": [
+      "Claimed!",
+      "Bumble Burrow Bumbles"
+     ]
+    },
+    "butterfly": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-butterfly.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-butterfly.png",
+     "text": [
+      "Claimed!",
+      "Chrysalis Garden Butterflies"
+     ]
+    },
+    "moth": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-moth.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-moth.png",
+     "text": [
+      "Claimed!",
+      "Silk Cocoon Moths"
+     ]
+    },
+    "hummingbird": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-hummingbird.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-hummingbird.png",
+     "text": [
+      "Claimed!",
+      "Cup Nest Hummingbirds"
+     ]
+    },
+    "bat": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-bat.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-bat.png",
+     "text": [
+      "Claimed!",
+      "Bat Roost Bats"
+     ]
+    },
+    "robin": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-robin.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-robin.png",
+     "text": [
+      "Claimed!",
+      "Shrub Nest Robins"
+     ]
+    },
+    "raccoon": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-raccoon.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-raccoon.png",
+     "text": [
+      "Claimed!",
+      "Tree-Hollow Den Raccoons"
+     ]
+    },
+    "opossum": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-opossum.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-opossum.png",
+     "text": [
+      "Claimed!",
+      "Stick Den Opossums"
+     ]
+    },
+    "bear": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-claimed-bear.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-claimed-bear.png",
+     "text": [
+      "Claimed!",
+      "Cave Den Bears"
+     ]
+    }
+   },
+   "dismantled": {
+    "bee": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-bee.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-bee.png",
+     "text": [
+      "Dismantled!",
+      "Honey Hive Bees"
+     ]
+    },
+    "bumblebee": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-bumblebee.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-bumblebee.png",
+     "text": [
+      "Dismantled!",
+      "Bumble Burrow Bumbles"
+     ]
+    },
+    "butterfly": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-butterfly.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-butterfly.png",
+     "text": [
+      "Dismantled!",
+      "Chrysalis Garden Butterflies"
+     ]
+    },
+    "moth": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-moth.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-moth.png",
+     "text": [
+      "Dismantled!",
+      "Silk Cocoon Moths"
+     ]
+    },
+    "hummingbird": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-hummingbird.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-hummingbird.png",
+     "text": [
+      "Dismantled!",
+      "Cup Nest Hummingbirds"
+     ]
+    },
+    "bat": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-bat.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-bat.png",
+     "text": [
+      "Dismantled!",
+      "Bat Roost Bats"
+     ]
+    },
+    "robin": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-robin.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-robin.png",
+     "text": [
+      "Dismantled!",
+      "Shrub Nest Robins"
+     ]
+    },
+    "raccoon": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-raccoon.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-raccoon.png",
+     "text": [
+      "Dismantled!",
+      "Tree-Hollow Den Raccoons"
+     ]
+    },
+    "opossum": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-opossum.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-opossum.png",
+     "text": [
+      "Dismantled!",
+      "Stick Den Opossums"
+     ]
+    },
+    "bear": {
+     "medallion": "assets/ui/rivals/toasts/species/toast-badge-dismantled-bear.png",
+     "toast": "assets/ui/rivals/toasts/species/toast-dismantled-bear.png",
+     "text": [
+      "Dismantled!",
+      "Cave Den Bears"
+     ]
+    }
+   }
+  },
+  "note": "Generic toasts have a sub-line baked in; species toasts carry the colony name (fern-reports rivals.json). For other text use assets/ui/screens/toast-pill.png + a toast-badge-* medallion at scale 0.6, top-left (4,4)."
+ }
+}

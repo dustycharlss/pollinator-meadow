@@ -1,0 +1,276 @@
+{
+  "name": "Pollinator Meadow hazard status FX (job 17)",
+  "generator": "src/build-fx-status.mjs",
+  "scale": "2x (frame px / 2 = CSS px)",
+  "alpha": "straight; transparent pixels carry bled edge colour",
+  "notes": [
+    "hazard ids from fern-reports hazards.json (12) + the 5 extra hazards (smoke_puff, geyser, venus_flytrap, pigeon, wasp). Entries marked \"proposed\" have no penalty type in the spec yet.",
+    "attach: body-center = animal pivot; head = head bone; head-top = above the head (use anchor_px as the point that touches the head)."
+  ],
+  "effects": [
+    {
+      "id": "status-web-stuck",
+      "strip": "status-web-stuck-strip.png",
+      "still": "status-web-stuck-still.png",
+      "frame_w": 256,
+      "frame_h": 256,
+      "frame_count": 6,
+      "fps": 8,
+      "loop": true,
+      "duration_s": 0.75,
+      "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+      "scale": 2,
+      "display_css_px": [
+        128,
+        128
+      ],
+      "anchor_px": [
+        128,
+        128
+      ],
+      "anchor_uv": [
+        0.5,
+        0.5
+      ],
+      "attach": "body-center",
+      "blend": "alpha (straight, edge-bled)",
+      "desc": "sticky web strands wrapped over the animal (open middle so the face shows); wobbles while stuck. Stop it when the animal boings free (play wobble-pop or web-strand burst).",
+      "source_svg": "src/svg/status/status-web-stuck.svg",
+      "hazards": {
+        "web": "penalty stick (hold 1.2 s, tap to boing free)"
+      },
+      "play": "loop while held; stop on free"
+    },
+    {
+      "id": "status-wet-drips",
+      "strip": "status-wet-drips-strip.png",
+      "still": "status-wet-drips-still.png",
+      "frame_w": 128,
+      "frame_h": 128,
+      "frame_count": 8,
+      "fps": 12,
+      "loop": true,
+      "duration_s": 0.667,
+      "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+      "scale": 2,
+      "display_css_px": [
+        64,
+        64
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "anchor_uv": [
+        0.5,
+        0.5
+      ],
+      "attach": "body-center",
+      "blend": "alpha (straight, edge-bled)",
+      "desc": "three drops dripping off the animal with tiny splash rings; loops while wet/droopy",
+      "source_svg": "src/svg/status/status-wet-drips.svg",
+      "hazards": {
+        "sprinkler": "penalty droopy 2 s",
+        "puddle": "penalty slow (linger 0.5 s)",
+        "rain_cloud": "penalty heavy_wings (fliers)",
+        "geyser": "proposed: soaked by the eruption"
+      },
+      "play": "loop for the effect duration"
+    },
+    {
+      "id": "status-soot-puff",
+      "strip": "status-soot-puff-strip.png",
+      "still": "status-soot-puff-still.png",
+      "frame_w": 128,
+      "frame_h": 128,
+      "frame_count": 8,
+      "fps": 10,
+      "loop": true,
+      "duration_s": 0.8,
+      "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+      "scale": 2,
+      "display_css_px": [
+        64,
+        64
+      ],
+      "anchor_px": [
+        64,
+        100
+      ],
+      "anchor_uv": [
+        0.5,
+        0.7813
+      ],
+      "attach": "head",
+      "blend": "alpha (straight, edge-bled)",
+      "desc": "little charcoal soot cloud puffing around the head with drifting blocky specks; loops while sooty",
+      "source_svg": "src/svg/status/status-soot-puff.svg",
+      "hazards": {
+        "smoke_puff": "proposed: sooty while in the puff"
+      },
+      "play": "loop for the effect duration"
+    },
+    {
+      "id": "status-dizzy-stars",
+      "strip": "status-dizzy-stars-strip.png",
+      "still": "status-dizzy-stars-still.png",
+      "frame_w": 128,
+      "frame_h": 128,
+      "frame_count": 8,
+      "fps": 12,
+      "loop": true,
+      "duration_s": 0.667,
+      "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+      "scale": 2,
+      "display_css_px": [
+        64,
+        64
+      ],
+      "anchor_px": [
+        64,
+        80
+      ],
+      "anchor_uv": [
+        0.5,
+        0.625
+      ],
+      "attach": "head-top",
+      "blend": "alpha (straight, edge-bled)",
+      "desc": "three chubby stars orbiting a swirl ring over the head; loops for the stun time",
+      "source_svg": "src/svg/status/status-dizzy-stars.svg",
+      "hazards": {
+        "acorn_drop": "penalty dizzy (stun 1.0 s, \"little stars over the head\")",
+        "pigeon": "proposed: pigeon bump = dizzy"
+      },
+      "play": "loop for the stun time"
+    },
+    {
+      "id": "status-slow-snail",
+      "strip": "status-slow-snail-strip.png",
+      "still": "status-slow-snail-still.png",
+      "frame_w": 128,
+      "frame_h": 128,
+      "frame_count": 6,
+      "fps": 6,
+      "loop": true,
+      "duration_s": 1,
+      "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+      "scale": 2,
+      "display_css_px": [
+        64,
+        64
+      ],
+      "anchor_px": [
+        64,
+        116
+      ],
+      "anchor_uv": [
+        0.5,
+        0.9063
+      ],
+      "attach": "head-top",
+      "blend": "alpha (straight, edge-bled)",
+      "desc": "snail inching along a slime trail inside a cream speech-bubble badge; show over the head while slowed (mud, puddle, nettle, mist, relaxed-mode slowdowns)",
+      "source_svg": "src/svg/status/status-slow-snail.svg",
+      "hazards": {
+        "mud": "penalty slow 0.55x",
+        "puddle": "penalty slow 0.7x",
+        "nettle": "penalty itchy 0.8x",
+        "mist_vent": "penalty foggy 0.85x",
+        "bramble": "slow 0.8x for 0.6 s",
+        "sprinkler": "walker 0.85x",
+        "*relaxed": "relaxed mode: every hazard = 0.8x for 1 s"
+      },
+      "play": "loop while any speed multiplier < 1; can stack with another status"
+    },
+    {
+      "id": "status-goodies-pop",
+      "strip": "status-goodies-pop-strip.png",
+      "still": "status-goodies-pop-still.png",
+      "frame_w": 192,
+      "frame_h": 192,
+      "frame_count": 10,
+      "fps": 20,
+      "loop": false,
+      "duration_s": 0.5,
+      "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+      "scale": 2,
+      "display_css_px": [
+        96,
+        96
+      ],
+      "anchor_px": [
+        96,
+        108
+      ],
+      "anchor_uv": [
+        0.5,
+        0.5625
+      ],
+      "attach": "body-center",
+      "blend": "alpha (straight, edge-bled)",
+      "desc": "one-shot pop when goodies fall out (bramble snag, sneeze, etc.): burst ring, a nectar drop, pollen ball and petal fly out with sparkles, then fade. The real pickups take over after the last frame.",
+      "source_svg": "src/svg/status/status-goodies-pop.svg",
+      "hazards": {
+        "bramble": "penalty drop",
+        "pollen_cloud": "sneeze drops 1 item",
+        "venus_flytrap": "proposed",
+        "wasp": "proposed"
+      },
+      "play": "one-shot at the drop point, only when items actually drop (never in relaxed mode)"
+    }
+  ],
+  "by_hazard": {
+    "web": [
+      "status-web-stuck"
+    ],
+    "sprinkler": [
+      "status-wet-drips",
+      "status-slow-snail"
+    ],
+    "puddle": [
+      "status-wet-drips",
+      "status-slow-snail"
+    ],
+    "rain_cloud": [
+      "status-wet-drips"
+    ],
+    "geyser": [
+      "status-wet-drips"
+    ],
+    "smoke_puff": [
+      "status-soot-puff"
+    ],
+    "acorn_drop": [
+      "status-dizzy-stars"
+    ],
+    "pigeon": [
+      "status-dizzy-stars"
+    ],
+    "mud": [
+      "status-slow-snail"
+    ],
+    "nettle": [
+      "status-slow-snail"
+    ],
+    "mist_vent": [
+      "status-slow-snail"
+    ],
+    "bramble": [
+      "status-slow-snail",
+      "status-goodies-pop"
+    ],
+    "*relaxed": [
+      "status-slow-snail"
+    ],
+    "pollen_cloud": [
+      "status-goodies-pop"
+    ],
+    "venus_flytrap": [
+      "status-goodies-pop"
+    ],
+    "wasp": [
+      "status-goodies-pop"
+    ]
+  }
+}

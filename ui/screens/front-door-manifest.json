@@ -1,0 +1,856 @@
+{
+ "id": "front-door",
+ "job": "Squid Job 14",
+ "style": "cute blocky meadow: ink #3b2614, honey #ffd23f, cream #fff3d8, meadow greens; cast = blocky GLB renders with an ink outline",
+ "coords": "rect = [x, y, w, h] in px from top-left of the backdrop at its native size; norm = same divided by width/height (0-1). Points = [x, y].",
+ "buttons": "title buttons assets/ui/screens/btn-{challenge,relaxed}-{idle,pressed}.png are 520x168 and the button slots are 520x168, so they draw 1:1 on the native backdrop.",
+ "screens": {
+  "title-portrait": {
+   "files": [
+    {
+     "file": "assets/ui/screens/title-bg-portrait.png",
+     "w": 1080,
+     "h": 1920,
+     "bytes": 167318,
+     "kb": 163.4
+    },
+    {
+     "file": "assets/ui/screens/title-bg-portrait.webp",
+     "w": 1080,
+     "h": 1920,
+     "bytes": 81948,
+     "kb": 80.0
+    }
+   ],
+   "size": [
+    1080,
+    1920
+   ],
+   "safeArea": "Designed for 1080x1920 (9:16). Scale with object-fit: cover, anchored centre. Taller phones (19.5:9, e.g. 1080x2340 / 390x844) crop about 7% from each side, so every slot keeps >= 90 px (8%) side margin. Keep UI out of the top 120 px (notch/status bar) and bottom 90 px (home indicator); all slots already do. Compute slot positions from the normalized rects on the displayed (cover-scaled) image.",
+   "slots": {
+    "logo": {
+     "rect": [
+      90,
+      180,
+      900,
+      338
+     ],
+     "norm": [
+      0.0833,
+      0.0938,
+      0.8333,
+      0.176
+     ]
+    },
+    "button-challenge": {
+     "rect": [
+      280,
+      1000,
+      520,
+      168
+     ],
+     "norm": [
+      0.2593,
+      0.5208,
+      0.4815,
+      0.0875
+     ]
+    },
+    "button-relaxed": {
+     "rect": [
+      280,
+      1200,
+      520,
+      168
+     ],
+     "norm": [
+      0.2593,
+      0.625,
+      0.4815,
+      0.0875
+     ]
+    }
+   },
+   "notes": "logo rect matches logo.png aspect (1600x600 = 2.667). Buttons 1:1."
+  },
+  "title-landscape": {
+   "files": [
+    {
+     "file": "assets/ui/screens/title-bg-landscape.png",
+     "w": 1920,
+     "h": 1080,
+     "bytes": 186371,
+     "kb": 182.0
+    },
+    {
+     "file": "assets/ui/screens/title-bg-landscape.webp",
+     "w": 1920,
+     "h": 1080,
+     "bytes": 100090,
+     "kb": 97.7
+    }
+   ],
+   "size": [
+    1920,
+    1080
+   ],
+   "safeArea": "Designed for 1920x1080 (16:9). Scale with object-fit: cover, anchored centre. Wider phones (19.5:9) crop about 9% from top and bottom, so slots keep >= 60 px top/bottom margin and stay in the central 80%. Keep UI clear of the left/right 100 px (notch / rounded corners in landscape). Compute slot positions from the normalized rects on the displayed (cover-scaled) image.",
+   "slots": {
+    "logo": {
+     "rect": [
+      585,
+      60,
+      750,
+      281
+     ],
+     "norm": [
+      0.3047,
+      0.0556,
+      0.3906,
+      0.2602
+     ]
+    },
+    "button-challenge": {
+     "rect": [
+      700,
+      420,
+      520,
+      168
+     ],
+     "norm": [
+      0.3646,
+      0.3889,
+      0.2708,
+      0.1556
+     ]
+    },
+    "button-relaxed": {
+     "rect": [
+      700,
+      620,
+      520,
+      168
+     ],
+     "norm": [
+      0.3646,
+      0.5741,
+      0.2708,
+      0.1556
+     ]
+    }
+   },
+   "notes": "logo rect matches logo.png aspect (1600x600 = 2.667). Buttons 1:1."
+  },
+  "splash-portrait": {
+   "files": [
+    {
+     "file": "assets/ui/screens/splash-bg-portrait.png",
+     "w": 1080,
+     "h": 1920,
+     "bytes": 190117,
+     "kb": 185.7
+    },
+    {
+     "file": "assets/ui/screens/splash-bg-portrait.webp",
+     "w": 1080,
+     "h": 1920,
+     "bytes": 68698,
+     "kb": 67.1
+    },
+    {
+     "file": "assets/ui/screens/splash-bg.png",
+     "w": 1080,
+     "h": 1920,
+     "bytes": 190117,
+     "kb": 185.7,
+     "note": "alias of splash-bg-portrait.png"
+    }
+   ],
+   "size": [
+    1080,
+    1920
+   ],
+   "safeArea": "Designed for 1080x1920 (9:16). Scale with object-fit: cover, anchored centre. Taller phones (19.5:9, e.g. 1080x2340 / 390x844) crop about 7% from each side, so every slot keeps >= 90 px (8%) side margin. Keep UI out of the top 120 px (notch/status bar) and bottom 90 px (home indicator); all slots already do. Compute slot positions from the normalized rects on the displayed (cover-scaled) image.",
+   "slots": {
+    "logo": {
+     "rect": [
+      140,
+      520,
+      800,
+      300
+     ],
+     "norm": [
+      0.1296,
+      0.2708,
+      0.7407,
+      0.1562
+     ]
+    },
+    "progress-bar": {
+     "rect": [
+      180,
+      1250,
+      720,
+      96
+     ],
+     "norm": [
+      0.1667,
+      0.651,
+      0.6667,
+      0.05
+     ]
+    },
+    "loading-text": {
+     "rect": [
+      240,
+      1370,
+      600,
+      70
+     ],
+     "norm": [
+      0.2222,
+      0.7135,
+      0.5556,
+      0.0365
+     ]
+    }
+   },
+   "notes": "progress-bar rect = progress-track.png (720x96) drawn 1:1. Fill goes in the track inner rect (offset 24,22, 672x52); see progressBar. loading-text = optional \"Loading...\" / tips line."
+  },
+  "splash-landscape": {
+   "files": [
+    {
+     "file": "assets/ui/screens/splash-bg-landscape.png",
+     "w": 1920,
+     "h": 1080,
+     "bytes": 180798,
+     "kb": 176.6
+    },
+    {
+     "file": "assets/ui/screens/splash-bg-landscape.webp",
+     "w": 1920,
+     "h": 1080,
+     "bytes": 70418,
+     "kb": 68.8
+    }
+   ],
+   "size": [
+    1920,
+    1080
+   ],
+   "safeArea": "Designed for 1920x1080 (16:9). Scale with object-fit: cover, anchored centre. Wider phones (19.5:9) crop about 9% from top and bottom, so slots keep >= 60 px top/bottom margin and stay in the central 80%. Keep UI clear of the left/right 100 px (notch / rounded corners in landscape). Compute slot positions from the normalized rects on the displayed (cover-scaled) image.",
+   "slots": {
+    "logo": {
+     "rect": [
+      585,
+      110,
+      750,
+      281
+     ],
+     "norm": [
+      0.3047,
+      0.1019,
+      0.3906,
+      0.2602
+     ]
+    },
+    "progress-bar": {
+     "rect": [
+      600,
+      760,
+      720,
+      96
+     ],
+     "norm": [
+      0.3125,
+      0.7037,
+      0.375,
+      0.0889
+     ]
+    },
+    "loading-text": {
+     "rect": [
+      660,
+      872,
+      600,
+      60
+     ],
+     "norm": [
+      0.3438,
+      0.8074,
+      0.3125,
+      0.0556
+     ]
+    }
+   },
+   "notes": "progress-bar rect = progress-track.png (720x96) drawn 1:1. Fill goes in the track inner rect (offset 24,22, 672x52); see progressBar. loading-text = optional \"Loading...\" / tips line."
+  },
+  "results-portrait": {
+   "files": [
+    {
+     "file": "assets/ui/screens/results-bg-portrait.png",
+     "w": 1080,
+     "h": 1920,
+     "bytes": 149293,
+     "kb": 145.8
+    },
+    {
+     "file": "assets/ui/screens/results-bg-portrait.webp",
+     "w": 1080,
+     "h": 1920,
+     "bytes": 79846,
+     "kb": 78.0
+    }
+   ],
+   "size": [
+    1080,
+    1920
+   ],
+   "safeArea": "Designed for 1080x1920 (9:16). Scale with object-fit: cover, anchored centre. Taller phones (19.5:9, e.g. 1080x2340 / 390x844) crop about 7% from each side, so every slot keeps >= 90 px (8%) side margin. Keep UI out of the top 120 px (notch/status bar) and bottom 90 px (home indicator); all slots already do. Compute slot positions from the normalized rects on the displayed (cover-scaled) image.",
+   "slots": {
+    "header": {
+     "rect": [
+      140,
+      170,
+      800,
+      200
+     ],
+     "norm": [
+      0.1296,
+      0.0885,
+      0.7407,
+      0.1042
+     ]
+    },
+    "rank-1": {
+     "rect": [
+      460,
+      1133,
+      160,
+      160
+     ],
+     "norm": [
+      0.4259,
+      0.5901,
+      0.1481,
+      0.0833
+     ]
+    },
+    "rank-2": {
+     "rect": [
+      252,
+      1223,
+      160,
+      160
+     ],
+     "norm": [
+      0.2333,
+      0.637,
+      0.1481,
+      0.0833
+     ]
+    },
+    "rank-3": {
+     "rect": [
+      668,
+      1293,
+      160,
+      160
+     ],
+     "norm": [
+      0.6185,
+      0.6734,
+      0.1481,
+      0.0833
+     ]
+    },
+    "rank-4": {
+     "rect": [
+      44,
+      1337,
+      160,
+      160
+     ],
+     "norm": [
+      0.0407,
+      0.6964,
+      0.1481,
+      0.0833
+     ]
+    },
+    "panel": {
+     "rect": [
+      90,
+      1590,
+      900,
+      220
+     ],
+     "norm": [
+      0.0833,
+      0.8281,
+      0.8333,
+      0.1146
+     ]
+    }
+   },
+   "podiumSteps": {
+    "step-1": {
+     "rect": [
+      440,
+      1080,
+      200,
+      420
+     ],
+     "norm": [
+      0.4074,
+      0.5625,
+      0.1852,
+      0.2188
+     ]
+    },
+    "step-2": {
+     "rect": [
+      232,
+      1170,
+      200,
+      330
+     ],
+     "norm": [
+      0.2148,
+      0.6094,
+      0.1852,
+      0.1719
+     ]
+    },
+    "step-3": {
+     "rect": [
+      648,
+      1240,
+      200,
+      260
+     ],
+     "norm": [
+      0.6,
+      0.6458,
+      0.1852,
+      0.1354
+     ]
+    },
+    "step-4": {
+     "rect": [
+      24,
+      1300,
+      200,
+      200
+     ],
+     "norm": [
+      0.0222,
+      0.6771,
+      0.1852,
+      0.1042
+     ]
+    }
+   },
+   "standAnchors": {
+    "stand-1": {
+     "pt": [
+      540,
+      1080
+     ],
+     "norm": [
+      0.5,
+      0.5625
+     ]
+    },
+    "stand-2": {
+     "pt": [
+      332,
+      1170
+     ],
+     "norm": [
+      0.3074,
+      0.6094
+     ]
+    },
+    "stand-3": {
+     "pt": [
+      748,
+      1240
+     ],
+     "norm": [
+      0.6926,
+      0.6458
+     ]
+    },
+    "stand-4": {
+     "pt": [
+      124,
+      1300
+     ],
+     "norm": [
+      0.1148,
+      0.6771
+     ]
+    }
+   },
+   "notes": "rank-N rect = where badge assets/ui/screens/rank-N.png (256x256) goes, scaled to the rect, sitting on the front face of its podium step. stand-N = top-centre of step N, where that player's critter stands (feet). Order left to right: 4th, 2nd, 1st (tallest, centred), 3rd. panel = calm cream area for scores / a Continue button (optional)."
+  },
+  "results-landscape": {
+   "files": [
+    {
+     "file": "assets/ui/screens/results-bg-landscape.png",
+     "w": 1920,
+     "h": 1080,
+     "bytes": 155532,
+     "kb": 151.9
+    },
+    {
+     "file": "assets/ui/screens/results-bg-landscape.webp",
+     "w": 1920,
+     "h": 1080,
+     "bytes": 80826,
+     "kb": 78.9
+    }
+   ],
+   "size": [
+    1920,
+    1080
+   ],
+   "safeArea": "Designed for 1920x1080 (16:9). Scale with object-fit: cover, anchored centre. Wider phones (19.5:9) crop about 9% from top and bottom, so slots keep >= 60 px top/bottom margin and stay in the central 80%. Keep UI clear of the left/right 100 px (notch / rounded corners in landscape). Compute slot positions from the normalized rects on the displayed (cover-scaled) image.",
+   "slots": {
+    "header": {
+     "rect": [
+      560,
+      40,
+      800,
+      170
+     ],
+     "norm": [
+      0.2917,
+      0.037,
+      0.4167,
+      0.1574
+     ]
+    },
+    "rank-1": {
+     "rect": [
+      870,
+      562,
+      180,
+      180
+     ],
+     "norm": [
+      0.4531,
+      0.5204,
+      0.0938,
+      0.1667
+     ]
+    },
+    "rank-2": {
+     "rect": [
+      620,
+      652,
+      180,
+      180
+     ],
+     "norm": [
+      0.3229,
+      0.6037,
+      0.0938,
+      0.1667
+     ]
+    },
+    "rank-3": {
+     "rect": [
+      1120,
+      722,
+      180,
+      180
+     ],
+     "norm": [
+      0.5833,
+      0.6685,
+      0.0938,
+      0.1667
+     ]
+    },
+    "rank-4": {
+     "rect": [
+      370,
+      755,
+      180,
+      180
+     ],
+     "norm": [
+      0.1927,
+      0.6991,
+      0.0938,
+      0.1667
+     ]
+    },
+    "panel": {
+     "rect": [
+      1400,
+      280,
+      470,
+      520
+     ],
+     "norm": [
+      0.7292,
+      0.2593,
+      0.2448,
+      0.4815
+     ]
+    }
+   },
+   "podiumSteps": {
+    "step-1": {
+     "rect": [
+      840,
+      500,
+      240,
+      430
+     ],
+     "norm": [
+      0.4375,
+      0.463,
+      0.125,
+      0.3981
+     ]
+    },
+    "step-2": {
+     "rect": [
+      590,
+      590,
+      240,
+      340
+     ],
+     "norm": [
+      0.3073,
+      0.5463,
+      0.125,
+      0.3148
+     ]
+    },
+    "step-3": {
+     "rect": [
+      1090,
+      660,
+      240,
+      270
+     ],
+     "norm": [
+      0.5677,
+      0.6111,
+      0.125,
+      0.25
+     ]
+    },
+    "step-4": {
+     "rect": [
+      340,
+      720,
+      240,
+      210
+     ],
+     "norm": [
+      0.1771,
+      0.6667,
+      0.125,
+      0.1944
+     ]
+    }
+   },
+   "standAnchors": {
+    "stand-1": {
+     "pt": [
+      960,
+      500
+     ],
+     "norm": [
+      0.5,
+      0.463
+     ]
+    },
+    "stand-2": {
+     "pt": [
+      710,
+      590
+     ],
+     "norm": [
+      0.3698,
+      0.5463
+     ]
+    },
+    "stand-3": {
+     "pt": [
+      1210,
+      660
+     ],
+     "norm": [
+      0.6302,
+      0.6111
+     ]
+    },
+    "stand-4": {
+     "pt": [
+      460,
+      720
+     ],
+     "norm": [
+      0.2396,
+      0.6667
+     ]
+    }
+   },
+   "notes": "rank-N rect = where badge assets/ui/screens/rank-N.png (256x256) goes, scaled to the rect, sitting on the front face of its podium step. stand-N = top-centre of step N, where that player's critter stands (feet). Order left to right: 4th, 2nd, 1st (tallest, centred), 3rd. panel = calm cream area for scores / a Continue button (optional)."
+  }
+ },
+ "progressBar": {
+  "files": [
+   {
+    "file": "assets/ui/screens/progress-track.png",
+    "w": 720,
+    "h": 96,
+    "bytes": 6972,
+    "kb": 6.8
+   },
+   {
+    "file": "assets/ui/screens/progress-fill.png",
+    "w": 672,
+    "h": 52,
+    "bytes": 3467,
+    "kb": 3.4
+   },
+   {
+    "file": "assets/ui/screens/progress-fill-amber.png",
+    "w": 672,
+    "h": 52,
+    "bytes": 3431,
+    "kb": 3.4
+   },
+   {
+    "file": "assets/ui/screens/progress-cap-glow.png",
+    "w": 128,
+    "h": 128,
+    "bytes": 12511,
+    "kb": 12.2
+   }
+  ],
+  "track": {
+   "size": [
+    720,
+    96
+   ],
+   "innerRect": [
+    24,
+    22,
+    672,
+    52
+   ],
+   "note": "cream pill with ink outline and a recessed groove; draw at the progress-bar slot"
+  },
+  "fill": {
+   "size": [
+    672,
+    52
+   ],
+   "nineSliceX": 26,
+   "note": "mint #7dffb0 (amber #ffb347 alt, e.g. for slow/retry) pill with ink edge and gloss. Place at track inner rect; show progress p by drawing width = max(52, p*672) with 9-slice caps of 26 px left/right (or clip with a rounded rect). Hide fill at p=0."
+  },
+  "capGlow": {
+   "size": [
+    128,
+    128
+   ],
+   "pivot": [
+    0.5,
+    0.5
+   ],
+   "note": "centre on the fill's right end: x = trackX + 24 + fillWidth - 26, y = trackY + 48. Pulse scale 0.9-1.1, additive or normal blend."
+  },
+  "matches": "assets/textures/fx/progress-ring.png (ink edges, mint #7dffb0 / amber #ffb347 tints)"
+ },
+ "brand": {
+  "files": [
+   {
+    "file": "assets/ui/brand/favicon-16.png",
+    "w": 16,
+    "h": 16,
+    "bytes": 200,
+    "kb": 0.2
+   },
+   {
+    "file": "assets/ui/brand/favicon-32.png",
+    "w": 32,
+    "h": 32,
+    "bytes": 1039,
+    "kb": 1.0
+   },
+   {
+    "file": "assets/ui/brand/favicon.ico",
+    "w": 32,
+    "h": 32,
+    "bytes": 1705,
+    "kb": 1.7
+   },
+   {
+    "file": "assets/ui/brand/apple-touch-icon.png",
+    "w": 180,
+    "h": 180,
+    "bytes": 23610,
+    "kb": 23.1
+   },
+   {
+    "file": "assets/ui/brand/icon-192.png",
+    "w": 192,
+    "h": 192,
+    "bytes": 9426,
+    "kb": 9.2
+   },
+   {
+    "file": "assets/ui/brand/icon-512.png",
+    "w": 512,
+    "h": 512,
+    "bytes": 28433,
+    "kb": 27.8
+   },
+   {
+    "file": "assets/ui/brand/icon-512-maskable.png",
+    "w": 512,
+    "h": 512,
+    "bytes": 25826,
+    "kb": 25.2
+   },
+   {
+    "file": "assets/ui/brand/og-image.png",
+    "w": 1200,
+    "h": 630,
+    "bytes": 117715,
+    "kb": 115.0
+   },
+   {
+    "file": "assets/ui/brand/og-image.jpg",
+    "w": 1200,
+    "h": 630,
+    "bytes": 118155,
+    "kb": 115.4
+   }
+  ],
+  "og": {
+   "size": [
+    1200,
+    630
+   ],
+   "logoRect": [
+    40,
+    70,
+    640,
+    240
+   ],
+   "note": "logo baked in; og-image.jpg is the same image, smaller for platforms that prefer JPEG"
+  },
+  "maskableSafeZone": "bee kept inside the central 80% circle (r = 204.8 px at 512); background is full-bleed",
+  "readme": "assets/ui/brand/README.md"
+ }
+}

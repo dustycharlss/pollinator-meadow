@@ -1,0 +1,137 @@
+{
+ "job": 16,
+ "extra_hazards_job16": {
+  "smoke_puff": "placeholder (no official name in hazards.json/copy.json yet)",
+  "geyser": "placeholder (no official name in hazards.json/copy.json yet)",
+  "venus_flytrap": "placeholder (no official name in hazards.json/copy.json yet)",
+  "pigeon": "placeholder (no official name in hazards.json/copy.json yet)",
+  "wasp": "placeholder (no official name in hazards.json/copy.json yet)"
+ },
+ "size_px": [
+  248,
+  248
+ ],
+ "scale": "2x of the 124 px journal .art circle",
+ "note": "hazard-<id>.png = transparent subject for the CSS .art circle (it already draws the parchment gradient + double ring); hazard-<id>-disc.png = pre-framed round portrait. Source: blocky hazard GLBs rendered by src/hazard-portrait.html.",
+ "portraits": {
+  "mud": {
+   "name": "Squishy Mud",
+   "key": "h:mud",
+   "file": "assets/ui/portraits/hazards/hazard-mud.png",
+   "disc": "assets/ui/portraits/hazards/hazard-mud-disc.png",
+   "source": "puddle-pixor-blocky.glb"
+  },
+  "puddle": {
+   "name": "Splashy Puddle",
+   "key": "h:puddle",
+   "file": "assets/ui/portraits/hazards/hazard-puddle.png",
+   "disc": "assets/ui/portraits/hazards/hazard-puddle-disc.png",
+   "source": "puddle-water-pixor-blocky.glb"
+  },
+  "bramble": {
+   "name": "Bramble Bush",
+   "key": "h:bramble",
+   "file": "assets/ui/portraits/hazards/hazard-bramble.png",
+   "disc": "assets/ui/portraits/hazards/hazard-bramble-disc.png",
+   "source": "thorn-bush-pixor-blocky.glb"
+  },
+  "web": {
+   "name": "Sticky Web",
+   "key": "h:web",
+   "file": "assets/ui/portraits/hazards/hazard-web.png",
+   "disc": "assets/ui/portraits/hazards/hazard-web-disc.png",
+   "source": "spider-web-google_cM0NzColM_0-blocky.glb"
+  },
+  "sprinkler": {
+   "name": "Sprinkler",
+   "key": "h:sprinkler",
+   "file": "assets/ui/portraits/hazards/hazard-sprinkler.png",
+   "disc": "assets/ui/portraits/hazards/hazard-sprinkler-disc.png",
+   "source": "sprinkler-portrait-blocky.glb"
+  },
+  "acorn_drop": {
+   "name": "Acorn Plop",
+   "key": "h:acorn_drop",
+   "file": "assets/ui/portraits/hazards/hazard-acorn_drop.png",
+   "disc": "assets/ui/portraits/hazards/hazard-acorn_drop-disc.png",
+   "source": "acorn-blocky.glb"
+  },
+  "nettle": {
+   "name": "Itchy Nettles",
+   "key": "h:nettle",
+   "file": "assets/ui/portraits/hazards/hazard-nettle.png",
+   "disc": "assets/ui/portraits/hazards/hazard-nettle-disc.png",
+   "source": "nettle-patch-blocky.glb"
+  },
+  "pollen_cloud": {
+   "name": "Sneezy Cloud",
+   "key": "h:pollen_cloud",
+   "file": "assets/ui/portraits/hazards/hazard-pollen_cloud.png",
+   "disc": "assets/ui/portraits/hazards/hazard-pollen_cloud-disc.png",
+   "source": "cloud-quaternius_P1cMV8qtN2-blocky.glb"
+  },
+  "wind_gust": {
+   "name": "Gusty Breeze",
+   "key": "h:wind_gust",
+   "file": "assets/ui/portraits/hazards/hazard-wind_gust.png",
+   "disc": "assets/ui/portraits/hazards/hazard-wind_gust-disc.png",
+   "source": "wind-gust-portrait-blocky.glb"
+  },
+  "rain_cloud": {
+   "name": "Drizzle Cloud",
+   "key": "h:rain_cloud",
+   "file": "assets/ui/portraits/hazards/hazard-rain_cloud.png",
+   "disc": "assets/ui/portraits/hazards/hazard-rain_cloud-disc.png",
+   "source": "rain-cloud-pixor-blocky.glb"
+  },
+  "mist_vent": {
+   "name": "Misty Puff",
+   "key": "h:mist_vent",
+   "file": "assets/ui/portraits/hazards/hazard-mist_vent.png",
+   "disc": "assets/ui/portraits/hazards/hazard-mist_vent-disc.png",
+   "source": "steam-vent-pixor-blocky.glb"
+  },
+  "slippery_rock": {
+   "name": "Slippy Rock",
+   "key": "h:slippery_rock",
+   "file": "assets/ui/portraits/hazards/hazard-slippery_rock.png",
+   "disc": "assets/ui/portraits/hazards/hazard-slippery_rock-disc.png",
+   "source": "rock-mossy-pixor-blocky.glb"
+  },
+  "smoke_puff": {
+   "name": "Smoky Puff",
+   "key": "h:smoke_puff",
+   "file": "assets/ui/portraits/hazards/hazard-smoke_puff.png",
+   "disc": "assets/ui/portraits/hazards/hazard-smoke_puff-disc.png",
+   "source": "smoke-puff-pixor-blocky.glb"
+  },
+  "geyser": {
+   "name": "Bubbly Geyser",
+   "key": "h:geyser",
+   "file": "assets/ui/portraits/hazards/hazard-geyser.png",
+   "disc": "assets/ui/portraits/hazards/hazard-geyser-disc.png",
+   "source": "geyser-pixor-blocky.glb"
+  },
+  "venus_flytrap": {
+   "name": "Snappy Flytrap",
+   "key": "h:venus_flytrap",
+   "file": "assets/ui/portraits/hazards/hazard-venus_flytrap.png",
+   "disc": "assets/ui/portraits/hazards/hazard-venus_flytrap-disc.png",
+   "source": "venus-flytrap-poly-by-google_0y4ZpRcGhoD-blocky.glb"
+  },
+  "pigeon": {
+   "name": "Pushy Pigeon",
+   "key": "h:pigeon",
+   "file": "assets/ui/portraits/hazards/hazard-pigeon.png",
+   "disc": "assets/ui/portraits/hazards/hazard-pigeon-disc.png",
+   "source": "pigeon-quaternius_9NGlBTpDEr-blocky.glb"
+  },
+  "wasp": {
+   "name": "Buzzy Wasp",
+   "key": "h:wasp",
+   "file": "assets/ui/portraits/hazards/hazard-wasp.png",
+   "disc": "assets/ui/portraits/hazards/hazard-wasp-disc.png",
+   "source": "wasp-quaternius_3aQgc75sUR-blocky.glb"
+  }
+ }
+}

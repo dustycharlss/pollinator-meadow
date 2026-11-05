@@ -1,0 +1,61 @@
+{
+  "id": "tap-hand",
+  "generator": "src/build-tap-hand.mjs",
+  "strip": "tap-hand-strip.png",
+  "frame_w": 256,
+  "frame_h": 256,
+  "frame_count": 3,
+  "layout": "horizontal strip, frame i at x = i*frame_w",
+  "scale": 2,
+  "display_css_px": [
+    128,
+    128
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "id": "idle",
+      "file": "tap-hand-idle.png",
+      "hotspot_px": [
+        104,
+        48
+      ],
+      "hotspot_uv": [
+        0.4063,
+        0.1875
+      ],
+      "suggested_ms": 500
+    },
+    {
+      "index": 1,
+      "id": "press",
+      "file": "tap-hand-press.png",
+      "hotspot_px": [
+        104,
+        60
+      ],
+      "hotspot_uv": [
+        0.4063,
+        0.2344
+      ],
+      "suggested_ms": 150
+    },
+    {
+      "index": 2,
+      "id": "release",
+      "file": "tap-hand-release.png",
+      "hotspot_px": [
+        104,
+        44
+      ],
+      "hotspot_uv": [
+        0.4063,
+        0.1719
+      ],
+      "suggested_ms": 350
+    }
+  ],
+  "hotspot_note": "Place the frame so hotspot_px sits on the tap target. Hotspot moves +12 px down on press (finger pushes in) and -4 px on release; to keep the finger glued to the target, use per-frame hotspot. idle hotspot = [104,48] (css [52,24]).",
+  "loop": "idle (bob optional) -> press -> release(ripple) -> idle; repeat",
+  "blend": "alpha (straight)"
+}

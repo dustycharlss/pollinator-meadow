@@ -1,0 +1,29 @@
+{
+  "id": "status-web-stuck",
+  "strip": "status-web-stuck-strip.png",
+  "still": "status-web-stuck-still.png",
+  "frame_w": 256,
+  "frame_h": 256,
+  "frame_count": 6,
+  "fps": 8,
+  "loop": true,
+  "duration_s": 0.75,
+  "layout": "horizontal strip, frame 1 at the left; frame i at x = i*frame_w",
+  "scale": 2,
+  "display_css_px": [
+    128,
+    128
+  ],
+  "anchor_px": [
+    128,
+    128
+  ],
+  "anchor_uv": [
+    0.5,
+    0.5
+  ],
+  "attach": "body-center",
+  "blend": "alpha (straight, edge-bled)",
+  "desc": "sticky web strands wrapped over the animal (open middle so the face shows); wobbles while stuck. Stop it when the animal boings free (play wobble-pop or web-strand burst).",
+  "source_svg": "src/svg/status/status-web-stuck.svg"
+}
