@@ -3,6 +3,8 @@ import { SPECIES } from './data.js';
 
 export const VALLEY_SAVE_KEY = 'pm-valley-v1';
 export const HEAL_PACKUP = 0.85;
+/** Beta: every valley level playable; set false to restore sequential unlock. */
+export const UNLOCK_ALL_LEVELS = true;
 export const PACKUP_REFUND = 0.5;
 
 export const PATCHES = [
@@ -137,15 +139,18 @@ export function createValley(ctx) {
     canStart(id, crewTags) {
       const def = patchDef(id), st = V.patches[id];
       if (!def || !st) return { ok: false, why: 'Unknown patch' };
-      if (st.state === 'wild') return { ok: false, why: 'Already wild — postcard mode later' };
-      // one open at a time
-      const busy = PATCHES.find(p => p.id !== id && ['in_progress', 'blooming'].includes(V.patches[p.id].state));
-      if (busy && st.state === 'wilted') return { ok: false, why: `Finish ${busy.name} first` };
-      // sequential unlock: prior patches must be wild (except continue)
-      const idx = PATCHES.findIndex(p => p.id === id);
-      if (st.state === 'wilted') {
-        for (let i = 0; i < idx; i++) {
-          if (V.patches[PATCHES[i].id].state !== 'wild') return { ok: false, why: `Heal ${PATCHES[i].name} first` };
+      // When UNLOCK_ALL_LEVELS, wild patches are replayable (heal resets on start).
+      if (st.state === 'wild' && !UNLOCK_ALL_LEVELS) return { ok: false, why: 'Already wild — postcard mode later' };
+      if (!UNLOCK_ALL_LEVELS) {
+        // one open at a time
+        const busy = PATCHES.find(p => p.id !== id && ['in_progress', 'blooming'].includes(V.patches[p.id].state));
+        if (busy && st.state === 'wilted') return { ok: false, why: `Finish ${busy.name} first` };
+        // sequential unlock: prior patches must be wild (except continue)
+        const idx = PATCHES.findIndex(p => p.id === id);
+        if (st.state === 'wilted') {
+          for (let i = 0; i < idx; i++) {
+            if (V.patches[PATCHES[i].id].state !== 'wild') return { ok: false, why: `Heal ${PATCHES[i].name} first` };
+          }
         }
       }
       const miss = missingNeeds(def.need, crewTags);

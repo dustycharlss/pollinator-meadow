@@ -2,7 +2,7 @@ import { FEATURES } from './features.js';
 // The timed round: clock, score breakdown, round resources, best scores and the round save.
 export const LENGTHS = [3, 5, 10, 15, 20];
 const ROUND_KEY = 'pollinator-meadow-round-v1', BEST_KEY = 'pollinator-meadow-best-v1', SET_KEY = 'pollinator-meadow-settings-v1';
-export const CATS = [['gather', '🌼', 'Gathering'], ['building', '🔨', 'Building'], ['territory', '🗺️', 'Territory'], FEATURES.teamFoods ? ['team', '🤝', 'Teamwork foods & journal'] : ['team', '📖', 'Journal pages'], ['upkeep', '💧', 'Upkeep bonuses'], ['explore', '✨', 'Dewdrops'], ['admin', '🛠️', 'Admin bonus']];
+export const CATS = [['gather', '🌼', 'Gathering'], ['building', '🔨', 'Building'], FEATURES.teamFoods ? ['team', '🤝', 'Teamwork foods & journal'] : ['team', '📖', 'Journal pages'], ['upkeep', '💧', 'Upkeep bonuses'], ['explore', '✨', 'Dewdrops'], ['admin', '🛠️', 'Admin bonus']];
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
 
 export function loadSettings() { return Object.assign({ len: 10, vol: 0.7, mute: false }, j(SET_KEY, {})); }

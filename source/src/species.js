@@ -10,7 +10,7 @@ export const ARCH = {
   bee:         { size: 'S', run: 8.5, fly: 1.55, carry: 6,  pick: 1, reach: 3.0, drain: 0.27, hSpd: 8.5, hCap: 3, hEat: 0.8, mix: { n: 0.75, h: 0.25 }, by: { k: 'h', per: 4 },
     str: ['Quick nectar runs', 'Flies over everything', 'Makes a little 🍯 as it delivers'], weak: ['Tiny loads (6)', 'Stamina runs out'] },
   butterfly:   { size: 'S', run: 7.2, fly: 1.35, carry: 6,  pick: 1, reach: 3.8, drain: 0.17, hSpd: 7.0, hCap: 3, hEat: 1.0, mix: { n: 1 }, by: null,
-    str: ['Longest glide', 'Wide pickup reach', 'Great for growing territory (tech)'], weak: ['Slow-ish, drifty', 'Small loads'] },
+    str: ['Longest glide', 'Wide pickup reach', 'Great for cheering the meadow (tech)'], weak: ['Slow-ish, drifty', 'Small loads'] },
   hummingbird: { size: 'S', run: 10,  fly: 1.8,  carry: 4,  pick: 2, reach: 2.6, drain: 0.45, hSpd: 10.5, hCap: 2, hEat: 0.6, mix: { n: 1 }, by: null,
     str: ['Fastest animal', '2 nectar per flower', 'Quick sips'], weak: ['Smallest load (4)', 'Burns stamina fast', 'Must slow to sip'] },
   moth:        { size: 'S', run: 7.5, fly: 1.3,  carry: 6,  pick: 1, reach: 3.4, drain: 0.26, hSpd: 6.5, hCap: 3, hEat: 1.0, night: 1.25, mix: { n: 0.7, f: 0.3 }, by: { k: 'f', per: 4 },

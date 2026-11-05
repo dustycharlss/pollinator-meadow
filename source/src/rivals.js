@@ -192,8 +192,8 @@ export async function createRivals(scene, ctx) {
     return { x: -n.x * 0.7, z: -n.z * 0.7, y: heightAt(-n.x * 0.7, -n.z * 0.7) };
   }
   function nearPlayerEdge(x, z) {
-    // keep >= 12 m outside player's claim edge
-    return terr.inside(x, z, 12);
+    // Territory retired (t135u): no claim edge to avoid.
+    return false;
   }
   function pickBuildSpot(base, kind) {
     const reach = kind === 'outpost' ? 36 : 28;
@@ -292,7 +292,7 @@ export async function createRivals(scene, ctx) {
     R.score += Math.round(pts * edgeMul());
     audio?.sample?.('rivals/rival-build-done', 0.45);
     if (b.kind === 'outpost' || b.kind === 'home' || b.kind === 'marker') {
-      showToast('claimed', `${R.active.name} claimed a patch!`, R.active.sp);
+      showToast('claimed', `${R.active.name} built nearby!`, R.active.sp);
       audio?.sample?.('rivals/rival-colony-cheer', 0.35);
     }
     if (b.kind === 'home') ensurePile(b);
@@ -378,8 +378,8 @@ export async function createRivals(scene, ctx) {
 
   R.update = (dt, t, { playing, paused, p, lead }) => {
     if (!playing || paused || !R.active) return;
-    // territory score drip for rival
-    R.score += (terr.rivalPct || 0) * 0.08 * dt * edgeMul();
+    // Territory retired — rival score from builds/actions only.
+    R.score += 0;
 
     // construction
     if (R.buildProg) {
@@ -405,7 +405,7 @@ export async function createRivals(scene, ctx) {
     if (R.pileCd > 0) R.pileCd = Math.max(0, R.pileCd - dt);
     for (const b of R.buildings) if (b._claimCd > 0) b._claimCd = Math.max(0, b._claimCd - dt);
     if (R.react) { R.react.t -= dt; if (R.react.t <= 0) R.react = null; }
-    if (reactOn() && p && !R.dismantle) { tickRaid(dt, p); R.tryClaim(p, dt); }
+    if (reactOn() && p && !R.dismantle) { tickRaid(dt, p); /* Flower Flag / claim retired with territory (t135u) */ }
   };
 
 
@@ -507,33 +507,13 @@ export async function createRivals(scene, ctx) {
       toast?.(`${SPECIES[sp]?.emoji || '⭐'} ${CLAIM_FLAVOR[sp] || 'Good game!'}`, 2600);
     }, 900);
     showToast('claimed', `Flower flag! Patch is yours`, sp);
-    round.add('territory', 35);
+    /* territory score retired */
     ctx.onHud?.();
     return true;
   }
-  R.tryClaim = (p, dt) => {
-    if (!reactOn() || !R.active || !p) { R.claimT = 0; return false; }
-    const patch = R.nearPatch(p);
-    if (!patch) { R.claimT = 0; return false; }
-    if ((patch._claimCd || 0) > 0) { R.claimT = 0; return false; }
-    R.claimT += dt;
-    if (R.claimT > 0.15 && R.claimT < 0.15 + dt) worldBadge(patch.x, patch.y, patch.z, '😮', 1000);
-    if (!R.dismantle && !R.raidProg) {
-      ensureUi(); R.ringEl.style.display = 'block'; R.ringLab.textContent = 'Flower\nflag';
-      const pct = Math.min(1, R.claimT / 4);
-      R.ringEl.style.background = `conic-gradient(#4aa8ff ${pct * 360}deg, #fff3d8 0deg)`;
-    }
-    if (R.claimT < 4) return 'holding';
-    return completeClaim(patch);
-  };
-  /** Wheel / Interact: plant flag now if standing in a rival patch. */
-  R.beginFlag = (p) => {
-    if (!reactOn() || !R.active || !p) return false;
-    const patch = R.nearPatch(p);
-    if (!patch) { toast?.('Stand in a rival meadow patch to plant your flower flag', 2200); return false; }
-    if ((patch._claimCd || 0) > 0) { toast?.('That patch needs a little rest first', 1800); return false; }
-    return completeClaim(patch);
-  };
+  // Flower Flag / territory claim retired (t135u). Kept as no-ops so any leftover callers stay safe.
+  R.tryClaim = () => { R.claimT = 0; return false; };
+  R.beginFlag = () => false;
 
 
   R.nearRival = (p) => (p && Number.isFinite(p.x) && Number.isFinite(p.z)) ? nearestBuild(p, 6.5) : null;
@@ -562,7 +542,7 @@ export async function createRivals(scene, ctx) {
       build, home, patch,
       canStartle: !!(on && build && R.startleImm <= 0 && !R.reactBusy()),
       canRaid: !!(on && home && R.pileCd <= 0 && !R.raidProg),
-      canClaim: !!(on && patch && (patch._claimCd || 0) <= 0),
+      canClaim: false,
       canDismantle: !!build,
     };
   };

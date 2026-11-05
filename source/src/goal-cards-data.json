@@ -1,995 +1,995 @@
 [
- {
-  "id": "first_haul",
-  "title": "First Haul",
-  "tier": "easy",
-  "description": "Bring food home to your nest.",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "round.stats.units >= T (player + helpers; nestCheck in main.js)",
-  "reward": "🧺 Jumbo Basket",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Scale T by ARCH[lead].econ (code: max(1,(carry/7)^0.25): bee 1.00, bear 1.30).",
-  "status": "active",
-  "targets": {
-   "3": 6,
-   "5": 10,
-   "10": 20,
-   "15": 30,
-   "20": 40
+  {
+    "id": "first_haul",
+    "title": "First Haul",
+    "tier": "easy",
+    "description": "Bring food home to your nest.",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "round.stats.units >= T (player + helpers; nestCheck in main.js)",
+    "reward": "\ud83e\uddfa Jumbo Basket",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Scale T by ARCH[lead].econ (code: max(1,(carry/7)^0.25): bee 1.00, bear 1.30).",
+    "status": "active",
+    "targets": {
+      "3": 6,
+      "5": 10,
+      "10": 20,
+      "15": 30,
+      "20": 40
+    }
+  },
+  {
+    "id": "quick_start",
+    "title": "Speedy Start",
+    "tier": "easy",
+    "description": "Drop off your first load in the first minute!",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "first nestCheck delivery while round.elapsed < 60",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Fixed target; good first card for brand-new players.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 1,
+      "20": 1
+    }
+  },
+  {
+    "id": "beacon_buddy",
+    "title": "Builder",
+    "tier": "easy",
+    "description": "Build a Tier 1 building for your animal.",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.builds.outpost >= T",
+    "reward": "Hat: flower-crown",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 2,
+      "15": 3,
+      "20": 4
+    }
+  },
+  {
+    "id": "trail_blazer",
+    "title": "Dew Builder",
+    "tier": "easy",
+    "description": "Build a Tier 2 building (needs \ud83d\udca7 Dewdrops).",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.builds.marker >= T",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Cheap (3 wood + 2 forage base).",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 2,
+      "10": 3,
+      "15": 4,
+      "20": 5
+    }
+  },
+  {
+    "id": "garden_time",
+    "title": "Star Builder",
+    "tier": "easy",
+    "description": "Build a Tier 3 building (needs a \ud83c\udf1f Starseed).",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.builds.garden >= T",
+    "reward": "Hat: leaf-hat",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Max 6 gardens.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 2,
+      "15": 2,
+      "20": 3
+    }
+  },
+  {
+    "id": "dew_dash",
+    "title": "Dewdrop Dash",
+    "tier": "easy",
+    "description": "Hop up to a golden dewdrop.",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "round.stats.dew >= T (dewCheck)",
+    "reward": "\ud83e\uddfa Jumbo Basket time",
+    "min_len_min": 3,
+    "offer_only_if": "dewdrops left >= T",
+    "notes": "~18 dewdrops (ROUTE_STARTS); save.dew resets each fresh round.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 2,
+      "10": 3,
+      "15": 4,
+      "20": 5
+    }
+  },
+  {
+    "id": "new_friend",
+    "title": "New Friend",
+    "tier": "easy",
+    "description": "Hire a helper to gather with you.",
+    "tags": [
+      "hiring"
+    ],
+    "condition": "round.stats.helpers >= T (H.hire)",
+    "reward": "\ud83d\udc3e Free helper hire",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Hire cost multiplier 1+0.2n (first 3), then 1.4+0.4(n-3) (helpers.js).",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 2,
+      "15": 3,
+      "20": 4
+    }
+  },
+  {
+    "id": "smart_start",
+    "title": "Smart Start",
+    "tier": "easy",
+    "description": "Research your first tech.",
+    "tags": [
+      "tech/research"
+    ],
+    "condition": "tech.count() >= T (tech.js finish(); resets every round)",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Tier 1 = 14 cost, 20 s research.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 2,
+      "15": 3,
+      "20": 4
+    }
+  },
+  {
+    "id": "cozy_home",
+    "title": "Cozy Home",
+    "tier": "easy",
+    "description": "Upgrade your home to make it bigger.",
+    "tags": [
+      "building"
+    ],
+    "condition": "build.homeLv[lead] >= T (B.upgradeHome)",
+    "reward": "\ud83c\udf9f\ufe0f Temporary visitor",
+    "min_len_min": 3,
+    "offer_only_if": "homeLv[lead] < 3",
+    "notes": "Check homeLv resets per fresh round.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 2,
+      "20": 2
+    }
+  },
+  {
+    "id": "nest_grows",
+    "title": "Nest Grows",
+    "tier": "easy",
+    "description": "Fill your nest until it grows!",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "nests[lead].stage >= T (STAGE_AT 0/6/18/40)",
+    "reward": "Hat: mushroom-cap",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Stage-up also unlocks a home ability.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 2,
+      "15": 2,
+      "20": 3
+    }
+  },
+  {
+    "id": "bloom_zone",
+    "title": "Bloom Zone",
+    "tier": "easy",
+    "description": "Grow your meadow bigger.",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.maxPct >= T (%)",
+    "reward": "\ud83c\udf9f\ufe0f Temporary visitor",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Percent targets are first guesses; tune with a playtest. Parked: territory system removed (t135u).",
+    "status": "parked",
+    "targets": {
+      "3": 1,
+      "5": 2,
+      "10": 4,
+      "15": 6,
+      "20": 8
+    }
+  },
+  {
+    "id": "larder",
+    "title": "Star Carrier",
+    "tier": "easy",
+    "description": "Carry a \ud83c\udf1f Starseed home safely.",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.builds.storage >= T",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Base cost 10 wood + 5 honey; lead price may differ.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 2,
+      "20": 2
+    }
+  },
+  {
+    "id": "bridge",
+    "title": "Bridge Builder",
+    "tier": "easy",
+    "description": "Build a bridge over the water.",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.builds.bridge >= T",
+    "reward": "\ud83e\uddfa Jumbo Basket",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 2,
+      "20": 2
+    }
+  },
+  {
+    "id": "tend_beacon",
+    "title": "Dew Collector",
+    "tier": "medium",
+    "description": "Grab a whole cluster of 5 \ud83d\udca7 Dewdrops before they dry.",
+    "tags": [
+      "building"
+    ],
+    "condition": "count of beacon tends (build.js update: round.add('upkeep',12)) >= T",
+    "reward": "\ud83c\udf9f\ufe0f Temporary visitor",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Needs a beacon placed 40+ s earlier, so 3-min rounds are tight.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 2,
+      "10": 3,
+      "15": 5,
+      "20": 6
+    }
+  },
+  {
+    "id": "busy_helpers",
+    "title": "Busy Helpers",
+    "tier": "medium",
+    "description": "Let your helpers bring food home.",
+    "tags": [
+      "hiring",
+      "gathering"
+    ],
+    "condition": "round.stats.helperUnits >= T",
+    "reward": "\ud83d\udc3e Free helper hire",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 5,
+      "5": 10,
+      "10": 25,
+      "15": 40,
+      "20": 60
+    }
+  },
+  {
+    "id": "crew_three",
+    "title": "Crew of Three",
+    "tier": "medium",
+    "description": "Hire a team of helpers.",
+    "tags": [
+      "hiring"
+    ],
+    "condition": "round.stats.helpers >= T",
+    "reward": "Hat: dandelion-puff",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 2,
+      "5": 2,
+      "10": 3,
+      "15": 4,
+      "20": 5
+    }
+  },
+  {
+    "id": "team_trainer",
+    "title": "Team Trainer",
+    "tier": "medium",
+    "description": "Train your helpers to level up.",
+    "tags": [
+      "hiring"
+    ],
+    "condition": "helpers.lvl >= T (H.train)",
+    "reward": "\ud83d\udc3e Free helper hire",
+    "min_len_min": 5,
+    "offer_only_if": "helpers.lvl < 3",
+    "notes": "Helper training level may carry over between rounds; offer only if not maxed.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 2,
+      "20": 2
+    }
+  },
+  {
+    "id": "gear_up",
+    "title": "Gear Up",
+    "tier": "medium",
+    "description": "Buy a new piece of gear.",
+    "tags": [
+      "gear"
+    ],
+    "condition": "buyGear() returns true T times this round",
+    "reward": "\ud83e\uddfa Jumbo Basket \u00d72",
+    "min_len_min": 3,
+    "offer_only_if": "some save.gear[lead].t[slot] < 3",
+    "notes": "Gear tiers and bank are saved forever, so check that a slot isn't maxed.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 2,
+      "20": 2
+    }
+  },
+  {
+    "id": "upgrade_it",
+    "title": "Level Up!",
+    "tier": "medium",
+    "description": "Upgrade a garden or beacon.",
+    "tags": [
+      "building"
+    ],
+    "condition": "B.upgrade() succeeds T times",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 2,
+      "20": 3
+    }
+  },
+  {
+    "id": "half_best",
+    "title": "Half Way Hero",
+    "tier": "medium",
+    "description": "Get half of your best score.",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "round.score() >= 0.5 * bests()[len]",
+    "reward": "\ud83e\uddfa Jumbo Basket time",
+    "min_len_min": 3,
+    "offer_only_if": "bests()[len] exists",
+    "notes": "Self-scaling. Skip for first-ever round.",
+    "status": "active",
+    "targets": {
+      "3": 0.5,
+      "5": 0.5,
+      "10": 0.5,
+      "15": 0.5,
+      "20": 0.5
+    }
+  },
+  {
+    "id": "mixed_bag",
+    "title": "Mixed Bag",
+    "tier": "medium",
+    "description": "Collect all 3 kinds: \ud83c\udf3c Petals, \ud83d\udca7 Dewdrops, \ud83c\udf1f Starseeds.",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "each of round.res p/d/s gained >= T",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Gardens rotate kinds; helpers of other species bring other kinds.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 1,
+      "20": 1
+    }
+  },
+  {
+    "id": "bloom_burst",
+    "title": "Bloom Burst",
+    "tier": "medium",
+    "description": "Make your meadow really big!",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.maxPct >= T (%)",
+    "reward": "\ud83c\udf9f\ufe0f Temporary visitor",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Tune with a playtest. Parked: territory system removed (t135u).",
+    "status": "parked",
+    "targets": {
+      "3": 3,
+      "5": 5,
+      "10": 8,
+      "15": 12,
+      "20": 15
+    }
+  },
+  {
+    "id": "far_flower",
+    "title": "Far Flower",
+    "tier": "medium",
+    "description": "Build something far from home.",
+    "tags": [
+      "building"
+    ],
+    "condition": "a placed building has rec.solo == true",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 1,
+      "20": 2
+    }
+  },
+  {
+    "id": "page_finder",
+    "title": "Page Finder",
+    "tier": "medium",
+    "description": "Find a new Field Journal page.",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "journalUnlock() returns true this round",
+    "reward": "Hat: honey-pot-hat",
+    "min_len_min": 5,
+    "offer_only_if": "jFound() < JTOTAL",
+    "notes": "Pages are saved forever; skip once the journal is full.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 1,
+      "20": 2
+    }
+  },
+  {
+    "id": "smart_cookie",
+    "title": "Smart Cookie",
+    "tier": "medium",
+    "description": "Research a tier 2 tech.",
+    "tags": [
+      "tech/research"
+    ],
+    "condition": "any node with tier >= 2 done in tech.done",
+    "reward": "\u2728 Looks unlock",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Tier 2 = 26 cost, 35 s.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 1,
+      "20": 1
+    }
+  },
+  {
+    "id": "garden_party",
+    "title": "Star Party",
+    "tier": "medium",
+    "description": "Build lots of Tier 3 buildings.",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.builds.garden >= T",
+    "reward": "\ud83c\udf9f\ufe0f Temporary visitor",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Max 6.",
+    "status": "active",
+    "targets": {
+      "3": 2,
+      "5": 2,
+      "10": 3,
+      "15": 4,
+      "20": 5
+    }
+  },
+  {
+    "id": "builder_mix",
+    "title": "Builder Mix",
+    "tier": "medium",
+    "description": "Build different kinds of buildings.",
+    "tags": [
+      "building"
+    ],
+    "condition": "count of distinct keys in round.stats.builds >= T",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 2,
+      "5": 3,
+      "10": 3,
+      "15": 4,
+      "20": 5
+    }
+  },
+  {
+    "id": "night_shift",
+    "title": "Night Shift",
+    "tier": "medium",
+    "description": "Bring food home after dark. \ud83c\udf19",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "units delivered while nightOf(clock.t) > 0.5 >= T",
+    "reward": "\ud83e\uddfa Jumbo Basket",
+    "min_len_min": 10,
+    "offer_only_if": "",
+    "notes": "Day is 540 s and a round starts at morning, so night only comes in long rounds. Best for moth, bat, opossum, raccoon.",
+    "status": "active",
+    "targets": {
+      "3": 0,
+      "5": 0,
+      "10": 5,
+      "15": 10,
+      "20": 15
+    }
+  },
+  {
+    "id": "little_ones",
+    "title": "Little Ones",
+    "tier": "hard",
+    "description": "Grow your home all the way so babies arrive!",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "nests[lead].stage >= 3 (40 units)",
+    "reward": "\u2728 Looks unlock + \ud83d\udce6 burst",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 3,
+      "5": 3,
+      "10": 3,
+      "15": 3,
+      "20": 3
+    }
+  },
+  {
+    "id": "beacon_ring",
+    "title": "Busy Builder",
+    "tier": "hard",
+    "description": "Build lots of Tier 1 buildings.",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.builds.outpost >= T",
+    "reward": "\ud83d\udc3e Free helper hire",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Max 18.",
+    "status": "active",
+    "targets": {
+      "3": 2,
+      "5": 3,
+      "10": 5,
+      "15": 8,
+      "20": 10
+    }
+  },
+  {
+    "id": "dew_hunter",
+    "title": "Dew Hunter",
+    "tier": "hard",
+    "description": "Find lots of golden dewdrops.",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "round.stats.dew >= T",
+    "reward": "\ud83e\uddfa Jumbo Basket \u00d72",
+    "min_len_min": 5,
+    "offer_only_if": "dewdrops left >= T",
+    "notes": "Spread across 6 zones; fliers have an easier time.",
+    "status": "active",
+    "targets": {
+      "3": 3,
+      "5": 5,
+      "10": 8,
+      "15": 11,
+      "20": 14
+    }
+  },
+  {
+    "id": "tech_master",
+    "title": "Tech Master",
+    "tier": "hard",
+    "description": "Research lots of tech.",
+    "tags": [
+      "tech/research"
+    ],
+    "condition": "tech.count() >= T",
+    "reward": "\u2728 Looks unlock",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "6 nodes per branch pair; only one research at a time per species.",
+    "status": "active",
+    "targets": {
+      "3": 2,
+      "5": 3,
+      "10": 5,
+      "15": 6,
+      "20": 6
+    }
+  },
+  {
+    "id": "full_crew",
+    "title": "Full Crew",
+    "tier": "hard",
+    "description": "Hire a big helper team.",
+    "tags": [
+      "hiring"
+    ],
+    "condition": "round.stats.helpers >= T",
+    "reward": "\ud83d\udc3e Free helper hire",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "HIRE_MAX 10 (+tech hireCap).",
+    "status": "active",
+    "targets": {
+      "3": 3,
+      "5": 4,
+      "10": 6,
+      "15": 8,
+      "20": 10
+    }
+  },
+  {
+    "id": "home_sweet",
+    "title": "Dream Home",
+    "tier": "hard",
+    "description": "Upgrade your home to the top level.",
+    "tags": [
+      "building"
+    ],
+    "condition": "build.homeLv[lead] >= 3",
+    "reward": "\ud83d\udce6 Big resource burst",
+    "min_len_min": 10,
+    "offer_only_if": "homeLv[lead] < 3",
+    "notes": "Upgrade 1-2-3 in one round.",
+    "status": "active",
+    "targets": {
+      "3": 3,
+      "5": 3,
+      "10": 3,
+      "15": 3,
+      "20": 3
+    }
+  },
+  {
+    "id": "helper_haul",
+    "title": "Helper Haul",
+    "tier": "hard",
+    "description": "Your helpers bring home a mountain of food!",
+    "tags": [
+      "hiring",
+      "gathering"
+    ],
+    "condition": "round.stats.helperUnits >= T",
+    "reward": "\ud83d\udc3e Free helper hire",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 15,
+      "5": 30,
+      "10": 70,
+      "15": 110,
+      "20": 160
+    }
+  },
+  {
+    "id": "big_bloom",
+    "title": "Big Bloom",
+    "tier": "hard",
+    "description": "Turn a huge part of the map into meadow!",
+    "tags": [
+      "building"
+    ],
+    "condition": "round.stats.maxPct >= T (%)",
+    "reward": "\ud83c\udf9f\ufe0f Temporary visitor",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Tune with a playtest. Parked: territory system removed (t135u).",
+    "status": "parked",
+    "targets": {
+      "3": 6,
+      "5": 10,
+      "10": 18,
+      "15": 25,
+      "20": 30
+    }
+  },
+  {
+    "id": "best_ever",
+    "title": "Best Ever!",
+    "tier": "hard",
+    "description": "Beat your best score for this round length.",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "round.score() > bests()[len] (or pm-best-sp lead:len)",
+    "reward": "\u2728 Looks unlock + \ud83e\uddfa Jumbo",
+    "min_len_min": 3,
+    "offer_only_if": "bests()[len] exists",
+    "notes": "Use the per-species best so switching animals stays fair.",
+    "status": "active",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 1,
+      "20": 1
+    }
+  },
+  {
+    "id": "gather_pro",
+    "title": "Gather Pro",
+    "tier": "hard",
+    "description": "Bring home a giant pile of food.",
+    "tags": [
+      "gathering"
+    ],
+    "condition": "round.stats.units >= T",
+    "reward": "\ud83e\uddfa Jumbo Basket \u00d72",
+    "min_len_min": 3,
+    "offer_only_if": "",
+    "notes": "Scale by ARCH[lead].econ.",
+    "status": "active",
+    "targets": {
+      "3": 20,
+      "5": 35,
+      "10": 80,
+      "15": 120,
+      "20": 170
+    }
+  },
+  {
+    "id": "max_level",
+    "title": "Max Level",
+    "tier": "hard",
+    "description": "Upgrade a garden or beacon to Lv 3.",
+    "tags": [
+      "building"
+    ],
+    "condition": "any placed building p.lv >= 3",
+    "reward": "\ud83d\udce6 Big resource burst",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "",
+    "status": "active",
+    "targets": {
+      "3": 3,
+      "5": 3,
+      "10": 3,
+      "15": 3,
+      "20": 3
+    }
+  },
+  {
+    "id": "producer",
+    "title": "Busy Workshop",
+    "tier": "hard",
+    "description": "Build a Tier 2 or Tier 3 building.",
+    "tags": [
+      "tech/research",
+      "building"
+    ],
+    "condition": "round.stats.builds[apiary|honeycave|woodpile|wormfarm] >= 1",
+    "reward": "\ud83d\udc3e Free helper hire",
+    "min_len_min": 5,
+    "offer_only_if": "lead in bee, bear, opossum, robin",
+    "notes": "Needs the tier 3 node (bee apiary, bear cave, opossum woodpile, robin wormfarm).",
+    "status": "active",
+    "targets": {
+      "3": 0,
+      "5": 1,
+      "10": 1,
+      "15": 1,
+      "20": 2
+    }
+  },
+  {
+    "id": "stay_dry",
+    "title": "Stay Dry",
+    "tier": "medium",
+    "description": "Zip past a sprinkler without getting soggy.",
+    "tags": [
+      "hazards"
+    ],
+    "condition": "(needs hazards chunk: garden-sprinkler)",
+    "reward": "\ud83e\uddfa Jumbo Basket",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Parked: no hazards code yet.",
+    "status": "parked",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 2,
+      "15": 2,
+      "20": 3
+    }
+  },
+  {
+    "id": "nettle_skip",
+    "title": "Nettle Hop",
+    "tier": "medium",
+    "description": "Hop around the nettle patches.",
+    "tags": [
+      "hazards"
+    ],
+    "condition": "(needs hazards chunk: nettle-patch)",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Parked.",
+    "status": "parked",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 2,
+      "15": 3,
+      "20": 3
+    }
+  },
+  {
+    "id": "say_boo",
+    "title": "Peekaboo!",
+    "tier": "medium",
+    "description": "Give a rival a friendly surprise to shoo it away.",
+    "tags": [
+      "rival startle/raid/claim"
+    ],
+    "condition": "(needs rivals chunk: startle)",
+    "reward": "\ud83c\udf9f\ufe0f Temporary visitor",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Parked. Keep it a playful 'boo', never a fight.",
+    "status": "parked",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 2,
+      "15": 2,
+      "20": 3
+    }
+  },
+  {
+    "id": "claim_patch",
+    "title": "Claim a Patch",
+    "tier": "hard",
+    "description": "Bloom flowers on a spot no colony owns yet.",
+    "tags": [
+      "rival startle/raid/claim"
+    ],
+    "condition": "(needs rivals chunk: claim)",
+    "reward": "\ud83d\udc3e Free helper hire",
+    "min_len_min": 10,
+    "offer_only_if": "",
+    "notes": "Parked.",
+    "status": "parked",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 2,
+      "15": 3,
+      "20": 4
+    }
+  },
+  {
+    "id": "tidy_up",
+    "title": "Tidy Up",
+    "tier": "medium",
+    "description": "Take apart a rival's building into confetti!",
+    "tags": [
+      "dismantle"
+    ],
+    "condition": "(needs dismantle mini-game)",
+    "reward": "\ud83d\udce6 Resource burst",
+    "min_len_min": 5,
+    "offer_only_if": "",
+    "notes": "Parked. Planks/petals/confetti pop, never a smash.",
+    "status": "parked",
+    "targets": {
+      "3": 1,
+      "5": 1,
+      "10": 1,
+      "15": 2,
+      "20": 3
+    }
   }
- },
- {
-  "id": "quick_start",
-  "title": "Speedy Start",
-  "tier": "easy",
-  "description": "Drop off your first load in the first minute!",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "first nestCheck delivery while round.elapsed < 60",
-  "reward": "📦 Resource burst",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Fixed target; good first card for brand-new players.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 1,
-   "20": 1
-  }
- },
- {
-  "id": "beacon_buddy",
-  "title": "Builder",
-  "tier": "easy",
-  "description": "Build a Tier 1 building for your animal.",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.builds.outpost >= T",
-  "reward": "Hat: flower-crown",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 2,
-   "15": 3,
-   "20": 4
-  }
- },
- {
-  "id": "trail_blazer",
-  "title": "Dew Builder",
-  "tier": "easy",
-  "description": "Build a Tier 2 building (needs 💧 Dewdrops).",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.builds.marker >= T",
-  "reward": "📦 Resource burst",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Cheap (3 wood + 2 forage base).",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 2,
-   "10": 3,
-   "15": 4,
-   "20": 5
-  }
- },
- {
-  "id": "garden_time",
-  "title": "Star Builder",
-  "tier": "easy",
-  "description": "Build a Tier 3 building (needs a 🌟 Starseed).",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.builds.garden >= T",
-  "reward": "Hat: leaf-hat",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Max 6 gardens.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 2,
-   "15": 2,
-   "20": 3
-  }
- },
- {
-  "id": "dew_dash",
-  "title": "Dewdrop Dash",
-  "tier": "easy",
-  "description": "Hop up to a golden dewdrop.",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "round.stats.dew >= T (dewCheck)",
-  "reward": "🧺 Jumbo Basket time",
-  "min_len_min": 3,
-  "offer_only_if": "dewdrops left >= T",
-  "notes": "~18 dewdrops (ROUTE_STARTS); save.dew resets each fresh round.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 2,
-   "10": 3,
-   "15": 4,
-   "20": 5
-  }
- },
- {
-  "id": "new_friend",
-  "title": "New Friend",
-  "tier": "easy",
-  "description": "Hire a helper to gather with you.",
-  "tags": [
-   "hiring"
-  ],
-  "condition": "round.stats.helpers >= T (H.hire)",
-  "reward": "🐾 Free helper hire",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Hire cost multiplier 1+0.2n (first 3), then 1.4+0.4(n-3) (helpers.js).",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 2,
-   "15": 3,
-   "20": 4
-  }
- },
- {
-  "id": "smart_start",
-  "title": "Smart Start",
-  "tier": "easy",
-  "description": "Research your first tech.",
-  "tags": [
-   "tech/research"
-  ],
-  "condition": "tech.count() >= T (tech.js finish(); resets every round)",
-  "reward": "📦 Resource burst",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Tier 1 = 14 cost, 20 s research.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 2,
-   "15": 3,
-   "20": 4
-  }
- },
- {
-  "id": "cozy_home",
-  "title": "Cozy Home",
-  "tier": "easy",
-  "description": "Upgrade your home to make it bigger.",
-  "tags": [
-   "building"
-  ],
-  "condition": "build.homeLv[lead] >= T (B.upgradeHome)",
-  "reward": "🎟️ Temporary visitor",
-  "min_len_min": 3,
-  "offer_only_if": "homeLv[lead] < 3",
-  "notes": "Check homeLv resets per fresh round.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 2,
-   "20": 2
-  }
- },
- {
-  "id": "nest_grows",
-  "title": "Nest Grows",
-  "tier": "easy",
-  "description": "Fill your nest until it grows!",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "nests[lead].stage >= T (STAGE_AT 0/6/18/40)",
-  "reward": "Hat: mushroom-cap",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Stage-up also unlocks a home ability.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 2,
-   "15": 2,
-   "20": 3
-  }
- },
- {
-  "id": "bloom_zone",
-  "title": "Bloom Zone",
-  "tier": "easy",
-  "description": "Grow your meadow bigger.",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.maxPct >= T (%)",
-  "reward": "🎟️ Temporary visitor",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Percent targets are first guesses; tune with a playtest.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 2,
-   "10": 4,
-   "15": 6,
-   "20": 8
-  }
- },
- {
-  "id": "larder",
-  "title": "Star Carrier",
-  "tier": "easy",
-  "description": "Carry a 🌟 Starseed home safely.",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.builds.storage >= T",
-  "reward": "📦 Resource burst",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Base cost 10 wood + 5 honey; lead price may differ.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 2,
-   "20": 2
-  }
- },
- {
-  "id": "bridge",
-  "title": "Bridge Builder",
-  "tier": "easy",
-  "description": "Build a bridge over the water.",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.builds.bridge >= T",
-  "reward": "🧺 Jumbo Basket",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 2,
-   "20": 2
-  }
- },
- {
-  "id": "tend_beacon",
-  "title": "Dew Collector",
-  "tier": "medium",
-  "description": "Grab a whole cluster of 5 💧 Dewdrops before they dry.",
-  "tags": [
-   "building"
-  ],
-  "condition": "count of beacon tends (build.js update: round.add('upkeep',12)) >= T",
-  "reward": "🎟️ Temporary visitor",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Needs a beacon placed 40+ s earlier, so 3-min rounds are tight.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 2,
-   "10": 3,
-   "15": 5,
-   "20": 6
-  }
- },
- {
-  "id": "busy_helpers",
-  "title": "Busy Helpers",
-  "tier": "medium",
-  "description": "Let your helpers bring food home.",
-  "tags": [
-   "hiring",
-   "gathering"
-  ],
-  "condition": "round.stats.helperUnits >= T",
-  "reward": "🐾 Free helper hire",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 5,
-   "5": 10,
-   "10": 25,
-   "15": 40,
-   "20": 60
-  }
- },
- {
-  "id": "crew_three",
-  "title": "Crew of Three",
-  "tier": "medium",
-  "description": "Hire a team of helpers.",
-  "tags": [
-   "hiring"
-  ],
-  "condition": "round.stats.helpers >= T",
-  "reward": "Hat: dandelion-puff",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 2,
-   "5": 2,
-   "10": 3,
-   "15": 4,
-   "20": 5
-  }
- },
- {
-  "id": "team_trainer",
-  "title": "Team Trainer",
-  "tier": "medium",
-  "description": "Train your helpers to level up.",
-  "tags": [
-   "hiring"
-  ],
-  "condition": "helpers.lvl >= T (H.train)",
-  "reward": "🐾 Free helper hire",
-  "min_len_min": 5,
-  "offer_only_if": "helpers.lvl < 3",
-  "notes": "Helper training level may carry over between rounds; offer only if not maxed.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 2,
-   "20": 2
-  }
- },
- {
-  "id": "gear_up",
-  "title": "Gear Up",
-  "tier": "medium",
-  "description": "Buy a new piece of gear.",
-  "tags": [
-   "gear"
-  ],
-  "condition": "buyGear() returns true T times this round",
-  "reward": "🧺 Jumbo Basket ×2",
-  "min_len_min": 3,
-  "offer_only_if": "some save.gear[lead].t[slot] < 3",
-  "notes": "Gear tiers and bank are saved forever, so check that a slot isn't maxed.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 2,
-   "20": 2
-  }
- },
- {
-  "id": "upgrade_it",
-  "title": "Level Up!",
-  "tier": "medium",
-  "description": "Upgrade a garden or beacon.",
-  "tags": [
-   "building"
-  ],
-  "condition": "B.upgrade() succeeds T times",
-  "reward": "📦 Resource burst",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 2,
-   "20": 3
-  }
- },
- {
-  "id": "half_best",
-  "title": "Half Way Hero",
-  "tier": "medium",
-  "description": "Get half of your best score.",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "round.score() >= 0.5 * bests()[len]",
-  "reward": "🧺 Jumbo Basket time",
-  "min_len_min": 3,
-  "offer_only_if": "bests()[len] exists",
-  "notes": "Self-scaling. Skip for first-ever round.",
-  "status": "active",
-  "targets": {
-   "3": 0.5,
-   "5": 0.5,
-   "10": 0.5,
-   "15": 0.5,
-   "20": 0.5
-  }
- },
- {
-  "id": "mixed_bag",
-  "title": "Mixed Bag",
-  "tier": "medium",
-  "description": "Collect all 3 kinds: 🌼 Petals, 💧 Dewdrops, 🌟 Starseeds.",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "each of round.res p/d/s gained >= T",
-  "reward": "📦 Resource burst",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Gardens rotate kinds; helpers of other species bring other kinds.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 1,
-   "20": 1
-  }
- },
- {
-  "id": "bloom_burst",
-  "title": "Bloom Burst",
-  "tier": "medium",
-  "description": "Make your meadow really big!",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.maxPct >= T (%)",
-  "reward": "🎟️ Temporary visitor",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Tune with a playtest.",
-  "status": "active",
-  "targets": {
-   "3": 3,
-   "5": 5,
-   "10": 8,
-   "15": 12,
-   "20": 15
-  }
- },
- {
-  "id": "far_flower",
-  "title": "Far Flower",
-  "tier": "medium",
-  "description": "Build something far from home.",
-  "tags": [
-   "building"
-  ],
-  "condition": "a placed building has rec.solo == true",
-  "reward": "📦 Resource burst",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 1,
-   "20": 2
-  }
- },
- {
-  "id": "page_finder",
-  "title": "Page Finder",
-  "tier": "medium",
-  "description": "Find a new Field Journal page.",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "journalUnlock() returns true this round",
-  "reward": "Hat: honey-pot-hat",
-  "min_len_min": 5,
-  "offer_only_if": "jFound() < JTOTAL",
-  "notes": "Pages are saved forever; skip once the journal is full.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 1,
-   "20": 2
-  }
- },
- {
-  "id": "smart_cookie",
-  "title": "Smart Cookie",
-  "tier": "medium",
-  "description": "Research a tier 2 tech.",
-  "tags": [
-   "tech/research"
-  ],
-  "condition": "any node with tier >= 2 done in tech.done",
-  "reward": "✨ Looks unlock",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Tier 2 = 26 cost, 35 s.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 1,
-   "20": 1
-  }
- },
- {
-  "id": "garden_party",
-  "title": "Star Party",
-  "tier": "medium",
-  "description": "Build lots of Tier 3 buildings.",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.builds.garden >= T",
-  "reward": "🎟️ Temporary visitor",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Max 6.",
-  "status": "active",
-  "targets": {
-   "3": 2,
-   "5": 2,
-   "10": 3,
-   "15": 4,
-   "20": 5
-  }
- },
- {
-  "id": "builder_mix",
-  "title": "Builder Mix",
-  "tier": "medium",
-  "description": "Build different kinds of buildings.",
-  "tags": [
-   "building"
-  ],
-  "condition": "count of distinct keys in round.stats.builds >= T",
-  "reward": "📦 Resource burst",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 2,
-   "5": 3,
-   "10": 3,
-   "15": 4,
-   "20": 5
-  }
- },
- {
-  "id": "night_shift",
-  "title": "Night Shift",
-  "tier": "medium",
-  "description": "Bring food home after dark. 🌙",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "units delivered while nightOf(clock.t) > 0.5 >= T",
-  "reward": "🧺 Jumbo Basket",
-  "min_len_min": 10,
-  "offer_only_if": "",
-  "notes": "Day is 540 s and a round starts at morning, so night only comes in long rounds. Best for moth, bat, opossum, raccoon.",
-  "status": "active",
-  "targets": {
-   "3": 0,
-   "5": 0,
-   "10": 5,
-   "15": 10,
-   "20": 15
-  }
- },
- {
-  "id": "little_ones",
-  "title": "Little Ones",
-  "tier": "hard",
-  "description": "Grow your home all the way so babies arrive!",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "nests[lead].stage >= 3 (40 units)",
-  "reward": "✨ Looks unlock + 📦 burst",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 3,
-   "5": 3,
-   "10": 3,
-   "15": 3,
-   "20": 3
-  }
- },
- {
-  "id": "beacon_ring",
-  "title": "Busy Builder",
-  "tier": "hard",
-  "description": "Build lots of Tier 1 buildings.",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.builds.outpost >= T",
-  "reward": "🐾 Free helper hire",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Max 18.",
-  "status": "active",
-  "targets": {
-   "3": 2,
-   "5": 3,
-   "10": 5,
-   "15": 8,
-   "20": 10
-  }
- },
- {
-  "id": "dew_hunter",
-  "title": "Dew Hunter",
-  "tier": "hard",
-  "description": "Find lots of golden dewdrops.",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "round.stats.dew >= T",
-  "reward": "🧺 Jumbo Basket ×2",
-  "min_len_min": 5,
-  "offer_only_if": "dewdrops left >= T",
-  "notes": "Spread across 6 zones; fliers have an easier time.",
-  "status": "active",
-  "targets": {
-   "3": 3,
-   "5": 5,
-   "10": 8,
-   "15": 11,
-   "20": 14
-  }
- },
- {
-  "id": "tech_master",
-  "title": "Tech Master",
-  "tier": "hard",
-  "description": "Research lots of tech.",
-  "tags": [
-   "tech/research"
-  ],
-  "condition": "tech.count() >= T",
-  "reward": "✨ Looks unlock",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "6 nodes per branch pair; only one research at a time per species.",
-  "status": "active",
-  "targets": {
-   "3": 2,
-   "5": 3,
-   "10": 5,
-   "15": 6,
-   "20": 6
-  }
- },
- {
-  "id": "full_crew",
-  "title": "Full Crew",
-  "tier": "hard",
-  "description": "Hire a big helper team.",
-  "tags": [
-   "hiring"
-  ],
-  "condition": "round.stats.helpers >= T",
-  "reward": "🐾 Free helper hire",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "HIRE_MAX 10 (+tech hireCap).",
-  "status": "active",
-  "targets": {
-   "3": 3,
-   "5": 4,
-   "10": 6,
-   "15": 8,
-   "20": 10
-  }
- },
- {
-  "id": "home_sweet",
-  "title": "Dream Home",
-  "tier": "hard",
-  "description": "Upgrade your home to the top level.",
-  "tags": [
-   "building"
-  ],
-  "condition": "build.homeLv[lead] >= 3",
-  "reward": "📦 Big resource burst",
-  "min_len_min": 10,
-  "offer_only_if": "homeLv[lead] < 3",
-  "notes": "Upgrade 1-2-3 in one round.",
-  "status": "active",
-  "targets": {
-   "3": 3,
-   "5": 3,
-   "10": 3,
-   "15": 3,
-   "20": 3
-  }
- },
- {
-  "id": "helper_haul",
-  "title": "Helper Haul",
-  "tier": "hard",
-  "description": "Your helpers bring home a mountain of food!",
-  "tags": [
-   "hiring",
-   "gathering"
-  ],
-  "condition": "round.stats.helperUnits >= T",
-  "reward": "🐾 Free helper hire",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 15,
-   "5": 30,
-   "10": 70,
-   "15": 110,
-   "20": 160
-  }
- },
- {
-  "id": "big_bloom",
-  "title": "Big Bloom",
-  "tier": "hard",
-  "description": "Turn a huge part of the map into meadow!",
-  "tags": [
-   "building"
-  ],
-  "condition": "round.stats.maxPct >= T (%)",
-  "reward": "🎟️ Temporary visitor",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Tune with a playtest.",
-  "status": "active",
-  "targets": {
-   "3": 6,
-   "5": 10,
-   "10": 18,
-   "15": 25,
-   "20": 30
-  }
- },
- {
-  "id": "best_ever",
-  "title": "Best Ever!",
-  "tier": "hard",
-  "description": "Beat your best score for this round length.",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "round.score() > bests()[len] (or pm-best-sp lead:len)",
-  "reward": "✨ Looks unlock + 🧺 Jumbo",
-  "min_len_min": 3,
-  "offer_only_if": "bests()[len] exists",
-  "notes": "Use the per-species best so switching animals stays fair.",
-  "status": "active",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 1,
-   "20": 1
-  }
- },
- {
-  "id": "gather_pro",
-  "title": "Gather Pro",
-  "tier": "hard",
-  "description": "Bring home a giant pile of food.",
-  "tags": [
-   "gathering"
-  ],
-  "condition": "round.stats.units >= T",
-  "reward": "🧺 Jumbo Basket ×2",
-  "min_len_min": 3,
-  "offer_only_if": "",
-  "notes": "Scale by ARCH[lead].econ.",
-  "status": "active",
-  "targets": {
-   "3": 20,
-   "5": 35,
-   "10": 80,
-   "15": 120,
-   "20": 170
-  }
- },
- {
-  "id": "max_level",
-  "title": "Max Level",
-  "tier": "hard",
-  "description": "Upgrade a garden or beacon to Lv 3.",
-  "tags": [
-   "building"
-  ],
-  "condition": "any placed building p.lv >= 3",
-  "reward": "📦 Big resource burst",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "",
-  "status": "active",
-  "targets": {
-   "3": 3,
-   "5": 3,
-   "10": 3,
-   "15": 3,
-   "20": 3
-  }
- },
- {
-  "id": "producer",
-  "title": "Busy Workshop",
-  "tier": "hard",
-  "description": "Build a Tier 2 or Tier 3 building.",
-  "tags": [
-   "tech/research",
-   "building"
-  ],
-  "condition": "round.stats.builds[apiary|honeycave|woodpile|wormfarm] >= 1",
-  "reward": "🐾 Free helper hire",
-  "min_len_min": 5,
-  "offer_only_if": "lead in bee, bear, opossum, robin",
-  "notes": "Needs the tier 3 node (bee apiary, bear cave, opossum woodpile, robin wormfarm).",
-  "status": "active",
-  "targets": {
-   "3": 0,
-   "5": 1,
-   "10": 1,
-   "15": 1,
-   "20": 2
-  }
- },
- {
-  "id": "stay_dry",
-  "title": "Stay Dry",
-  "tier": "medium",
-  "description": "Zip past a sprinkler without getting soggy.",
-  "tags": [
-   "hazards"
-  ],
-  "condition": "(needs hazards chunk: garden-sprinkler)",
-  "reward": "🧺 Jumbo Basket",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Parked: no hazards code yet.",
-  "status": "parked",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 2,
-   "15": 2,
-   "20": 3
-  }
- },
- {
-  "id": "nettle_skip",
-  "title": "Nettle Hop",
-  "tier": "medium",
-  "description": "Hop around the nettle patches.",
-  "tags": [
-   "hazards"
-  ],
-  "condition": "(needs hazards chunk: nettle-patch)",
-  "reward": "📦 Resource burst",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Parked.",
-  "status": "parked",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 2,
-   "15": 3,
-   "20": 3
-  }
- },
- {
-  "id": "say_boo",
-  "title": "Peekaboo!",
-  "tier": "medium",
-  "description": "Give a rival a friendly surprise to shoo it away.",
-  "tags": [
-   "rival startle/raid/claim"
-  ],
-  "condition": "(needs rivals chunk: startle)",
-  "reward": "🎟️ Temporary visitor",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Parked. Keep it a playful 'boo', never a fight.",
-  "status": "parked",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 2,
-   "15": 2,
-   "20": 3
-  }
- },
- {
-  "id": "claim_patch",
-  "title": "Claim a Patch",
-  "tier": "hard",
-  "description": "Bloom flowers on a spot no colony owns yet.",
-  "tags": [
-   "rival startle/raid/claim"
-  ],
-  "condition": "(needs rivals chunk: claim)",
-  "reward": "🐾 Free helper hire",
-  "min_len_min": 10,
-  "offer_only_if": "",
-  "notes": "Parked.",
-  "status": "parked",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 2,
-   "15": 3,
-   "20": 4
-  }
- },
- {
-  "id": "tidy_up",
-  "title": "Tidy Up",
-  "tier": "medium",
-  "description": "Take apart a rival's building into confetti!",
-  "tags": [
-   "dismantle"
-  ],
-  "condition": "(needs dismantle mini-game)",
-  "reward": "📦 Resource burst",
-  "min_len_min": 5,
-  "offer_only_if": "",
-  "notes": "Parked. Planks/petals/confetti pop, never a smash.",
-  "status": "parked",
-  "targets": {
-   "3": 1,
-   "5": 1,
-   "10": 1,
-   "15": 2,
-   "20": 3
-  }
- }
 ]

@@ -15,7 +15,7 @@ export function createAdmin(X) {
   const RES = { p: '🌼', d: '💧', s: '🌟' };
 
   sec('⏱ Round', true, [
-    F(() => `Time left ${Math.floor(round.left / 60)}:${String(Math.floor(round.left % 60)).padStart(2, '0')} · score ${round.score()} · territory ${terr.pct.toFixed(1)}%`),
+    F(() => `Time left ${Math.floor(round.left / 60)}:${String(Math.floor(round.left % 60)).padStart(2, '0')} · score ${round.score()}`),
     B('+1 min', () => round.setLeft(round.left + 60)), B('−1 min', () => round.setLeft(round.left - 60)), B('Set 30 s', () => round.setLeft(30)),
     T('Pause timer', () => round.timerPaused, v => { round.timerPaused = v; }),
     T('Allow swap / possess (default off: locked to lead)', () => !!adm.allowSwap, v => { adm.allowSwap = v; }),
@@ -27,18 +27,14 @@ export function createAdmin(X) {
     B('+100 each resource', () => { for (const k in RES) round.addRes(k, 100); }), B('Max resources', () => { for (const k in RES) round.addRes(k, 9999 - round.res[k]); }),
     ...Object.keys(RES).map(k => B(`+100 ${RES[k]}`, () => round.addRes(k, 100))), B('Zero resources', () => { for (const k in RES) round.addRes(k, -round.res[k]); }),
   ]);
-  sec('🗺 Territory + building', false, [
-    T('Claim ALL territory', () => !!terr.all, v => { terr.claimAll(v); }),
-    B('Clear territory (remove all builds)', () => X.clearTerritory()),
-    B('Grow beacons to max', () => X.growMax()),
+  sec('🔨 Building', false, [
+    B('Clear all builds', () => X.clearTerritory()),
     T('Instant build (free)', () => build.free, v => { build.free = v; }),
     B('🌻 Free beacon at my feet', () => X.freeAtFeet('outpost')), B('🌷 Free garden', () => X.freeAtFeet('garden')),
     B('🧺 Free larder', () => X.freeAtFeet('storage')), B('🌉 Free bridge', () => X.freeAtFeet('bridge')),
     B('🏡 Max all homes', () => X.maxHomes()),
-    T('Show territory grid', () => !!terr.debug, v => terr.setDebug(v)),
-    S('Territory growth ×', 0.25, 6, 0.25, () => adm.grow, v => { adm.grow = v; }, v => '×' + v),
     S('Player edge vs rivals', 0, 0.5, 0.05, () => adm.playerEdge, v => { adm.playerEdge = +v; }, v => Math.round((+v) * 100) + '%'),
-    T('Rival reactions (startle / raid / claim / dismantle responses)', () => adm.rivalReact !== false, v => { adm.rivalReact = v; }),
+    T('Rival reactions (startle / raid / dismantle responses)', () => adm.rivalReact !== false, v => { adm.rivalReact = v; }),
     T('🎮 Unlock all controls', () => !!(X.onb && X.save && X.save.onb && X.save.onb.cmd && X.save.onb.tech && X.save.onb.int), v => { if (!X.onb) return; v ? X.onb.unlockAll() : X.onb.relock(); }),
     B('↺ Reset tips', () => X.onb && X.onb.reset()),
     B('🎨 Unlock all looks', () => { if (!X.save || !X.looks) return; const L = X.save.looks; L.unlocked = { pal: ['default','honey','lilac','mint','berry','sunset','sky','midnight'], pat: ['none','stripes','spots','hearts'], emo: ['wave','hop','spin','toss'] }; X.persist?.(); X.looks.openPanel?.(); X.toast?.('🎨 All looks unlocked'); }),

@@ -661,7 +661,7 @@ body.inRound.packReady #packBtn{display:block}
   <button class="ib" id="bJournal" title="Field Journal (J)">📖<span id="jBadge">0/27</span></button>
   <button class="ib" id="bPause" title="Menu (Esc)">☰</button>
 </div>
-<div id="bmHint"></div><div class="hud" id="roundBar"><div id="rbMain"><span id="rbLead" title="Lead species">🐝</span><span class="t" id="rbTime">⏱ 10:00</span><span class="fp" id="rbFree">Free play</span><span id="rbScore">★ 0</span><span id="rbPct">🗺 0%</span></div><div id="rbRes"><span id="rP">🌼 0</span><span id="rD">💧 0</span><span id="rS">🌟 0</span><span id="rHl">🐾 0</span></div><button id="rbTech"></button></div>
+<div id="bmHint"></div><div class="hud" id="roundBar"><div id="rbMain"><span id="rbLead" title="Lead species">🐝</span><span class="t" id="rbTime">⏱ 10:00</span><span class="fp" id="rbFree">Free play</span><span id="rbScore">★ 0</span><span id="rbPct" style="display:none" aria-hidden="true"></span></div><div id="rbRes"><span id="rP">🌼 0</span><span id="rD">💧 0</span><span id="rS">🌟 0</span><span id="rHl">🐾 0</span></div><button id="rbTech"></button></div>
 <div id="bTray"></div><div id="bWhy"></div><div id="bInfoC"></div>
 <div id="bBar"><button id="bbExit">✕ Done</button><button id="bbRot">⟳</button><button id="bbPlace">✓ Place</button></div>
 <button id="admBtn">ADM</button><div id="admin"></div><div id="fps"></div>
@@ -740,9 +740,9 @@ body.inRound.packReady #packBtn{display:block}
 </div></div>
 <div class="ov" id="how"><div class="panel">
   <h2>How to play</h2>
-  <p>Fly, run and climb through a peaceful meadow. Tap <b>🔨 Build</b> to spend what you gather on <b>Flower Beacons</b>, gardens, larders and bridges. Beacons make the meadow around them bloom and slowly <b>spread your territory</b>: nobody loses anything, the wild meadow just grows lusher.</p>
+  <p>Fly, run and climb through a peaceful meadow. Tap <b>🔨 Build</b> to spend what you gather on species buildings, gardens, larders and bridges. Gather <b>Petals</b>, <b>Dewdrops</b> and <b>Starseeds</b>, hire helpers, and heal each valley level with your crew.</p>
   <p>✨ <b>Sparkles</b> mark your creature's favourite food. Carry it home to score points and fill your stockpile. 🌼 <b>Nectar</b> comes from bees, butterflies, hummingbirds, moths and bats; 🪱 <b>forage</b> from raccoons and robins; 🪵 <b>wood</b> from opossums; 🍯 <b>honey</b> from bears. Swap animals to collect them all.</p>
-  <p>💧 Visit a Beacon that is showing a water drop to tend it: it blooms wider and earns a bonus. 🐾 <b>Hire helpers</b> from the build menu: friendly animals that gather on their own and carry it home or to a Larder. 🗺️ <b>Overview</b> (or C) shows the whole meadow: tap a helper, then tap food to gather there, a Larder or home to deliver to, or the ground to move. Double-tap or 🎮 Control to play as that helper. 🚩 Trail Markers stretch how far you can build. Score as much as you can before the clock runs out!</p>
+  <p>💧 Gather Petals, Dewdrops and Starseeds across the meadow. 🐾 <b>Hire helpers</b> from the build menu: friendly animals that follow you, gather on their own, and carry it home. 📣 <b>Command</b> sends helpers to gather, deliver, or stay. Score as much as you can before the clock runs out — or pick Free roam on a valley level with no timer!</p>
   <p style="font-size:12.5px;opacity:.75"><b>Touch:</b> drag on the left to move · Jump (tap twice for a double jump, hold to flutter) · action button · drag on the right to turn the camera.<br><b>Keys:</b> WASD/arrows · Space jump · E action · B build · Q/R camera · Tab / 1–9 switch animal · C overview (click select, drag box, right-click command, wheel zoom) · J journal · Esc pause.</p>
   <button class="big" id="howClose">Got it</button>
 </div></div>

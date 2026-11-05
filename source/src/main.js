@@ -890,7 +890,12 @@ function startValleyPatch(patchId) {
   const def = valley.def(patchId);
   valleySession = { patchId, neighbor: def.neighbor, contest: def.contest };
   valley.data.activePatch = patchId;
-  if (valley.get(patchId).state === 'wilted') valley.setState(patchId, 'in_progress');
+  {
+    const st = valley.get(patchId);
+    // UNLOCK_ALL_LEVELS: allow replaying a wild patch by resetting heal progress
+    if (st && st.state === 'wild') { valley.setHeal(patchId, 0); valley.setState(patchId, 'in_progress'); st.contestDone = false; }
+    else if (st && st.state === 'wilted') valley.setState(patchId, 'in_progress');
+  }
   valley.save();
   crew.arcade = false;
   closeValleyMap();
@@ -1021,7 +1026,7 @@ function toTitle() { persist(); saveRound(); noSave = true; try { sessionStorage
 function openPause() { $('bPause').classList.remove('pulse');
   if (shopOpen) closeShop();
   if (!playing || round.over || $('pause').classList.contains('on')) return;
-  $('pauseInfo').textContent = `${round.free ? '∞ Free play (not saved to best scores)' : `⏱ ${fmtT(round.left)} left`} · ★ ${round.score().toLocaleString()} · 🗺 ${terr.pct.toFixed(1)}%`; openOv('pause'); hubSet('game');
+  $('pauseInfo').textContent = `${round.free ? '∞ Free play (not saved to best scores)' : `⏱ ${fmtT(round.left)} left`} · ★ ${round.score().toLocaleString()}`; openOv('pause'); hubSet('game');
 }
 // title: Challenge / Relaxed set mode then open Valley Map (overhaul primary path)
 for (const [id, mode] of [['tChallenge', 'challenge'], ['tRelaxed', 'relaxed']]) $(id).onclick = () => { settings.mode = mode; saveSettings(settings); openValleyMap(); };
@@ -1079,7 +1084,7 @@ function updateRoundHud(force) {
   if (tiers) $('rS').classList.toggle('carry', !!tiers.carrying);
   if (!round) return;
   setTxt('rbTime', (round.free || round.noTimer) ? '⏱ ∞' : '⏱ ' + fmtT(Math.ceil(round.left))); $('rbMain').classList.toggle('low', !round.free && !round.noTimer && round.running && round.left < 30 && !round.over);
-  setTxt('rbScore', '★ ' + round.score().toLocaleString()); setTxt('rbPct', '🗺 ' + (terr.pct < 10 ? terr.pct.toFixed(1) : Math.round(terr.pct)) + '%');
+  setTxt('rbScore', '★ ' + round.score().toLocaleString()); if ($('rbPct')) { $('rbPct').style.display = 'none'; $('rbPct').textContent = ''; }
   for (const k of RES_KEYS) { const h = RI(k) + ' ' + round.res[k], id = 'r' + k.toUpperCase(); if (hudCache[id] !== h) { hudCache[id] = h; $(id).innerHTML = h; } }
   if (helpers) setTxt('rHl', crewText()); if (tech) updateTechHud();
   if (round.flashT > 0 && round.flashK) { const s = $('r' + round.flashK.toUpperCase()); s.classList.remove('fl'); void s.offsetWidth; s.classList.add('fl'); round.flashT = 0; }
@@ -1094,11 +1099,11 @@ function layoutResults(C) {
 function showResults() {
   if (round.free) return;
   if (rts.possessed) releaseHelper(); if (rts.on) exitRts(true);
-  setBuild(false); const score = round.score(); round.stats.maxPct = Math.max(round.stats.maxPct, terr.pct);
+  setBuild(false); const score = round.score();
   const prev = bests()[round.len] || 0, isBest = setBest(round.len, score), sprev = spBests()[lead + ':' + round.len] || 0, spBest = setSpBest(lead, round.len, score); clearRound(); dirty = false; closeTech();
   $('rsLead').innerHTML = `${SPECIES[lead].emoji} Led by the ${SPECIES[lead].name} · ${tech.count()} tech researched<br><small>${spBest ? '🏆 Best ever as ' + SPECIES[lead].name + '!' : `${SPECIES[lead].name} best (${round.len} min): ${sprev.toLocaleString()}`}</small>`;
   $('rsScore').textContent = score.toLocaleString(); $('rsBest').textContent = isBest ? '🏆 New best score!' : `Best (${round.len} min): ${prev.toLocaleString()}`;
-  $('rsBrk').innerHTML = CATS.filter(([k]) => k !== 'admin' || round.sc[k] > 0).map(([k, ic, nm]) => `<div><span>${ic} ${nm}${k === 'territory' ? ` (${round.stats.maxPct.toFixed(1)}% claimed)` : ''}</span><b>${Math.floor(round.sc[k]).toLocaleString()}</b></div>`).join('');
+  $('rsBrk').innerHTML = CATS.filter(([k]) => (k !== 'admin' || round.sc[k] > 0) && (round.sc[k] || 0) > 0).map(([k, ic, nm]) => `<div><span>${ic} ${nm}</span><b>${Math.floor(round.sc[k]).toLocaleString()}</b></div>`).join('');
   const bl = Object.entries(round.stats.builds).map(([t, n]) => `${n} ${CATALOG[t] ? CATALOG[t].name : t}${n > 1 ? 's' : ''}`).join(', ');
   $('rsStats').textContent = `Built: ${bl || 'nothing'} · Delivered ${round.stats.units} gathered items · 🐾 ${helpers ? helpers.perm() : 0} helper${helpers && helpers.perm() === 1 ? '' : 's'} hired, who brought in ${round.stats.helperUnits || 0}${round.stats.visitors ? ` · 🎟️ ${round.stats.visitors} visitor${round.stats.visitors === 1 ? '' : 's'} brought ${round.stats.visitorUnits || 0}` : ''} · ${round.stats.dew} dewdrops`;
   if (goals) { const gl = goals.resultsLine(); if (gl) $('rsStats').textContent += ' · ' + gl; }
@@ -1325,9 +1330,7 @@ function worldTick(dt, st) {
   if (rivals) rivals.update(playing && !paused ? dt : 0, st, { playing, paused, p: P[cur], lead });
   // Valley heal meter ← bloom %; contests + pack-up
   if (valleySession && playing && !paused && round.running && !round.over) {
-    const bloom = Math.max(0, Math.min(1, (terr?.pct || 0) / 100));
-    // keep heal from going backwards if contest bonus pushed ahead of bloom
-    if (bloom > healAmt) healAmt = bloom;
+    // Heal comes from zone pickups / team lifts / contests — territory bloom retired (t135u).
     if (zones) { zones.update(dt, camera); if (!zones.keyGoalMet()) healAmt = Math.min(healAmt, HEAL_PACKUP - 0.01); }
     if (valley) valley.setHeal(valleySession.patchId, healAmt);
     updateHealUi();
@@ -1346,12 +1349,11 @@ function worldTick(dt, st) {
   if (looks) looks.update(playing && !paused ? dt : 0, riders[cur], P[cur]);
   if (goals && playing && !paused) goals.update();
   if (onb && playing && !paused) { if (round.stats.builds && Object.keys(round.stats.builds).length) onb.flags.built = 1; if (helpers && helpers.perm && helpers.perm() > 0) onb.flags.hired = 1; onb.update(dt, st); }
-  if (playing && !paused && round.running && !round.over) { round.tick(dt); round.add('territory', terr.pct * 0.1 * dt); tech.update(dt); }
+  if (playing && !paused && round.running && !round.over) { round.tick(dt); tech.update(dt); }
 }
 function frameSim(sdt, t, st) {
-  terr.growMul = playing && !paused && round.running ? adm.grow * (1 + tech.g().terr) : 0; terr.update(sdt, camera.position, night);
+  terr.growMul = 0; terr.update(sdt, camera.position, night);
   build.update(playing && !paused ? sdt : 0, t, playing ? P[cur] : null, st);
-  round.stats.maxPct = Math.max(round.stats.maxPct, terr.pct);
 }
 let _smK = null, _smV = null, _smS = 0;
 function speedMv(m) { if (_smK === m && _smS === adm.speed) return _smV; const f = adm.speed, o = Object.assign({}, m, { run: m.run * f }); if (m.fly) o.fly = Object.assign({}, m.fly, m.fly.speed ? { speed: m.fly.speed * f } : {}); _smK = m; _smS = f; _smV = o; return o; }
@@ -1713,7 +1715,7 @@ async function boot() {
   buildLens(); refreshTitle(); syncMixUi(); $('sMute').checked = !!settings.mute; applyMix(); audio.setMute(settings.mute);
   const X = { round, terr, build, adm, rivals, goals, onb, items, looks, save, get weather() { return weather; },
     endRound: () => { if (playing && !round.over) round.finish(); }, restartRound: () => startNew(round.len),
-    clearTerritory: () => { build.clear(); tiers && tiers.reset(); terr.claimAll(false); terr.resetBlooms(); terr.refresh(); renderBTray(true); },
+    clearTerritory: () => { build.clear(); tiers && tiers.reset(); terr.resetBlooms(); terr.refresh(); renderBTray(true); },
     growMax: () => { for (const q of build.placed || []) if ((q.type === 'outpost' || q.type === 'marker')) terr.grow(q.id, 99); },
     freeAtFeet: type => { const p = P[cur]; build.free_place(type, p.x, p.z, cam.yaw); renderBTray(true); },
     maxHomes: () => { for (const id of SPECIES_ORDER) { build.homeLv[id] = 3; build.rebuildHome(id); } build.refreshHomes(); renderBTray(true); },
@@ -1724,7 +1726,7 @@ async function boot() {
     bank: n => { for (const id of SPECIES_ORDER) save.gear[id].bank += n; persist(); updateHud(); },
     unlockJournal: () => { for (const q of SPECIAL) save.journal[q.id] = save.journal[q.id] || { t: Date.now() }; for (const id of SPECIES_ORDER) save.journal['a:' + id] = save.journal['a:' + id] || { t: Date.now() }; for (const m of MOMENTS) save.journal['m:' + m.id] = save.journal['m:' + m.id] || { t: Date.now() }; persist(); refreshJournalBadge(); },
     nextSeason: () => clock.nextSeason(), isNight: () => curNight, setNight: v => setNight(v, true),
-    perfText: () => { const i = renderer.info; return `${state.fps || 0} fps · ${i.render.calls} calls · ${(i.render.triangles / 1000).toFixed(0)}k tris · ${i.memory.geometries} geo · ${i.memory.textures} tex · terr ${terr.pct.toFixed(1)}% · sim ${simT.toFixed(0)}s`; },
+    perfText: () => { const i = renderer.info; return `${state.fps || 0} fps · ${i.render.calls} calls · ${(i.render.triangles / 1000).toFixed(0)}k tris · ${i.memory.geometries} geo · ${i.memory.textures} tex · sim ${simT.toFixed(0)}s`; },
     wipeSave, helpers,
     spawnHelper: sp => { const p = P[cur]; return helpers.spawnFree(sp, p.x + 3, p.z + 3).then(() => { buildTray(); renderBTray(true); }); },
     freePlay: () => !!(round && round.free), setFree: v => enterFree(v),
