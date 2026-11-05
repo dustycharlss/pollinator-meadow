@@ -25,7 +25,7 @@ import { createItems } from './items.js';
 import { createCosmetics, EMOTES } from './cosmetics.js';
 import { createValley, PATCHES, HEAL_PACKUP } from './valley.js';
 import { createZones } from './zones.js';
-import { createCrew, STARTER_CREW, SKILLS, crewTags, priceForCrew, isFlyer } from './crew.js';
+import { createCrew, STARTER_CREW, SKILLS, crewTags, priceForCrew, isFlyer, crewValid } from './crew.js';
 import { createContests } from './contests.js';
 import { createPackUp } from './packup.js';
 import { paintValleyMap, setHealArt, playPackupBurst } from './valley-art.js';
@@ -229,12 +229,17 @@ function updateHud() {
   $('gTxt').textContent = '🛠️ ' + gearLine(cur);
   $('dewTxt').textContent = `${save.dew.length} / ${world.platforms.count}`;
 }
+function renderMenuTeam() { const b = $('menuTeam'); if (!b) return; if (!crew) { b.innerHTML = ''; return; }
+  b.innerHTML = `<b>🐾 Your team</b><span class="mt">${crew.get().map(id => `<button class="mtc ${id === cur ? 'on' : ''}" data-id="${id}">${SPECIES[id].emoji}<small>${SPECIES[id].name}</small></button>`).join('')}</span><button class="pill" id="mtEdit">✏️ Change team</button>`;
+  b.querySelectorAll('.mtc').forEach(c => c.onclick = () => { const id = c.dataset.id; if (valleySession) crew.swapById(id); else selectSpecies(id); closeMenu(); });
+  $('mtEdit').onclick = () => { closeMenu(); openTeamPick(() => { if ($('menu')) renderMenuTeam(); }); }; }
 function buildCards() {
-  $('cards').innerHTML = SPECIES_ORDER.map((id, i) => { const sp = SPECIES[id], n = nests[id]; const next = STAGE_AT[n.stage + 1];
+  const ORDER = valleySession && crew ? crew.get() : SPECIES_ORDER;
+  $('cards').innerHTML = ORDER.map((id, i) => { const sp = SPECIES[id], n = nests[id]; const next = STAGE_AT[n.stage + 1];
     return `<div class="card ${id === cur ? 'sel' : ''}" data-id="${id}"><span class="em">${sp.emoji}</span><div style="flex:1"><b>${i + 1}. ${sp.name}</b>${sp.nocturnal ? '<span class="tag">🌙 night</span>' : '<span class="tag">☀️ day</span>'}<small>${sp.blurb}</small><small>🏠 ${sp.nest.name} — ${sp.nest.stages[n.stage]} (stage ${n.stage + 1}/4)</small><small class="abs">${(ABILITIES[id] || []).map((a, i) => i < n.stage ? `<span title="${a.desc}">${a.icon} <b>${a.name}</b> — ${a.desc}</span>` : `<span class="lk">🔒 ${a.name} (stage ${i + 2})</span>`).join('<br>')}</small><div class="pg"><i style="width:${next ? 100 * (n.units - STAGE_AT[n.stage]) / (next - STAGE_AT[n.stage]) : 100}%"></i></div></div></div>`; }).join('');
-  document.querySelectorAll('.card').forEach(c => c.onclick = () => { selectSpecies(c.dataset.id); closeMenu(); });
+  document.querySelectorAll('.card').forEach(c => c.onclick = () => { if (valleySession && crew) crew.swapById(c.dataset.id); else selectSpecies(c.dataset.id); closeMenu(); });
 }
-const openMenu = () => { if (shopOpen) return; buildCards(); $('menu').classList.add('on'); input.active = false; paused = true; };
+const openMenu = () => { if (shopOpen) return; buildCards(); renderMenuTeam(); $('menu').classList.add('on'); input.active = false; paused = true; };
 const closeMenu = () => { $('menu').classList.remove('on'); syncPause(); };
 const swapOK = () => {
   if (valleySession && crew) return true; // crew of 3 always free to swap
@@ -560,6 +565,16 @@ function stepPlayer(dt, t) {
 function stepParked(id, dt, t) {
   const sp = SPECIES[id], mv = sp.mv, p = P[id], phys = world.phys, col = sp.coll || { h: 1.4, r: 0.8 }, R = riders[id], U = R.userData;
   p.t += dt; p.vx = p.vz = 0; p.speed = 0; p.flapping = false; p.boostT = 0; p.digT = 0;
+  const fs = !p.goto && playing && !paused ? followSlot(id) : null;
+  if (fs) { const L = P[cur]; let wob = Math.sin(p.t * 0.7 + id.length) * 0.9;
+    const tx = L.x - Math.sin(L.yaw) * fs.back + Math.cos(L.yaw) * (fs.side * 2.4 + wob), tz = L.z - Math.cos(L.yaw) * fs.back - Math.sin(L.yaw) * (fs.side * 2.4 + wob);
+    const dx = tx - p.x, dz = tz - p.z, d = Math.hypot(dx, dz), dl = Math.hypot(L.x - p.x, L.z - p.z);
+    if (dl > 45) placeFollowers(true);
+    else if (d > 1.2 && (dl > 3.4 || d > 3)) { const sp2 = Math.min(mv.run * (d > 10 ? 1.25 : 0.85), d * 3); const v = Math.min(d, sp2 * dt); p.x += dx / d * v; p.z += dz / d * v; p.yaw = Math.atan2(dx, dz); p.speed = sp2; }
+    else { p.yaw += (Math.atan2(Math.sin(L.yaw - p.yaw), Math.cos(L.yaw - p.yaw))) * Math.min(1, dt * 2); }
+    if (mv.fly) { const gy = heightAt(p.x, p.z), ty = Math.max(gy, L.y + (L.grounded ? 0 : 0.6)); if (ty > gy + 0.3 || !p.grounded) { p.y += (ty - p.y) * Math.min(1, dt * 3); p.vy = 0; p.grounded = false; } }
+    else if (L.y > p.y + 2.5 && dl < 6) { p.vy = 9; p.grounded = false; } // hop up after the leader
+  }
   if (p.goto && playing && !paused) { const dx = p.goto.x - p.x, dz = p.goto.z - p.z, d = Math.hypot(dx, dz); if (d < 1) p.goto = null; else { const v = Math.min(d, mv.run * 0.7 * dt); p.x += dx / d * v; p.z += dz / d * v; p.yaw = Math.atan2(dx, dz); p.speed = mv.run * 0.7; } }
   const wasG = p.grounded, oldY = p.y;
   if (!wasG) { p.vy = Math.max(sp.mv.fly ? -6 : -30, p.vy - mv.grav * dt); p.y += p.vy * dt; }
@@ -819,22 +834,44 @@ function renderValleyMap() {
   go.textContent = (cont ? '⏱ Continue · ' : '⏱ ') + 'Challenge';
   if (fr) fr.textContent = (cont ? '🌿 Continue · ' : '🌿 ') + 'Free roam';
 }
-function openCrewTent() {
-  if (!crew || !valley) return;
-  const unlocked = crew.unlocked();
-  const picks = [];
-  const ask = (slot) => {
-    const choices = unlocked.map(id => `${SPECIES[id].emoji} ${SPECIES[id].name}`).join(' / ');
-    const cur = crew.get()[slot];
-    const next = window.prompt(`Crew slot ${slot + 1} (now ${SPECIES[cur].emoji}). Type id:\n${unlocked.join(', ')}`, cur);
-    return next && SPECIES[next] ? next : cur;
-  };
-  const a = ask(0), b = ask(1), c = ask(2);
-  const r = crew.set([a, b, c]);
-  if (!r.ok) toast('⛺ ' + r.why, 2600);
-  else toast('⛺ Crew ready: ' + crew.get().map(id => SPECIES[id].emoji).join(' '), 2400);
-  renderValleyMap();
+function openCrewTent(after) { openTeamPick(after || renderValleyMap); }
+// ---- Team picker (crew of 3): in-game overlay, replaces browser prompt
+let tpSel = [], tpAfter = null;
+function teamUnlocked() { const u = crew ? crew.unlocked() : STARTER_CREW; return SPECIES_ORDER.filter(id => u.includes(id)); }
+function openTeamPick(after) {
+  if (!crew) return; crew.loadFromValley(); tpSel = crew.get(); tpAfter = after || null; renderTeamPick(); openOv('teamPick');
 }
+function renderTeamPick() {
+  const un = new Set(teamUnlocked());
+  $('tpSlots').innerHTML = [0, 1, 2].map(i => { const id = tpSel[i]; return id ? `<button class="tps on" data-r="${i}">${SPECIES[id].emoji}<small>${SPECIES[id].name}</small><i>✕</i></button>` : `<button class="tps" disabled>＋<small>slot ${i + 1}</small></button>`; }).join('');
+  $('tpList').innerHTML = SPECIES_ORDER.map(id => { const sp = SPECIES[id], on = tpSel.includes(id), lk = !un.has(id), sk = SKILLS[id];
+    return `<button class="tpc ${on ? 'on' : ''} ${lk ? 'lk' : ''}" data-s="${id}" ${lk ? 'disabled' : ''}><span>${lk ? '🔒' : sp.emoji}</span><b>${sp.name}</b><small>${isFlyer(id) ? '🪽 flyer' : '🐾 walker'}${id === 'robin' ? ' + walker' : ''}${sk ? ' · ' + sk.name : ''}</small></button>`; }).join('');
+  const v = crewValid(tpSel);
+  $('tpWhy').textContent = v.ok ? '✓ Great team! Tap a portrait in-level to swap instantly.' : (tpSel.length < 3 ? `Pick ${3 - tpSel.length} more · need a flyer and a walker` : v.why);
+  $('tpWhy').classList.toggle('bad', !v.ok && tpSel.length === 3);
+  $('tpGo').disabled = !v.ok;
+}
+$('tpList').addEventListener('click', e => { const c = e.target.closest('.tpc'); if (!c || c.disabled) return; const id = c.dataset.s; audio.blip(2);
+  const i = tpSel.indexOf(id); if (i >= 0) tpSel.splice(i, 1); else if (tpSel.length < 3) tpSel.push(id); else { tpSel[2] = id; } renderTeamPick(); });
+$('tpSlots').addEventListener('click', e => { const c = e.target.closest('.tps.on'); if (!c) return; tpSel.splice(+c.dataset.r, 1); audio.blip(1); renderTeamPick(); });
+$('tpDef').onclick = () => { tpSel = [...STARTER_CREW]; renderTeamPick(); };
+$('tpBack').onclick = () => closeOv('teamPick');
+$('tpGo').onclick = () => {
+  const r = crew.set(tpSel.slice());
+  if (!r.ok) { toast('⛺ ' + r.why, 2600); return; }
+  closeOv('teamPick'); audio.sample?.('ui/select-pop', 0.35);
+  toast('🐾 Team ready: ' + crew.get().map(id => SPECIES[id].emoji).join(' '), 2200);
+  if (playing && crew.get().length) {
+    if (!crew.includes(cur)) { selectSpecies(crew.get()[0]); if (valleySession) lead = crew.get()[0]; }
+    crew.active = Math.max(0, crew.get().indexOf(cur)); placeFollowers(true);
+    if (valleySession) renderCrewDock();
+  }
+  const f = tpAfter; tpAfter = null; f && f();
+};
+// teammates (crew minus active) trail the active animal loosely
+function followerIds() { if (!crew || !playing || rts.on) return []; return crew.get().filter(id => id !== cur && P[id]); }
+function followSlot(id) { const f = followerIds(), k = f.indexOf(id); return k < 0 ? null : { side: k ? 1 : -1, back: 3.2 + k * 1.6 }; }
+function placeFollowers(snap) { const L = P[cur]; if (!L) return; for (const id of followerIds()) { const s = followSlot(id), p = P[id]; const tx = L.x - Math.sin(L.yaw) * s.back + Math.cos(L.yaw) * s.side * 2.4, tz = L.z - Math.cos(L.yaw) * s.back - Math.sin(L.yaw) * s.side * 2.4; if (snap || Math.hypot(p.x - L.x, p.z - L.z) > 45) { p.x = tx; p.z = tz; p.y = Math.max(heightAt(tx, tz), L.y) + 0.5; p.vy = 0; p.grounded = false; p.goto = null; } } }
 function startValleyPatch(patchId) {
   if (!valley || !crew) return;
   const gate = valley.canStart(patchId, crew.tags());
@@ -1115,12 +1152,16 @@ function renderPick() {
   const b = spBests();
   $('pkList').innerHTML = SPECIES_ORDER.map(id => { const sp = SPECIES[id], A = ARCH[id], best = b[id + ':' + settings.len];
     return `<button class="pk ${id === pickSel ? 'on' : ''}" data-s="${id}"><div class="hd"><span>${sp.emoji}</span><div><b>${sp.name}</b><small>${SIZE_NAME[A.size]} · ${sp.mv.fly ? 'flier' : 'ground'} · brings ${RES_ICON[RES_OF[id]]}${A.by ? ' (+' + RES_ICON[A.by.k] + ')' : ''}</small></div></div>${barsHtml(id)}<div class="sw">＋ ${A.str.join(' · ')}</div><div class="wk">－ ${A.weak.join(' · ')}</div><div class="pay">Pays in ${payIcons(id)}${best ? ` · 🏆 ${best.toLocaleString()}` : ''}</div></button>`; }).join('');
-  $('pkGo').textContent = `▶ Start as ${SPECIES[pickSel].emoji} ${SPECIES[pickSel].name}`;
+  if ($('pkTeam') && crew) { crew.loadFromValley(); $('pkTeam').innerHTML = `🐾 Team: ${crew.get().map(id => SPECIES[id].emoji).join(' ')} <button class="pill" id="pkTeamBtn">✏️ Pick team</button>`; $('pkTeamBtn').onclick = () => openTeamPick(renderPick); }
+  $('pkGo').textContent = `⏱ Challenge as ${SPECIES[pickSel].emoji}`; $('pkFree').textContent = `🌿 Free roam as ${SPECIES[pickSel].emoji}`;
 }
 function openPick() { pickSel = settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee'; renderPick(); openOv('pick'); }
 $('pkList').addEventListener('click', e => { const c = e.target.closest('.pk'); if (!c) return; audio.blip(2); pickSel = c.dataset.s; renderPick(); });
 $('pkBack').onclick = () => closeOv('pick');
-$('pkGo').onclick = () => { closeOv('pick'); settings.lead = pickSel; saveSettings(settings); setLead(pickSel, true); startNew(settings.len); };
+const pkStart = mode => { settings.mode = mode; closeOv('pick'); settings.lead = pickSel; saveSettings(settings); setLead(pickSel, true); startNew(settings.len); };
+$('pkFree').onclick = () => pkStart('relaxed');
+$('pkGo').onclick = () => pkStart('challenge');
+if (0) $('pkGo').onclick = () => { closeOv('pick'); settings.lead = pickSel; saveSettings(settings); setLead(pickSel, true); startNew(settings.len); };
 // tech tree overlay
 let techSp = 'bee', techSel = null;
 function openTech(sp) {

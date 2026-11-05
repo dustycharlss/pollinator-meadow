@@ -21,6 +21,8 @@ function rawH(x, z) {
   let h = 3.0 * Math.sin(x * 0.018 + 0.5) * Math.cos(z * 0.021) + 1.6 * Math.sin(x * 0.045 + z * 0.03 + 1.3) + 0.7 * Math.sin(x * 0.11) * Math.sin(z * 0.1);
   const d = Math.hypot(x - POND.x, z - POND.z);
   h *= 1 - smooth(0, 34, 34 - d) ; // flatten around pond
+  // no dry basins below water level away from the real pond (bee hive basin was reading as a flooded, unbuildable area)
+  const fl = WATER_Y + 0.9, k = smooth(POND.r * 1.6, POND.r * 3, d); if (h < fl + 1.5) { const s = fl + 1.5 * Math.exp((h - fl - 1.5) / 1.5); h += (Math.max(h, s) - h) * k; }
   h -= 4.0 * Math.exp(-(d * d) / (POND.r * POND.r));
   return h;
 }
@@ -63,7 +65,7 @@ export async function buildWorld(scene, { quality = 1, nests = [], renderer }) {
     const x = pa.getX(i), z = pa.getZ(i), y = heightAt(x, z); pa.setY(i, y);
     zoneWeights(x, z, tmp);
     const n = 0.92 + 0.08 * Math.sin(x * 0.3) * Math.cos(z * 0.27);
-    if (y < WATER_Y + 0.5) tmp.lerp(new THREE.Color(0.35, 0.3, 0.2), 0.7);
+    { const dp = Math.hypot(x - POND.x, z - POND.z); if (dp < POND.r * 1.9) tmp.lerp(new THREE.Color(0.86, 0.76, 0.5), 0.75); } // sandy shore ring only at the real pond
     col[i * 3] = tmp.r * n; col[i * 3 + 1] = tmp.g * n; col[i * 3 + 2] = tmp.b * n;
   }
   tg.setAttribute('color', new THREE.BufferAttribute(col, 3));
@@ -78,6 +80,7 @@ export async function buildWorld(scene, { quality = 1, nests = [], renderer }) {
   const water = new THREE.Mesh(new THREE.CircleGeometry(POND.r * 1.9, 40), new THREE.MeshLambertMaterial({ color: 0x4fb0e0, transparent: true, opacity: 0.78, emissive: 0x0a2a44 }));
   water.rotation.x = -Math.PI / 2; water.position.set(POND.x, WATER_Y, POND.z); scene.add(water);
   world.water = water;
+  { const rim = new THREE.Mesh(new THREE.RingGeometry(POND.r * 1.9, POND.r * 2.05, 48), new THREE.MeshBasicMaterial({ color: 0xfff3c4, transparent: true, opacity: 0.85 })); rim.rotation.x = -Math.PI / 2; rim.position.set(POND.x, WATER_Y + 0.03, POND.z); scene.add(rim); }
 
   // ---------- placement ----------
   const nestPts = nests.map(n => [n.x, n.z]);

@@ -1,6 +1,7 @@
 // Valley zones: 8 rising-complexity levels + 5 vertical set pieces (preview only).
 // Each patch gets its own layout of solids, tiered pickups, team lifts and builder-gated stairs.
 import * as THREE from 'three';
+import { WATER_RECTS } from './data.js';
 
 export const SIZE = { bee: 'tiny', butterfly: 'tiny', hummingbird: 'tiny', moth: 'tiny', bat: 'tiny', bumblebee: 'medium', robin: 'medium', raccoon: 'medium', opossum: 'medium', bear: 'bear' };
 export const FLYERS = new Set(['bee', 'butterfly', 'hummingbird', 'moth', 'bat', 'bumblebee', 'robin']);
@@ -100,7 +101,11 @@ export function createZones(scene, ctx) {
       const s = { type: 'cyl', x: A.x + x, z: A.z + z, r, y0: g + h - T, top: g + h, kind: 'zone' }; ctx.phys.addDyn(s); solids.push(s); if (hidden) { m.visible = false; s.off = true; } return { m, s };
     },
     mound(x, z, h, r) { this.cyl(x, z, r, h, 0x7cc35a, h + 0.6); },
-    water(x, z, w, d) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.2, d), new THREE.MeshLambertMaterial({ color: 0x4aa3d8, transparent: true, opacity: 0.8 })); m.position.set(A.x + x, gy(x, z) + 0.08, A.z + z); group.add(m); },
+    water(x, z, w, d) { // narrow stream with sandy banks: hop or fly over it
+      d = Math.min(d, 3.2); const g = gy(x, z);
+      const bank = new THREE.Mesh(new THREE.BoxGeometry(w, 0.14, d + 2.2), mat(0xe6cf8f)); bank.position.set(A.x + x, g + 0.05, A.z + z); group.add(bank);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.2, d), new THREE.MeshLambertMaterial({ color: 0x2f8fe0, emissive: 0x0b3a66, transparent: true, opacity: 0.9 })); m.position.set(A.x + x, g + 0.12, A.z + z); group.add(m);
+      WATER_RECTS.push({ x: A.x + x, z: A.z + z, hw: w / 2, hd: d / 2 }); },
     pickup(tier, x, z, h) { const T = TIER[tier], m = new THREE.Mesh(T.geo(), mat(T.col, 0.8)); m.position.set(A.x + x, gy(x, z) + h, A.z + z); group.add(m); picks.push({ tier, m, y: m.position.y, got: false }); },
     node(kind, x, z, h) {
       const N = NODE[kind], col = TIER[N.tier].col, m = new THREE.Group();
@@ -122,6 +127,7 @@ export function createZones(scene, ctx) {
   };
   const say = (s, d = 2200) => { if (t - msgT > 1.6) { msgT = t; ctx.toast(s, d); } };
   function clear() {
+    WATER_RECTS.length = 0;
     for (const s of solids) s.off = true; // dyn solids stay in list but inert
     solids = []; picks = []; builds = []; drafts = []; hoops = []; star = null;
     for (const n of nodes) n.label.remove(); nodes = [];

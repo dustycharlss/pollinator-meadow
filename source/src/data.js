@@ -205,6 +205,8 @@ export const ZONES = [
 ];
 export const POND = { x: -108, z: 108, r: 12 };
 export const WATER_Y = -1.6;
+export const WATER_RECTS = []; // live zone streams {x,z,hw,hd} for build checks
+export const inWater = (x, z, pad = 0) => Math.hypot(x - POND.x, z - POND.z) < POND.r * 1.05 + pad || WATER_RECTS.some(r => Math.abs(x - r.x) < r.hw + pad && Math.abs(z - r.z) < r.hd + pad);
 export const WATER_PLANTS = { lotus: 14, waterLilies: 12 };
 
 // Peaceful ambient ground animals: they wander and nibble ground food. Nothing chases, hunts or hurts anything.

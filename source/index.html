@@ -635,6 +635,15 @@ body.inRound #healMeter,body.inRound #crewDock{display:flex}
 body.inRound.packReady #packBtn{display:block}
 
 .zoneNode{position:fixed;transform:translate(-50%,-100%);pointer-events:none;background:rgba(255,255,255,.85);border-radius:12px;padding:2px 8px;font:600 14px system-ui;color:#5a3b22;z-index:20;display:none;white-space:nowrap}
+#teamPick{z-index:60}.tpp{max-width:720px;color:var(--ink)}#tpSlots{display:flex;gap:8px;justify-content:center;margin:6px 0}
+.tps{position:relative;width:86px;height:74px;border-radius:16px;border:3px dashed rgba(59,38,20,.4);background:rgba(255,255,255,.5);font:800 30px system-ui;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.tps.on{border-style:solid;border-color:#3b2614;background:#ffd23f}.tps small{font-size:11px}.tps i{position:absolute;top:2px;right:6px;font-style:normal;font-size:12px}
+#tpList{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:7px;max-height:44vh;overflow:auto;padding:2px}
+.tpc{display:flex;flex-direction:column;align-items:center;padding:7px;border-radius:14px;border:3px solid rgba(59,38,20,.35);background:rgba(255,255,255,.55);color:var(--ink);font:inherit;cursor:pointer}
+.tpc span{font-size:30px}.tpc b{font-size:13px}.tpc small{font-size:10.5px;opacity:.8;text-align:center}.tpc.on{border-color:#3b2614;background:rgba(255,210,63,.6)}.tpc.lk{opacity:.4}
+#tpWhy{text-align:center;font-weight:800;margin:6px 0;font-size:13px}#tpWhy.bad{color:#b3261e}.tpp .row2{flex-wrap:wrap}
+#menuTeam,#pkTeam{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin:4px 0 8px;font-weight:800}
+#menuTeam .mt{display:flex;gap:6px}.mtc{border:3px solid #3b2614;border-radius:14px;background:#fff;padding:4px 8px;font:800 22px system-ui;display:flex;flex-direction:column;align-items:center}.mtc small{font-size:10px}.mtc.on{background:#ffd23f}
 </style>
 </head>
 <body>
@@ -704,9 +713,9 @@ body.inRound.packReady #packBtn{display:block}
 <button id="packBtn" type="button">📦 Pack Up</button>
 
 <div id="title" class="on fd"><picture><source media="(orientation:landscape)" srcset="./ui/screens/title-bg-landscape.webp"><img class="fdBg" src="./ui/screens/title-bg-portrait.webp" alt=""></picture><div class="logo" data-slot="logo"><img id="logoImg" src="./img/logo.png" alt="Pollinator Meadow" onerror="this.remove();document.getElementById('logoTxt').hidden=false"><div id="logoTxt" hidden><span class="fl">🌼</span><h1>Pollinator Meadow</h1></div><small>Grow your meadow. Gather, build and bloom.</small></div>
-<button class="fdBtn" id="tChallenge" data-slot="button-challenge" aria-label="Challenge: timed round, full score"></button><button class="fdBtn" id="tRelaxed" data-slot="button-relaxed" aria-label="Relaxed: gentle round, hazards only slow you"></button>
+<button class="fdBtn" id="tChallenge" hidden style="display:none"></button><button class="fdBtn" id="tRelaxed" hidden style="display:none"></button>
 <div class="menu">
-  <button class="big" id="tValley">🗺️ Valley Map</button>
+  <button class="big" id="tValley">🗺️ Valley Levels</button>
   <button class="big" id="play">▶ Arcade Play</button>
   <button class="big sec" id="cont" style="display:none">⏩ Continue round</button>
   <div class="lens" id="lens"><span>Round</span></div>
@@ -715,8 +724,14 @@ body.inRound.packReady #packBtn{display:block}
 </div></div>
 <div class="ov" id="pick"><div class="panel pkp">
   <h2>Choose your species</h2><p class="pkn">Your lead animal for this round. Everything you build, research and hire is priced in its own resources. Big animals haul a lot but move slowly; small fliers are quick but carry little.</p>
+  <div id="pkTeam"></div>
   <div id="pkList"></div>
-  <div class="row2"><button class="big sec" id="pkBack">◀ Back</button><button class="big" id="pkGo">▶ Start</button></div>
+  <div class="row2"><button class="big sec" id="pkBack">◀ Back</button><button class="big sec" id="pkFree">🌿 Free roam</button><button class="big" id="pkGo">⏱ Challenge</button></div>
+</div></div>
+<div class="ov" id="teamPick"><div class="panel tpp">
+  <h2>🐾 Pick your team</h2><p class="pkn">Choose 3 friends. You need at least one flyer and one walker. The two you aren't playing follow you around.</p>
+  <div id="tpSlots"></div><div id="tpList"></div><div id="tpWhy"></div>
+  <div class="row2"><button class="big sec" id="tpBack">◀ Back</button><button class="big sec" id="tpDef">🐝🐦🐻 Starter</button><button class="big" id="tpGo">✓ Team up!</button></div>
 </div></div>
 <div class="ov" id="tech"><div class="panel tkp">
   <div class="tkh"><h2>🧬 Tech tree</h2><span id="tkRes"></span><button id="tkX">✕</button></div>
@@ -776,7 +791,7 @@ body.inRound.packReady #packBtn{display:block}
 </div></div>
 
 <div class="ov" id="menu"><div class="panel">
-  <h2>Choose your creature</h2><div id="cards"></div>
+  <h2>Choose your creature</h2><div id="menuTeam"></div><div id="cards"></div>
   <button class="big sec" id="menuClose">Back to the meadow</button>
 </div></div>
 

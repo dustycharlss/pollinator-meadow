@@ -1,7 +1,7 @@
 // Build mode: spend gathered resources on little things that make your home meadow bloom and spread.
 // Everything here is cosy and peaceful - beacons, gardens, larders, bridges, home upgrades. Nothing is taken from anyone.
 import * as THREE from 'three';
-import { WORLD_R, POND, WATER_Y, SPECIES_ORDER } from './data.js';
+import { WORLD_R, POND, WATER_Y, SPECIES_ORDER, inWater } from './data.js';
 import { SITES, siteDist } from './sites.js';
 import { FEATURES } from './features.js';
 import { loadGLB, bakeParts, lambertFrom } from './models.js';
@@ -203,7 +203,7 @@ export async function createBuild(scene, ctx) {
     const c = Math.cos(yaw), s = Math.sin(yaw), g0 = heightAt(x, z);
     for (const [a, b] of pts) {
       const px = x + a * c + b * s, pz = z - a * s + b * c, h = heightAt(px, pz);
-      if (h < WATER_Y + 0.5) return 'Too close to water';
+      if (inWater(px, pz, 0.6)) return 'Too close to water';
       if (Math.abs(h - g0) > (C.m === 'bridge' ? 0.9 : 1.3)) return 'Ground is too steep';
       if (phys.blocked(px, pz, 0.8)) return 'Something is in the way';
       if (FEATURES.teamFoods) for (const S of SITES) if (siteDist(S, px, pz) < S.hw + 1.2) return 'Keep the puzzle paths clear';
