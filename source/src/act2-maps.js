@@ -368,6 +368,45 @@ export const MAPS2 = {
       B.puzzle('echo', 'Echo whistle', ['trickster', 'bruiser'], ['hlC', 'plC'], { hint: '🐾 Grab the gift · the 🎶 whistle pings hidden steps + a secret lever · 🐻 sneak behind the trunk onto the root plate.', track: [['gift:whistle', 'trickster', 'grab the gift on the quiet side', 5.5, 39.5], ['hlC', 'trickster', 'ping, climb the hidden steps, pull the secret lever', 5.5, 45.5], ['plC', 'bruiser', 'sneak behind the trunk onto the root plate', -6.2, 51]] });
     },
   },
+  // ===== 15 · Frost Hollow — M7 Seasons (creek ice, snow steps, mud chute) + E7 Prowling Fox =====
+  frost_hollow: {
+    goal: 'Frost Hollow', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 61], par: 480,
+    bounds: { x0: -9, x1: 9, z0: -8, z1: 65 },
+    crew: 'Bee · Raccoon · Bear',
+    banter: { start: ['🐝 Bee: Three bells — summer, winter, spring! I’ll ring them.', '🦝 Raccoon: Winter freezes the creek, spring makes mud for sliding…', '🐻 Bear: …and snow hides Bee’s scent from the fox.'], end: ['🦝 Raccoon: That mud chute was the best!', '🐝 Bee: The fox never sniffed me out.'] },
+    build(B) {
+      B.home(0, -5); B.lane(-8, 8, -7, 64);
+      [[6.5, -4], [-6.5, 14], [6.5, 36]].forEach(([x, z], i) => B.tree(x, z, 0.85 + (i % 2) * 0.1));
+      // A · teach the seasons: ring ❄️ winter → the creek freezes and everyone walks across the ice
+      B.checkpoint(0, -1);
+      B.seasonBells(0, 2, 2);
+      B.creek('cA', -8, 6, 8, 10);
+      B.lever('lvA', 3.5, 12.5, { label: 'Frosty lever' });
+      B.door('lvA', 15.5, -8, 8);
+      // B · snow steps (winter only) up to the ledge · then 🌱 spring turns the chute to mud: belly-slide over the hedge
+      B.checkpoint(0, 17.5);
+      B.seasonBells(3, 19.5, 2);
+      B.snowPile('snB1', -4.5, 20.6, 2.4, 2, 1.3); B.snowPile('snB2', -4.5, 22.7, 2.4, 2, 2.6);
+      B.wall(-4.5, 25.4, 4, 3.2, 3.9, { look: 'stone' });
+      B.door('lvB', 28.5, -8, 8);
+      B.mudSlide('mdB', -4.5, 26.4, 3.9, -1, 32, 0, { label: 'Mud chute' });
+      B.lever('lvB', 3.5, 32.5, { label: 'Hollow lever' });
+      // C · combo: the fox prowls by the bell post. Hide in the hollow log or ring winter (snow hides your scent) · Bear slides the log across the ice
+      B.checkpoint(0, 35.5);
+      B.seasonBells(-3, 37.5, 2);
+      B.creek('cC', -8, 41.5, 8, 46.5);
+      B.boulder('logC', -5, 44, -3.6, 44, { kind: 'log', w: 1.4, d: 2.2, h: 1.0, slotH: 0.2, need: ['winter'], needWhy: 'Ring the ❄️ winter bell first — it only slides on ice', label: 'Log' });
+      B.iceSlot('iceC', 5, 44, 0.2);
+      B.fox('fxC', 0, 51, { yaw: Math.PI, ring: 5, path: [[-4, 51], [4, 51]], speed: 1.4 });
+      B.hide('log', -2.5, 53.5, 1.4, 1.4);
+      B.wall(5, 54, 0.6, 0.6, 2, { look: 'bark' }); B.bell('blC', 5, 54, 2.6, { label: 'Fox-post bell' });
+      B.door(['iceC', 'blC'], 57, -8, 8);
+      B.checkpoint(0, 59);
+      B.puzzle('ice', 'Frozen creek', ['scout', 'trickster'], ['lvA'], { hint: '🪽 Fly into the ❄️ winter bell · the creek freezes · 🐾 walk across the ice and pull the lever.', track: [['winter', 'scout', 'fly into the ❄️ winter bell', 0, 2, 2], ['lvA', 'trickster', 'walk across the ice, pull the lever', 3.5, 12.5]] });
+      B.puzzle('mud', 'Mud chute', ['scout', 'trickster'], ['lvB'], { hint: '🪽 Winter → 🐾 climb the snow steps to the ledge · 🪽 Spring → 🐾 belly-slide down the mud chute over the hedge · pull the lever.', track: [['mdB', 'trickster', 'winter: climb the snow steps · spring: slide the mud chute', -4.5, 20.6], ['lvB', 'trickster', 'pull the hollow lever', 3.5, 32.5]] });
+      B.puzzle('fox', 'Fox hollow', ['scout', 'bruiser'], ['iceC', 'blC'], { hint: '❄️ Winter: 🐻 shove the log — it slides across the ice into the slot · 🪽 sneak past the fox (hollow log, or let the snow hide your scent) and ring the post bell.', track: [['iceC', 'bruiser', 'winter: shove the log across the ice', -5, 44], ['blC', 'scout', 'dodge the fox’s nose, ring the fox-post bell', 5, 54, 2.6]] });
+    },
+  },
   // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
   a2_lab: {
     goal: 'Lab', act2: true, key: 'puzzles', ceil: 9, exit: [0, 30], par: 0,
