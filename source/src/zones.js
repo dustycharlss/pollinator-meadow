@@ -48,7 +48,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam']);
+export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn']);
 
 const MAPS = {
   sunny_hollow: {
@@ -237,11 +237,15 @@ const MAPS = {
   },
 
   picnic_lawn: {
-    goal: 'Pop the basket · two-plate table bunch · dam the lemonade · both Dew Ponds',
-    key: 'puzzles', ceil: 12,
+    goal: 'Pop the basket · two-plate table · dam the lemonade · then all three across to the 🏁 exit',
+    key: 'puzzles', ceil: 12, exit: [14, 21], par: 360,
+    banter: {
+      start: ['🐻 Bear: A picnic! Is any of this for me?', '🦝 Raccoon: Focus, Bear. The lemonade river is in the way.', '🐝 Bee: Sticky river… I\'ll stay up high, thanks!'],
+      end: ['🦝 Raccoon: Best. Picnic. Ever.', '🐻 Bear: I found a crumb! Mission complete.', '🐝 Bee: You two are the best team.'],
+    },
     bounds: { x0: -24, x1: 26, z0: -12, z1: 26 }, deep: [[-24, 10, 26, 14]], lemonade: true,
-    crew: 'Hummingbird · Raccoon · Bear',
-    intro: ['🧺 Picnic Lawn: Tricksters can throw acorns at far switches.', 'Two plates? Park two friends — the third one goes!'],
+    crew: 'Bee · Raccoon · Bear',
+    intro: ['🧺 Tricksters can throw acorns at far switches.', 'Two plates? Park two friends — the third one goes!'],
     build(B) {
       B.rim(12); B.water(0xffd65a); B.home(0, 0);
       [[-16, -6, 0xff8a8a], [-4, -9, 0x8ab4ff], [16, 18, 0xffe08a], [-16, 18, 0xc9b6ff]].forEach(([x, z, c]) => B.blanket(x - 4, z - 3, 8, 6, c));
@@ -252,18 +256,22 @@ const MAPS = {
       B.table(10, 4, 6, 4, 3.4);
       B.cage(10, 4, 2.8, 2.8, 2.2, { base: 3.4, gate: 's', gateSig: ['pH', 'pL'], look: 'glass' });
       B.plate('pH', 5, -1.5, { heavy: true, label: 'heavy plate' }); B.plate('pL', 15, -1.5, { label: 'light plate' });
-      B.pickup('star', 10, 4.3, 4.4, { who: ['scout'], whyNot: 'Only a Scout fits inside the cloche', set: 'bunch' });
+      B.pickup('petal', 10, 4.3, 4.4, { who: ['scout'], whyNot: 'Only a Scout fits inside the cloche', set: 'bunch' });
+      for (let i = 0; i < 3; i++) B.pickup('petal', 9 + i, 3.2, 4.3, { show: 'bunch' });
       // 3 · Lemonade dam: Bear shoves a basket into the stream, Scout rings the cup bell
       B.boulder('dam', 2, 7, 2, 12, { kind: 'basket', w: 2.8, d: 3, h: 1.6, slotH: 0.6, cross: [0.4, 9.2, 3.6, 14.8], label: 'Picnic basket' });
       B.wall(8, 19, 1.6, 1.6, 4.2, { look: 'cream' }); B.bell('cup', 8, 19, 5.1, { label: 'Cup bell' });
-      B.node('heavy', -6, 3, 0.2, { sig: 'pond1' });
-      B.node('heavy', 17, 21, 0.2, { sig: 'pond2', need: 'cup' });
+      for (let i = 0; i < 5; i++) { const a = i / 5 * 6.28; B.pickup('petal', -6 + Math.cos(a) * 1.6, 3 + Math.sin(a) * 1.6, 0.9); }
+      for (let i = 0; i < 4; i++) B.pickup('petal', 16 + (i % 2) * 2, 20 + (i > 1 ? 2 : 0), 0.9, { show: 'cup' });
+      // secret: Starseed on top of the tall cooler (north-west) — boost a Trickster off Bear
+      B.wall(-20, 21, 3, 3, 5.2, { look: 'cream' });
+      B.pickup('star', -20, 21, 6.0, { who: ['trickster'], whyNot: 'Too heavy for a Scout — boost your Trickster off Bear!', set: 'picStar' });
       [[-2, -4], [4, -6], [20, -6], [-20, 0], [20, 6], [-6, 20]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9));
       B.tree(-22, -10, 1); B.tree(24, -10, 1); B.tree(24, 24, 1); B.tree(-22, 24, 1);
       B.puzzle('lid', 'Basket lid', ['trickster'], ['lid'], { hint: '🐾 Swap to your Trickster and throw an acorn at the basket latch across the stream.' });
       B.puzzle('table', 'Two-plate table', ['bruiser', 'trickster', 'scout'], ['bunch'], { hint: '🐻 Bear on the heavy plate · 🐾 Trickster on the light plate · 🪽 Scout flies into the cloche.' });
       B.puzzle('dam', 'Lemonade dam', ['bruiser', 'scout'], ['dam', 'cup'], { hint: '🐻 Shove the basket into the stream · 🪽 ring the cup bell to switch the lemonade.' });
-      B.puzzle('ponds', 'Both Dew Ponds', ['bruiser'], ['pond1', 'pond2'], { hint: '🐻 Bear can lift each Dew Pond alone — the second appears after the cup bell.' });
+      B.puzzle('picStar', 'Secret Starseed', ['bruiser', 'trickster'], ['picStar'], { req: false, hint: '🐻 Park Bear by the tall cooler, then boost your Trickster up.' });
     },
   },
 
