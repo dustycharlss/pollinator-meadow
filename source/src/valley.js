@@ -8,7 +8,13 @@ export const HEAL_PACKUP = 0.85;
  *  Act 2 (Trailhead Trials + levels 9-16) always follows its story gate for players; UNLOCK_ALL_LEVELS only
  *  bypasses that gate in test mode (URL ?unlock=all, or localStorage pm_unlock_all = '1'). */
 export const UNLOCK_ALL_LEVELS = true;
+/** MASTER LEVEL GATE SWITCH. false = every level (Act 1, Training Garden, Trailhead Trials, 9-16 and any level
+ *  added later) is open for every player, no URL flag needed, no locked tiles. Set true to bring back the story
+ *  gates below (Act 1 sequence, Trailhead after 1-8, 9→16 in order) with ?unlock=all / pm_unlock_all as the test bypass. */
+export const LEVEL_GATES_ENABLED = false;
+export const gatesOff = () => !LEVEL_GATES_ENABLED;
 export function testUnlock() {
+  if (!LEVEL_GATES_ENABLED) return true;
   if (!UNLOCK_ALL_LEVELS) return false;
   try { if (/[?&]unlock=all\b/.test(location.search)) return true; return localStorage.getItem('pm_unlock_all') === '1'; } catch (e) { return false; }
 }
@@ -154,6 +160,7 @@ export function createValley(ctx) {
     /** Act 2 story gate: Trailhead Trials after levels 1-8; Trailhead unlocks 9; then 9→16 in order */
     act2Gate(id) {
       const k = ACT2_IDS.indexOf(id); if (k < 0) return { ok: true };
+      if (!LEVEL_GATES_ENABLED) return { ok: true };
       if (testUnlock()) return { ok: true, test: true };
       if (!api.act1Done()) { const left = ACT1_IDS.filter(q => !api.beaten(q)).length; return { ok: false, why: `Beat levels 1–8 first (${left} to go)` }; }
       if (k === 0) return { ok: true };
@@ -187,8 +194,8 @@ export function createValley(ctx) {
       if (!def || !st) return { ok: false, why: 'Unknown patch' };
       if (def.act === 2) { const g = api.act2Gate(id); if (!g.ok) return g; }
       // When UNLOCK_ALL_LEVELS, wild patches are replayable (heal resets on start).
-      if (st.state === 'wild' && !UNLOCK_ALL_LEVELS) return { ok: false, why: 'Already wild — postcard mode later' };
-      if (!UNLOCK_ALL_LEVELS && !def.act) {
+      if (st.state === 'wild' && !UNLOCK_ALL_LEVELS && LEVEL_GATES_ENABLED) return { ok: false, why: 'Already wild — postcard mode later' };
+      if (!UNLOCK_ALL_LEVELS && LEVEL_GATES_ENABLED && !def.act) {
         // one open at a time
         const busy = PATCHES.find(p => p.id !== id && ['in_progress', 'blooming'].includes(V.patches[p.id].state));
         if (busy && st.state === 'wilted') return { ok: false, why: `Finish ${busy.name} first` };

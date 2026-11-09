@@ -24,8 +24,8 @@ import { createGoals } from './goals.js';
 import { createOnboarding } from './onboarding.js';
 import { createItems } from './items.js';
 import { createCosmetics, EMOTES } from './cosmetics.js';
-import { createValley, PATCHES, HEAL_PACKUP, ACT1_PATCHES, ACT2_PATCHES, ACT1_IDS, testUnlock } from './valley.js';
-import { createZones, READY_LEVELS } from './zones.js';
+import { createValley, PATCHES, HEAL_PACKUP, ACT1_PATCHES, ACT2_PATCHES, ACT1_IDS, testUnlock, LEVEL_GATES_ENABLED } from './valley.js';
+import { createZones, hasLevel } from './zones.js';
 import { CLIP } from './declutter.js';
 // Adventure refocus (Nov 9): build mode, species buildings, resource economy, Command wheel/helper AI,
 // heal meter + Pack Up gate are cut. Levels end when their goal is met. Petals are the score.
@@ -943,7 +943,7 @@ function renderValleyMap() {
   const st = vSelPatch ? valley.get(vSelPatch) : null;
   let gate = def ? valley.canStart(def.id, crew.tags()) : { ok: false, why: 'Pick a patch' };
   if (def && def.act === 2 && gate.ok && gate.test) gate = { ...gate, why: '' };
-  if (ADVENTURE && def && !READY_LEVELS.has(def.id) && gate.ok) gate = { ok: false, why: 'Coming soon!' };
+  if (ADVENTURE && def && !hasLevel(def.id) && gate.ok) gate = { ok: false, why: 'Coming soon!' };
   const stars = def && def.neighbor && def.neighbor !== 'all'
     ? ' · ' + '★'.repeat(Math.floor(valley.friendship(def.neighbor))) + '☆'.repeat(3 - Math.floor(valley.friendship(def.neighbor)))
     : '';
@@ -965,7 +965,7 @@ function renderActTabs() {
   $('vAct2Page').hidden = vActPage !== 2;
   if (vActPage !== 2) return;
   const left = ACT1_IDS.filter(id => !valley.beaten(id)).length;
-  $('vA2Note').textContent = open2 ? (testUnlock() && !valley.act1Done() ? '🧪 Test mode: Act 2 unlocked for testing' : '🪧 Pip found a new trail! Start with Trailhead Trials, then levels 9 → 16 in order.') : `🔒 Beat levels 1–8 to open the trail · ${left} to go`;
+  $('vA2Note').textContent = !LEVEL_GATES_ENABLED ? '🪧 Pip found a new trail! Every level is open — Trailhead Trials shows the new tricks, then play 9 → 16 in any order.' : open2 ? (testUnlock() && !valley.act1Done() ? '🧪 Test mode: Act 2 unlocked for testing' : '🪧 Pip found a new trail! Start with Trailhead Trials, then levels 9 → 16 in order.') : `🔒 Beat levels 1–8 to open the trail · ${left} to go`;
   $('vA2Grid').innerHTML = ACT2_PATCHES.map(d => { const g = valley.act2Gate(d.id), lk = !g.ok, S = valley.data.stars?.[d.id], done = valley.beaten(d.id), tt = d.id === 'trailhead_trials';
     const st = tt ? (done ? '🏅' : '') : (S ? '⭐'.repeat(S.n) + '☆'.repeat(3 - S.n) : '☆☆☆');
     return `<button type="button" class="a2t${tt ? ' tt' : ''}${lk ? ' lock' : ''}${vSelPatch === d.id ? ' sel' : ''}" data-id="${d.id}">${tt ? '' : `<i class="n">${d.n}</i>`}<span class="e">${lk ? '🔒' : d.emoji}</span><div><b>${d.name}</b>${tt ? '<br><small>Act 2 tutorial · new tricks peek</small>' : `<br><small>${d.teach}</small>`}${st ? `<div class="st">${st}</div>` : ''}</div>${done && !tt ? '<span class="done">✅</span>' : ''}</button>`; }).join('');

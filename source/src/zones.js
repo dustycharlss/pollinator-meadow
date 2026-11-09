@@ -52,6 +52,8 @@ const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
 export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'weathervane_hill', 'hornet_hedge', 'owl_wood', 'frost_hollow', 'backyard_split', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
+/** a level is playable as soon as its map exists (MAPS / MAPS2), so levels added later need no list edit */
+export const hasLevel = id => !!MAPS[id] && !String(id).startsWith('a2_');
 
 const MAPS = {
   // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
