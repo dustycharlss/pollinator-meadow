@@ -61,7 +61,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPr
 const PR = Math.min(devicePixelRatio || 1, isMobile ? 1.75 : 2);
 renderer.setPixelRatio(PR); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 const scene = new THREE.Scene();
-const DAYFOG = new THREE.Color(0xb9d8ee), NIGHTFOG = new THREE.Color(0x0b1233);
+const DAYFOG = new THREE.Color(0xb9d8ee), NIGHTFOG = new THREE.Color(0x0b1233), MOON_KEY = new THREE.Vector3(-45, 95, -35), MOOD_L = new THREE.PointLight(0xb8ccff, 0, 7, 1.2);
 scene.fog = new THREE.Fog(DAYFOG.clone(), 70, 300);
 const camera = new THREE.PerspectiveCamera(62, 1, 0.3, 700);
 const hemi = new THREE.HemisphereLight(0xcfe8ff, 0x6a8a4a, 1.5); scene.add(hemi);
@@ -821,6 +821,11 @@ function updateNight(dt) {
   // the clock hurries past the hours this animal sleeps through, and lingers over the ones it loves
   clock.speed = sp.nocturnal ? (nF < 0.5 ? 3 : 0.55) : (nF > 0.5 ? 3 : 1);
   if (state.freeze) clock.speed = 0;
+  // moody-night Act 2 levels (Owl Wood): the level's day/night bell owns the clock; restore the animal's usual sky on leaving
+  const mw = playing && zones && zones.moody ? zones.moody() : null;
+  if (mw !== null) { clock.speed = 0; if ((nightOf(clock.t) > 0.5) !== mw) clock.set(mw ? NIGHT_T : DAY_T); }
+  else if (state.moodWas != null) setNight(!!SPECIES[cur].nocturnal, true);
+  state.moodWas = mw;
   const season0 = clock.season; clock.update(cdt); if (clock.season !== season0) onSeasonChange();
   syncNightFlag();
   night += (nightOf(clock.t) - night) * (1 - Math.exp(-3 * (state.nightInit ? dt : 1))); if (Math.abs(night - nightOf(clock.t)) < 0.002) night = nightOf(clock.t);
@@ -845,6 +850,17 @@ function updateNight(dt) {
   stars.material.opacity = n; stars.visible = n > 0.01; moon.visible = n > 0.01; moon.material.opacity = n;
   world.sparkle.mat.uniforms.uBoost.value = 1 + 0.35 * n;
   renderer.toneMappingExposure = THREE.MathUtils.lerp(1.0, 1.35, n);
+  { // deep-blue moody night (only while a moody level is at night): dim ambient, cool moon key light, close fog
+    state.mood = (state.mood || 0) + (((mw && n > 0.5) ? 1 : 0) - (state.mood || 0)) * Math.min(1, Math.max(dt, 0.016) * 3); if (state.mood < 0.002) state.mood = 0;
+    const md = state.mood, L = THREE.MathUtils.lerp;
+    if (md > 0) {
+      hemi.intensity *= 1 - 0.7 * md; hemi.color.lerp(wxCol.set(0x3a4ed8), md); hemi.groundColor.lerp(wxCol.set(0x0e1430), md);
+      sun.intensity = L(sun.intensity, 1.0, md); sun.color.lerp(wxCol.set(0x8fb0ff), md); sun.position.lerp(MOON_KEY, md);
+      scene.fog.color.lerp(wxCol.set(0x080d26), md); scene.fog.near = L(scene.fog.near, 20, md); scene.fog.far = L(scene.fog.far, 78, md);
+      scene.backgroundIntensity *= 1 - 0.75 * md; renderer.toneMappingExposure = L(renderer.toneMappingExposure, 0.9, md);
+    }
+    if (md > 0 && !MOOD_L.parent) scene.add(MOOD_L); MOOD_L.visible = md > 0; MOOD_L.intensity = 6 * md; if (md > 0 && P[cur]) MOOD_L.position.set(P[cur].x, P[cur].y + 2.4, P[cur].z + 0.8); // soft moonlit halo so the active animal reads
+  }
   if (Math.abs(n - (state.lastN ?? -1)) > 0.004 || !state.nightInit) { state.lastN = n; world.sparkle.setSpecies(cur, performance.now() / 1000); }
   audio.night(n, Math.max(w[3] * 0.55, rain * 0.6, snow * 0.4)); audio.rain(rain);
   { const now = performance.now(); if (now - (state.creekT || 0) > 500 && P[cur]) { state.creekT = now; const p = P[cur]; let wd = 99; // nearest water within ~24 m -> creek bed level

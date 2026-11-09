@@ -949,7 +949,7 @@ export function createZones(scene, ctx) {
   // detection per kind → true when the active animal is noticed right now
   function sees(e, p, id) {
     const S = AA(), c = CLASS_OF[id], q = p;
-    if (Math.abs(q.y - e.gy) > (e.kind === 'crow' || e.kind === 'owl' ? 9 : 3.2) && e.kind !== 'crow') return false;
+    if (Math.abs(q.y - e.gy) > (e.kind === 'crow' || e.kind === 'owl' ? 9 : e.o.high || 3.2) && e.kind !== 'crow') return false;
     switch (e.kind) {
       case 'badger': {
         if (e.asleepAll) return false;
@@ -970,7 +970,7 @@ export function createZones(scene, ctx) {
         if (!tiny || sneak || S.season === 'winter') return false; // sneaking + winter snow hide scent
         return flatD(e, q) < e.o.ring;
       }
-      case 'sprinkler': if (e.paused) return false; return q.y - e.gy < 3 && inCone(e, q, e.o.r, e.o.beam, e.sweepYaw);
+      case 'sprinkler': if (e.paused) return false; return q.y - e.gy < (e.o.high || 3) && inCone(e, q, e.o.r, e.o.beam, e.sweepYaw);
       case 'mower': return e.live && Math.abs(q.x - e.x) < 1.5 && Math.abs(q.z - e.z) < 1.3 && q.y - e.gy < 1.6;
     }
     return false;
@@ -1096,7 +1096,7 @@ export function createZones(scene, ctx) {
     wasps(id, x, z, o = {}) { return enemy('nest', id, x, z, { ring: o.r || 5, grace: 0.9, lift: o.lift || 0, ...o }); },
     owl(id, x, z, o = {}) { const base = o.perch ?? 3.5; this.wall(x, z, 0.7, 0.7, base, { look: 'bark' }); return enemy('owl', id, x, z, { cone: [o.r || 11, o.half || 0.36], lift: base, ...o }); },
     fox(id, x, z, o = {}) { return enemy('fox', id, x, z, { cone: [3.6, 0.55], ring: o.ring || 5, ...o }); },
-    sprinkler(id, x, z, o = {}) { const e = enemy('sprinkler', id, x, z, { r: o.r || 7, beam: o.beam || 0.22, ...o }); e.cone = coneMesh(e.o.r, e.o.beam, 0x7fd8ff); e.F.add(e.cone); e.F.rotation.y = e.baseYaw; e.grace = o.grace ?? 0.45; return e; },
+    sprinkler(id, x, z, o = {}) { const e = enemy('sprinkler', id, x, z, { r: o.r || 7, beam: o.beam || 0.22, ...o }); e.cone = coneMesh(e.o.r, e.o.beam, 0x7fd8ff); e.F.add(e.cone); e.F.rotation.y = e.baseYaw; e.grace = o.grace ?? 0.45; if (o.high) { const H = Math.min(o.high, 8), cg = new THREE.PlaneGeometry(e.o.r, H).rotateY(Math.PI / 2); cg.translate(0, H / 2, e.o.r / 2); const cur = new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ color: 0x9fe4ff, transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide })); e.cone.add(cur); for (let i = 0; i < 9; i++) { const k = (i + 1) / 10, d = bx(0.34, 0.34, 0.34, 0xbfeeff, 0, 0.6 + H * 0.9 * Math.sin(Math.PI * k * 0.85), e.o.r * k); d.material = new THREE.MeshBasicMaterial({ color: 0xbfeeff, transparent: true, opacity: 0.8 }); e.cone.add(d); } } return e; },
     mower(id, x0, x1, z, o = {}) { const e = enemy('mower', id, x0, z, { x0, x1, period: o.period || 9, dur: o.dur || 3.2, yaw: Math.PI / 2, ...o }); e.grace = 0.05; const L = Math.abs(x1 - x0), m = new THREE.Mesh(new THREE.PlaneGeometry(L + 2, 2.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff6a3a, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); const w = L2W((x0 + x1) / 2, z); m.position.set(w.x, w.y + 0.1, w.z); group.add(m); e.lane = m; return e; },
     gravel(x0, z0, x1, z1) { const S = AA(); S.gravel.push({ x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1 }); const w = L2W((x0 + x1) / 2, (z0 + z1) / 2); const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.08, z1 - z0), mat(0xb8b0a0)); m.position.set(w.x, w.y + 0.05, w.z); group.add(m); for (let i = 0; i < 14; i++) { const s = bx(0.3, 0.15, 0.3, 0x8a8478, w.x + (Math.sin(i * 7.1) * 0.5) * (x1 - x0), w.y + 0.1, w.z + (Math.cos(i * 3.3) * 0.5) * (z1 - z0)); group.add(s); } },
     // ---- M1 Light & Shadow ----
@@ -2049,6 +2049,7 @@ export function createZones(scene, ctx) {
     act, wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status,
     skipKid() { if (!recipe || !recipe.kid || !recipe.act2 || keyDone) return false; complete('Trail skipped'); return true; },
     toggleSneak(v) { if (!a2) return false; sneak = v == null ? !sneak : !!v; ctx.onSneak?.(sneak); tst(sneak ? '🐾 Sneaking: slow, quiet paws' : '🏃 Walking normally', 1200); return sneak; }, sneakOn: () => !!(a2 && sneak), isAct2: () => !!a2,
+    moody() { return !!(a2 && recipe && recipe.moody) ? !!AA().night : null; },
     gearInfo(c) { const k = GEAR_OF[c]; if (!k || !a2) return null; return { k, em: GEAR_INFO[k].em, name: GEAR_INFO[k].name, has: gearHas(k), on: gearOn(k), borrowed: !gear[k] && gearHas(k) }; },
     toggleGear(c) { const k = GEAR_OF[c || CLASS_OF[ctx.cur()]]; if (!k || !a2) return false; return setGear(k, !gearOn(k)); },
     gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, cp: !!a2.cp, dew: !!a2.dew, acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })) } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,

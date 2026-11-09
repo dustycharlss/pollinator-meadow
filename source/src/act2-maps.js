@@ -329,7 +329,7 @@ export const MAPS2 = {
   },
   // ===== 14 · Owl Wood — M6 Day/Night + E6 Night Owl, and the night gear (Glow Lantern + Echo Whistle) =====
   owl_wood: {
-    goal: 'Owl Wood', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 61], par: 480,
+    goal: 'Owl Wood', act2: true, moody: true, key: 'puzzles', ceil: 9.5, exit: [0, 61], par: 480,
     bounds: { x0: -9, x1: 9, z0: -8, z1: 65 },
     crew: 'Bee · Raccoon · Bear',
     banter: { start: ['🐝 Bee: Something shiny on that stump… a lantern?!', '🦝 Raccoon: The old owl only wakes at night. Stay behind the big trunks!'], end: ['🐝 Bee: My lantern makes glowing steps!', '🦝 Raccoon: And my whistle finds secret switches. Best. Gear. Ever.'] },
@@ -427,7 +427,7 @@ export const MAPS2 = {
       gate('crR', -4, 12);
       B.plate('plL', -4, 9.5, { label: 'Tap plate' });
       B.checkpoint(4, 12.5);
-      B.sprinkler('skR', 7.2, 19, { yaw: -Math.PI / 2, r: 7, speed: 0.7, sweep: 1.1, pause: 'plL' });
+      B.sprinkler('skR', 7.2, 19, { yaw: -Math.PI / 2, r: 7, speed: 0.7, sweep: 1.1, pause: 'plL', high: 9, beam: 0.26, grace: 0.4 }); // its spray arcs sky-high: flying Bee gets wet too
       B.cracked('crR', 4, 26, 7.4, 0.8, 2.2, { label: 'Old fence' });
       // 3 · mower timer: when the mower rests, Raccoon dashes across its lane to the shed lever → opens the right gate for Bee
       B.checkpoint(-4, 14.5);
@@ -440,9 +440,9 @@ export const MAPS2 = {
       B.door('blR', 50, -8, 8);
       B.checkpoint(0, 53);
       B.puzzle('gate1', 'Cross-yard gate', ['trickster'], ['lvL1'], { hint: '🐾 Pull the lever on the left — the gate opens on the RIGHT side!', track: [['lvL1', 'trickster', 'pull the lever (it opens the gate in the other room)', -4, 7]] });
-      B.puzzle('tap', 'Sprinkler tap', ['trickster', 'bruiser'], ['crR'], { hint: '🐾 Stand on the tap plate (left) to stop the sprinkler · swap to 🐻 and smash the old fence (right).', track: [['plL', 'trickster', 'stand on the tap plate to stop the sprinkler', -4, 9.5], ['crR', 'bruiser', 'cross while it’s off, smash the old fence', 4, 26]] });
+      B.puzzle('tap', 'Sprinkler tap', ['trickster', 'bruiser'], ['crR'], { hint: '🐾 Stand on the tap plate (left) to stop the sprinkler · its spray reaches high, so 🐻 AND 🪽 cross while it’s off · 🐻 smash the old fence.', track: [['plL', 'trickster', 'stand on the tap plate to stop the sprinkler', -4, 9.5], ['crR', 'bruiser', 'cross while it’s off (Bee too — the spray reaches flyers), smash the old fence', 4, 26]] });
       B.puzzle('mower', 'Mower dash', ['trickster'], ['lvL3'], { hint: '🐾 Wait for the mower to stop (it flashes ? before it goes), then dash across and pull the shed lever.', track: [['lvL3', 'trickster', 'time the mower, dash across, pull the shed lever', -4, 31]] });
-      B.puzzle('home', 'Back together', ['scout'], ['blR'], { hint: '🪽 Fly through the open gate and ring the birdhouse bell.', track: [['blR', 'scout', 'ring the birdhouse bell', 4, 38, 3.2]] });
+      B.puzzle('home', 'Back together', ['scout'], ['blR'], { hint: '🪽 Cross the sprinkler while Raccoon holds the tap plate (it sprays high!), fly through the open gate, ring the birdhouse bell.', track: [['blR', 'scout', 'ring the birdhouse bell', 4, 38, 3.2]] });
     },
   },
   // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
