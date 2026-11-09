@@ -48,7 +48,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn']);
+export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard']);
 
 const MAPS = {
   sunny_hollow: {
@@ -276,11 +276,15 @@ const MAPS = {
   },
 
   cliff_orchard: {
-    goal: 'Boulder Stair · waterfall switch · ring the Moonfruit bell, grab the Starseed',
-    key: 'puzzles', ceil: 20, nightCycle: 180, dewWindow: 20,
+    goal: 'Boulder Stair · waterfall switch · Moonfruit Shelf · then all three up to the 🏁 exit on the high ledge',
+    key: 'puzzles', ceil: 20, nightCycle: 180, dewWindow: 20, exit: [4, 23.5, 2.6, 11.6], par: 420,
+    banter: {
+      start: ['🦝 Raccoon: That cliff goes up, and up, and UP.', '🐻 Bear: I can\'t climb. But I can make stairs!', '🐝 Bee: And I\'ll grab the Moonfruit at the very top!'],
+      end: ['🐝 Bee: Look at the view from up here!', '🦝 Raccoon: Bear, you were a great step.', '🐻 Bear: I\'m a great everything.'],
+    },
     bounds: { x0: -20, x1: 20, z0: -12, z1: 26 },
-    crew: 'Hummingbird · Bat · Bear',
-    intro: ['🍎 Cliff Orchard: climb ledge by ledge as a team.', 'Boost chain: Bear is a step for your Trickster.'],
+    crew: 'Bee · Raccoon · Bear',
+    intro: ['🍎 Climb ledge by ledge as a team.', 'Boost chain: Bear is a step for your Trickster, and the Scout tops it off.'],
     build(B) {
       B.rim(20); B.home(0, 0);
       B.wall(0, 18, 40, 16, 7, { look: 'cliff' });           // ledge 1 (top 7)
@@ -300,18 +304,19 @@ const MAPS = {
       B.target('cave', 10, 18.1, 9.4, { from: { x: 10, z: 13, r: 2.6, minH: 6.6 }, range: 9, label: 'Switch behind the waterfall', fromWhy: 'Stand on the ledge lip in front of the waterfall to throw' });
       B.steps('cave', [[16, 17.1, 2.4, 1.8, 9.2]], 7);
       // 3 · Boost chain: Bear on ledge 2, Trickster hops to the shelf lever, Scout rings the Moonfruit bell
-      B.marker('bruiser', -9, 21.2, 11.8, 'Park Bear here');
+      B.marker('bruiser', -13.8, 21.2, 11.8, 'Park Bear here');
       B.lever('shelf', -14.5, 24.4, { base: 16.8, label: 'Shelf lever' });
       B.cage(-10, 24, 3, 3, 2.4, { base: 16.8, gate: 's', gateSig: 'shelf', look: 'leaf' });
       B.bell('moon', -10, 24.4, 18.1, { label: 'Moonfruit bell' });
-      B.pickup('star', -10, 23.6, 17.6, { show: 'moon', who: ['scout'], whyNot: 'Only a Scout can reach inside', set: 'star' });
-      B.node('heavy', 6, 22, 11.6, { sig: 'fruit' });
+      B.pickup('petal', -10, 23.6, 17.6, { show: 'moon', who: ['scout'], whyNot: 'Only a Scout can reach inside', set: 'fruitGot' });
+      // secret: a Starseed tucked on the far corner of the Moonfruit Shelf — only a flyer finds it
+      B.pickup('star', -8.6, 25.6, 17.6, { who: ['scout'], whyNot: 'Only a Scout can carry this from up here!', set: 'cliffStar' });
       B.nightDew(-14, 22, 12.6); B.nightDew(14, 23, 12.6); B.nightDew(0, 12, 7.8);
       [[-4, -4], [4, -4], [12, 2], [-12, 13], [6, 12], [-6, 21]].forEach(([x, z]) => B.pickup('petal', x, z, z > 18 ? 12.4 : z > 10 ? 7.8 : 0.9));
       B.puzzle('stair', 'Boulder Stair', ['bruiser'], ['b1', 'b2', 'b3'], { hint: '🐻 Shove both boulders into the stair slots by the cliff, then the third onto the ledge plate.' });
       B.puzzle('cave', 'Waterfall switch', ['trickster'], ['cave'], { hint: '🐾 From the ledge lip, throw an acorn at the switch behind the waterfall.' });
-      B.puzzle('moon', 'Moonfruit Shelf', ['bruiser', 'trickster', 'scout'], ['star'], { hint: '🐻 Park Bear by the shelf · 🐾 hop up and pull the lever · 🪽 ring the Moonfruit bell and grab the Starseed.' });
-      B.puzzle('fruit', 'Heavy fruit', ['bruiser'], ['fruit'], { req: false });
+      B.puzzle('moon', 'Moonfruit Shelf', ['bruiser', 'trickster', 'scout'], ['fruitGot'], { hint: '🐻 Park Bear by the shelf · 🐾 hop up and pull the lever · 🪽 ring the Moonfruit bell and grab the Moonfruit.' });
+      B.puzzle('cliffStar', 'Secret Starseed', ['scout'], ['cliffStar'], { req: false, hint: '🪽 Something sparkles on the far corner of the Moonfruit Shelf…' });
     },
   },
 
