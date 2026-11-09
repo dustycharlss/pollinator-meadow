@@ -56,7 +56,18 @@ const MAPS = {
     key: 'puzzles', ceil: 12, exit: [0, -10],
     bounds: { x0: -24, x1: 24, z0: -14, z1: 22 }, mounds: [[-12, 12, 3, 1], [12, 14, 3, 1], [-4, 6, 2.2, 0.8]],
     crew: 'Bee · Raccoon · Bear',
-    intro: ['☀️ Sunny Hollow teaches one class at a time.', '🪽 Scouts fly · 🐾 Tricksters pull & climb · 🐻 Bruisers shove & lift', 'Tap a portrait to swap. Friends you leave behind stay put!'],
+    par: 240,
+    banter: {
+      start: ['🐝 Bee: Wow, Sunny Hollow! I can fly up high!', '🦝 Raccoon: I\'ll handle the levers and the tricky stuff.', '🐻 Bear: And I\'ll move anything heavy. Let\'s go!'],
+      end: ['🐝 Bee: We did it — together!', '🦝 Raccoon: Teamwork makes the meadow work.', '🐻 Bear: Snack time? Snack time!'],
+    },
+    intro: ['Tap a portrait (or 1 · 2 · 3) to swap. Friends you leave behind stay put!'],
+    tutor: [
+      { until: 'sun', say: '🐦 Pip: Swap to 🐝 Bee (1). Only a flyer can reach the bell on the Big Sunflower — fly north and touch it!' },
+      { until: 'patch', say: '🐦 Pip: Now swap to 🦝 Raccoon (2). Hop into the dirt dip (south-west) and tap 🤝 Interact to pull the lever.' },
+      { until: 'glade', say: '🐦 Pip: Swap to 🐻 Bear (3). Walk to the fallen log by the east hedge and tap 🤝 Interact to shove it.' },
+      { until: 'boostStar', optional: true, say: '🐦 Pip: Secret! Park 🐻 Bear by the tall rock, swap to 🦝 Raccoon, hop on his back and up the ledge. Bear makes a great step!' },
+    ],
     build(B) {
       B.rim(12);
       ring(18, 21, 15.5, 4, [0, 9]).forEach(([x, z], i) => B.tree(x, z, 0.95 + (i % 3) * 0.1));
@@ -358,6 +369,7 @@ export function createZones(scene, ctx) {
   const group = new THREE.Group(); scene.add(group);
   let solids = [], picks = [], nodes = [], hoops = [], nightDews = [], star = null;
   let homeAt = null, A = { x: 0, z: 0 }, baseY = 0, recipe = null, id = null, picked = 0, keyDone = false, msgT = 0, t = 0;
+  let tutorI = 0, tutorT = -99, endLines = [], result = null;
   let exitAt = null, exitOpen = false, exitMesh = null, exitLabel = null, starGot = false;
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
   let sampleH = null, waterMeshes = [];
@@ -681,6 +693,7 @@ export function createZones(scene, ctx) {
     sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
+    tutorI = 0; tutorT = -99; endLines = []; result = null;
     if (exitLabel) exitLabel.remove(); exitAt = null; exitOpen = false; exitMesh = null; exitLabel = null; starGot = false;
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
@@ -695,7 +708,7 @@ export function createZones(scene, ctx) {
     bearPad = addSolid({ type: 'cyl', x: 0, z: 0, r: 1.15, y0: -99, top: -98, kind: 'zone', off: true, pad: true });
     if (recipe.night) { nightOn = true; ctx.setNight(true); }
     else if (recipe.nightCycle) { nightOn = false; ctx.setNight(false); }
-    introQ = [`🎯 ${recipe.goal}`, ...(recipe.intro || [])];
+    introQ = [...(recipe.banter?.start || []), `🎯 ${recipe.goal}`, ...(recipe.intro || [])];
   }
   function crewAt(x, z, r) {
     const p = ctx.getP(); let n = Math.hypot(p.x - x, p.z - z) < r ? 1 : 0;
@@ -733,7 +746,12 @@ export function createZones(scene, ctx) {
   function complete(why) {
     if (keyDone) return; keyDone = true;
     if (exitLabel) exitLabel.style.display = 'none';
-    ctx.toast(`🏆 ${why}!${starGot ? ' ⭐ Starseed found too!' : ''}`, 3400); ctx.audio?.chime?.();
+    const pets = picks.filter(k => k.tier === 'petal' && !k.nightOnly), got = pets.filter(k => k.got).length;
+    const hasStar = picks.some(k => k.tier === 'star');
+    result = { id, petals: got, petalsTotal: pets.length, star: starGot, hasStar, time: Math.round(t), par: recipe.par || 0,
+      stars: { petals: got >= pets.length, star: !hasStar || starGot, par: !recipe.par || t <= recipe.par }, end: recipe.banter?.end || [] };
+    result.n = Object.values(result.stars).filter(Boolean).length;
+    ctx.toast(`🏆 ${why}! ${'⭐'.repeat(result.n)}${'☆'.repeat(3 - result.n)}`, 3400); ctx.audio?.chime?.(); ctx.onComplete?.(result);
   }
   const clsOfCur = () => CLASS_OF[ctx.cur()] || 'trickster';
   const d3 = (p, q) => Math.hypot(p.x - q.x, (p.y + 0.6) - q.y, p.z - q.z);
@@ -847,7 +865,13 @@ export function createZones(scene, ctx) {
   function update(dt, cam) {
     if (!recipe) return; t += dt;
     const p = ctx.getP(), cur = ctx.cur(), c = clsOfCur(), size = SIZE[cur] || 'medium', ids = ctx.crewIds();
-    if (introQ.length && t > 0.4 + (4 - introQ.length) * 0.01 && t - msgT > 3.2) { msgT = t; ctx.toast(introQ.shift(), 3000); }
+    if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; ctx.toast(introQ.shift(), 3000); }
+    // guided tutorial (Sunny Hollow): one Pip line per step, repeated every 25 s until that step is done
+    else if (recipe.tutor && !keyDone) {
+      while (tutorI < recipe.tutor.length && sig[recipe.tutor[tutorI].until]) { tutorI++; tutorT = -99; }
+      const st = recipe.tutor[tutorI];
+      if (st && !(st.optional && exitOpen && t - tutorT < 60) && t - tutorT > 25 && t - msgT > 3.2) { tutorT = t; msgT = t; lastProg = t; ctx.toast(st.say, 5200); }
+    }
     // player tween (slip / climb / dig)
     if (tw) {
       if (tw.p !== p) { tw.p.x = tw.b.x; tw.p.y = tw.b.y; tw.p.z = tw.b.z; tw = null; }
@@ -999,6 +1023,6 @@ export function createZones(scene, ctx) {
   function status() { return { id, exit: exitAt ? { x: exitAt.x - A.x, z: exitAt.z - A.z, open: exitOpen, n: crewAtExit() } : null, starGot, sig: { ...sig }, puzzles: puzzles.map(p => ({ id: p.id, done: p.done, req: p.req })), keyDone, picked, keyDew, props: props.filter(p => p.act).map(p => ({ act: p.act, cls: p.cls, sig: p.sig, label: p.label, x: p.x, y: p.y, z: p.z, done: !!p.done, b: p.b || null, from: p.from || null })), plates: plates.map(p => ({ sig: p.sig, x: p.x, y: p.y, z: p.z, heavy: p.heavy, holder: p.holder })), nodes: nodes.map(n => ({ kind: n.kind, x: n.m.position.x, y: n.m.position.y, z: n.m.position.z, done: n.done, sig: n.sig })), picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, show: k.show || null, who: k.who || null, night: k.nightOnly })), hoops: hoops.map(h => ({ x: h.m.position.x, y: h.m.position.y, z: h.m.position.z, got: h.got })), A: { ...A }, baseY }; }
   return {
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
-    act, wheelOpts, status, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
+    act, wheelOpts, status, result: () => result, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }

@@ -853,8 +853,9 @@ function renderValleyMap() {
   const stars = def && def.neighbor && def.neighbor !== 'all'
     ? ' · ' + '★'.repeat(Math.floor(valley.friendship(def.neighbor))) + '☆'.repeat(3 - Math.floor(valley.friendship(def.neighbor)))
     : '';
+  const lvStars = ADVENTURE && def ? (() => { const S = valley.data.stars?.[def.id]; return ' · ' + (S ? '⭐'.repeat(S.n) + '☆'.repeat(3 - S.n) : '☆☆☆'); })() : '';
   $('vDetail').textContent = def
-    ? `${def.emoji} ${def.name} — ${def.blurb}${stars}${gate.ok ? '' : ' · 🔒 ' + gate.why}`
+    ? `${def.emoji} ${def.name} — ${def.blurb}${ADVENTURE ? lvStars : stars}${gate.ok ? '' : ' · 🔒 ' + gate.why}`
     : (ADVENTURE ? 'Pick a level to play' : 'Pick a wilted patch to heal');
   const go = $('vGo'), fr = $('vFree'), cont = st && st.state !== 'wilted';
   go.disabled = !gate.ok; if (fr) fr.disabled = !gate.ok;
@@ -1406,7 +1407,18 @@ function worldTick(dt, st) {
   if (valleySession && playing && !paused && round.running && !round.over) {
     // Heal comes from zone pickups / team lifts / contests — territory bloom retired (t135u).
     if (zones) { zones.update(dt, camera); if (!zones.keyGoalMet()) healAmt = Math.min(healAmt, HEAL_PACKUP - 0.01); }
-    if (ADVENTURE && zones && zones.keyGoalMet() && valleySession && !valleySession.ending) { valleySession.ending = true; toast('🎉 Level complete!', 2600); audio.music?.jingle?.('win'); setTimeout(() => endValleyPatchWild(), 2200); }
+    if (ADVENTURE && zones && zones.keyGoalMet() && valleySession && !valleySession.ending) {
+      valleySession.ending = true; audio.music?.jingle?.('win');
+      const res = zones.result?.() || null, lines = [];
+      if (res) {
+        const st = res.stars; lines.push(`🌸 Petals ${res.petals}/${res.petalsTotal} ${st.petals ? '⭐' : '☆'} · ⭐ Starseed ${st.star ? '⭐' : '☆'} · ⏱ ${fmtT(res.time)}${res.par ? ' / par ' + fmtT(res.par) : ''} ${st.par ? '⭐' : '☆'}`);
+        lines.push(...res.end);
+        const S = (valley.data.stars = valley.data.stars || {}), old = S[res.id] || { n: 0 };
+        S[res.id] = { n: Math.max(old.n || 0, res.n), petals: !!(old.petals || st.petals), star: !!(old.star || st.star), par: !!(old.par || st.par), best: Math.min(old.best || 1e9, res.time) }; valley.save();
+      }
+      lines.forEach((l, i) => setTimeout(() => toast(l, 2800), 2600 + i * 2600));
+      setTimeout(() => endValleyPatchWild(), 2600 + lines.length * 2600 + 400);
+    }
     if (valley) valley.setHeal(valleySession.patchId, healAmt);
     updateHealUi();
     const def = valley?.def(valleySession.patchId);
