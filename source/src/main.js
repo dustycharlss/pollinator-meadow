@@ -25,6 +25,10 @@ import { createItems } from './items.js';
 import { createCosmetics, EMOTES } from './cosmetics.js';
 import { createValley, PATCHES, HEAL_PACKUP } from './valley.js';
 import { createZones } from './zones.js';
+// Adventure refocus (Nov 9): build mode, species buildings, resource economy, Command wheel/helper AI,
+// heal meter + Pack Up gate are cut. Levels end when their goal is met. Petals are the score.
+export const ADVENTURE = true;
+document.body.classList.toggle('adv', ADVENTURE);
 import { createCrew, STARTER_CREW, SKILLS, crewTags, priceForCrew, isFlyer, crewValid } from './crew.js';
 import { createContests } from './contests.js';
 import { createPackUp } from './packup.js';
@@ -300,6 +304,7 @@ const gCost = (id, t) => costOf(SPECIES[id].carry, t);
 function nearHome() { const n = nests[cur], p = P[cur]; return Math.hypot(p.x - n.x, p.z - n.z) < 16; }
 function affordable(id) { const g = save.gear[id]; return g.t.some(t => t < 3 && g.bank >= gCost(id, t + 1)); }
 function updateShopChip() {
+  if (ADVENTURE) { const c0 = $('shopChip'); if (c0) c0.style.display = 'none'; return; }
   const show = playing && !paused && !shopOpen && nests && nearHome(), c = $('shopChip');
   c.style.display = show ? '' : 'none';
   if (show) { $('shopChipN').textContent = affordable(cur) ? '✨ upgrades ready!' : ''; if (!save.gearHint && !document.body.classList.contains('buildOn')) { save.gearHint = 1; toast('🛠️ You can spend what you gather on silly gear — tap 🤝 Interact at home (or press G)!', 4200); } }
@@ -318,6 +323,7 @@ function renderShop() {
 }
 function previewShop() { const g = save.gear[cur].t; shopPv = g.map((t, i) => (i === shopSel && t < 3 ? t + 1 : t)); gearFx.set(cur, shopPv); }
 function openShop() {
+  if (ADVENTURE) return;
   if (!playing || paused || shopOpen) return;
   if (!nearHome()) { toast(`🛠️ Your workbench is at home — head to your ${SPECIES[cur].nest.name} to upgrade gear`, 2800); return; }
   shopOpen = true; input.active = false; paused = true; document.body.classList.add('shopOn');
@@ -821,7 +827,7 @@ function renderValleyMap() {
   if (!valley || !crew) return;
   crew.loadFromValley();
   const wildN = valley.patches.filter(p => valley.get(p.id).state === 'wild').length;
-  $('vSub').textContent = `${wildN}/8 wild · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick 🌿 Free roam or ⏱ Challenge for any open level`;
+  $('vSub').textContent = (ADVENTURE ? `${wildN}/8 cleared · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick a level, then ▶ Play (or ⏱ Timed)` : `${wildN}/8 wild · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick 🌿 Free roam or ⏱ Challenge for any open level`);
   paintValleyMap({
     getState: id => valley.get(id),
     selected: vSelPatch,
@@ -844,11 +850,11 @@ function renderValleyMap() {
     : '';
   $('vDetail').textContent = def
     ? `${def.emoji} ${def.name} — ${def.blurb}${stars}${gate.ok ? '' : ' · 🔒 ' + gate.why}`
-    : 'Pick a wilted patch to heal';
+    : (ADVENTURE ? 'Pick a level to play' : 'Pick a wilted patch to heal');
   const go = $('vGo'), fr = $('vFree'), cont = st && st.state !== 'wilted';
   go.disabled = !gate.ok; if (fr) fr.disabled = !gate.ok;
-  go.textContent = (cont ? '⏱ Continue · ' : '⏱ ') + 'Challenge';
-  if (fr) fr.textContent = (cont ? '🌿 Continue · ' : '🌿 ') + 'Free roam';
+  go.textContent = (cont ? '⏱ Continue · ' : '⏱ ') + (ADVENTURE ? 'Timed' : 'Challenge');
+  if (fr) fr.textContent = ADVENTURE ? (cont ? '▶ Continue' : '▶ Play') : (cont ? '🌿 Continue · ' : '🌿 ') + 'Free roam';
 }
 function openCrewTent(after) { openTeamPick(after || renderValleyMap); }
 // ---- Team picker (crew of 3): in-game overlay, replaces browser prompt
@@ -931,7 +937,7 @@ function startValleyPatch(patchId) {
   renderCrewDock();
   updateHealUi();
   onb?.note?.('valleyIn');
-  toast(`${def.emoji} ${def.name} · heal the meadow with your crew!`, 3200);
+  toast(ADVENTURE ? `${def.emoji} ${def.name} · solve it with your crew!` : `${def.emoji} ${def.name} · heal the meadow with your crew!`, 3200);
 }
 function renderCrewDock() {
   const dock = $('crewDock'); if (!dock) return;
@@ -974,6 +980,7 @@ function renderCrewDock() {
   });
 }
 function updateHealUi() {
+  if (ADVENTURE) { document.body.classList.remove('packReady'); return; }
   setHealArt(healAmt);
   document.body.classList.toggle('packReady', !!(valleySession && packup && !packup.active && packup.canStart()));
 }
@@ -982,7 +989,7 @@ function endValleyPatchWild() {
   const id = valleySession.patchId;
   valley.markWild(id, { at: Date.now(), heal: 1 });
   const def = valley.def(id);
-  toast(`🌿 ${def.name} is wild forever!`, 3200);
+  toast(ADVENTURE ? `🏆 ${def.name} cleared!` : `🌿 ${def.name} is wild forever!`, 3200);
   valleySession = null; zones?.clear();
   playing = false; round.running = false; round.over = true;
   document.body.classList.remove('inRound', 'packReady');
@@ -1233,6 +1240,7 @@ if (0) $('pkGo').onclick = () => { closeOv('pick'); settings.lead = pickSel; sav
 // tech tree overlay
 let techSp = 'bee', techSel = null;
 function openTech(sp) {
+  if (ADVENTURE) return;
   if (!playing || !round || round.over || techOpen) return;
   techSp = sp && TREES[sp] ? sp : (rts.on && rts.sel.length ? rts.sel[0].sp : rts.on && rts.own ? rts.own : cur);
   techSel = null; techOpen = true; $('tech').classList.add('on'); syncPause(); renderTech(); audio.blip(4);
@@ -1357,6 +1365,7 @@ $('bTray').addEventListener('click', e => { const c = e.target.closest('.bc'); i
   if (c.dataset.sw) { const id = c.dataset.sw; if (swapOK() || round.mode === 'relaxed') { setBuild(false); selectSpecies(id); toast(`⇄ Swapped to ${SPECIES[id].name}`, 1500); setBuild(true); } else toast(`🔒 Only ${SPECIES[id].name} knows how to build this. Swap to ${SPECIES[id].name}!`, 2200); return; }
   if (c.dataset.t) { pickAndPlaceBuilding(c.dataset.t); return; } });
 function setBuild(on) {
+  if (ADVENTURE && on) return;
   if (!build || on === build.active) return;
   if (on) { if (!playing || paused || shopOpen) return; const p = P[cur]; p.vx = p.vz = 0; bmF.on = false; state.bmPicked = null; build.enter(); renderBTray(true); } else { build.exit(); bmF.on = false; cam.swoop = 0.6; trayMode = 'build'; build.hiring = false; document.body.classList.remove('hireOn'); }
   document.body.classList.toggle('buildOn', on); $('bBuild').classList.toggle('on', on); setActLabel(); cam.pitch = on ? 0.8 : 0.35; if (on) toast('🔨 ' + KID.build, 2600); $('bmHint').textContent = on ? '🔒 ' + KID.build : ''; $('bmHint').classList.toggle('on', on);
@@ -1384,6 +1393,7 @@ function worldTick(dt, st) {
   if (valleySession && playing && !paused && round.running && !round.over) {
     // Heal comes from zone pickups / team lifts / contests — territory bloom retired (t135u).
     if (zones) { zones.update(dt, camera); if (!zones.keyGoalMet()) healAmt = Math.min(healAmt, HEAL_PACKUP - 0.01); }
+    if (ADVENTURE && zones && zones.keyGoalMet() && valleySession && !valleySession.ending) { valleySession.ending = true; toast('🎉 Level complete!', 2600); audio.music?.jingle?.('win'); setTimeout(() => endValleyPatchWild(), 2200); }
     if (valley) valley.setHeal(valleySession.patchId, healAmt);
     updateHealUi();
     const def = valley?.def(valleySession.patchId);
@@ -1392,12 +1402,12 @@ function worldTick(dt, st) {
       onb?.note?.('packup');
     }
     // contests disabled (t145u) — skip invite/update
-    if (packup) packup.update(dt, P[cur]);
+    if (packup && !ADVENTURE) packup.update(dt, P[cur]);
   }
 
   if (items) items.update(playing && !paused ? dt : 0);
   if (looks) looks.update(playing && !paused ? dt : 0, riders[cur], P[cur]);
-  if (goals && playing && !paused) goals.update();
+  if (goals && !ADVENTURE && playing && !paused) goals.update();
   if (onb && playing && !paused) { if (round.stats.builds && Object.keys(round.stats.builds).length) onb.flags.built = 1; if (helpers && helpers.perm && helpers.perm() > 0) onb.flags.hired = 1; onb.update(dt, st); }
   if (playing && !paused && round.running && !round.over) { round.tick(dt); tech.update(dt); }
 }
@@ -1534,7 +1544,7 @@ function panBy(dx, dy) { const wpp = 2 * rts.h * Math.tan(camera.fov * Math.PI /
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('wheel', e => { if (!rts.on) return; e.preventDefault(); rts.h = clampH(rts.h * (1 + Math.max(-0.3, Math.min(0.3, e.deltaY * 0.0012)))); }, { passive: false });
   cv.addEventListener('pointerleave', () => { rts.mouse = null; });
-  addEventListener('keydown', e => { const k = e.key.toLowerCase(); rts.keys[k] = true; if (k === 'c' && playing && !paused && !e.repeat && wheels) wheels.sticky('cmd'); });
+  addEventListener('keydown', e => { const k = e.key.toLowerCase(); rts.keys[k] = true; if (k === 'c' && !ADVENTURE && playing && !paused && !e.repeat && wheels) wheels.sticky('cmd'); });
   addEventListener('keyup', e => { rts.keys[e.key.toLowerCase()] = false; });
   addEventListener('blur', () => { rts.keys = {}; });
 }
@@ -1616,7 +1626,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
+  zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
   helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
@@ -1709,7 +1719,7 @@ async function boot() {
       updateRoundHud?.(true); updateHud?.();
     },
     grantHelper: async () => {
-      if (!helpers) return null;
+      if (!helpers || ADVENTURE) return null;
       if (helpers.perm() >= helpers.max()) {
         toast('🐾 Crew full — helper gift becomes a resource burst', 2600);
         for (const k of ['n', 'f', 'w', 'h']) round.addRes(k, 10);
@@ -1724,7 +1734,7 @@ async function boot() {
       return h;
     },
     grantVisitor: async () => {
-      if (!helpers) return null;
+      if (!helpers || ADVENTURE) return null;
       const pool = ['butterfly', 'hummingbird', 'bee', 'robin', 'raccoon', 'opossum'];
       const sp = pool[(Math.random() * pool.length) | 0];
       const p = P[cur] || nests[lead];
@@ -1906,7 +1916,7 @@ function wheelOpts() {
       { icon: sp.actEmoji, ik: sp.mv && sp.mv.fly ? ['fly','ability'] : 'ability', label: sp.actName, on: () => { input.actPressed = true; } },
       { icon: '📍', ik: 'show-home', label: 'Show home', on: () => { pingHomeT = 6; toast(`${sp.nest.emoji} Pointing home for a few seconds`, 1500); } },
       { icon: '🎥', ik: 'overview-x', label: 'Reset view', on: () => { cam.yaw = P[cur].yaw; cam.pitch = 0.35; } },
-      { icon: '🧺', ik: 'quick-item', label: items && items.count('jumbo') ? `Jumbo ×${items.count('jumbo')}` : 'Jumbo Basket', dis: !(items && items.count('jumbo')), why: 'Earn from goals', on: () => items && items.useJumbo() },
+      ...(ADVENTURE ? [] : [{ icon: '🧺', ik: 'quick-item', label: items && items.count('jumbo') ? `Jumbo ×${items.count('jumbo')}` : 'Jumbo Basket', dis: !(items && items.count('jumbo')), why: 'Earn from goals', on: () => items && items.useJumbo() }]),
       { icon: '🎨', ik: 'looks', label: 'Looks', on: () => looks && looks.openPanel() },
     ] },
     build: { el: 'bBuild', enabled: () => playing && !paused, tap: () => toggleBuild(), options: () => {
@@ -1930,14 +1940,16 @@ function wheelOpts() {
       const p = P[cur], opts = [];
       const home = nearHome();
       // Home context
-      if (home) {
+      if (ADVENTURE) { if (home && p.carried > 0) opts.push({ icon: '🏠', ik: 'return-home', label: 'Deliver', on: () => depositNow() }); }
+      else if (home) {
         opts.push({ icon: '🛠️', ik: 'tool', label: 'Workbench', on: () => openShop() });
         if (p.carried > 0) opts.push({ icon: '🏠', ik: 'return-home', label: 'Deliver', on: () => depositNow() });
       } else {
         opts.push({ icon: '🛠️', ik: 'tool', label: 'Workbench', dis: true, why: 'Head home for the workbench', on: () => {} });
       }
       // Rival colonies + neighbor contests removed (t145u). Pack-up stays.
-      if (packup && packup.active) opts.push({ icon: '📦', ik: 'packup', label: 'Pack building', on: () => packup.tap(p) });
+      if (ADVENTURE) {}
+      else if (packup && packup.active) opts.push({ icon: '📦', ik: 'packup', label: 'Pack building', on: () => packup.tap(p) });
       else if (packup && packup.canStart()) opts.push({ icon: '📦', ik: 'packup', label: 'Pack Up', on: () => packup.begin() });
       // Emotes (always on Interact wheel; locked ones clearly disabled)
       for (const e of EMOTES) {
@@ -1945,7 +1957,7 @@ function wheelOpts() {
         opts.push({ icon: e.icon, ik: 'emote-' + e.id, label: e.name, dis: locked, why: 'Earn more stars to unlock', on: () => looks && looks.emote(e.id) });
       }
       opts.push(
-        { icon: '🎒', ik: 'inventory', label: 'Inventory', on: () => openHub('inv') },
+        ...(ADVENTURE ? [] : [{ icon: '🎒', ik: 'inventory', label: 'Inventory', on: () => openHub('inv') }]),
         { icon: '📖', ik: 'journal', label: 'Journal', on: () => openJournal() },
         { icon: '☰', ik: 'menu', label: 'Menu', on: () => openHub('game') },
       );
@@ -1957,12 +1969,13 @@ function interactTap() {
   const p = P[cur];
   if (packup && packup.active) { packup.tap(p); return; }
   if (nearHome() && p.carried > 0) { depositNow(); return; }
-  if (nearHome()) return openShop();
-  if (packup && packup.canStart()) { packup.begin(); return; }
-  toast(`🤝 Nothing to interact with here · your ${SPECIES[cur].nest.name} workbench is at home`, 2200);
+  if (nearHome() && !ADVENTURE) return openShop();
+  if (!ADVENTURE && packup && packup.canStart()) { packup.begin(); return; }
+  toast(ADVENTURE ? '🤝 Nothing to interact with here — look for a class badge over a puzzle' : `🤝 Nothing to interact with here · your ${SPECIES[cur].nest.name} workbench is at home`, 2200);
 }
 function initWheels() {
   const d = wheelOpts(); const defs = {};
+  if (ADVENTURE) { delete d.build; delete d.cmd; }
   for (const k in d) defs[k] = { ...d[k], options: () => wheelOpts()[k].options() };
   wheels = createWheels({ defs, onOpen: () => document.body.classList.add('wheelOn'), onClose: () => document.body.classList.remove('wheelOn'), sound: k => audio.sample({ open: 'ui/wheel-open-whoosh', hi: 'ui/highlight-tick', pick: 'ui/select-pop', cancel: 'ui/cancel', err: 'ui/error-bonk' }[k], k === 'hi' ? 0.3 : 0.45) });
 }

@@ -1,5 +1,6 @@
 // Pip tips (Fern onboarding.json) — progressive unlocks + tip card.
-const BEATS = [
+const ADV = () => document.body.classList.contains('adv');
+const BEATS_OLD = [
   { id: 'hello', pip: "Hi! I'm Pip. Let's grow a meadow!", relaxed: 'Hi friend! I’m Pip. No rush here!', portrait: 'hello', after: 4 },
   { id: 'move', pip: 'Walk or fly to the sparkly flowers!', portrait: 'hint', wait: 1 },
   { id: 'gather', pip: 'Tap Act near flowers to gather. Yum!', portrait: 'hint', need: 'gather' },
@@ -14,6 +15,15 @@ const BEATS = [
   { id: 'packup', pip: 'Heal 85%! Pack Up your buildings and leave the patch wild!', portrait: 'unlock', need: 'healReady', unlock: 'pack' },
   { id: 'done', pip: 'You did it! Go grow, little buddy!', portrait: 'unlock' },
 ];
+// Adventure refocus: Pip only teaches moving, swapping and Interact (puzzle hints come from the level)
+const BEATS_ADV = [
+  { id: 'hello', pip: "Hi! I'm Pip. Let's explore the valley!", relaxed: 'Hi friend! I’m Pip. No rush here!', portrait: 'hello', after: 4 },
+  { id: 'move', pip: 'Walk, jump or fly around — grab the Petals!', portrait: 'hint', wait: 1 },
+  { id: 'crew_swap', pip: 'Tap a portrait to swap friends instantly!', portrait: 'unlock', need: 'valleyIn' },
+  { id: 'interact', pip: 'See a badge over something? Tap 🤝 Interact next to it!', portrait: 'unlock', unlock: 'int', need: 'valleyIn' },
+  { id: 'done', pip: 'You did it! Have fun, little buddy!', portrait: 'unlock' },
+];
+const BEATS = new Proxy([], { get: (t, k) => { const B = ADV() ? BEATS_ADV : BEATS_OLD; const v = B[k]; return typeof v === 'function' ? v.bind(B) : v; } });
 const PORTRAIT = { hello: 'guide-happy-blocky.png', unlock: 'guide-cheering-blocky.png', hint: 'guide-thinking-blocky.png' };
 
 export function createOnboarding(ctx) {
@@ -41,9 +51,9 @@ export function createOnboarding(ctx) {
     const onb = save.onb;
     document.body.classList.toggle('onbCmd', !onb.cmd);
     document.body.classList.toggle('onbTech', !onb.tech);
-    document.body.classList.toggle('onbInt', !onb.int);
+    document.body.classList.toggle('onbInt', !onb.int && !ADV());
     const rts = document.getElementById('bRts'); if (rts) rts.style.display = onb.cmd ? '' : 'none';
-    const bi = document.getElementById('bInt'); if (bi) bi.style.display = onb.int ? '' : 'none';
+    const bi = document.getElementById('bInt'); if (bi) bi.style.display = (onb.int || ADV()) ? '' : 'none';
   }
 
   function showBeat(b) {

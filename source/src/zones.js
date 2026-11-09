@@ -494,7 +494,7 @@ export function createZones(scene, ctx) {
   const group = new THREE.Group(); scene.add(group);
   let solids = [], picks = [], nodes = [], builds = [], drafts = [], hoops = [], silks = [], nightDews = [], star = null;
   let homeAt = null, A = { x: 0, z: 0 }, baseY = 0, recipe = null, id = null, picked = 0, keyDone = false, msgT = 0, t = 0;
-  let nightOn = false, dewPulseT = -99, nodesDone = 0, buildsDone = 0, keyDew = 0;
+  let advNeed = 99, nightOn = false, dewPulseT = -99, nodesDone = 0, buildsDone = 0, keyDew = 0;
   let terrainMesh = null, sampleH = null, waterMeshes = [];
   const mats = new Map();
   const mat = (c, e = 0) => { const k = c + ':' + e; if (!mats.has(k)) mats.set(k, new THREE.MeshLambertMaterial({ color: c, emissive: e ? c : 0, emissiveIntensity: e, flatShading: true })); return mats.get(k); };
@@ -688,17 +688,20 @@ export function createZones(scene, ctx) {
       const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.7), mat(0xffd23f, 0.7)); lamp.position.set(A.x + x, g + 2.5, A.z + z); group.add(lamp);
     },
     pickup(tier, x, z, h) {
+      if (tier === 'dew') tier = 'petal'; // adventure refocus: Petals are the score
       const T = TIER[tier], m = new THREE.Mesh(T.geo(), mat(T.col, 0.8));
       m.position.set(A.x + x, gy(x, z) + h, A.z + z); group.add(m);
       picks.push({ tier, m, y: m.position.y, got: false, nightOnly: false });
     },
     nightDew(x, z, h) {
+      return this.pickup('petal', x, z, h);
       const T = TIER.dew, m = new THREE.Mesh(T.geo(), mat(T.col, 0.9));
       m.position.set(A.x + x, gy(x, z) + h, A.z + z); m.visible = false; group.add(m);
       const rec = { tier: 'dew', m, y: m.position.y, got: false, nightOnly: true, alive: false };
       picks.push(rec); nightDews.push(rec);
     },
     node(kind, x, z, h) {
+      return; // adventure refocus: team-gather nodes cut
       const N = NODE[kind], col = TIER[N.tier].col, m = new THREE.Group();
       const body = new THREE.Mesh(kind === 'team' ? new THREE.CylinderGeometry(0.9, 0.9, 3, 10).rotateZ(Math.PI / 2) : kind === 'heavy' ? new THREE.CylinderGeometry(1.6, 1.8, 0.6, 16) : new THREE.DodecahedronGeometry(1.1), mat(kind === 'team' ? 0xb07a32 : col, kind === 'team' ? 0.15 : 0.7));
       body.position.y = kind === 'heavy' ? 0.3 : 1; m.add(body);
@@ -709,6 +712,7 @@ export function createZones(scene, ctx) {
       nodes.push({ kind, m, body, label, done: false, wob: 0 });
     },
     builder(name, who, x, z, steps) {
+      steps.forEach(([sx, sz, h, r]) => this.cyl(sx, sz, r, h, 0x8b6a45, Math.min(h + 1, 1.6))); return; // built from the start
       const ghost = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.18, 8, 24).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.85 }));
       ghost.position.set(A.x + x, gy(x, z) + 0.3, A.z + z); group.add(ghost);
       const parts = steps.map(([sx, sz, h, r]) => this.cyl(sx, sz, r, h, 0x8b6a45, Math.min(h + 1, 1.6), true));
@@ -723,6 +727,7 @@ export function createZones(scene, ctx) {
       m.position.set(A.x + x, gy(x, z) + h, A.z + z); group.add(m); hoops.push({ m, got: false });
     },
     starheart(x, z, h, caps) {
+      return;
       this.node('heaviest', x, z, h);
       star = { node: nodes[nodes.length - 1], caps: caps.map(([cx, cz, ch]) => ({ x: A.x + cx, z: A.z + cz, y: gy(cx, cz) + ch })), carry: false, safe: { x: A.x, z: A.z + 2 }, mesh: null, lastY: 0, dropped: 0 };
     },
@@ -745,9 +750,10 @@ export function createZones(scene, ctx) {
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
     buildTerrainMesh(recipe.terrain, recipe.bounds);
     recipe.build(B);
+    advNeed = Math.max(1, Math.ceil(picks.length * 0.7));
     if (recipe.night) { nightOn = true; ctx.setNight(true); }
     else if (recipe.nightCycle) { nightOn = false; ctx.setNight(false); }
-    ctx.toast(`🎯 ${recipe.goal}`, 3600);
+    ctx.toast(`🎯 Gather ${advNeed} Petals to finish ${'this level'}`, 3600);
   }
   function crewAt(x, z, r) {
     const p = ctx.getP(); let n = Math.hypot(p.x - x, p.z - z) < r ? 1 : 0;
@@ -759,7 +765,7 @@ export function createZones(scene, ctx) {
     for (const d of nightDews) { if (d.got) continue; d.alive = want; d.m.visible = want; }
   }
   function checkKey() {
-    if (!recipe || keyDone) return;
+    if (!recipe || keyDone) return; if (1) return;
     if (recipe.key === 'node' && nodesDone >= 1) complete('Team lift done');
     else if (recipe.key === 'multi') {
       const nn = recipe.needNodes || 0, nb = recipe.needBuilds || 0;
@@ -767,7 +773,7 @@ export function createZones(scene, ctx) {
     }
   }
   const keyGoalMet = () => !recipe || keyDone;
-  function complete(why) { if (keyDone) return; keyDone = true; ctx.toast(`✅ ${why} — this zone can heal fully now!`, 3200); ctx.audio?.chime?.(); }
+  function complete(why) { if (keyDone) return; keyDone = true; ctx.toast(`✅ ${why}!`, 2600); ctx.audio?.chime?.(); }
   function update(dt, cam) {
     if (!recipe) return; t += dt;
     const p = ctx.getP(), cur = ctx.cur(), size = SIZE[cur] || 'medium';
@@ -792,9 +798,10 @@ export function createZones(scene, ctx) {
       if (k.nightOnly && !k.alive) continue;
       k.m.rotation.y += dt * 2; k.m.position.y = k.y + Math.sin(t * 2 + k.y) * 0.15;
       if (Math.hypot(p.x - k.m.position.x, p.z - k.m.position.z) < 1.5 && Math.abs(p.y + 0.6 - k.m.position.y) < 1.8) {
-        k.got = true; k.m.visible = false; k.alive = false; ctx.addHeal(TIER[k.tier].heal); ctx.audio?.sample?.('ui2/pickup', 0.4); picked++;
+        k.got = true; k.m.visible = false; k.alive = false; ctx.addHeal(TIER[k.tier].heal); ctx.onPick?.(k.tier); ctx.audio?.sample?.('ui2/item-produced', 0.4); picked++;
         if (k.tier === 'dew') keyDew++;
-        if (recipe.key === 'pick') {
+        if (picked >= advNeed) complete(`${picked} Petals gathered`);
+        if (0 && recipe.key === 'pick') {
           const need = recipe.pick || 1;
           const have = (recipe.pickTier === 'petal') ? picked : keyDew;
           if (have >= need) complete(recipe.pickTier === 'petal' ? 'Petals gathered' : 'Dewdrops gathered');
@@ -849,5 +856,6 @@ export function createZones(scene, ctx) {
       }
     }
   }
-  return { homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe, NEED, SIZE, MAPS };
+  const status = () => ({ picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, night: k.nightOnly })), A: { ...A }, baseY, keyDone, picked, need: advNeed });
+  return { status, homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe ? `Gather ${advNeed} Petals` : '', active: () => !!recipe, NEED, SIZE, MAPS };
 }

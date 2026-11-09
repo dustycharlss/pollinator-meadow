@@ -412,6 +412,7 @@ img.ico{width:1.15em;height:1.15em;object-fit:contain;vertical-align:middle;poin
 
 /* Pip onboarding locks — hide until unlocked */
 body.onbCmd #bRts{display:none!important}
+body.adv #play,body.adv #cont,body.adv #lens,body.adv #bestTxt,body.adv #rHl,body.adv #carryTxt,body.adv #spChip br{display:none!important}
 body.onbInt #bInt{display:none!important}
 body.onbTech #rbTech,body.onbTech #pTech{display:none!important}
 
@@ -638,6 +639,7 @@ body.inRound #crewDock:empty{display:none}
 body.inRound.packReady #packBtn{display:block}
 
 .zoneNode{position:fixed;transform:translate(-50%,-100%);pointer-events:none;background:rgba(255,255,255,.85);border-radius:12px;padding:2px 8px;font:600 14px system-ui;color:#5a3b22;z-index:20;display:none;white-space:nowrap}
+body.adv #bBuild,body.adv #bRts,body.adv #nestBar,body.adv #shopChip,body.adv #dewChip,body.adv #healMeter,body.adv #rtsBar,body.adv #possBar,body.adv #pTech,body.adv #hubTabs [data-tab="tech"],body.adv #hubTabs [data-tab="inv"],body.adv #goalWrap,body.adv #rD,body.adv #rS,body.adv #bTray,body.adv #bBar,body.adv #bmHint,body.adv #shop,body.adv #packBtn{display:none!important}
 #teamPick{z-index:60}.tpp{max-width:720px;color:var(--ink)}#tpSlots{display:flex;gap:8px;justify-content:center;margin:6px 0}
 .tps{position:relative;width:86px;height:74px;border-radius:16px;border:3px dashed rgba(59,38,20,.4);background:rgba(255,255,255,.5);font:800 30px system-ui;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .tps.on{border-style:solid;border-color:#3b2614;background:#ffd23f}.tps small{font-size:11px}.tps i{position:absolute;top:2px;right:6px;font-style:normal;font-size:12px}
@@ -691,7 +693,7 @@ body.inRound.packReady #packBtn{display:block}
 
 <div class="ov" id="valley"><div class="vWrap">
   <h2>🗺️ Valley Map</h2>
-  <div class="vSub" id="vSub">Heal wilted patches with your crew of three</div>
+  <div class="vSub" id="vSub">Guide your crew of three through each level</div>
   <div id="vMapStage"><img id="vMapImg" alt="Valley map"><div id="vSlots"></div></div>
   <div id="vPatches" hidden></div>
   <div id="vDetail">Pick a patch</div>
@@ -718,7 +720,7 @@ body.inRound.packReady #packBtn{display:block}
 <div id="title" class="on fd"><picture><source media="(orientation:landscape)" srcset="./ui/screens/title-bg-landscape.webp"><img class="fdBg" src="./ui/screens/title-bg-portrait.webp" alt=""></picture><div class="logo" data-slot="logo"><img id="logoImg" src="./img/logo.png" alt="Pollinator Meadow" onerror="this.remove();document.getElementById('logoTxt').hidden=false"><div id="logoTxt" hidden><span class="fl">🌼</span><h1>Pollinator Meadow</h1></div><small>Grow your meadow. Gather, build and bloom.</small></div>
 <button class="fdBtn" id="tChallenge" hidden style="display:none"></button><button class="fdBtn" id="tRelaxed" hidden style="display:none"></button>
 <div class="menu">
-  <button class="big" id="tValley">🗺️ Valley Levels</button>
+  <button class="big" id="tValley">▶ Play Adventure</button>
   <button class="big" id="play">▶ Arcade Play</button>
   <button class="big sec" id="cont" style="display:none">⏩ Continue round</button>
   <div class="lens" id="lens"><span>Round</span></div>
@@ -743,10 +745,10 @@ body.inRound.packReady #packBtn{display:block}
 </div></div>
 <div class="ov" id="how"><div class="panel">
   <h2>How to play</h2>
-  <p>Fly, run and climb through a peaceful meadow. Tap <b>🔨 Build</b> to spend what you gather on species buildings, gardens, larders and bridges. Gather <b>Petals</b>, <b>Dewdrops</b> and <b>Starseeds</b>, hire helpers, and heal each valley level with your crew.</p>
-  <p>✨ <b>Sparkles</b> mark your creature's favourite food. Carry it home to score points and fill your stockpile. 🌼 <b>Nectar</b> comes from bees, butterflies, hummingbirds, moths and bats; 🪱 <b>forage</b> from raccoons and robins; 🪵 <b>wood</b> from opossums; 🍯 <b>honey</b> from bears. Swap animals to collect them all.</p>
-  <p>💧 Gather Petals, Dewdrops and Starseeds across the meadow. 🐾 <b>Hire helpers</b> from the build menu: friendly animals that follow you, gather on their own, and carry it home. 📣 <b>Command</b> sends helpers to gather, deliver, or stay. Score as much as you can before the clock runs out — or pick Free roam on a valley level with no timer!</p>
-  <p style="font-size:12.5px;opacity:.75"><b>Touch:</b> drag on the left to move · Jump (tap twice for a double jump, hold to flutter) · action button · drag on the right to turn the camera.<br><b>Keys:</b> WASD/arrows · Space jump · E action · B build · Q/R camera · Tab / 1–9 switch animal · C Command wheel (send helpers) · J journal · Esc pause.</p>
+  <p>🐾 Pollinator Meadow is a cozy puzzle adventure. Pick a valley level on the map and explore it with your crew of three animals. Nobody gets hurt — a wrong move just means trying again.</p>
+  <p>🌸 <b>Petals</b> are your score: pick them up as you explore. Gather enough Petals in a level to finish it. Each level also hides a secret <b>⭐ Starseed</b> — see if you can find it!</p>
+  <p>🔁 <b>Swap</b> animals by tapping a portrait (or 1/2/3). Each animal moves differently: flyers zip over water and up high, walkers jump and climb. Look for a badge over a puzzle and tap <b>🤝 Interact</b> next to it.</p>
+  <p style="font-size:12.5px;opacity:.75"><b>Touch:</b> drag on the left to move · Jump (tap twice for a double jump, hold to flutter) · action button · drag on the right to turn the camera.<br><b>Keys:</b> WASD/arrows · Space jump · E action · Q/R camera · Tab / 1–3 switch animal · J journal · Esc pause.</p>
   <button class="big" id="howClose">Got it</button>
 </div></div>
 <div class="ov" id="pause"><div class="panel">

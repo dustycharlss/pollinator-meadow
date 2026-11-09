@@ -9,14 +9,14 @@ export const UNLOCK_ALL_LEVELS = true;
 export const PACKUP_REFUND = 0.5;
 
 export const PATCHES = [
-  { id: 'sunny_hollow', name: 'Sunny Hollow', emoji: '☀️', need: ['flyer', 'walker'], neighbor: 'bee', contest: null, blurb: 'Warm octagon clearing: deliver 20 Petals, hire 1, build 1 T1.' },
-  { id: 'creek_bend', name: 'Creek Bend', emoji: '🌊', need: ['bridge', 'flyer'], neighbor: 'robin', contest: null, blurb: 'U-creek, terraces, crossing + Honey Log; gather 10 Petals.' },
-  { id: 'moon_meadow', name: 'Moon Meadow', emoji: '🌙', need: ['night'], neighbor: 'moth', contest: null, blurb: 'Hollow Oak climb; night every 3 min; collect 12 Dewdrops.' },
-  { id: 'log_jam', name: 'Log Jam', emoji: '🪵', need: ['bear', 'pollinate'], neighbor: 'bear', contest: null, blurb: 'Canyon jams: shove log ramps, 3 Honey Logs, Tower Dew Pond.' },
-  { id: 'picnic_lawn', name: 'Picnic Lawn', emoji: '🧺', need: ['raccoon', 'robin'], neighbor: 'raccoon', contest: null, blurb: 'Picnic grid + lemonade stream; 2 Dew Ponds + Big Table bunch.' },
-  { id: 'cliff_orchard', name: 'Cliff Orchard', emoji: '🍎', need: ['bat', 'hummingbird'], neighbor: 'bat', contest: null, blurb: '4 ledge rings, Boulder Stair, waterfall Dew Pond, night Moonfruit.' },
-  { id: 'windy_rise', name: 'Windy Rise', emoji: '💨', need: ['butterfly', 'bumblebee'], neighbor: 'butterfly', contest: null, blurb: 'Terraces + canopy sky roads, night silk, Fork Tree Honey Log.' },
-  { id: 'festival_glade', name: 'Festival Glade', emoji: '🎉', need: ['crew_all_roles'], neighbor: 'all', contest: null, blurb: 'Full mix: Ribbon Creek, knoll Starheart, every earlier trick.' },
+  { id: 'sunny_hollow', name: 'Sunny Hollow', emoji: '☀️', need: ['flyer', 'walker'], neighbor: 'bee', contest: null, blurb: 'Warm clearing by the Home Stump. Find Petals and a secret Starseed.' },
+  { id: 'creek_bend', name: 'Creek Bend', emoji: '🌊', need: ['bridge', 'flyer'], neighbor: 'robin', contest: null, blurb: 'A U-shaped creek with stepped banks. Cross the water and grab Petals.' },
+  { id: 'moon_meadow', name: 'Moon Meadow', emoji: '🌙', need: ['night'], neighbor: 'moth', contest: null, blurb: 'Climb the Hollow Oak. Night falls every 3 minutes.' },
+  { id: 'log_jam', name: 'Log Jam', emoji: '🪵', need: ['bear', 'pollinate'], neighbor: 'bear', contest: null, blurb: 'Canyon log jams and a tall tower to climb.' },
+  { id: 'picnic_lawn', name: 'Picnic Lawn', emoji: '🧺', need: ['raccoon', 'robin'], neighbor: 'raccoon', contest: null, blurb: 'A giant picnic blanket beside a lemonade stream.' },
+  { id: 'cliff_orchard', name: 'Cliff Orchard', emoji: '🍎', need: ['bat', 'hummingbird'], neighbor: 'bat', contest: null, blurb: 'Four cliff ledges, a boulder stair and a waterfall.' },
+  { id: 'windy_rise', name: 'Windy Rise', emoji: '💨', need: ['butterfly', 'bumblebee'], neighbor: 'butterfly', contest: null, blurb: 'Windy terraces and canopy sky roads.' },
+  { id: 'festival_glade', name: 'Festival Glade', emoji: '🎉', need: ['crew_all_roles'], neighbor: 'all', contest: null, blurb: 'The big finale: Ribbon Creek, the knoll and every trick you know.' },
 ];
 
 const STATES = ['wilted', 'in_progress', 'blooming', 'wild'];
