@@ -136,7 +136,7 @@ export async function buildNests(scene) {
     const ring = new THREE.Mesh(new THREE.RingGeometry(7, 8.2, 40), new THREE.MeshBasicMaterial({ color: n.color, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     ring.rotation.x = -Math.PI / 2; ring.position.y = 0.4; root.add(ring);
     const beaconMat = new THREE.MeshBasicMaterial({ color: n.color, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false });
-    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.4, 70, 12, 1, true), beaconMat); beacon.position.y = 35; root.add(beacon);
+    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.4, 70, 12, 1, true), beaconMat); beacon.position.y = 35; beacon.visible = false; root.add(beacon);
     scene.add(root);
     const nest = { id, root, stages: S, stage: -1, units: 0, pop: [], x: n.x, z: n.z, y, ring, beaconMat,
       stageFor: (u) => STAGE_AT.reduce((a, v, i) => u >= v ? i : a, 0),

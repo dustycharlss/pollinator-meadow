@@ -169,8 +169,9 @@ export function buildPlatforms(scene, { solids, heightAt, R, nestPts, quality = 
   const haloT = new THREE.TextureLoader().load(import.meta.env.BASE_URL + 'img/star.png');
   const halos = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ map: haloT, size: 4.2, color: 0xffe07a, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
   halos.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(dewdrops.length * 3), 3)); halos.frustumCulled = false; scene.add(halos);
-  const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 40, 6, 1, true), new THREE.MeshBasicMaterial({ color: 0xffe07a, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-  const rays = new THREE.InstancedMesh(ray.geometry, ray.material, Math.max(1, dewdrops.length)); rays.frustumCulled = false; scene.add(rays);
+  // t161u: no tall dew sky-lasers — keep the drop + halo only
+  const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 40, 6, 1, true), new THREE.MeshBasicMaterial({ color: 0xffe07a, transparent: true, opacity: 0, depthWrite: false, visible: false }));
+  const rays = new THREE.InstancedMesh(ray.geometry, ray.material, Math.max(1, dewdrops.length)); rays.frustumCulled = false; rays.visible = false;
   const out = {
     routes, dewdrops, tops, count: dewdrops.length,
     setCollected(ids) { for (const d of dewdrops) d.got = ids.includes(d.id); },

@@ -50,21 +50,22 @@ export function flightStep(p, sp, mv, S) {
   const base = mag > 0.05 ? mag : 0;
   fl.ph += dt * TAU * (pat === 'flutter' ? 2.6 : pat === 'spiral' ? 1.6 : 1);
   if (pat === 'line') {
+    // F.up = target climb (m/s). Hold Jump with no stick to climb; stick leans into forward flight.
     accel(S.dx * base * run * F.speed * B, S.dz * base * run * F.speed * B, 44); out.h = true;
-    p.vy = damp(p.vy, mag > 0.1 ? 0.5 : 1.1, 8, dt); out.v = true; out.drain = mag > 0.1 ? 1 : 0.7;
+    p.vy = damp(p.vy, mag > 0.1 ? F.up * 0.45 : F.up, 12, dt); out.v = true; out.drain = mag > 0.1 ? 1 : 0.7;
     out.pitch = 0.22 * Math.min(1, speed / (run * F.speed * B));
   } else if (pat === 'flutter') {
     const wave = Math.sin(fl.ph), surge = 0.62 + 0.38 * Math.sin(fl.ph - 0.9);
     const sx = S.dz, sz = -S.dx, sway = Math.sin(fl.ph * 0.5 + fl.seed) * 1.9; // sideways drift
     accel(S.dx * base * run * F.speed * B * surge + sx * sway * (0.4 + base), S.dz * base * run * F.speed * B * surge + sz * sway * (0.4 + base), 13); out.h = true;
-    p.vy = damp(p.vy, 1.0 + 4.3 * wave, 11, dt); out.v = true; out.pitch = -0.25 * wave; out.roll = 0.28 * Math.sin(fl.ph * 0.5 + fl.seed);
+    p.vy = damp(p.vy, F.up * (1.1 + 4.8 * wave), 11, dt); out.v = true; out.pitch = -0.25 * wave; out.roll = 0.28 * Math.sin(fl.ph * 0.5 + fl.seed);
   } else if (pat === 'spiral') {
     let dir = base ? Math.atan2(S.dx, S.dz) : fl.hd, L = S.light;
     if (base) { dir += 0.95 * Math.sin(t * 1.9 + fl.seed); fl.hd = dir; } else fl.hd += 1.5 * dt; // no stick: lazy circling
     if (L && L.d < 20) { const toL = Math.atan2(L.x - p.x, L.z - p.z), a = 0.55 * (1 - L.d / 20); dir += angDiff(toL, dir) * a * (base ? 1 : 1.4); if (!base && L.d < 7) fl.hd = toL + 1.25; }
     const spd = (base ? base * run * F.speed * B : 3.2) * (0.8 + 0.2 * Math.sin(fl.ph));
     accel(Math.sin(dir) * spd, Math.cos(dir) * spd, 10); out.h = true;
-    p.vy = damp(p.vy, 0.7 + 2.0 * Math.sin(t * 2.2 + fl.seed), 5, dt); out.v = true; out.roll = 0.5 * Math.sin(t * 1.9 + fl.seed + 1.6); out.pitch = 0.1;
+    p.vy = damp(p.vy, F.up * (0.4 + 1.1 * Math.sin(t * 2.2 + fl.seed)), 5, dt); out.v = true; out.roll = 0.5 * Math.sin(t * 1.9 + fl.seed + 1.6); out.pitch = 0.1;
   } else if (pat === 'hover') {
     if (S.press) fl.burst = 0.34;
     fl.burst = Math.max(0, fl.burst - dt);
@@ -73,7 +74,7 @@ export function flightStep(p, sp, mv, S) {
     fl.back = backward ? fl.back + dt : 0; out.lockYaw = backward && fl.back < 1.1;
     const dx = base ? S.dx : Math.sin(p.yaw), dz = base ? S.dz : Math.cos(p.yaw), amt = dart ? 1 : base, mul = dart ? 2.1 : backward ? 0.6 : 1;
     accel(dx * amt * run * F.speed * mul, dz * amt * run * F.speed * mul, dart ? 140 : 70); out.h = true; // stops dead: instant hover
-    p.vy = damp(p.vy, dart ? 0.4 : 0.8 + 1.7 * base, 16, dt); out.v = true; out.drain = dart ? 1.2 : 0.65;
+    p.vy = damp(p.vy, dart ? F.up * 0.07 : F.up * (0.15 + 0.28 * base), 16, dt); out.v = true; out.drain = dart ? 1.2 : 0.65;
     out.pitch = backward ? -0.35 : dart ? 0.55 : 0.1 + 0.25 * Math.min(1, speed / 14); out.roll = 0;
   } else if (pat === 'bumble') {
     // heavy bumbling: slow turns, a gentle sag after every flap, and a lazy side-to-side wobble
@@ -81,7 +82,7 @@ export function flightStep(p, sp, mv, S) {
     const wob = Math.sin(t * 2.7 + fl.seed) * 0.9 + Math.sin(t * 4.3 + fl.seed * 2) * 0.4, sx = S.dz, sz = -S.dx;
     const sp2 = run * F.speed * B * (0.82 + 0.18 * Math.sin(fl.cyc * TAU / per));
     accel(S.dx * base * sp2 + sx * wob * (0.35 + base * 0.8), S.dz * base * sp2 + sz * wob * (0.35 + base * 0.8), 15); out.h = true;
-    p.vy = damp(p.vy, 0.35 + 0.9 * base + sag + Math.sin(t * 3.3 + fl.seed) * 0.35, 6, dt); out.v = true; out.drain = base ? 1 : 0.8;
+    p.vy = damp(p.vy, F.up * (0.25 + 0.55 * base) + sag + Math.sin(t * 3.3 + fl.seed) * 0.35, 8, dt); out.v = true; out.drain = base ? 1 : 0.8;
     out.pitch = 0.32 + 0.1 * Math.sin(t * 3.3); out.roll = 0.3 * Math.sin(t * 2.7 + fl.seed) + 0.1 * wob;
   } else if (pat === 'bound') {
     fl.cyc += dt; const per = 0.78, ph = fl.cyc % per, flap = ph < 0.34;

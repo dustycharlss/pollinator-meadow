@@ -620,10 +620,13 @@ export function createZones(scene, ctx) {
       const disc = new THREE.Mesh(new THREE.CircleGeometry(r - 0.1, 32), new THREE.MeshBasicMaterial({ color: 0xffe07a, transparent: true, opacity: 0.12, depthWrite: false })); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.02; G.add(disc);
       const pole = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.4, 0.22), mat(0x8a5a2b, 0.9)); pole.position.set(r * 0.7, 1.7, 0); G.add(pole);
       const flag = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.8, 0.08), mat(0xb0b0b0, 0.9)); flag.position.set(r * 0.7 + 0.7, 3.0, 0); G.add(flag);
-      // beacon: a tall soft light column so the goal reads from anywhere in the level
-      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 1.1, 36, 14, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-      beam.position.set(r * 0.7, 18, 0); G.add(beam);
-      exitAt = { x: A.x + x, z: A.z + z, y, r }; exitMesh = { G, ringM, disc, flag, beam };
+      // soft sparkles around the flag (no tall sky beam) — brighter once the exit opens
+      const spN = 14, spPos = new Float32Array(spN * 3);
+      for (let i = 0; i < spN; i++) { const a = (i / spN) * Math.PI * 2, rr = 0.4 + (i % 3) * 0.35; spPos[i * 3] = r * 0.7 + Math.cos(a) * rr; spPos[i * 3 + 1] = 2.4 + (i % 4) * 0.35; spPos[i * 3 + 2] = Math.sin(a) * rr; }
+      const spGeo = new THREE.BufferGeometry(); spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3));
+      const spark = new THREE.Points(spGeo, new THREE.PointsMaterial({ color: 0xffe07a, size: 0.55, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true }));
+      G.add(spark);
+      exitAt = { x: A.x + x, z: A.z + z, y, r }; exitMesh = { G, ringM, disc, flag, pole, spark, flagY: 3.0 };
       exitLabel = document.createElement('div'); exitLabel.className = 'zoneNode'; document.body.appendChild(exitLabel);
     },
     glade(x, z, col = 0xa8d88a) { const m = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.8, 0.12, 10), mat(col)); m.position.set(A.x + x, gy(x, z) + 0.08, A.z + z); group.add(m); },
@@ -690,7 +693,7 @@ export function createZones(scene, ctx) {
       const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.6, 0.8, 8), mat(o.lantern ? 0xffe08a : COL.gold, o.lantern ? 0.2 : 0.35)); G.add(bell);
       const cap = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), mat(0x6b4a30)); cap.position.y = 0.5; G.add(cap);
       G.position.set(A.x + x, g + h, A.z + z); group.add(G);
-      props.push({ kind: 'bell', act: 'bell', cls: 'scout', sig: s, x: A.x + x, y: g + h, z: A.z + z, r: 2.0, touch: 1.8, need: o.need, needWhy: o.needWhy, label: o.label || 'Bell', G, bell, lantern: o.lantern, icon: badge('scout', A.x + x, g + h + 1.3, A.z + z) });
+      props.push({ kind: 'bell', act: 'bell', cls: 'scout', sig: s, x: A.x + x, y: g + h, z: A.z + z, r: 3.2, touch: 5.0, need: o.need, needWhy: o.needWhy, label: o.label || 'Bell', G, bell, lantern: o.lantern, icon: badge('scout', A.x + x, g + h + 1.3, A.z + z) });
     },
     lever(s, x, z, o = {}) {
       const g = gy(x, z) + (o.base || 0), G = new THREE.Group();
@@ -849,6 +852,58 @@ export function createZones(scene, ctx) {
     tag(k) { const pr = props[props.length - 1]; if (pr && !pr.sig) pr.sig = k; },
   };
 
+  /** Lush leafy frame outside the play rect — instanced blocky trees/bushes (phone-cheap). */
+  function buildLeafyBackdrop(bounds) {
+    const { x0, x1, z0, z1 } = bounds, pad = 2.8, band = 22;
+    const greens = [0x3f8a35, 0x4f9a3e, 0x5fae4a, 0x2f6a28, 0x6ab84f, 0x458a3a];
+    const barkC = [0x6b4a30, 0x5a3b22, 0x8a5a2b];
+    const flowerC = [0xffd23f, 0xff6bd6, 0xff8a1f, 0x4aa8ff, 0xff5a5a];
+    const N = 110, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), P = new THREE.Vector3(), Col = new THREE.Color();
+    const mk = (geo, n) => {
+      const mat0 = new THREE.MeshLambertMaterial({ color: 0xffffff });
+      const im = new THREE.InstancedMesh(geo, mat0, n);
+      im.frustumCulled = false;
+      im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3);
+      return im;
+    };
+    const trunk = mk(new THREE.BoxGeometry(1, 1, 1), N);
+    const canopy = mk(new THREE.BoxGeometry(1, 1, 1), N * 2);
+    const bush = mk(new THREE.BoxGeometry(1, 1, 1), N);
+    const flower = mk(new THREE.BoxGeometry(1, 1, 1), Math.floor(N * 0.55));
+    const setC = (im, i, hex) => { Col.setHex(hex); im.setColorAt(i, Col); };
+    let ti = 0, ci = 0, bi = 0, fi = 0;
+    const rng = (s) => { const x = Math.sin(s * 127.1 + A.x * 0.013 + A.z * 0.019) * 43758.5453; return x - Math.floor(x); };
+    for (let i = 0; i < N; i++) {
+      const side = i % 4, u = rng(i * 3.1), v = rng(i * 7.7), depth = pad + v * band;
+      let lx, lz;
+      if (side === 0) { lx = x0 - depth; lz = z0 + u * (z1 - z0); }
+      else if (side === 1) { lx = x1 + depth; lz = z0 + u * (z1 - z0); }
+      else if (side === 2) { lx = x0 + u * (x1 - x0); lz = z0 - depth; }
+      else { lx = x0 + u * (x1 - x0); lz = z1 + depth; }
+      lx += (rng(i * 11.3) - 0.5) * 2.2; lz += (rng(i * 13.7) - 0.5) * 2.2;
+      const g = gy(lx, lz), s = 0.75 + rng(i * 19.1) * 1.15, kind = rng(i * 5.5);
+      if (kind < 0.7 && ti < N) {
+        const th = (2.2 + rng(i * 2.2) * 2.8) * s, tw = (0.35 + rng(i * 4.4) * 0.25) * s;
+        P.set(A.x + lx, g + th / 2, A.z + lz); S.set(tw, th, tw); Q.identity(); M.compose(P, Q, S); trunk.setMatrixAt(ti, M); setC(trunk, ti, barkC[i % barkC.length]); ti++;
+        const layers = 1 + (rng(i * 9.9) > 0.4 ? 1 : 0);
+        for (let L = 0; L < layers && ci < canopy.count; L++) {
+          const cw = (2.2 + rng(i * 6.6 + L) * 1.8) * s, ch = (1.4 + rng(i * 8.8 + L) * 1.2) * s;
+          P.set(A.x + lx + (rng(i + L * 3) - 0.5) * 0.4 * s, g + th + ch * 0.35 + L * ch * 0.55, A.z + lz + (rng(i + L * 5) - 0.5) * 0.4 * s);
+          S.set(cw, ch, cw); M.compose(P, Q, S); canopy.setMatrixAt(ci, M); setC(canopy, ci, greens[(i + L) % greens.length]); ci++;
+        }
+      } else if (bi < N) {
+        const bw = (1.6 + rng(i * 3.3) * 1.8) * s, bh = (0.9 + rng(i * 4.1) * 1.1) * s, bd = (1.4 + rng(i * 5.2) * 1.4) * s;
+        P.set(A.x + lx, g + bh / 2, A.z + lz); S.set(bw, bh, bd); M.compose(P, Q, S); bush.setMatrixAt(bi, M); setC(bush, bi, greens[i % greens.length]); bi++;
+      }
+      if (rng(i * 17.1) > 0.5 && fi < flower.count) {
+        const fh = 0.28 + rng(i * 21) * 0.4;
+        P.set(A.x + lx + (rng(i * 23) - 0.5) * 1.8, g + fh / 2 + 0.05, A.z + lz + (rng(i * 29) - 0.5) * 1.8);
+        S.set(fh, fh, fh); M.compose(P, Q, S); flower.setMatrixAt(fi, M); setC(flower, fi, flowerC[i % flowerC.length]); fi++;
+      }
+    }
+    trunk.count = ti; canopy.count = ci; bush.count = bi; flower.count = fi;
+    for (const im of [trunk, canopy, bush, flower]) { im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; group.add(im); }
+  }
   function tst(s, d) { if (recipe && recipe.kid) return; ctx.toast(s, d); }
   const say = (s, d = 2200) => { if (t - msgT > 1.6) { msgT = t; tst(s, d); } };
   function clear() {
@@ -872,6 +927,7 @@ export function createZones(scene, ctx) {
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
     recipe.build(B);
     { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); }
+    buildLeafyBackdrop(recipe.bounds);
     decorateProps();
     // Bruiser "standing platform" (Olaf shield move): a solid on Bear's back while he's parked
     bearPad = addSolid({ type: 'cyl', x: 0, z: 0, r: 1.15, y0: -99, top: -98, kind: 'zone', off: true, pad: true });
@@ -902,13 +958,17 @@ export function createZones(scene, ctx) {
   }
   function setExitLook() {
     if (!exitMesh) return; const on = exitOpen;
-    exitMesh.ringM.material = mat(on ? 0xffc93c : 0x9a8f7a, 0.6); exitMesh.flag.material = mat(on ? 0xff5a5a : 0xb0b0b0, 0.8); exitMesh.disc.material.opacity = on ? 0.35 : 0.12;
-    exitMesh.beam.material.color.set(on ? 0xffd23f : 0xffffff);
+    exitMesh.ringM.material = mat(on ? 0xffc93c : 0x9a8f7a, 0.6); exitMesh.flag.material = mat(on ? 0xff5a5a : 0xb0b0b0, 0.8); exitMesh.disc.material.opacity = on ? 0.45 : 0.12;
+    if (exitMesh.disc.material.color) exitMesh.disc.material.color.set(on ? 0xffd23f : 0xffe07a);
+    if (exitMesh.spark) { exitMesh.spark.material.opacity = on ? 0.85 : 0.28; exitMesh.spark.material.color.set(on ? 0xffd23f : 0xffe07a); exitMesh.spark.material.size = on ? 0.75 : 0.5; }
   }
   function updateExit(cam) {
     if (!exitAt || !exitLabel) return;
-    exitMesh.flag.rotation.y = Math.sin(t * 2) * 0.25;
-    exitMesh.beam.material.opacity = exitOpen ? 0.38 + 0.14 * Math.sin(t * 3) : recipe.kid ? 0 : 0.1;
+    // bobbing flag + soft sparkle orbit — no sky laser
+    const bob = Math.sin(t * 2.4) * 0.18;
+    exitMesh.flag.position.y = (exitMesh.flagY || 3) + bob;
+    exitMesh.flag.rotation.y = Math.sin(t * 2) * 0.35;
+    if (exitMesh.spark) { exitMesh.spark.rotation.y = t * 0.7; exitMesh.spark.position.y = bob * 0.4; }
     const v = new THREE.Vector3(exitAt.x, exitAt.y + 4, exitAt.z); v.project(cam);
     const p = ctx.getP(), pd = Math.hypot(p.x - exitAt.x, p.z - exitAt.z), on = exitOpen && !keyDone && v.z < 1 && pd < 40;
     exitLabel.style.display = on ? 'block' : 'none';
@@ -1134,7 +1194,7 @@ export function createZones(scene, ctx) {
       }
       if (pr.kind === 'bell') {
         if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0;
-        if (!pr.done && c === 'scout' && d3(p, pr) < pr.touch) ringBell(pr);
+        if (!pr.done && c === 'scout' && dFlat(p, pr) < 2.4 && p.y > pr.y - 1.2 && p.y < pr.y + 6.5) ringBell(pr);
       }
       if (pr.icon && !pr.done) pr.icon.position.y += Math.sin(t * 3 + pr.x) * 0.004;
     }

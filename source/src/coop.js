@@ -58,7 +58,7 @@ export function buildCoop(scene, E) {
     const grp = new THREE.Group(); scene.add(grp);
     const pz = Object.assign({ S, def, id: def.id, grp, done: !!(E.roundDone || E.save.journal)[def.id], stage: (E.save.coop.stage[def.id] | 0), team: [], beacons: [], prize: null, hintPos: { x: S.x, z: S.z }, msgT: 0 }, extra);
     pz.prizeG = prizeMesh(def.id); pz.prizeHalo = halo(def.color, 4.2); pz.prizeG.add(pz.prizeHalo); pz.prizeHalo.position.y = 0.5; pz.prizeG.visible = false; grp.add(pz.prizeG);
-    pz.beam = column(def.id === 'nectar' ? 0xaec4ff : 0x7ff7e8); pz.grp.add(pz.beam);
+    pz.beam = column(def.id === 'nectar' ? 0xaec4ff : 0x7ff7e8); pz.beam.visible = false; pz.grp.add(pz.beam);
     pz.badgeS = badge(pz.badgeText || '🤝'); grp.add(pz.badgeS);
     puzzles.push(pz); return pz;
   };

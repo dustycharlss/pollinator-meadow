@@ -47,14 +47,14 @@ export function createTiers(scene, ctx) {
   function spawnCluster(at) {
     const c = at || land(); const cl = { x: c.x, z: c.z, drops: [], t0: 0, live: true, g: new THREE.Group() };
     for (let i = 0; i < 5; i++) { const a = i * 1.2566 + Math.random() * 0.4, r = 1.2 + Math.random() * 2.2, x = c.x + Math.cos(a) * r, z = c.z + Math.sin(a) * r, y = heightAt(x, z) + 1.2; const m = dropMesh(); m.position.set(x, y, z); const gl = glow('d', 2.4); gl.position.copy(m.position); cl.g.add(m, gl); cl.drops.push({ x, y, z, m, gl, got: false }); }
-    cl.beam = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 14, 6, 1, true), new THREE.MeshBasicMaterial({ color: col('d'), transparent: true, opacity: 0.35, depthWrite: false })); cl.beam.position.set(c.x, heightAt(c.x, c.z) + 7, c.z); cl.g.add(cl.beam);
+    cl.beam = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 14, 6, 1, true), new THREE.MeshBasicMaterial({ color: col('d'), transparent: true, opacity: 0.35, depthWrite: false })); cl.beam.position.set(c.x, heightAt(c.x, c.z) + 7, c.z); cl.beam.visible = false; cl.g.add(cl.beam);
     root.add(cl.g); TI.clusters.push(cl); return cl;
   }
   function killCluster(cl) { cl.live = false; root.remove(cl.g); TI.clusters.splice(TI.clusters.indexOf(cl), 1); }
   // ---------- T3 Starseed nodes (escort)
   function spawnSeed(x, z, y) {
     const g = new THREE.Group(); const m = starMesh(0.8); const gl = glow('s', 4); g.add(m, gl);
-    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 22, 6, 1, true), new THREE.MeshBasicMaterial({ color: col('s'), transparent: true, opacity: 0.4, depthWrite: false })); beam.position.y = 11; g.add(beam);
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 22, 6, 1, true), new THREE.MeshBasicMaterial({ color: col('s'), transparent: true, opacity: 0.4, depthWrite: false })); beam.position.y = 11; beam.visible = false; g.add(beam);
     const yy = y ?? Math.max(heightAt(x, z), WATER_Y) + 1.4; g.position.set(x, yy, z); root.add(g); const s = { x, z, y: yy, g, m, beam }; TI.seeds.push(s); return s;
   }
   const carryObj = new THREE.Group(); { carryObj.add(starMesh(0.55), glow('s', 2.6)); carryObj.visible = false; scene.add(carryObj); }
