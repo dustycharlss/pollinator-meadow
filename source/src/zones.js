@@ -51,7 +51,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
+export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 
 const MAPS = {
   // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
@@ -1140,7 +1140,7 @@ export function createZones(scene, ctx) {
       const sd = { id, x: w.x, y: w.y, z: w.z, G, sprout, planted: false, grown: false, grow: o.grow || 'vine', pad: null };
       props.push({ kind: 'seed', act: 'plant', cls: 'trickster', sig: 'planted:' + id, x: w.x, y: w.y, z: w.z, r: 2.2, label: o.label || 'Seed spot', need: o.need, needWhy: o.needWhy, seed: sd, icon: badge('trickster', w.x, w.y + 1.8, w.z, 0.9) });
       if (sd.grow === 'vine') { const [ax, az, ha, bxx, bz, hb] = o.vine; this.vine(ax, az, ha, bxx, bz, hb, { need: 'grown:' + id, needWhy: 'Grow the vine first: plant the seed (Trickster), then water it (Scout)', label: o.vineLabel || 'Vine ladder' }); const vp = props[props.length - 1]; vp.leaves = group.children.slice(-Math.max(2, Math.ceil((vp.b.y - vp.y) / 0.9))); vp.leaves.forEach(l => { l.visible = false; }); sd.vine = vp; }
-      else { const pw = L2W(o.padAt ? o.padAt[0] : x, o.padAt ? o.padAt[1] : z, o.base || 0); const P = new THREE.Group(); P.position.set(pw.x, pw.y, pw.z); P.add(bx(0.5, 0.7, 0.5, 0xf3eee0, 0, 0.35, 0), bx(2.2, 0.5, 2.2, 0xe04848, 0, 0.85, 0, 0.15), bx(0.4, 0.12, 0.4, 0xffffff, 0.5, 1.12, 0.3), bx(0.35, 0.12, 0.35, 0xffffff, -0.5, 1.12, -0.4)); P.visible = false; group.add(P); sd.pad = { x: pw.x, y: pw.y + 1.1, z: pw.z, P, v: o.v || { bruiser: 22, trickster: 15, scout: 11 } }; sd.pad.s = addSolid({ type: 'cyl', x: pw.x, z: pw.z, r: 1.1, y0: pw.y - 1, top: pw.y + 1.1, kind: 'zone', off: true }); S.pads.push(sd); }
+      else { const pw = L2W(o.padAt ? o.padAt[0] : x, o.padAt ? o.padAt[1] : z, o.base || 0); const P = new THREE.Group(); P.position.set(pw.x, pw.y, pw.z); P.add(bx(0.5, 0.7, 0.5, 0xf3eee0, 0, 0.35, 0), bx(2.2, 0.5, 2.2, 0xe04848, 0, 0.85, 0, 0.15), bx(0.4, 0.12, 0.4, 0xffffff, 0.5, 1.12, 0.3), bx(0.35, 0.12, 0.35, 0xffffff, -0.5, 1.12, -0.4)); P.visible = false; group.add(P); sd.pad = { x: pw.x, y: pw.y + 1.1, z: pw.z, P, v: o.v || { bruiser: 22, trickster: 15, scout: 11 }, to: o.padTo ? L2W(o.padTo[0], o.padTo[1], o.padTo[2] || 0) : null }; sd.pad.s = addSolid({ type: 'cyl', x: pw.x, z: pw.z, r: 1.1, y0: pw.y - 1, top: pw.y + 1.1, kind: 'zone', off: true }); S.pads.push(sd); }
       S.seeds.push(sd); return sd;
     },
     drip(x, z, h = 2.4) { const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.6, 0.12, 0.9, 0x5fae4a, 0, 0, 0)); const d = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), mat(0x7fd8ff, 0.7)); d.position.y = -0.4; G.add(d); this.cyl(x, z, 0.12, h, 0x3f8a35); AA().drips.push({ x: w.x, y: w.y, z: w.z, G, d }); },
@@ -1278,7 +1278,7 @@ export function createZones(scene, ctx) {
         if (sd.vine) { sd.vine.leaves.forEach(l => { l.visible = true; }); tst('🌿 A vine ladder grew! Tricksters can climb it', 2200); } if (sd.pad) { sd.pad.P.visible = true; sd.pad.s.off = false; tst('🍄 A bouncy mushroom grew! Bear bounces highest', 2200); } }
       if (sd.vine && sd.grown) sd.vine.leaves.forEach((l, i) => { l.scale.setScalar(Math.min(1, (l.userData.g = (l.userData.g || 0) + dt * 2) - i * 0.12) || 0.001); });
     }
-    for (const sd of S.pads) { if (!sd.grown) continue; const pd = sd.pad; if (flatD(pd, p) < 1.3 && Math.abs(p.y - pd.y) < 0.6 && p.vy <= 0.1) { p.vy = pd.v[c] || 14; p.grounded = false; p.y = pd.y + 0.1; p._gY = -1e9; fx(pd.x, pd.y, pd.z); ctx.audio?.blip?.(5); pd.P.scale.y = 0.6; if (c === 'bruiser') setSig('bounce:' + sd.id); } pd.P.scale.y += (1 - pd.P.scale.y) * Math.min(1, dt * 6); }
+    for (const sd of S.pads) { if (!sd.grown) continue; const pd = sd.pad; if (flatD(pd, p) < 1.3 && Math.abs(p.y - pd.y) < 0.6 && p.vy <= 0.1 && !tw) { if (c === 'bruiser' && pd.to) { tween(p, { x: pd.to.x, y: pd.to.y + 0.4, z: pd.to.z }, 1.0, 3.2); tst('🍄 BOING! Bear bounces sky-high!', 1600); } p.vy = pd.v[c] || 14; p.grounded = false; p.y = pd.y + 0.1; p._gY = -1e9; fx(pd.x, pd.y, pd.z); ctx.audio?.blip?.(5); pd.P.scale.y = 0.6; if (c === 'bruiser') setSig('bounce:' + sd.id); } pd.P.scale.y += (1 - pd.P.scale.y) * Math.min(1, dt * 6); }
     // ---- wind ----
     for (const w of S.winds) {
       const inZ = p.x > w.x0 && p.x < w.x1 && p.z > w.z0 && p.z < w.z1;

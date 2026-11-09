@@ -202,6 +202,54 @@ export const MAPS2 = {
       B.puzzle('mill', 'Mill run', ['trickster', 'bruiser'], ['lvC', 'log:lgC'], { hint: '🐾 Water down → walk the bed to the mill lever · water up on the far side → 🐻 ride the log while the turtle naps.', track: [['lvC', 'trickster', 'water down (sluice), walk the bed to the mill lever', 4, 41], ['log:lgC', 'bruiser', 'water up (far sluice), hop on the log and float across', -4, 37.4]] });
     },
   },
+  // ===== 11 · Bramble Patch — M3 Seed Growing + E3 Grumpy Spider =====
+  bramble_patch: {
+    goal: 'Bramble Patch', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 65], par: 480,
+    bounds: { x0: -9, x1: 9, z0: -8, z1: 69 },
+    crew: 'Bee · Raccoon · Bear',
+    banter: { start: ['🦝 Raccoon: I plant the seeds…', '🐝 Bee: …I bring the dewdrops! And mind the spider webs.'], end: ['🐻 Bear: BOING! Best mushroom ever.', '🦝 Raccoon: Snip snip — the spider never saw me.'] },
+    build(B) {
+      B.home(0, -5); B.lane(-8, 8, -7, 68);
+      [[6.5, -4], [-6.5, 18], [6.5, 30], [-6.5, 50]].forEach(([x, z], i) => B.tree(x, z, 0.85 + (i % 2) * 0.1));
+      // A · teach the vine: plant, water with a dewdrop, climb to the pillar lever
+      B.checkpoint(0, -1);
+      B.drip(4.5, 3.5, 2.4);
+      B.wall(-4.5, 10, 3.4, 3.4, 4.6, { look: 'stone' });
+      B.seed('sA', -4.5, 6.4, { vine: [-4.5, 7.9, 0, -4.5, 8.7, 4.6] });
+      B.lever('lvA', -4.5, 10.3, { base: 4.6, label: 'Pillar lever' });
+      B.door('lvA', 14, -8, 8);
+      // B · teach the mushroom pad: Bear's weight bounces highest — up to the ledge plate
+      B.checkpoint(0, 16);
+      B.drip(-5, 18.5, 2.4);
+      B.seed('sB', 2.5, 19, { grow: 'pad', padAt: [2.5, 21], padTo: [3, 25.6, 6.6] });
+      B.wall(3, 25.5, 6, 3, 6.6, { look: 'stone' });
+      B.plate('plB', 3, 25.6, { heavy: true, base: 6.6, label: 'ledge plate' });
+      B.door('plB', 29, -8, 8, { x: -3 });
+      // C · teach the spider: she watches her web. Pluck the far strand so she looks away, then snip!
+      B.checkpoint(-3, 31);
+      B.spider('spC', 4.5, 40.5, { yaw: Math.PI });
+      B.door(null, 37, -8, 8, { w: 3.2, x: 0 });
+      B.web('wC', 0, 37, 3.2, 3.2, { spider: 'spC' });
+      B.strand('spC', 6.5, 33.5, { label: 'Web strand' });
+      // D · combo: a web guards the seed spot; plant + water a mushroom so Bear can bounce to the exit-gate plate
+      B.checkpoint(0, 44);
+      B.spider('spD', -4.5, 51.5, { yaw: Math.PI });
+      const hw = (x, z, w, d) => { B.wall(x, z, w, d, 3.2, { look: 'hedge' }); B.wall(x, z, w, d, 30, { bot: 3, hidden: true }).s.off = false; };
+      hw(-1.6, 52, 0.6, 9.4); hw(-6.8, 47.3, 2.4, 0.6); hw(-2.5, 47.3, 1.8, 0.6);
+      B.web('wD', -4.5, 47.3, 2.2, 3.2, { spider: 'spD' });
+      B.strand('spD', 2, 51.5, { label: 'Web strand' });
+      B.drip(5.5, 46, 2.4);
+      B.seed('sD', -6.8, 52.2, { grow: 'pad', padAt: [-6.8, 54.4], padTo: [-5, 56.2, 6.6] });
+      B.wall(-5, 56, 6, 2.6, 6.6, { look: 'stone' });
+      B.plate('plD', -5, 56.2, { heavy: true, base: 6.6, label: 'ledge plate' });
+      B.door('plD', 60, -8, 8);
+      B.checkpoint(0, 62);
+      B.puzzle('vine', 'Vine ladder', ['trickster', 'scout'], ['lvA'], { hint: '🐾 Plant the seed · 🪽 bring a dewdrop from the drip leaf · 🐾 climb the vine and pull the lever.', track: [['planted:sA', 'trickster', 'plant the seed by the pillar', -4.5, 6.4], ['grown:sA', 'scout', 'fly to the drip leaf, bring a dewdrop to the seed', 4.5, 3.5, 2.4], ['lvA', 'trickster', 'climb the vine, pull the lever', -4.5, 10.3, 4.6]] });
+      B.puzzle('pad', 'Mushroom bounce', ['trickster', 'scout', 'bruiser'], ['plB'], { hint: '🐾 Plant · 🪽 water · 🐻 bounce on the mushroom up to the ledge plate.', track: [['planted:sB', 'trickster', 'plant the seed', 2.5, 19], ['grown:sB', 'scout', 'bring a dewdrop to the seed', -5, 18.5, 2.4], ['plB', 'bruiser', 'bounce on the mushroom onto the ledge plate', 2.5, 21]] });
+      B.puzzle('web', 'Spider web', ['trickster'], ['wC'], { hint: '🐾 Pluck the far web strand so the spider turns away, then snip the web.', track: [['pluck:spC', 'trickster', 'pluck the strand so the spider looks away', 6.5, 33.5], ['wC', 'trickster', 'snip the web while she looks away!', 0, 37]] });
+      B.puzzle('nest', 'Bramble garden', ['trickster', 'scout', 'bruiser'], ['plD'], { hint: '🐾 Pluck the strand, snip the web, plant · 🪽 water · 🐻 bounce to the gate plate.', track: [['wD', 'trickster', 'pluck the strand, then snip the web', 2, 51.5], ['planted:sD', 'trickster', 'sneak in behind the spider, plant the seed', -6.8, 52.2], ['grown:sD', 'scout', 'bring a dewdrop to the seed', 5.5, 46, 2.4], ['plD', 'bruiser', 'slip in while she looks away, bounce up to the gate plate', -6.8, 54.4]] });
+    },
+  },
   // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
   a2_lab: {
     goal: 'Lab', act2: true, key: 'puzzles', ceil: 9, exit: [0, 30], par: 0,
