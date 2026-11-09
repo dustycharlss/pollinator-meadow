@@ -164,6 +164,44 @@ export const MAPS2 = {
       B.puzzle('beam', 'Sun-lock gate', ['trickster', 'scout'], ['lit:gD'], { hint: '🐾 Open the shutter · 🪽 aim both mirrors at the gate’s sun-lock. Gravel is noisy — lure the badger first!', track: [['shD', 'trickster', 'open the shutter lever', -6, 47.5], ['lit:gD', 'scout', 'aim both mirrors at the gate’s sun-lock', -1, 50.5, 1.6]] });
     },
   },
+  // ===== 10 · Mill Pond — M2 Water Level + E2 Snapping Turtle =====
+  mill_pond: {
+    goal: 'Mill Pond', act2: true, key: 'puzzles', ceil: 8.5, exit: [0, 55], par: 420,
+    bounds: { x0: -9, x1: 9, z0: -8, z1: 59 },
+    crew: 'Bee · Raccoon · Bear',
+    banter: { start: ['🦝 Raccoon: Sluice levers set the water low, middle or high!', '🐝 Bee: Watch the turtle — it snaps at anyone in front.'], end: ['🐻 Bear: I rode a log! Like a boat!', '🦝 Raccoon: And the turtle never even woke up.'] },
+    build(B) {
+      B.home(0, -5); B.lane(-8, 8, -7, 58);
+      [[-6.5, -4], [6.5, 14], [-6.5, 30], [6.5, 50]].forEach(([x, z], i) => B.tree(x, z, 0.85 + (i % 2) * 0.1));
+      // A · teach: drain the pond to reach the lever on the dry bed
+      B.checkpoint(0, -1);
+      B.pond('pA', -8, 4, 8, 10.5, { level: 'mid' });
+      B.sluice('pA', -5, 2, 'low', { label: 'Sluice · water down' }); B.sluice('pA', 5, 2, 'mid', { label: 'Sluice · water middle' });
+      B.lever('lvA', 0, 7.2, { label: 'Pond-bed lever' });
+      B.door('lvA', 14.5, -8, 8);
+      // B · teach the turtle: it guards the stepping-stone ford. Float the leaf to make it look away, or raise the water so it naps
+      B.checkpoint(0, 16.5);
+      B.pond('pB', -8, 21, 8, 27, { level: 'mid' });
+      B.bridgeFixed(0, 20.6, 0, 27.4, 2.6);
+      B.turtle('tuB', 0, 24, { yaw: Math.PI, pond: 'pB', leaf: [-5, 19], leafTo: [-7, 27] });
+      B.sluice('pB', 5, 19, 'high', { label: 'Sluice · water up' });
+      B.lever('lvB', 4, 29.5, { label: 'Gate lever' });
+      B.door('lvB', 31.5, -8, 8);
+      // C · combo: low water → Raccoon walks the bed to the mill lever; high water → the turtle naps and Bear rides the log
+      B.checkpoint(0, 33);
+      B.pond('pC', -8, 36, 8, 46, { level: 'mid' });
+      B.sluice('pC', 6, 34.2, 'low', { label: 'Sluice · water down' });
+      B.sluice('pC', 6, 47.6, 'high', { label: 'Sluice · water up' });
+      B.lever('lvC', 4, 41, { label: 'Mill lever' });
+      B.floatLog('lgC', 'pC', -4, 37.4, -4, 44.6, { w: 2.6, d: 2.2 });
+      B.turtle('tuC', -4, 48, { yaw: Math.PI, pond: 'pC', nap: 16 });
+      B.door(['lvC', 'log:lgC'], 50, -8, 8);
+      B.checkpoint(0, 52);
+      B.puzzle('drain', 'Dry pond bed', ['trickster'], ['lvA'], { hint: '🐾 Pull the water-down sluice, then walk the dry bed to the lever.', track: [['pA:low', 'trickster', 'pull the sluice to lower the water', -5, 2], ['lvA', 'trickster', 'walk the dry bed, pull the lever', 0, 7.2]] });
+      B.puzzle('ford', 'Turtle ford', ['trickster'], ['lvB'], { hint: '🐾 Flick the floating leaf so the turtle looks away (or raise the water so it naps), then cross the ford.', track: [['lvB', 'trickster', 'distract the turtle, cross the ford, pull the lever', 4, 29.5]] });
+      B.puzzle('mill', 'Mill run', ['trickster', 'bruiser'], ['lvC', 'log:lgC'], { hint: '🐾 Water down → walk the bed to the mill lever · water up on the far side → 🐻 ride the log while the turtle naps.', track: [['lvC', 'trickster', 'water down (sluice), walk the bed to the mill lever', 4, 41], ['log:lgC', 'bruiser', 'water up (far sluice), hop on the log and float across', -4, 37.4]] });
+    },
+  },
   // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
   a2_lab: {
     goal: 'Lab', act2: true, key: 'puzzles', ceil: 9, exit: [0, 30], par: 0,
