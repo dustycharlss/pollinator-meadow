@@ -48,7 +48,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise']);
+export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 
 const MAPS = {
   sunny_hollow: {
@@ -361,11 +361,15 @@ const MAPS = {
   },
 
   festival_glade: {
-    goal: 'Timber Stage · Lantern Lane · Cliff Seats · carry the Starheart home',
-    key: 'puzzles', star: true, ceil: 14, nightCycle: 180, dewWindow: 20,
+    goal: 'Timber Stage · Lantern Lane · Cliff Seats · carry the Starheart home · then all three to the 🏁 exit',
+    key: 'puzzles', star: true, ceil: 14, nightCycle: 180, dewWindow: 20, exit: [0, -4.5, 2.8], par: 600,
+    banter: {
+      start: ['🐝 Bee: The Festival! Lights, music, everything!', '🦝 Raccoon: Three districts, three puzzles. We know every trick now.', '🐻 Bear: And then the Starheart. Let\'s bring it home together.'],
+      end: ['🐝 Bee: The whole valley is celebrating!', '🦝 Raccoon: We did every level. Every single one!', '🐻 Bear: Best crew in the meadow. Group hug!'],
+    },
     bounds: { x0: -26, x1: 26, z0: -12, z1: 30 }, deep: [[-26, 6, 26, 9.5]],
-    crew: 'Any Scout · Trickster · Bruiser',
-    intro: ['🎉 Festival Glade: every district needs a different combo.', 'Open all three to free the Starheart on the knoll!'],
+    crew: 'Bee · Raccoon · Bear',
+    intro: ['🎉 Every district needs a different combo.', 'Open all three to free the Starheart on the knoll, then carry it home!'],
     build(B) {
       B.rim(14); B.water(0x7fc0ff); B.home(0, 0);
       B.bridgeFixed(-20, 4.6, -20, 10.9, 4); // wide bridge (everyone) west
@@ -393,11 +397,15 @@ const MAPS = {
       B.bell('d3', 17, -3, 1.6, { label: 'Seat bell' });
       [[-22, 0], [22, 2], [-8, -6], [8, -8], [-20, 16], [22, 26]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9));
       B.nightDew(-6, 26, 1.2); B.nightDew(6, 26, 1.2);
+      // secret: Starseed on the tall drum (north-west) — boost a Trickster off Bear
+      B.wall(-20, 27, 3, 3, 5.2, { look: 'wood' });
+      B.pickup('star', -20, 27, 6.0, { who: ['trickster'], whyNot: 'Too heavy for a Scout — boost your Trickster off Bear!', set: 'festStar' });
       B.tree(-24, -10, 1.1); B.tree(24, 28, 1.1); B.tree(-24, 28, 1.1);
       B.puzzle('d1', 'Timber Stage', ['bruiser', 'trickster'], ['d1'], { hint: '🐻 Shove both stage logs into the stair · 🐾 climb up and pull the curtain lever.' });
       B.puzzle('d2', 'Lantern Lane', ['trickster', 'scout'], ['l1', 'l2'], { hint: '🐾 Park your Trickster on the shutter plate · 🪽 slip through the knothole and light both lanterns.' });
       B.puzzle('d3', 'Cliff Seats', ['bruiser', 'trickster', 'scout'], ['d3'], { hint: '🐻 Bear on the seat plate · 🐾 throw at the Picnic Tier flag · 🪽 ring the seat bell.' });
       B.puzzle('star', 'Starheart relay', ['bruiser', 'trickster', 'scout'], ['starHome'], { hint: '⭐ Lift the Starheart with two friends close by, then carry it home — gently down the caps.' });
+      B.puzzle('festStar', 'Secret Starseed', ['bruiser', 'trickster'], ['festStar'], { req: false, hint: '🐻 Park Bear by the tall drum, then boost your Trickster.' });
     },
   },
 };
@@ -929,7 +937,9 @@ export function createZones(scene, ctx) {
     }
     // class movement rules: Trickster flight is short hops only; everyone stays under the level's sky ceiling
     if (!tw) {
-      if (c === 'trickster' && !p.grounded && p.floorY != null && p.y > p.floorY + CLASSES.trickster.flyCap) { p.y = p.floorY + CLASSES.trickster.flyCap; if (p.vy > 0) p.vy = 0; if (p.stam != null) p.stam = Math.min(p.stam, 0.35); }
+      if (p.grounded) p._gY = p.y; // take-off height: the hop cap is measured from here, not from a gap below
+      const capBase = Math.max(p.floorY ?? -1e9, p._gY ?? -1e9);
+      if (c === 'trickster' && !p.grounded && p.floorY != null && p.y > capBase + CLASSES.trickster.flyCap) { p.y = capBase + CLASSES.trickster.flyCap; if (p.vy > 0) p.vy = 0; if (p.stam != null) p.stam = Math.min(p.stam, 0.35); }
       if (recipe.ceil && p.y > baseY + recipe.ceil) { p.y = baseY + recipe.ceil; if (p.vy > 0) p.vy = 0; say('🌬️ Too windy up there — stay lower', 1400); }
       deepBlock(p, cur, true);
     }
@@ -1036,7 +1046,7 @@ export function createZones(scene, ctx) {
       if (pd < 3.2 && Math.abs(p.y - n.m.position.y) < 3) {
         if (have >= need) {
           n.done = true; nodesDone++; const N = NODE[n.kind]; addHeal(TIER[N.tier].heal * N.amt); setSig(n.sig);
-          ctx.toast(`💪 Lifted! +${N.amt} ${TIER[N.tier].em} ${TIER[N.tier].name}${N.amt > 1 ? 's' : ''}`, 2400); ctx.audio?.chime?.();
+          ctx.toast(n.kind === 'heaviest' ? '💪 You lifted the Starheart together!' : `💪 Lifted the ${N.name}!`, 2400); ctx.audio?.chime?.();
           if (star && n === star.node) { star.carry = true; star.mesh = n.body; n.m.remove(n.body); group.add(n.body); ctx.toast('⭐ Carry the Starheart home — gently down the caps!', 3200); }
           else n.m.visible = false;
         } else { n.wob = 0.5; say(`😅 Too heavy! ${need - have} more friend${need - have > 1 ? 's' : ''} close by (${have}/${need}) — 🐻 Bear lifts more`); }

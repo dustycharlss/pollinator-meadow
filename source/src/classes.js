@@ -22,7 +22,7 @@ export const CLASSES = {
     tag: 'Climbs vines · digs tunnels · pulls levers · throws acorns · builds plank bridges',
     can: ['Climb vines and bark', 'Dig soft dirt and use tunnels', 'Pull ground levers', 'Throw an acorn at a far switch', 'Build a Plank Bridge'],
     cant: ['Fly high or far (short hops only)', 'Move logs or boulders'],
-    acts: ['lever', 'vine', 'dig', 'throw', 'plank'], carryMul: 1, flyCap: 3.4,
+    acts: ['lever', 'vine', 'dig', 'throw', 'plank'], carryMul: 1, flyCap: 3.6,
   },
   bruiser: {
     id: 'bruiser', size: 'bear', name: 'Bruiser', short: 'Big paw', color: '#ff8a1f', em: '🐻',
