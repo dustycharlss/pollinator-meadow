@@ -48,7 +48,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend']);
+export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow']);
 
 const MAPS = {
   sunny_hollow: {
@@ -138,11 +138,15 @@ const MAPS = {
   },
 
   moon_meadow: {
-    goal: 'Collect 12 Dewdrops · light the knotholes, open the roots, open the Crown',
-    key: 'puzzles', pick: 12, pickTier: 'dew', ceil: 16, nightCycle: 180, dewWindow: 20,
+    goal: 'Light the knotholes, open the roots, open the Crown · then all three into the Hollow Oak 🏁',
+    key: 'puzzles', ceil: 16, nightCycle: 180, dewWindow: 20, exit: [0, 14.6, 2.4], par: 360,
+    banter: {
+      start: ['🐻 Bear: It\'s so dark. Is that tree... hollow?', '🐝 Bee: I see little knotholes. I can squeeze in!', '🦝 Raccoon: And I smell soft dirt. Time to dig!'],
+      end: ['🐝 Bee: The whole oak is glowing!', '🐻 Bear: Cozy in here. Can we stay?', '🦝 Raccoon: Only if you share the snacks.'],
+    },
     bounds: { x0: -22, x1: 22, z0: -12, z1: 26 },
-    crew: 'Moth · Opossum or Bat · Bear',
-    intro: ['🌙 Moon Meadow: the Hollow Oak hides Dewdrops inside.', '🪽 Scouts slip through knotholes · 🐾 Tricksters dig · 🐻 Bruisers smash roots'],
+    crew: 'Bee · Raccoon · Bear',
+    intro: ['🌙 The exit is inside the Hollow Oak, behind tough roots.', '🪽 Scouts slip through knotholes · 🐾 Tricksters dig · 🐻 Bruisers smash roots', '🌙 At night, bonus Petals sparkle for a little while!'],
     build(B) {
       B.rim(16); B.home(0, 0);
       ring(14, 19, 15, 6, [3, 4, 10]).forEach(([x, z]) => B.tree(x, z, 1.0, 0, 0x2f5e3a));
@@ -156,7 +160,8 @@ const MAPS = {
       B.cage(-9, 7, 3.4, 3.4, 2.4, { closed: true, look: 'dirt' });
       B.dig('den', -9, 3.6, -9, 7, { label: 'Soft dirt' });
       B.lever('root', -9.6, 7.6, { label: 'Root lever' });
-      B.node('heavy', 0, 15, 0.2, { sig: 'pond' });
+      // secret: a Starseed hidden on the oak's leafy crown corner — only a flyer gets up there
+      B.pickup('star', 4.2, 18.2, 13.4, { who: ['scout'], whyNot: 'Only a Scout can carry this from way up here!', set: 'moonStar' });
       B.pickup('dew', -2.2, 16.4, 1); B.pickup('dew', 2.2, 16.4, 1);
       // 1 · Knothole lanterns (Scout slips in, rings the lantern)
       [[5.9, 14, 2.4, 1, 'lan1', 'e'], [-5.9, 14, 5.4, -1, 'lan2', 'w'], [0, 19.9, 8.4, 0, 'lan3', 'n']].forEach(([x, z, base, sx, sig]) => {
@@ -178,7 +183,7 @@ const MAPS = {
       B.puzzle('lanterns', 'Knothole lanterns', ['scout'], ['lan1', 'lan2', 'lan3'], { hint: '🪽 Fly your Scout to the knotholes on the oak and slip inside to light each lantern.' });
       B.puzzle('roots', 'Root Tunnel', ['trickster', 'bruiser'], ['rootWall'], { hint: '🐾 Dig into the soft dirt west of the oak and pull the root lever, then 🐻 smash the cracked roots.' });
       B.puzzle('crown', 'Crown door', ['bruiser', 'trickster', 'scout'], ['crown'], { hint: '🐻 Park Bear under the Mid Window · 🐾 hop up and throw at the crown bell · 🪽 fly in for the Dewdrops.' });
-      B.puzzle('pond', 'Dew Pond', ['bruiser'], ['pond'], { req: false });
+      B.puzzle('moonStar', 'Secret Starseed', ['scout'], ['moonStar'], { req: false, hint: '🪽 Something sparkles on the very top corner of the oak…' });
     },
   },
 
@@ -708,7 +713,7 @@ export function createZones(scene, ctx) {
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
     recipe.build(B);
-    { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1]); }
+    { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3); }
     // Bruiser "standing platform" (Olaf shield move): a solid on Bear's back while he's parked
     bearPad = addSolid({ type: 'cyl', x: 0, z: 0, r: 1.15, y0: -99, top: -98, kind: 'zone', off: true, pad: true });
     if (recipe.night) { nightOn = true; ctx.setNight(true); }
