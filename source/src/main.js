@@ -25,6 +25,7 @@ import { createItems } from './items.js';
 import { createCosmetics, EMOTES } from './cosmetics.js';
 import { createValley, PATCHES, HEAL_PACKUP } from './valley.js';
 import { createZones, READY_LEVELS } from './zones.js';
+import { CLIP } from './declutter.js';
 // Adventure refocus (Nov 9): build mode, species buildings, resource economy, Command wheel/helper AI,
 // heal meter + Pack Up gate are cut. Levels end when their goal is met. Petals are the score.
 export const ADVENTURE = true;
@@ -678,6 +679,61 @@ function bmFocus(dt) {
   const r = Math.hypot(bmF.x, bmF.z); if (r > WORLD_LIM) { bmF.x *= WORLD_LIM / r; bmF.z *= WORLD_LIM / r; }
   bmF.y = bmF.floorY = Math.max(heightAt(bmF.x, bmF.z), -1.6); bmF.yaw = cam.yaw; return bmF;
 }
+// ---------- declutter (t158u): clear the play area while a level is open ----------
+// World decor / grass / dew platforms inside the level rect are hidden per-instance; nests, meadow, territory,
+// helpers and other gather-era systems are moved to an unrendered layer; ambient critters are clipped (CLIP).
+const DCL = { W: [0, 0], NEST: [0, 0], TERR: [0, 0], HELP: [0, 0], on: false, layered: [], inst: [], solids: [], rect: null };
+const _M0 = new THREE.Matrix4().makeScale(0, 0, 0);
+function dclLayer(o) { o.traverse(q => { if (q.userData._dl == null) { q.userData._dl = q.layers.mask; q.layers.set(1); } }); DCL.layered.push(o); }
+function declutterOn(r) {
+  DCL.on = true; DCL.rect = r; const M = 14, inR = (x, z, m) => x > r.x0 - m && x < r.x1 + m && z > r.z0 - m && z < r.z1 + m;
+  Object.assign(CLIP, { on: true, x0: r.x0, z0: r.z0, x1: r.x1, z1: r.z1, keep: 1 });
+  const C = scene.children;
+  for (let i = DCL.W[0]; i < DCL.W[1] && i < C.length; i++) {
+    const o = C[i];
+    if (o.isInstancedMesh) {
+      const a = o.instanceMatrix.array, idx = [], save = [];
+      if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
+      const r0 = o.geometry.boundingSphere?.radius || 1;
+      for (let k = 0; k < o.count; k++) {
+        const x = a[k * 16 + 12], z = a[k * 16 + 14], sc = Math.hypot(a[k * 16], a[k * 16 + 1], a[k * 16 + 2]), big = r0 * sc;
+        const m = o.count > 1500 ? 2 : big > 2.5 ? M + 14 : M; // big trees: wide berth so canopies never loom over the level
+        if (inR(x, z, m)) { idx.push(k); save.push(a.slice(k * 16, k * 16 + 16)); }
+      }
+      if (idx.length) { DCL.inst.push({ o, idx, save }); for (const k of idx) a.set(_M0.elements, k * 16); o.instanceMatrix.needsUpdate = true; }
+    } else if (o.isPoints || o.isSprite) dclLayer(o);
+  }
+  for (const [a, b] of [DCL.NEST, DCL.TERR, DCL.HELP]) for (let i = a; i < b && i < C.length; i++) dclLayer(C[i]);
+  for (const so of world.solids) if (so.kind !== 'zone' && so.kind !== 'pond' && !so.off && inR(so.x, so.z, 2)) { so.off = true; DCL.solids.push(so); }
+}
+function declutterOff() {
+  DCL.on = false; CLIP.on = false;
+  for (const o of DCL.layered) o.traverse(q => { if (q.userData._dl != null) { q.layers.mask = q.userData._dl; delete q.userData._dl; } });
+  for (const e of DCL.inst) { const a = e.o.instanceMatrix.array; e.idx.forEach((k, j) => a.set(e.save[j], k * 16)); e.o.instanceMatrix.needsUpdate = true; }
+  for (const so of DCL.solids) so.off = false;
+  DCL.layered = []; DCL.inst = []; DCL.solids = [];
+  for (const id of SPECIES_ORDER) { if (riders[id]) riders[id].traverse(q => q.layers.enable(0)); if (marks[id]) marks[id].scale.set(3, 1.5, 1); }
+}
+function declutterTick() {
+  const want = !!(valleySession && zones && zones.active());
+  if (want && !DCL.on) declutterOn(zones.rect());
+  else if (!want && DCL.on) declutterOff();
+  if (!DCL.on) return;
+  // animated instanced meshes (dew drops / rays) rewrite their matrices: keep the in-rect ones zeroed
+  for (const e of DCL.inst) { const a = e.o.instanceMatrix.array; let dirty = false; for (const k of e.idx) if (a[k * 16] !== 0 || a[k * 16 + 5] !== 0) { a.set(_M0.elements, k * 16); dirty = true; } if (dirty) e.o.instanceMatrix.needsUpdate = true; }
+  // only the crew is drawn inside the level; other species' riders/shadows stay out of the way
+  const crewL = crew ? crew.get() : [], r = DCL.rect;
+  for (const id of SPECIES_ORDER) {
+    const R = riders[id]; if (!R) continue; const inside = R.position.x > r.x0 - 10 && R.position.x < r.x1 + 10 && R.position.z > r.z0 - 10 && R.position.z < r.z1 + 10;
+    const show = crewL.includes(id) || !inside;
+    R.traverse(q => { if (show) q.layers.enable(0); else q.layers.disable(0); });
+    if (shadows[id]) shadows[id].visible = shadows[id].visible && show;
+    if (marks[id] && !crewL.includes(id)) marks[id].visible = false;
+    else if (marks[id] && marks[id].visible) { // parked-friend pins: small, and gone when right next to the camera
+      const m = marks[id], dc = m.position.distanceTo(camera.position); const w = dc < 9 ? 0.001 : Math.min(2.2, 1.2 + dc * 0.04); m.scale.set(w, w / 2, 1);
+    }
+  }
+}
 function updateCamera(dt) {
   const p = playing ? (build && build.active ? bmFocus(dt) : P[cur]) : titleTarget(dt), sp = SPECIES[cur], now = performance.now(), bm = !!(build && build.active);
   cam.yaw += input.dYaw; cam.pitch = Math.max(0.1, Math.min(0.95, cam.pitch + input.dPitch)); input.dYaw = input.dPitch = 0;
@@ -704,7 +760,7 @@ function updateCamera(dt) {
         for (const c of CN) if (y > c.y0 && y < c.y1 && (x - c.x) ** 2 + (z - c.z) ** 2 < c.r * c.r) { want = Math.max(0.3, u - 0.12); break; }
         if (want < 1) break;
         world.phys.near(x, z, (so) => {
-          if (want < 1 || so.wall === false && so.kind === 'trunk') return;
+          if (want < 1 || so.wall === false && so.kind === 'trunk' || so.fadeM) return; // level walls / trees fade instead of pulling the camera in
           const f = world.phys.foot(so, x, z); if (f.d > 0.9 || y > so.top + 0.5 || y < so.y0) return;
           const f0 = world.phys.foot(so, fx, fz); if (f0.d < 0.4) return; // the focus is on/in it: ignore
           want = Math.max(0.3, u - 0.12);
@@ -712,6 +768,7 @@ function updateCamera(dt) {
       }
     }
     cam.occ = want;
+    if (zones && valleySession) zones.fadeLine(cx, cy, cz, fx, fy, fz, dt);
     cam.shopK = cam.shopK ?? 1; cam.shopK += (want - cam.shopK) * Math.min(1, dt * (want < cam.shopK ? 12 : 2.5));
     if (cam.shopK < 0.999) { cx = fx + (cx - fx) * cam.shopK; cy = fy + (cy - fy) * cam.shopK; cz = fz + (cz - fz) * cam.shopK; cy = Math.max(cy, heightAt(cx, cz) + 0.9); }
   }
@@ -723,6 +780,13 @@ function updateCamera(dt) {
 let arrowT = 0, nearestBloom = -1;
 function updateArrow(dt, t) {
   const sp = SPECIES[cur], p = P[cur], n = nests[cur]; arrowT -= dt;
+  if (valleySession && zones && zones.active()) { // in a level the foot ring points at the next objective (not flowers)
+    const o = zones.objective(), A = $('arrowA'); A.style.opacity = 0; $('arrowL').textContent = '';
+    if (!homeInd) homeInd = createHomeInd(scene);
+    const far = o && o.x != null ? Math.hypot(o.x - p.x, o.z - p.z) : 0;
+    homeInd.update({ x: p.x, y: p.floorY ?? p.y, z: p.z, R: ringR, ang: o && o.x != null ? Math.atan2(o.x - p.x, o.z - p.z) : 0, show: far > 5, color: o?.color || '#ffd23f', mode: settings.ind || 'ring', t, dt, far });
+    return;
+  }
   const toNest = p.carried >= Math.max(2, abOf(cur).cap * 0.6);
   if (arrowT <= 0) { arrowT = 0.5; const B = world.blooms; let best = -1, bd = 1e12; for (const i of B.byPol[polOf(cur)]) { if (B.readyAt[i] > t) continue; const d = (B.x[i] - p.x) ** 2 + (B.z[i] - p.z) ** 2; if (d < bd) { bd = d; best = i; } } nearestBloom = best; }
   let tx, tz, label, show = true;
@@ -1049,7 +1113,7 @@ function saveRound() { if (noSave || !round || !playing || !round.running || rou
 addEventListener('pagehide', saveRound);
 
 function beginRound() {
-  dirty = true; round.running = true; round.over = false; round.noTimer = !!valleySession && round.mode === 'relaxed';
+  dirty = true; round.running = true; round.over = false; round.noTimer = !!valleySession && (ADVENTURE || round.mode === 'relaxed'); // adventure: par time is a star, no countdown
   if (!swapOK() && cur !== lead && SPECIES[lead]) selectSpecies(lead, true);
   $('title').classList.remove('on'); document.body.classList.add('inRound'); playing = true; syncPause(); audio.start(); renderCrewDock();
   cam.zoomT = 1; cam.pitch = 0.35; { const p = P[cur]; cam.yaw = p.yaw; cam.swoop = 1.4; }
@@ -1627,12 +1691,12 @@ async function boot() {
   const nestInfo = SPECIES_ORDER.map(id => SPECIES[id].nest);
   setLoad(0.05, 'Loading creatures…'); await loadMany(NEEDED, p => setLoad(0.05 + p * 0.2));
   setLoad(0.3, 'Growing the meadow…');
-  world = await buildWorld(scene, { quality: QUALITY, nests: nestInfo, renderer }); resize();
+  DCL.W[0] = scene.children.length; world = await buildWorld(scene, { quality: QUALITY, nests: nestInfo, renderer }); resize(); DCL.W[1] = scene.children.length;
   setLoad(0.7, 'Waking the pollinators…');
   riders = await buildRiders(scene); gearFx = createGear(scene, riders); for (const id of SPECIES_ORDER) gearFx.set(id, save.gear[id].t); ambient = await buildAmbient(scene, world, QUALITY); groundAmb = buildGroundAmbient(scene, world, QUALITY);
-  setLoad(0.85, 'Building nests…'); nests = await buildNests(scene);
+  setLoad(0.85, 'Building nests…'); DCL.NEST[0] = scene.children.length; nests = await buildNests(scene);
   for (const id of SPECIES_ORDER) nests[id].set(save.units[id] || 0, false);
-  meadow = await buildMeadow(scene, nests, save); state.meadow = meadow;
+  meadow = await buildMeadow(scene, nests, save); state.meadow = meadow; DCL.NEST[1] = scene.children.length;
   for (const id of SPECIES_ORDER) { meadow.setUnits(id, nests[id].units, false); meadow.setStage(id, nests[id].stage); }
   // stars + moon
   const sg = new THREE.BufferGeometry(), sp = new Float32Array(900 * 3);
@@ -1647,12 +1711,12 @@ async function boot() {
     const mk = badge(SPECIES[id].emoji, 3.0); mk.visible = false; scene.add(mk); marks[id] = mk;
   }
   round = createRound(); round.reset(settings.len); round.onEnd = showResults;
-  terr = await createTerritory(scene, { heightAt, nestPts: nestInfo.map(n => [n.x, n.z]), quality: QUALITY });
+  DCL.TERR[0] = scene.children.length; terr = await createTerritory(scene, { heightAt, nestPts: nestInfo.map(n => [n.x, n.z]), quality: QUALITY });
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${SPECIES[id]?.emoji || ''} ${SPECIES[id]?.name || id}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
-  helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${SPECIES[id]?.emoji || ''} ${SPECIES[id]?.name || id}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
+  DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
     deposit: () => nestCheck(P[cur], SPECIES[cur], state.sT || 0, true), gatherAt: r => gather(P[cur], SPECIES[cur], state.sT || 0, r, true, true),
@@ -1790,7 +1854,7 @@ async function boot() {
   if (!FEATURES.teamFoods) { const b0 = document.querySelector('#jTabs button[data-t="0"]'); if (b0) b0.style.display = 'none'; } state.E = E; refreshJournalBadge();
   for (const z of coop.puzzles) if (z.done) meadow.bloomPuzzle(z.S.id, false);
   for (const id of SPECIES_ORDER) { const U = riders[id].userData; if (!SPECIES[id].ground && U.box) U.body.position.y = -U.box.min.y; }
-  babies = buildBabies(scene, riders, nests); babies.sync(); if (babies.list.length) { save.journal['m:baby'] = save.journal['m:baby'] || { t: Date.now() }; }
+  babies = buildBabies(scene, riders, nests); DCL.HELP[1] = scene.children.length; babies.sync(); if (babies.list.length) { save.journal['m:baby'] = save.journal['m:baby'] || { t: Date.now() }; }
   selectSpecies(SPECIES.hasOwnProperty(save.species) ? save.species : 'bee', true);
   weather = buildWeather(scene);
   if (SPECIES[cur].nocturnal !== (nightOf(clock.t) > 0.5)) setNight(SPECIES[cur].nocturnal, true);
@@ -2038,6 +2102,7 @@ function loop(now) {
   if (admin) admin.update(rdt);
   if (playing && !paused) updateArrow(dt, t); else if (!playing && homeInd) homeInd.hide();
   world.water.position.y = -1.6 + Math.sin(t * 0.8) * 0.03;
+  declutterTick();
   renderer.render(scene, camera);
 }
 boot().catch(e => { console.error('boot failed', e); $('loadTxt').textContent = 'Failed to load: ' + e.message; });

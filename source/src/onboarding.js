@@ -17,11 +17,11 @@ const BEATS_OLD = [
 ];
 // Adventure refocus: Pip only teaches moving, swapping and Interact (puzzle hints come from the level)
 const BEATS_ADV = [
-  { id: 'hello', pip: "Hi! I'm Pip. Let's explore the valley!", relaxed: 'Hi friend! I’m Pip. No rush here!', portrait: 'hello', after: 4 },
-  { id: 'move', pip: 'Walk, jump or fly around — grab the Petals!', portrait: 'hint', wait: 1 },
-  { id: 'crew_swap', pip: 'Tap a portrait to swap friends instantly!', portrait: 'unlock', need: 'valleyIn' },
-  { id: 'interact', pip: 'See a badge over something? Tap 🤝 Interact next to it!', portrait: 'unlock', unlock: 'int', need: 'valleyIn' },
-  { id: 'done', pip: 'You did it! Have fun, little buddy!', portrait: 'unlock' },
+  { id: 'hello', pip: "Hi, I'm Pip! 👋", relaxed: "Hi, I'm Pip! 👋", portrait: 'hello', after: 3 },
+  { id: 'move', pip: 'Drag to move · tap Jump.', portrait: 'hint', wait: 1, after: 4 },
+  { id: 'crew_swap', pip: 'Tap a portrait to swap.', portrait: 'unlock', need: 'valleyIn', after: 4 },
+  { id: 'interact', pip: 'Glowing thing? Tap 🤝 Interact.', portrait: 'unlock', unlock: 'int', need: 'valleyIn', after: 4 },
+  { id: 'done', pip: 'Have fun!', portrait: 'unlock', after: 3 },
 ];
 const BEATS = new Proxy([], { get: (t, k) => { const B = ADV() ? BEATS_ADV : BEATS_OLD; const v = B[k]; return typeof v === 'function' ? v.bind(B) : v; } });
 const PORTRAIT = { hello: 'guide-happy-blocky.png', unlock: 'guide-cheering-blocky.png', hint: 'guide-thinking-blocky.png' };
@@ -106,7 +106,7 @@ export function createOnboarding(ctx) {
     if (O.beat) {
       const b = O.beat;
       const relaxed = ctx.round?.()?.mode === 'relaxed';
-      if (!relaxed && b.after && now - O.shownAt >= b.after) O.dismiss();
+      if ((!relaxed || ADV()) && b.after && now - O.shownAt >= b.after) O.dismiss(); // adventure: tips never park on screen
       return;
     }
     // pick next unseen beat whose need is met

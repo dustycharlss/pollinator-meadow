@@ -1,3 +1,4 @@
+import { clipped } from './declutter.js';
 // Ground animals: friendly low-poly STAND-IN models built from primitives (swap point: GROUND_MODELS).
 // Nothing here ever hunts, chases or harms anything: ambient animals just wander and nibble the plentiful ground food.
 import * as THREE from 'three';
@@ -299,7 +300,7 @@ export function buildGroundAmbient(scene, world, quality = 1) {
           }
           const y = Math.max(heightAt(a.x, a.z), -1.5);
           const bob = a.state === 'walk' ? Math.abs(Math.sin(a.ph)) * (def.kind === 'robin' ? 0.28 : 0.06) : 0;
-          D.position.set(a.x, y + bob, a.z); D.rotation.set(a.state === 'eat' ? 0.55 * Math.abs(Math.sin(t * 7 + i)) + 0.2 : 0, a.yaw, a.state === 'walk' ? Math.sin(a.ph) * 0.05 : 0); D.scale.setScalar(a.s * def.size / SPECIES[def.kind].size); D.updateMatrix(); for (const x of im) x.setMatrixAt(i, D.matrix);
+          D.position.set(a.x, y + bob, a.z); D.rotation.set(a.state === 'eat' ? 0.55 * Math.abs(Math.sin(t * 7 + i)) + 0.2 : 0, a.yaw, a.state === 'walk' ? Math.sin(a.ph) * 0.05 : 0); D.scale.setScalar(clipped(a.x, a.z, i, 8) ? 0 : a.s * def.size / SPECIES[def.kind].size); D.updateMatrix(); for (const x of im) x.setMatrixAt(i, D.matrix);
         });
         for (const x of im) x.instanceMatrix.needsUpdate = true;
       }

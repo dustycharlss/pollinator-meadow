@@ -655,6 +655,26 @@ body.adv #bBuild,body.adv #bRts,body.adv #nestBar,body.adv #shopChip,body.adv #d
 #tpWhy{text-align:center;font-weight:800;margin:6px 0;font-size:13px}#tpWhy.bad{color:#b3261e}.tpp .row2{flex-wrap:wrap}
 #menuTeam,#pkTeam{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin:4px 0 8px;font-weight:800}
 #menuTeam .mt{display:flex;gap:6px}.mtc{border:3px solid #3b2614;border-radius:14px;background:#fff;padding:4px 8px;font:800 22px system-ui;display:flex;flex-direction:column;align-items:center}.mtc small{font-size:10px}.mtc.on{background:#ffd23f}
+
+/* t158u declutter: no round timer/score in adventure; objective tracker + off-screen arrow; compact Pip + toasts at the top */
+body.adv #roundBar,body.adv #vGo,body.adv #spChip{display:none!important}
+body.adv #toast{top:calc(max(8px,env(safe-area-inset-top)) + 64px);font-size:14px;line-height:1.25;padding:6px 12px;max-width:min(80vw,330px);border-radius:12px}
+#objT{position:fixed;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 2px);transform:translateX(-50%);z-index:7;display:none;align-items:center;gap:8px;width:max-content;max-width:calc(100vw - 120px);background:var(--cream,#fff3d8);color:var(--ink,#3b2614);border:3px solid var(--oc,#ffd23f);border-radius:14px;padding:5px 10px;box-shadow:0 3px 0 rgba(59,38,20,.55);pointer-events:none;font:800 13px/1.2 system-ui}
+#objT #objDot{width:12px;height:12px;border-radius:50%;background:var(--oc,#ffd23f);flex:none;box-shadow:0 0 8px var(--oc,#ffd23f)}
+#objT b{display:block;font-weight:900}
+#objT small{display:block;font-weight:700;font-size:11px;opacity:.8;margin-top:1px}
+#objT small:empty{display:none}
+#objT.go{animation:objGo 1s ease-in-out infinite}
+@keyframes objGo{50%{transform:translateX(-50%) scale(1.04)}}
+#objA{position:fixed;z-index:7;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;background:var(--oc,#ffd23f);border:3px solid #fff;display:none;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);pointer-events:none}
+#objA span{color:#fff;font:900 18px/1 system-ui;text-shadow:0 1px 0 rgba(0,0,0,.4);display:block}
+body:not(.inRound) #objT,body:not(.inRound) #objA{display:none!important}
+body.intReady #bInt{animation:intPulse .9s ease-in-out infinite}
+@keyframes intPulse{50%{box-shadow:0 0 0 7px rgba(255,255,255,.6);filter:brightness(1.15)}}
+body.adv #pipCard{left:auto!important;right:8px;transform:none!important;top:calc(max(8px,env(safe-area-inset-top)) + 140px);bottom:auto!important;max-width:min(220px,58vw)!important;gap:4px!important}
+body.adv #pipImg{width:36px;height:36px}
+body.adv #pipCard>div{font-size:12px!important;padding:6px 9px!important;border-radius:12px!important}
+body.adv #pipCard button{font-size:11px!important;padding:3px 8px!important}
 </style>
 </head>
 <body>

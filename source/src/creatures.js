@@ -1,3 +1,4 @@
+import { clipped } from './declutter.js';
 import * as THREE from 'three';
 import { SPECIES, AMBIENT, WORLD_R, POND } from './data.js';
 import { loadGLB, bakeParts, lambertFrom, makeFlapMaterial, updateFlaps } from './models.js';
@@ -192,7 +193,7 @@ export async function buildAmbient(scene, world, quality = 1) {
       const st = k.def.style;
       for (let i = 0; i < k.count; i++) {
         const it = k.items[i];
-        if (i >= nAct) { dummy.position.set(it.x, -500, it.z); dummy.rotation.set(0, 0, 0); dummy.updateMatrix(); for (const m of k.meshes) m.setMatrixAt(i, dummy.matrix); continue; }
+        if (i >= nAct || clipped(it.x, it.z, i, 6)) { dummy.position.set(it.x, -500, it.z); dummy.rotation.set(0, 0, 0); dummy.updateMatrix(); for (const m of k.meshes) m.setMatrixAt(i, dummy.matrix); continue; }
         if (st === 'bee' || st === 'flutter' || st === 'dart') stepFlyer(it, k.def, dt, t, st);
         else if (st === 'patrol') stepPatrol(it, k.def, dt, t);
         else if (st === 'swoop') stepSwoop(it, k.def, dt, t);

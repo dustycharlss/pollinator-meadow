@@ -61,16 +61,16 @@ const MAPS = {
       start: ['🐝 Bee: Wow, Sunny Hollow! I can fly up high!', '🦝 Raccoon: I\'ll handle the levers and the tricky stuff.', '🐻 Bear: And I\'ll move anything heavy. Let\'s go!'],
       end: ['🐝 Bee: We did it — together!', '🦝 Raccoon: Teamwork makes the meadow work.', '🐻 Bear: Snack time? Snack time!'],
     },
-    intro: ['Tap a portrait (or 1 · 2 · 3) to swap. Friends you leave behind stay put!'],
+    intro: ['Tap a portrait to swap · friends stay put'],
     tutor: [
-      { until: 'sun', say: '🐦 Pip: Swap to 🐝 Bee (1). Only a flyer can reach the bell on the Big Sunflower — fly north and touch it!' },
-      { until: 'patch', say: '🐦 Pip: Now swap to 🦝 Raccoon (2). Hop into the dirt dip (south-west) and tap 🤝 Interact to pull the lever.' },
-      { until: 'glade', say: '🐦 Pip: Swap to 🐻 Bear (3). Walk to the fallen log by the east hedge and tap 🤝 Interact to shove it.' },
-      { until: 'boostStar', optional: true, say: '🐦 Pip: Secret! Park 🐻 Bear by the tall rock, swap to 🦝 Raccoon, hop on his back and up the ledge. Bear makes a great step!' },
+      { until: 'sun', say: '🐦 Swap to 🐝 Bee (1) and fly to the glowing bell up north.' },
+      { until: 'patch', say: '🐦 Swap to 🦝 Raccoon (2) · pull the green-glow lever.' },
+      { until: 'glade', say: '🐦 Swap to 🐻 Bear (3) · shove the orange-glow log.' },
+      { until: 'boostStar', optional: true, say: '🐦 Secret: park Bear by the tall rock, hop Raccoon up his back!' },
     ],
     build(B) {
       B.rim(12);
-      ring(18, 21, 15.5, 4, [0, 9]).forEach(([x, z], i) => B.tree(x, z, 0.95 + (i % 3) * 0.1));
+      ring(18, 21, 15.5, 4, [0, 9]).filter((_, i) => i % 2 === 0).forEach(([x, z], i) => B.tree(x, z, 0.95 + (i % 3) * 0.1)); // thinned (t158u)
       B.home(0, 0);
       // 1 · Scout: Big Sunflower bell
       B.sunflower(0, 14);
@@ -149,7 +149,7 @@ const MAPS = {
     intro: ['🌙 The exit is inside the Hollow Oak, behind tough roots.', '🪽 Scouts slip through knotholes · 🐾 Tricksters dig · 🐻 Bruisers smash roots', '🌙 At night, bonus Petals sparkle for a little while!'],
     build(B) {
       B.rim(16); B.home(0, 0);
-      ring(14, 19, 15, 6, [3, 4, 10]).forEach(([x, z]) => B.tree(x, z, 1.0, 0, 0x2f5e3a));
+      ring(14, 19, 15, 6, [3, 4, 10]).filter((_, i) => i % 2 === 0).forEach(([x, z]) => B.tree(x, z, 1.0, 0, 0x2f5e3a)); // thinned (t158u)
       // Hollow Oak shell (8×8, 12 tall) + mid floor + crown deck
       const O = { look: 'bark' };
       B.wall(0, 18, 8, 1, 12, O); B.wall(4, 14, 1, 8, 12, O); B.wall(-4, 14, 1, 8, 12, O);
@@ -419,6 +419,7 @@ export function createZones(scene, ctx) {
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
   let sampleH = null, waterMeshes = [];
   // three-class puzzle state
+  let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
   let sig = {}, props = [], gates = [], plates = [], puzzles = [], deep = [], crossings = [], steps = [], tw = null, lastProg = 0, hintT = 0, bearPad = null, windT = 0, introQ = [];
   const mats = new Map();
   const mat = (c, e = 0) => { const k = c + ':' + e; if (!mats.has(k)) mats.set(k, new THREE.MeshLambertMaterial({ color: c, emissive: e ? c : 0, emissiveIntensity: e, flatShading: true })); return mats.get(k); };
@@ -499,6 +500,8 @@ export function createZones(scene, ctx) {
       if (o.look === 'glass') { m.material = new THREE.MeshLambertMaterial({ color: 0xcff0ff, transparent: true, opacity: 0.35 }); }
       const s = addSolid({ type: 'box', x: A.x + x, z: A.z + z, hx: w / 2, hz: d / 2, yaw: -(o.yaw || 0), y0: g + bot, top: g + top, kind: 'zone' });
       if (o.hidden) { m.visible = false; s.off = true; }
+      { const ca = Math.abs(Math.cos(o.yaw || 0)), sa = Math.abs(Math.sin(o.yaw || 0)), hx = (w * ca + d * sa) / 2, hz = (w * sa + d * ca) / 2;
+        if (Math.max(w, d) < 14) { const e = { roots: [m], x0: A.x + x - hx, x1: A.x + x + hx, z0: A.z + z - hz, z1: A.z + z + hz, y0: g + bot, y1: g + top + 0.3, a: 1 }; fades.push(e); s.fadeM = e; } } // long boundary cliffs keep the camera pull-in
       return { m, s, g };
     },
     cyl(x, z, r, h, c, base = 0) {
@@ -522,8 +525,9 @@ export function createZones(scene, ctx) {
       const c1 = new THREE.Mesh(new THREE.BoxGeometry(2.4 * s, 1.8 * s, 2.4 * s), mat(leaf)); c1.position.y = trunkH + 0.7 * s; G.add(c1);
       const c2 = new THREE.Mesh(new THREE.BoxGeometry(1.5 * s, 1.2 * s, 1.5 * s), mat(0x4fa044)); c2.position.y = trunkH + 1.9 * s; G.add(c2);
       G.position.set(A.x + x, g, A.z + z); group.add(G);
-      addSolid({ type: 'cyl', x: A.x + x, z: A.z + z, r: 0.4 * s, y0: g - 1, top: g + trunkH + 0.2, kind: 'zone' });
-      if (glb) { const H = new THREE.Group(); H.position.set(A.x + x, g + 2.4 * s, A.z + z); group.add(H); dress(H, G, GLB.tree, 3 * s, 4.8 * s, 3 * s); }
+      const ts = addSolid({ type: 'cyl', x: A.x + x, z: A.z + z, r: 0.4 * s, y0: g - 1, top: g + trunkH + 0.2, kind: 'zone' });
+      const e = { roots: [G], x0: A.x + x - 1.5 * s, x1: A.x + x + 1.5 * s, z0: A.z + z - 1.5 * s, z1: A.z + z + 1.5 * s, y0: g + 0.6, y1: g + trunkH + 2.8 * s, a: 1 }; fades.push(e); ts.fadeM = e;
+      if (glb) { const H = new THREE.Group(); H.position.set(A.x + x, g + 2.4 * s, A.z + z); group.add(H); e.roots.push(H); dress(H, G, GLB.tree, 3 * s, 4.8 * s, 3 * s); }
     },
     sunflower(x, z) {
       const g = gy(x, z), G = new THREE.Group();
@@ -542,7 +546,10 @@ export function createZones(scene, ctx) {
       const disc = new THREE.Mesh(new THREE.CircleGeometry(r - 0.1, 32), new THREE.MeshBasicMaterial({ color: 0xffe07a, transparent: true, opacity: 0.12, depthWrite: false })); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.02; G.add(disc);
       const pole = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.4, 0.22), mat(0x8a5a2b, 0.9)); pole.position.set(r * 0.7, 1.7, 0); G.add(pole);
       const flag = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.8, 0.08), mat(0xb0b0b0, 0.9)); flag.position.set(r * 0.7 + 0.7, 3.0, 0); G.add(flag);
-      exitAt = { x: A.x + x, z: A.z + z, y, r }; exitMesh = { G, ringM, disc, flag };
+      // beacon: a tall soft light column so the goal reads from anywhere in the level
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 1.1, 36, 14, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      beam.position.set(r * 0.7, 18, 0); G.add(beam);
+      exitAt = { x: A.x + x, z: A.z + z, y, r }; exitMesh = { G, ringM, disc, flag, beam };
       exitLabel = document.createElement('div'); exitLabel.className = 'zoneNode'; document.body.appendChild(exitLabel);
     },
     glade(x, z, col = 0xa8d88a) { const m = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.8, 0.12, 10), mat(col)); m.position.set(A.x + x, gy(x, z) + 0.08, A.z + z); group.add(m); },
@@ -736,6 +743,7 @@ export function createZones(scene, ctx) {
     sampleH = null; waterMeshes = [];
     for (const s of solids) s.off = true;
     solids = []; picks = []; hoops = []; nightDews = []; star = null;
+    fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady');
     sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
@@ -750,11 +758,12 @@ export function createZones(scene, ctx) {
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
     recipe.build(B);
     { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); }
+    decorateProps();
     // Bruiser "standing platform" (Olaf shield move): a solid on Bear's back while he's parked
     bearPad = addSolid({ type: 'cyl', x: 0, z: 0, r: 1.15, y0: -99, top: -98, kind: 'zone', off: true, pad: true });
     if (recipe.night) { nightOn = true; ctx.setNight(true); }
     else if (recipe.nightCycle) { nightOn = false; ctx.setNight(false); }
-    introQ = [...(recipe.banter?.start || []), `🎯 ${recipe.goal}`, ...(recipe.intro || [])];
+    introQ = [...(recipe.banter?.start || []), ...(recipe.intro || [])]; // the goal lives in the objective tracker now
   }
   function crewAt(x, z, r) {
     const p = ctx.getP(); let n = Math.hypot(p.x - x, p.z - z) < r ? 1 : 0;
@@ -780,12 +789,14 @@ export function createZones(scene, ctx) {
   function setExitLook() {
     if (!exitMesh) return; const on = exitOpen;
     exitMesh.ringM.material = mat(on ? 0xffc93c : 0x9a8f7a, 0.6); exitMesh.flag.material = mat(on ? 0xff5a5a : 0xb0b0b0, 0.8); exitMesh.disc.material.opacity = on ? 0.35 : 0.12;
+    exitMesh.beam.material.color.set(on ? 0xffd23f : 0xffffff);
   }
   function updateExit(cam) {
     if (!exitAt || !exitLabel) return;
     exitMesh.flag.rotation.y = Math.sin(t * 2) * 0.25;
+    exitMesh.beam.material.opacity = exitOpen ? 0.38 + 0.14 * Math.sin(t * 3) : 0.1;
     const v = new THREE.Vector3(exitAt.x, exitAt.y + 4, exitAt.z); v.project(cam);
-    const p = ctx.getP(), pd = Math.hypot(p.x - exitAt.x, p.z - exitAt.z), on = !keyDone && v.z < 1 && pd < 40;
+    const p = ctx.getP(), pd = Math.hypot(p.x - exitAt.x, p.z - exitAt.z), on = exitOpen && !keyDone && v.z < 1 && pd < 40;
     exitLabel.style.display = on ? 'block' : 'none';
     if (on) { const n = crewAtExit(), L = reqLeft().length; exitLabel.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; exitLabel.style.top = ((1 - v.y) / 2 * innerHeight) + 'px'; exitLabel.textContent = exitOpen ? `🏁 Exit ${'🐾'.repeat(n)}${'◯'.repeat(Math.max(0, 3 - n))}` : `🏁 Exit · 🔒 ${L} puzzle${L === 1 ? '' : 's'} left`; }
   }
@@ -923,7 +934,7 @@ export function createZones(scene, ctx) {
     else if (recipe.tutor && !keyDone) {
       while (tutorI < recipe.tutor.length && sig[recipe.tutor[tutorI].until]) { tutorI++; tutorT = -99; }
       const st = recipe.tutor[tutorI];
-      if (st && !(st.optional && exitOpen && t - tutorT < 60) && t - tutorT > 25 && t - msgT > 3.2) { tutorT = t; msgT = t; lastProg = t; ctx.toast(st.say, 5200); }
+      if (st && !(st.optional && exitOpen && t - tutorT < 60) && t - tutorT > 25 && t - msgT > 3.2) { tutorT = t; msgT = t; lastProg = t; ctx.toast(st.say, 4200); }
     }
     // player tween (slip / climb / dig)
     if (tw) {
@@ -1013,7 +1024,7 @@ export function createZones(scene, ctx) {
       if (pr.icon && !pr.done) pr.icon.position.y += Math.sin(t * 3 + pr.x) * 0.004;
     }
     // proximity hint for the wrong class
-    { const pr = nearest(p); if (pr && pr.cls !== c && !pr.done) say(`${CLASSES[pr.cls].em} ${pr.label}: needs a ${CLASSES[pr.cls].name}`, 1800); else if (pr && pr.cls === c && !pr.done) say(`🤝 Tap Interact: ${ACTS[pr.act].verb}`, 1500); }
+    { const pr = nearest(p); if (pr && pr.cls !== c && !pr.done && t - (pr._hintT ?? -99) > 10) { pr._hintT = t; say(`${CLASSES[pr.cls].em} Needs a ${CLASSES[pr.cls].name}`, 1600); } nearOwn = pr && pr.cls === c && !(pr.done && !pr.two) ? pr : null; }
     // hoops (sequence)
     for (const h of hoops) if (!h.got && Math.hypot(p.x - h.m.position.x, p.z - h.m.position.z) < 1.8 && Math.abs(p.y + 0.5 - h.m.position.y) < 1.8) {
       if (h.prev && !sig[h.prev]) { say('💫 Start with the first hoop!', 1200); continue; }
@@ -1072,12 +1083,137 @@ export function createZones(scene, ctx) {
       ctx.toast(`🧩 ${pz.label} solved! ${pz.cls.map(k => CLASSES[k].em).join('')}${left ? ` · ${left} to go` : ''}`, 2600); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.();
     }
     // Pip hint after 45 s without progress
-    if (t - lastProg > 45 && t - hintT > 45) { const nx = reqLeft()[0] || puzzles.find(q => !q.done); if (nx && nx.hint) { hintT = t; ctx.toast(`🐦 Pip: ${nx.hint}`, 5200); } }
-    checkKey(); updateExit(cam);
+    if (t - lastProg > 45 && t - hintT > 45) { const nx = reqLeft()[0] || puzzles.find(q => !q.done); if (nx && nx.hint) { hintT = t; ctx.toast(`🐦 ${nx.hint}`, 4200); } }
+    checkKey(); updateExit(cam); updateHighlights(dt); updateTracker(cam);
   }
+  // ---- objective highlights (t158u): every live puzzle prop glows in the colour of the class that solves it ----
+  let haloTex = null;
+  function haloMap() {
+    if (haloTex) return haloTex;
+    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 2, 32, 32, 31);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    return (haloTex = new THREE.CanvasTexture(c));
+  }
+  const badgeLock = {};
+  const badgeLockOf = c => badgeLock[c] || (badgeLock[c] = Object.assign(badgeOf(c).clone(), { opacity: 0.4 }));
+  function decorateProps() {
+    for (const pr of props) {
+      const cls = pr.kind === 'plate' ? (pr.plate.heavy ? 'bruiser' : 'trickster') : pr.cls;
+      if (!cls || pr.kind === 'marker') continue;
+      const col = new THREE.Color(CLASSES[cls].color);
+      const air = pr.kind === 'bell' || pr.kind === 'target';
+      const hy = { bell: 0, target: 0, lever: 0.9, boulder: pr.from ? pr.from.top - pr.y - 0.5 : 1, cracked: 1.4, slip: 0, vine: 1.2, dig: 0.4, plank: 0.4, plate: 0.4 }[pr.kind] ?? 0.6;
+      const big = pr.kind === 'boulder' || pr.kind === 'cracked';
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloMap(), color: col, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }));
+      const hs = big ? 4.4 : 2.6; halo.scale.set(hs, hs, 1); halo.position.set(pr.x, pr.y + hy, pr.z); halo.renderOrder = 5; group.add(halo);
+      const gyw = air ? gy(pr.x - A.x, pr.z - A.z) : pr.y;
+      const R = pr.kind === 'plate' ? (pr.plate.heavy ? 1.75 : 1.45) : big ? Math.max(1.4, pr.r - 1.4) : 1.15;
+      const ring = new THREE.Mesh(new THREE.RingGeometry(R - 0.2, R, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }));
+      ring.position.set(pr.x, gyw + 0.14, pr.z); ring.renderOrder = 4; group.add(ring);
+      pr.hl = { halo, ring, s: hs, cls };
+    }
+  }
+  function updateHighlights(dt) {
+    for (const pr of props) {
+      if (pr.kind === 'marker') { pr.ring.material.opacity = 0.45 + 0.35 * (0.5 + 0.5 * Math.sin(t * 3)); continue; }
+      const h = pr.hl; if (!h) continue;
+      let st;
+      if (pr.kind === 'plate') { const pl = pr.plate, solved = puzzles.some(q => q.done && q.sigs.includes(pl.sig)); st = solved ? 'done' : pl.holder ? 'held' : 'active'; if (solved && pl.icon) pl.icon.visible = false; }
+      else if (pr.two) st = (pr.needIn && !isOn(pr.needIn)) || (pr.need && !isOn(pr.need)) ? 'locked' : 'travel';
+      else st = pr.done ? 'done' : (pr.need && !isOn(pr.need)) ? 'locked' : 'active';
+      const focus = objCache && objCache.pr === pr, pulse = 0.5 + 0.5 * Math.sin(t * 3.4 + pr.x);
+      const ha = { active: 0.5 + 0.35 * pulse, travel: 0.28, locked: 0.14, held: 0.12, done: 0 }[st], ra = { active: 0.85, travel: 0.4, locked: 0.22, held: 0.35, done: 0 }[st];
+      h.halo.visible = ha > 0; h.halo.material.opacity = ha; h.halo.material.depthTest = !(focus && st === 'active'); // the current goal shines through walls const sc = h.s * (focus ? 1.5 : 1) * (1 + (st === 'active' ? 0.14 * pulse : 0)); h.halo.scale.set(sc, sc, 1);
+      h.ring.visible = ra > 0; h.ring.material.opacity = ra; const rs = 1 + (st === 'active' ? 0.1 * pulse : 0); h.ring.scale.set(rs, 1, rs);
+      if (pr.icon && pr.kind !== 'plate' && pr.cls) { const want = st === 'locked' ? badgeLockOf(pr.cls) : badgeOf(pr.cls); if (pr.icon.material !== want) pr.icon.material = want; if (focus && st === 'active') pr.icon.position.y += Math.sin(t * 6) * 0.012; }
+      if (st === 'done' && !h.dim) { // solved props dim so the eye skips them
+        h.dim = true;
+        if (pr.G && !pr.lantern) pr.G.traverse(m => { if (m.isMesh && m.material?.color) { m.material = m.material.clone(); m.material.color.multiplyScalar(0.62); if (m.material.emissiveIntensity) m.material.emissiveIntensity *= 0.25; } });
+      }
+    }
+  }
+  // ---- objective tracker + off-screen arrow ----
+  const VERB = { bell: 'ring', lever: 'pull', shove: 'shove', smash: 'smash', throw: 'throw an acorn at', plank: 'lay a plank at', slip: 'slip through', vine: 'climb', dig: 'dig at' };
+  const lc = s => /^[A-Z][a-z'-]+( [a-z]|$)/.test(s) ? s[0].toLowerCase() + s.slice(1) : s;
+  function objective() {
+    if (!recipe || keyDone || !exitAt) return null;
+    if (exitOpen) { const n = crewAtExit(); return { text: `Everyone: walk to the 🏁 exit · ${n}/3`, cls: null, color: '#ffd23f', x: exitAt.x, y: exitAt.y + 1, z: exitAt.z }; }
+    let fb = null;
+    const seen = new Set();
+    const findFor = (k, depth) => { // what produces signal k? follows "needs X first" chains back to the first doable step
+      if (sig[k] || depth > 5 || seen.has(k)) return null; seen.add(k);
+      const cands = props.filter(q => q.sig === k && q.act && !q.done);
+      for (const pr of cands) if (isOn(pr.need)) { const C = CLASSES[pr.cls]; return { text: `${C.name}: ${pr.act === 'bell' && pr.lantern ? 'light' : VERB[pr.act]} the ${lc(pr.label)}`, cls: pr.cls, color: C.color, x: pr.x, y: pr.y, z: pr.z, pr, verb: ACTS[pr.act].verb }; }
+      const pl = plates.find(q => q.sig === k && !q.holder);
+      if (pl) { const c = pl.heavy ? 'bruiser' : 'trickster'; return { text: `${pl.heavy ? 'Bruiser' : 'A friend'}: stand on the ${lc(pl.label)}`, cls: c, color: CLASSES[c].color, x: pl.x, y: pl.y, z: pl.z, pr: props.find(q => q.plate === pl) }; }
+      const h = hoops.find(q => q.sig === k && !q.got);
+      if (h) { const first = hoops.find(q => !q.got) || h; return { text: 'Scout: fly through the hoops in order', cls: 'scout', color: CLASSES.scout.color, x: first.m.position.x, y: first.m.position.y, z: first.m.position.z }; }
+      const n = nodes.find(q => q.sig === k && !q.done);
+      if (n && isOn(n.need)) return { text: `Everyone: lift the ${NODE[n.kind].name} together`, cls: null, color: '#ffd23f', x: n.m.position.x, y: n.m.position.y, z: n.m.position.z };
+      if (k === 'starHome' && star && star.carry) return { text: 'Carry the Starheart home, gently', cls: null, color: '#ffd23f', x: star.safe.x, y: baseY + 1, z: star.safe.z };
+      for (const pr of cands) for (const nk of [].concat(pr.need || [])) { const r = findFor(nk, depth + 1); if (r) return r; }
+      if (n) for (const nk of [].concat(n.need || [])) { const r = findFor(nk, depth + 1); if (r) return r; }
+      return null;
+    };
+    for (const pz of reqLeft()) {
+      for (const k of pz.sigs) { const r = findFor(k, 0); if (r) return r; }
+      if (!fb) fb = pz;
+    }
+    if (fb) return { text: `${fb.cls.map(c => CLASSES[c].name).join(' + ')}: ${fb.label}`, cls: fb.cls[0], color: CLASSES[fb.cls[0]].color, x: null };
+    return null;
+  }
+  function ensureObjEl() {
+    if (objEl) return objEl;
+    const T = document.createElement('div'); T.id = 'objT'; T.innerHTML = '<i id="objDot"></i><div><b id="objTx"></b><small id="objSub"></small></div>'; document.body.appendChild(T);
+    const Ar = document.createElement('div'); Ar.id = 'objA'; Ar.innerHTML = '<span>➤</span>'; document.body.appendChild(Ar);
+    return (objEl = { T, Ar, tx: T.querySelector('#objTx'), sub: T.querySelector('#objSub'), key: '' });
+  }
+  const _v = new THREE.Vector3();
+  function updateTracker(cam) {
+    const E = ensureObjEl();
+    if (t - hlT > 0.25 || !objCache) {
+      hlT = t; objCache = objective();
+      const pets = picks.filter(k => k.tier === 'petal' && !k.nightOnly), got = pets.filter(k => k.got).length;
+      const sub = [nearOwn ? `🤝 Tap Interact: ${ACTS[nearOwn.act].verb}` : '', pets.length ? `🌸 ${got}/${pets.length}` : '', starGot ? '⭐ found' : ''].filter(Boolean).join(' · ');
+      const txt = objCache ? objCache.text : '', key = txt + '|' + sub + '|' + (objCache?.color || '');
+      if (key !== E.key) { E.key = key; E.tx.textContent = txt; E.sub.textContent = sub; E.T.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.Ar.style.setProperty('--oc', objCache?.color || '#ffd23f'); }
+      E.T.style.display = txt ? 'flex' : 'none'; E.T.classList.toggle('go', !!nearOwn);
+      document.body.classList.toggle('intReady', !!nearOwn);
+    }
+    const o = objCache;
+    if (!o || o.x == null || !cam) { E.Ar.style.display = 'none'; return; }
+    _v.set(o.x, o.y + 0.8, o.z).project(cam);
+    let sx = _v.x, sy = _v.y; const behind = _v.z > 1; if (behind) { sx = -sx; sy = -sy; if (Math.abs(sx) < 1e-3 && Math.abs(sy) < 1e-3) sy = -1; }
+    const W = innerWidth, H = innerHeight;
+    const on = !behind && Math.abs(sx) < 0.92 && sy < 0.75 && sy > -0.55;
+    if (on) { E.Ar.style.display = 'none'; return; }
+    const m = Math.max(Math.abs(sx) / 0.84, Math.abs(sy) / 0.7, 1e-3), ex = sx / m, ey = sy / m;
+    const px = Math.min(W - 28, Math.max(28, (ex + 1) / 2 * W)), py = Math.min(H - 250, Math.max(170, (1 - ey) / 2 * H));
+    E.Ar.style.display = 'flex'; E.Ar.style.left = px + 'px'; E.Ar.style.top = py + 'px';
+    E.Ar.firstChild.style.transform = `rotate(${-Math.atan2(sy, sx)}rad)`;
+  }
+  // ---- see-through occluders: hedges / walls / canopies between the camera and the player fade out ----
+  function fadeLine(cx, cy, cz, fx, fy, fz, dt) {
+    for (const e of fades) e.want = 1;
+    if (recipe) for (let i = 0; i <= 12; i++) {
+      const u = i / 14, x = cx + (fx - cx) * u, y = cy + (fy - cy) * u, z = cz + (fz - cz) * u;
+      for (const e of fades) if (x > e.x0 && x < e.x1 && z > e.z0 && z < e.z1 && y > e.y0 && y < e.y1) e.want = 0.2;
+    }
+    for (const e of fades) {
+      if (!e.cl && e.want >= 1) continue;
+      if (e.cl && Math.abs(e.a - e.want) < 0.005) continue;
+      e.cl = true; e.a += (e.want - e.a) * Math.min(1, dt * 10); if (Math.abs(e.a - e.want) < 0.01) e.a = e.want;
+      for (const r of e.roots) r.traverse(m => {
+        if (!m.isMesh) return;
+        if (!m.userData._fc) { m.userData._fc = 1; m.material = m.material.clone(); m.userData._fo = m.material.opacity ?? 1; m.material.transparent = true; }
+        m.material.opacity = m.userData._fo * e.a; m.material.depthWrite = e.a > 0.9;
+      });
+    }
+  }
+  function rect() { const b = recipe?.bounds || { x0: -20, x1: 20, z0: -20, z1: 20 }; return { x0: A.x + b.x0, x1: A.x + b.x1, z0: A.z + b.z0, z1: A.z + b.z1 }; }
   function status() { return { id, exit: exitAt ? { x: exitAt.x - A.x, z: exitAt.z - A.z, open: exitOpen, n: crewAtExit() } : null, starGot, sig: { ...sig }, puzzles: puzzles.map(p => ({ id: p.id, done: p.done, req: p.req })), keyDone, picked, keyDew, props: props.filter(p => p.act).map(p => ({ act: p.act, cls: p.cls, sig: p.sig, label: p.label, x: p.x, y: p.y, z: p.z, done: !!p.done, b: p.b || null, from: p.from || null })), plates: plates.map(p => ({ sig: p.sig, x: p.x, y: p.y, z: p.z, heavy: p.heavy, holder: p.holder })), nodes: nodes.map(n => ({ kind: n.kind, x: n.m.position.x, y: n.m.position.y, z: n.m.position.z, done: n.done, sig: n.sig })), picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, show: k.show || null, who: k.who || null, night: k.nightOnly })), hoops: hoops.map(h => ({ x: h.m.position.x, y: h.m.position.y, z: h.m.position.z, got: h.got })), A: { ...A }, baseY }; }
   return {
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
-    act, wheelOpts, status, result: () => result, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
+    act, wheelOpts, status, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }
