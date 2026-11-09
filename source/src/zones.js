@@ -48,7 +48,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard']);
+export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise']);
 
 const MAPS = {
   sunny_hollow: {
@@ -321,12 +321,16 @@ const MAPS = {
   },
 
   windy_rise: {
-    goal: 'Cross the gully · thread the wind hoops · haul the Fork Tree Honey Log',
-    key: 'puzzles', ceil: 14,
+    goal: 'Cross the gully · thread the wind hoops · haul the Fork Tree Honey Log · then all three to the 🏁 exit',
+    key: 'puzzles', ceil: 14, exit: [34, -3, 2.6], par: 420,
+    banter: {
+      start: ['🐝 Bee: Whoooa — this wind is strong!', '🐻 Bear: Wind doesn\'t bother me. I\'m big.', '🦝 Raccoon: Then hold still while I build us a bridge.'],
+      end: ['🐝 Bee: I rode the wind like a kite!', '🦝 Raccoon: And the Honey Log made it to the top.', '🐻 Bear: …Can we eat it now?'],
+    },
     bounds: { x0: -10, x1: 40, z0: -14, z1: 20 }, deep: [[12, -14, 16, 20]],
     wind: { x0: 18, x1: 36, z0: 0, z1: 14, every: 4, dur: 1.3, push: 6 },
-    crew: 'Butterfly · Opossum · Bear',
-    intro: ['💨 Windy Rise: gusts blow on a rhythm — glide between them.', 'Bear + Trickster build the gully crossing together.'],
+    crew: 'Bee · Raccoon · Bear',
+    intro: ['💨 Gusts blow on a rhythm — glide between them.', 'Bear + Trickster build the gully crossing together.'],
     build(B) {
       B.rim(14); B.water(); B.home(0, 0);
       [[-6, -10], [-6, 14], [6, 16], [38, 16], [38, -12]].forEach(([x, z]) => B.tree(x, z, 1.2));
@@ -345,9 +349,14 @@ const MAPS = {
       B.basketDecor('basket', 31.6, -9.6);
       B.bell('hauled', 28, -7, 11.6, { need: ['loaded'], needWhy: 'Load the Honey Log into the basket first (Bear)', label: 'Haul bell' });
       [[-4, -4], [4, 6], [22, -2], [30, 2], [34, 12], [24, 14]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9));
+      [[20, 6, 6.2], [26, 10, 8.2], [32, 6, 10.2]].forEach(([x, z, h]) => B.pickup('petal', x, z, h, { show: 'canopy' }));
+      // secret: Starseed on the tall east rock — boost a Trickster off Bear
+      B.wall(38, -6, 3, 3, 5.2, { look: 'stone' });
+      B.pickup('star', 38, -6, 6.0, { who: ['trickster'], whyNot: 'Too heavy for a Scout — boost your Trickster off Bear!', set: 'windStar' });
       B.puzzle('gully', 'Gully crossing', ['bruiser', 'trickster'], ['plank'], { hint: '🐻 Shove the log into the gully · 🐾 then build the planks on top.' });
       B.puzzle('wind', 'Wind gate', ['scout'], ['canopy'], { hint: '🪽 Glide through the three pink hoops in order between gusts, then ring the canopy bell.' });
       B.puzzle('fork', 'Fork Tree Honey Log', ['trickster', 'bruiser', 'scout'], ['hauled'], { hint: '🐾 Climb the Fork Tree vine and pull the lever · 🐻 shove the Honey Log into the basket · 🪽 ring the bell on top.' });
+      B.puzzle('windStar', 'Secret Starseed', ['bruiser', 'trickster'], ['windStar'], { req: false, hint: '🐻 Park Bear by the tall east rock, then boost your Trickster.' });
     },
   },
 
@@ -664,7 +673,8 @@ export function createZones(scene, ctx) {
       dress(holder, m, GLB.bridge, w, 0.6, L, 0);
       const ghost = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, L), new THREE.MeshBasicMaterial({ color: 0x7dc85a, transparent: true, opacity: 0.4 })); ghost.position.set(A.x + mx, g + 0.15, A.z + mz); ghost.rotation.y = yaw; group.add(ghost);
       const sd = addSolid({ type: 'box', x: A.x + mx, z: A.z + mz, hx: w / 2, hz: L / 2, yaw: -yaw, y0: g - 3, top: g + 0.4, kind: 'zone', off: true });
-      const c = { x0: A.x + Math.min(x1, x2) - w / 2, z0: A.z + Math.min(z1, z2) - 0.3, x1: A.x + Math.max(x1, x2) + w / 2, z1: A.z + Math.max(z1, z2) + 0.3, on: false, thin: !!o.thin };
+      const alongX = Math.abs(x2 - x1) > Math.abs(z2 - z1), px = alongX ? 0.3 : w / 2, pz = alongX ? w / 2 : 0.3; // pad across the plank, not along it
+      const c = { x0: A.x + Math.min(x1, x2) - px, z0: A.z + Math.min(z1, z2) - pz, x1: A.x + Math.max(x1, x2) + px, z1: A.z + Math.max(z1, z2) + pz, on: false, thin: !!o.thin };
       crossings.push(c);
       const ends = [[x1, z1], [x2, z2]].map(([ex, ez]) => ({ x: A.x + ex, z: A.z + ez }));
       for (const e of ends) props.push({ kind: 'plank', act: 'plank', cls: 'trickster', sig: s, x: e.x, y: gy(e.x - A.x, e.z - A.z), z: e.z, r: 2.6, need: o.need, needWhy: o.needWhy, label: o.label || 'Plank spot', holder, s: sd, cross: c, ghost, icon: badge('trickster', e.x, g + 2.0, e.z, 0.9) });
