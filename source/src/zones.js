@@ -51,7 +51,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'weathervane_hill', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
+export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'weathervane_hill', 'hornet_hedge', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 
 const MAPS = {
   // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
@@ -981,7 +981,7 @@ export function createZones(scene, ctx) {
     const cp = S.cp || { x: homeAt ? homeAt.x : A.x, y: gy((homeAt ? homeAt.x : A.x) - A.x, (homeAt ? homeAt.z : A.z) - A.z), z: homeAt ? homeAt.z : A.z };
     p.x = cp.x + 0.6; p.y = cp.y + 0.8; p.z = cp.z - 0.6; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; S.stuck = null;
     S.bonks++; S.safeT = t + 1.6; e.alertT = t; e.sus = 0;
-    if (S.acorn && S.acorn.by === ctx.cur()) acornBack();
+    if ((S.acorns || []).some(a => a.by === ctx.cur())) acornBack();
     fx(p.x, p.y + 0.6, p.z); ctx.audio?.sample?.('ui/error-bonk', 0.5);
     tst(`💫 Bonk! The ${e.name} spotted you — poof, back to the 🚩 flag`, 2400);
   }
@@ -1161,7 +1161,8 @@ export function createZones(scene, ctx) {
     acornChain(id, rings, o = {}) {
       const S = AA(), m = new THREE.Group(); m.add(bx(0.9, 0.8, 0.9, 0xffc93c, 0, 0, 0, 0.5), bx(1.0, 0.35, 1.0, 0x8b5a2b, 0, 0.45, 0), bx(0.15, 0.3, 0.15, 0x5a3b22, 0, 0.75, 0)); group.add(m);
       const R = rings.map((r, i) => { const w = L2W(r.x, r.z, r.h || 0); const rg = ringMesh(1.2, CLASSES[r.who].color); rg.position.set(w.x, w.y + 0.08, w.z); group.add(rg); const pr = { kind: 'ring', act: 'pick', cls: r.who, sig: `${id}:r${i}`, x: w.x, y: w.y, z: w.z, r: 2.2, re: true, label: r.home ? 'Acorn home' : 'Hand-off ring', icon: badge(r.who, w.x, w.y + 2.2, w.z, 0.85) }; props.push(pr); return { ...r, i, w, rg, pr }; });
-      S.acorn = { id, m, rings: R, at: o.start || 0, last: o.start || 0, by: null, dropT: -99, home: false, timed: !!o.timed };
+      const ch = { id, m, rings: R, at: o.start || 0, last: o.start || 0, by: null, dropT: -99, home: false, timed: !!o.timed };
+      (S.acorns = S.acorns || []).push(ch); if (!S.acorn) S.acorn = ch;
     },
     // ---- M5 Wasp smoke ----
     puffShroom(id, x, z, o = {}) { const w = L2W(x, z), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(0.4, 0.6, 0.4, 0xf3eee0, 0, 0.3, 0), bx(1.4, 0.5, 1.4, 0xb08aff, 0, 0.75, 0, 0.2), bx(0.3, 0.1, 0.3, 0xffffff, 0.3, 1.02, 0.2));
@@ -1224,12 +1225,12 @@ export function createZones(scene, ctx) {
       case 'crank': { S.wind *= -1; setSig('wind:up', S.wind > 0); setSig('wind:down', S.wind < 0); for (const V of S.vanes || []) V.rotation.y = S.wind > 0 ? 0 : Math.PI; tst(S.wind > 0 ? '🌬️ The wind turns — it blows UP the hill now' : '🌬️ The wind turns — it blows DOWN the hill now', 2000); return true; }
       case 'slide': { const to = pr._atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.3, z: to.z }, 0.7, 0.2); setSig(pr.sig); tst('🛷 Wheee! Belly-slide!', 1200); return true; }
       case 'stomp': { const until = t + pr.dur; S.smokes.push({ x: pr.x, z: pr.z, r: pr.smokeR, until, m: smokeCloud(pr.x, pr.y, pr.z, pr.smokeR) }); setSig(pr.sig); a2Burst(pr.x, pr.z, 6); tst('🍄 Poof! A calm smoke cloud — walk through it', 2000); return true; }
-      case 'pick': { const ac = S.acorn; const R = ac.rings.find(r => r.pr === pr); if (!R || ac.at !== R.i || ac.by) return true; ac.by = ctx.cur(); ac.at = -1; ac.last = R.i; tst('🌰 Got the Golden Acorn! Carry it to the next ring', 1600); return true; }
-      case 'drop': { const ac = S.acorn; const R = ac.rings.find(r => r.pr === pr); if (!R || ac.by !== ctx.cur()) return true; ac.by = null; ac.at = R.i; ac.dropT = t; setSig(R.pr.sig); if (R.home) { ac.home = true; setSig(ac.id + ':home'); tst('🌰 The Golden Acorn is home!', 2200); ctx.audio?.chime?.(); } else tst('⭕ Hand-off! The next friend picks it up', 1600); return true; }
+      case 'pick': { const ac = S.acorns.find(a => a.rings.some(r => r.pr === pr)); const R = ac && ac.rings.find(r => r.pr === pr); if (ac) S.acorn = ac; if (!R || ac.at !== R.i || ac.by) return true; ac.by = ctx.cur(); ac.at = -1; ac.last = R.i; tst('🌰 Got the Golden Acorn! Carry it to the next ring', 1600); return true; }
+      case 'drop': { const ac = S.acorns.find(a => a.rings.some(r => r.pr === pr)); const R = ac && ac.rings.find(r => r.pr === pr); if (!R || ac.by !== ctx.cur()) return true; ac.by = null; ac.at = R.i; ac.dropT = t; setSig(R.pr.sig); if (R.home) { ac.home = true; S.acorn = S.acorns.find(a => !a.home) || ac; setSig(ac.id + ':home'); tst('🌰 The Golden Acorn is home!', 2200); ctx.audio?.chime?.(); } else tst('⭕ Hand-off! The next friend picks it up', 1600); return true; }
     }
     return false;
   }
-  function acornBack() { const ac = AA().acorn; if (!ac) return; ac.by = null; ac.at = ac.last; tst('🌰 The acorn floats back to its ring', 1600); }
+  function acornBack() { const ac = (AA().acorns || []).find(a => a.by === ctx.cur()); if (!ac) return; ac.by = null; ac.at = ac.last; tst('🌰 The acorn floats back to its ring', 1600); }
   function smokeCloud(x, y, z, r) { const G = new THREE.Group(); G.position.set(x, y, z); for (let i = 0; i < 9; i++) { const a = i / 9 * 6.28, s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.32, 8, 6), new THREE.MeshLambertMaterial({ color: 0xf4f0ff, transparent: true, opacity: 0.45, depthWrite: false })); s.position.set(Math.cos(a) * r * 0.55, 0.8 + (i % 3) * 0.6, Math.sin(a) * r * 0.55); G.add(s); } group.add(G); return G; }
   function beamSeg(i, a, b) { const S = AA(); let m = S.beamPool[i]; if (!m) { m = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff27a, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })); m.renderOrder = 6; group.add(m); S.beamPool[i] = m; }
     const d = new THREE.Vector3(b.x - a.x, b.y - a.y, b.z - a.z), L = d.length(); m.visible = L > 0.05; m.scale.set(1, L, 1); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
@@ -1294,15 +1295,15 @@ export function createZones(scene, ctx) {
       else if (!pf.used && on && !held && S.wind < 0 && t - (pf.hintT || -9) > 4) { pf.hintT = t; say('🌬️ The wind blows down the hill — crank the vane so it blows UP', 2200); }
     }
     // ---- carry chain ----
-    if (S.acorn) {
-      const ac = S.acorn, carrier = ac.by && posOfId(ac.by);
+    for (const ac of S.acorns || []) {
+      const carrier = ac.by && posOfId(ac.by);
       if (carrier) ac.m.position.set(carrier.x, carrier.y + 2.0 + Math.sin(t * 4) * 0.08, carrier.z); else { const R = ac.rings[ac.at]; if (R) ac.m.position.set(R.w.x, R.w.y + 0.8 + Math.sin(t * 2) * 0.12, R.w.z); }
       ac.m.rotation.y += dt * 1.5;
       if (ac.timed && !ac.by && !ac.home && ac.at !== ac.last && t - ac.dropT > 5 && ac.dropT > 0) { ac.at = ac.last; ac.dropT = -99; tst('🌰 Too slow — the acorn floated back. Have the next friend waiting!', 2200); }
       for (const R of ac.rings) {
         const pr = R.pr, here = ac.at === R.i && !ac.by;
         if (here && !ac.home && !R.home) { pr.act = 'pick'; pr.cls = R.who; }
-        else if (ac.by && ac.at !== R.i && !(R.home && ac.home)) { pr.act = 'drop'; pr.cls = CLASS_OF[ac.by]; if (R.home && CLASS_OF[ac.by] !== 'bruiser') pr.act = null; }
+        else if (ac.by && ac.at !== R.i && !(R.home && ac.home)) { pr.act = 'drop'; pr.cls = CLASS_OF[ac.by]; if (R.home && CLASS_OF[ac.by] !== (R.homeBy || 'bruiser')) pr.act = null; }
         else pr.act = null;
         const glow = here && ac.timed && t - ac.dropT < 5 ? 0.6 + 0.4 * Math.sin(t * 10) : here ? 0.9 : ac.by ? 0.55 : 0.25;
         R.rg.userData.mats[0].opacity = glow; R.rg.userData.mats[1].opacity = glow * 0.3; pr.icon.visible = !!pr.act;

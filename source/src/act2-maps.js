@@ -291,6 +291,42 @@ export const MAPS2 = {
       B.puzzle('ridge', 'Windy ridge', ['scout', 'trickster', 'bruiser'], ['blC', 'lvC'], { hint: '🐾 Wind up · 🪽 ring the gust bell when the crow looks away · 🐻 + 🐾 raft to the ridge lever.', track: [['wind:up', 'trickster', 'crank the vane: wind up!', -5.5, 36.5], ['blC', 'scout', 'dodge the crow, ring the gust bell', 5.5, 41.5, 6], ['lvC', 'trickster', 'raft up to the ridge lever (Bear holds, then lets go)', -4.5, 43.5]] });
     },
   },
+  // ===== 13 · Hornet Hedge — M5 Carry Chain + E5 Wasp Nest =====
+  hornet_hedge: {
+    goal: 'Hornet Hedge', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 61], par: 480,
+    bounds: { x0: -9, x1: 9, z0: -8, z1: 65 },
+    crew: 'Bee · Raccoon · Bear',
+    banter: { start: ['🐻 Bear: The Golden Acorn is heavy — we pass it ring to ring.', '🐝 Bee: And stay out of the buzz zones! Bear’s mushrooms calm the wasps.'], end: ['🦝 Raccoon: Teamwork relay!', '🐻 Bear: The wasps didn’t even notice.'] },
+    build(B) {
+      B.home(0, -5); B.lane(-8, 8, -7, 64);
+      [[6.5, -4], [-6.5, 20], [6.5, 36]].forEach(([x, z], i) => B.tree(x, z, 0.85 + (i % 2) * 0.1));
+      // A · teach the chain: Bee fetches the acorn off the high shelf → hand-off ring → Bear carries it home
+      B.checkpoint(0, -1);
+      B.wall(-5, 4, 3, 3, 4.6, { look: 'stone' });
+      B.acornChain('acA', [{ x: -5, z: 4, h: 4.6, who: 'scout' }, { x: 1.5, z: 7, who: 'bruiser' }, { x: 5, z: 12.5, who: 'bruiser', home: true }]);
+      B.door('acA:home', 15, -8, 8);
+      // B · teach the wasps: their buzz zone covers the path. Bear stomps the puff-mushroom → 6 s of calm smoke
+      B.checkpoint(0, 17);
+      B.wall(-6, 25, 4, 6, 3, { look: 'hedge' }); B.wall(6, 25, 4, 6, 3, { look: 'hedge' });
+      B.wasps('wB', 0, 25, { r: 4.6 });
+      B.puffShroom('mB', -3.5, 19.5, { r: 6, dur: 7 });
+      B.lever('lvB', 3.5, 30.5, { label: 'Gate lever' });
+      B.door('lvB', 32, -8, 8);
+      // C · combo relay (timed: catch the acorn within 5 s): Raccoon climbs it up, Bee flies it high over the nest, Bear carries it home
+      B.checkpoint(0, 34);
+      B.wall(-5, 40.5, 3, 3, 4.4, { look: 'stone' });
+      B.vine(-5, 38.6, 0, -5, 39.4, 4.4, { label: 'Vine' });
+      B.wasps('wC', 0, 46, { r: 5.5 });
+      B.wall(-6.5, 46, 3, 3, 3, { look: 'hedge' }); B.wall(6.5, 46, 3, 3, 3, { look: 'hedge' });
+      B.puffShroom('mC', 2.5, 39.5, { r: 6, dur: 8 });
+      B.acornChain('acC', [{ x: -3, z: 36, who: 'trickster' }, { x: -5, z: 40.8, h: 4.4, who: 'scout' }, { x: 4.5, z: 52, who: 'bruiser' }, { x: 0, z: 56, who: 'bruiser', home: true }], { timed: true });
+      B.door('acC:home', 58, -8, 8);
+      B.checkpoint(0, 59.5);
+      B.puzzle('relay', 'Acorn relay', ['scout', 'bruiser'], ['acA:home'], { hint: '🪽 Grab the Golden Acorn off the high shelf, drop it in the hand-off ring · 🐻 carry it home.', track: [['acA:r1', 'scout', 'fetch the acorn from the high shelf, drop it in the ring', -5, 4, 4.6], ['acA:home', 'bruiser', 'pick up the acorn and carry it home', 1.5, 7]] });
+      B.puzzle('wasps', 'Buzz zone', ['bruiser', 'trickster'], ['lvB'], { hint: '🐻 Stomp the puff-mushroom · everyone walks through the calm smoke · 🐾 pull the lever.', track: [['smoke:mB', 'bruiser', 'stomp the puff-mushroom for calm smoke', -3.5, 19.5], ['lvB', 'trickster', 'hurry through the smoke, pull the lever', 3.5, 30.5]] });
+      B.puzzle('chain', 'Hornet relay', ['trickster', 'scout', 'bruiser'], ['acC:home'], { hint: '🐻 Smoke + walk to the far ring · 🐾 climb the acorn up the vine · 🪽 fly it high over the nest · 🐻 carry it home. Hand-offs must be caught within 5 s!', track: [['acC:r1', 'trickster', 'carry the acorn up the vine to the ledge ring', -3, 36], ['acC:r2', 'scout', 'fly the acorn high over the nest to the far ring', -5, 40.8, 4.4], ['acC:home', 'bruiser', 'catch it and carry it home', 4.5, 52]] });
+    },
+  },
   // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
   a2_lab: {
     goal: 'Lab', act2: true, key: 'puzzles', ceil: 9, exit: [0, 30], par: 0,
