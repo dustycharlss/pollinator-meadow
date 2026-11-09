@@ -51,7 +51,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'weathervane_hill', 'hornet_hedge', 'owl_wood', 'frost_hollow', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
+export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'weathervane_hill', 'hornet_hedge', 'owl_wood', 'frost_hollow', 'backyard_split', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 
 const MAPS = {
   // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
@@ -978,7 +978,8 @@ export function createZones(scene, ctx) {
   function bonk(e) {
     const S = AA(), p = ctx.getP(); if (tw) tw = null;
     fx(p.x, p.y + 0.6, p.z);
-    const cp = S.cp || { x: homeAt ? homeAt.x : A.x, y: gy((homeAt ? homeAt.x : A.x) - A.x, (homeAt ? homeAt.z : A.z) - A.z), z: homeAt ? homeAt.z : A.z };
+    const sAt = recipe.splitAt && recipe.splitAt[CLASS_OF[ctx.cur()]]; // split rooms: each friend goes back to a flag in THEIR room
+    const cp = (recipe.splitAt && ((S.cpBy || {})[ctx.cur()] || (sAt && { x: A.x + sAt[0], y: gy(sAt[0], sAt[1]), z: A.z + sAt[1] }))) || S.cp || { x: homeAt ? homeAt.x : A.x, y: gy((homeAt ? homeAt.x : A.x) - A.x, (homeAt ? homeAt.z : A.z) - A.z), z: homeAt ? homeAt.z : A.z };
     p.x = cp.x + 0.6; p.y = cp.y + 0.8; p.z = cp.z - 0.6; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; S.stuck = null;
     S.bonks++; S.safeT = t + 1.6; e.alertT = t; e.sus = 0;
     if ((S.acorns || []).some(a => a.by === ctx.cur())) acornBack();
@@ -1242,7 +1243,7 @@ export function createZones(scene, ctx) {
     // movers (parked-body tweens: raft launches)
     for (let i = S.movers.length - 1; i >= 0; i--) { const mv = S.movers[i]; mv.t += dt; const k = Math.min(1, mv.t / mv.d), e = k * k * (3 - 2 * k); const q = mv.q; q.x = mv.a.x + (mv.b.x - mv.a.x) * e; q.z = mv.a.z + (mv.b.z - mv.a.z) * e; q.y = mv.a.y + (mv.b.y - mv.a.y) * e + Math.sin(k * Math.PI) * mv.arc; q.vx = q.vz = q.vy = 0; q._safe = { x: q.x, z: q.z }; if (k >= 1) { S.movers.splice(i, 1); mv.done?.(); } }
     // checkpoints
-    for (const cp of S.cps) { if (flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3 && S.cp !== cp) { S.cp = cp; if (!cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
+    for (const cp of S.cps) { if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; if (flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3 && S.cp !== cp) { S.cp = cp; if (!cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
     // stuck in a web
     if (S.stuck) { if (t > S.stuck.until || S.stuck.who !== cur) S.stuck = null; else { p.x = S.stuck.x; p.z = S.stuck.z; p.y = S.stuck.y; p.vx = p.vz = p.vy = 0; } }
     // ---- light & shadow ----

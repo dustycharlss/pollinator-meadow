@@ -407,6 +407,44 @@ export const MAPS2 = {
       B.puzzle('fox', 'Fox hollow', ['scout', 'bruiser'], ['iceC', 'blC'], { hint: '❄️ Winter: 🐻 shove the log — it slides across the ice into the slot · 🪽 sneak past the fox (hollow log, or let the snow hide your scent) and ring the post bell.', track: [['iceC', 'bruiser', 'winter: shove the log across the ice', -5, 44], ['blC', 'scout', 'dodge the fox’s nose, ring the fox-post bell', 5, 54, 2.6]] });
     },
   },
+  // ===== 16 · Backyard Split — M8 Two-Room Split + E8 Garden Hazards (sprinkler, mower) =====
+  backyard_split: {
+    goal: 'Backyard Split', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 58], par: 480,
+    bounds: { x0: -9, x1: 9, z0: -8, z1: 62 },
+    crew: 'Bee · Raccoon · Bear',
+    banter: { start: ['🦝 Raccoon: A hedge splits the yard! I’m on the left…', '🐻 Bear: …Bee and I are on the right. Switches on one side open gates on the other!'], end: ['🐝 Bee: Back together again!', '🦝 Raccoon: I timed that mower perfectly.'] },
+    build(B) {
+      B.home(0, -5); B.lane(-8, 8, -7, 61);
+      B.split({ trickster: [-4, -1], scout: [3, -1, 1], bruiser: [5, -1] });
+      // the dividing hedge (low to see over, invisible tall cap so nobody hops it)
+      B.wall(0, 18.25, 0.6, 51.5, 2.4, { look: 'hedge' }); B.wall(0, 18.25, 0.6, 51.5, 30, { bot: 2.3, hidden: true }).s.off = false;
+      const gate = (s, x, z) => { B.gate(s, x, z, 8, 0.6, 2.8, { latch: true, label: 'Gate' }); B.wall(x, z, 8, 0.6, 30, { bot: 2.7, hidden: true }).s.off = false; };
+      B.checkpoint(-4, 1.5); B.checkpoint(4, 1.5);
+      // 1 · cross-room switch: Raccoon’s lever (left) opens the right gate
+      B.lever('lvL1', -4, 7, { label: 'Garden lever' });
+      gate('lvL1', 4, 10);
+      // 2 · sprinkler + plate pause: Raccoon holds the tap plate (left) → the sprinkler (right) stops while Bear crosses to smash the fence
+      gate('crR', -4, 12);
+      B.plate('plL', -4, 9.5, { label: 'Tap plate' });
+      B.checkpoint(4, 12.5);
+      B.sprinkler('skR', 7.2, 19, { yaw: -Math.PI / 2, r: 7, speed: 0.7, sweep: 1.1, pause: 'plL' });
+      B.cracked('crR', 4, 26, 7.4, 0.8, 2.2, { label: 'Old fence' });
+      // 3 · mower timer: when the mower rests, Raccoon dashes across its lane to the shed lever → opens the right gate for Bee
+      B.checkpoint(-4, 14.5);
+      B.mower('mwL', -7.4, -0.6, 22, { period: 7, dur: 2.6 });
+      B.lever('lvL3', -4, 31, { label: 'Shed lever' });
+      gate('lvL3', 4, 30);
+      B.checkpoint(4, 28.5); B.checkpoint(-4, 33);
+      // 4 · back together: Bee rings the birdhouse bell (right) → the last gate opens for everyone
+      B.wall(4, 38, 0.6, 0.6, 2.6, { look: 'bark' }); B.bell('blR', 4, 38, 3.2, { label: 'Birdhouse bell' });
+      B.door('blR', 50, -8, 8);
+      B.checkpoint(0, 53);
+      B.puzzle('gate1', 'Cross-yard gate', ['trickster'], ['lvL1'], { hint: '🐾 Pull the lever on the left — the gate opens on the RIGHT side!', track: [['lvL1', 'trickster', 'pull the lever (it opens the gate in the other room)', -4, 7]] });
+      B.puzzle('tap', 'Sprinkler tap', ['trickster', 'bruiser'], ['crR'], { hint: '🐾 Stand on the tap plate (left) to stop the sprinkler · swap to 🐻 and smash the old fence (right).', track: [['plL', 'trickster', 'stand on the tap plate to stop the sprinkler', -4, 9.5], ['crR', 'bruiser', 'cross while it’s off, smash the old fence', 4, 26]] });
+      B.puzzle('mower', 'Mower dash', ['trickster'], ['lvL3'], { hint: '🐾 Wait for the mower to stop (it flashes ? before it goes), then dash across and pull the shed lever.', track: [['lvL3', 'trickster', 'time the mower, dash across, pull the shed lever', -4, 31]] });
+      B.puzzle('home', 'Back together', ['scout'], ['blR'], { hint: '🪽 Fly through the open gate and ring the birdhouse bell.', track: [['blR', 'scout', 'ring the birdhouse bell', 4, 38, 3.2]] });
+    },
+  },
   // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
   a2_lab: {
     goal: 'Lab', act2: true, key: 'puzzles', ceil: 9, exit: [0, 30], par: 0,
