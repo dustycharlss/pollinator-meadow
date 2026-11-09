@@ -543,7 +543,7 @@ function stepPlayer(dt, t) {
   if (playing) coop.tryPush(p, sp, dt, t);
   phys.resolve(p, col.r, col.h, 0.55);
   // water is a solid edge for walkers on the ground: bump back (jump or fly over it instead)
-  if (!fly && p.grounded && !inWater(wOx, wOz, col.r * 0.5) && inWater(p.x, p.z, col.r * 0.5)) { p.x = wOx; p.z = wOz; p.vx *= -0.35; p.vz *= -0.35; if (t - (p.wBumpT || 0) > 1.2) { p.wBumpT = t; audio.blip(1); fx.burst(p.x, p.y + 0.3, p.z, 6, 2); if (t - msgT > 4) { msgT = t; toast('💧 Water! Jump over it', 1500); } } }
+  if (!fly && p.grounded && !inWater(wOx, wOz, col.r * 0.5) && inWater(p.x, p.z, col.r * 0.5) && !zones?.crossAt?.(p.x, p.z)) { p.x = wOx; p.z = wOz; p.vx *= -0.35; p.vz *= -0.35; if (t - (p.wBumpT || 0) > 1.2) { p.wBumpT = t; audio.blip(1); fx.burst(p.x, p.y + 0.3, p.z, 6, 2); if (t - msgT > 4) { msgT = t; toast('💧 Water! Jump over it', 1500); } } }
   if (!(fo && fo.lockYaw) && mag > 0.1 && p.speed > 0.6) { const want = Math.atan2(p.vx, p.vz); let d = want - p.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); p.yaw += d * (1 - Math.exp(-14 * dt)); }
   // --- vertical
   const wasG = p.grounded, oldY = p.y, vyBefore = p.vy;

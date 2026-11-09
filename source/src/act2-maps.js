@@ -115,6 +115,55 @@ export const MAPS2 = {
       ];
     },
   },
+  // ===== 9 · Sunbeam Grove — M1 Light & Shadow + E1 Sleepy Badger =====
+  sunbeam_grove: {
+    goal: 'Sunbeam Grove', act2: true, key: 'puzzles', ceil: 8.5, exit: [0, 61], par: 420,
+    bounds: { x0: -9, x1: 9, z0: -8, z1: 65 },
+    crew: 'Bee · Raccoon · Bear',
+    banter: { start: ['🐝 Bee: Sunbeams make the ghost steps solid!', '🦝 Raccoon: And a sleepy badger… tiptoe with 🐾 Sneak.'], end: ['🐻 Bear: My shadow made a bridge!', '🐝 Bee: And nobody woke the badgers.'] },
+    build(B) {
+      B.home(0, -5); B.lane(-8, 8, -7, 64);
+      [[-6.5, -4], [6.5, 8], [-6.5, 18], [6.5, 40], [-6.5, 52]].forEach(([x, z], i) => B.tree(x, z, 0.8 + (i % 2) * 0.15));
+      // A · teach: the mirror bounces the sunbeam onto a ghost step → Raccoon climbs to the lever
+      B.checkpoint(0, -1);
+      B.sunlamp('sunA', -6, 3, 3, { to: 'mA' });
+      B.mirror('mA', -2, 6, 1.6, [{ to: [-2, 11.5, 0.3] }, { lights: 'gA', to: [4, 8.5, 2.6] }], { label: 'Sun mirror' });
+      B.ghost('gA', 4, 8.5, 3, 3, 2.4);
+      B.wall(4, 12, 4, 3.4, 4.4, { look: 'stone' });
+      B.lever('lvA', 4, 12.4, { base: 4.4, label: 'Ledge lever' });
+      B.door('lvA', 14.5, -8, 8);
+      // B · teach the badger: a narrow hedge path, sneak behind him or throw an acorn to lure him away
+      B.checkpoint(0, 16.5);
+      B.wall(-6, 22, 4, 5, 2.2, { look: 'hedge' }); B.wall(6, 22, 4, 5, 2.2, { look: 'hedge' });
+      B.badger('bdB', 0.8, 22, { yaw: Math.PI / 2, lure: [-6.5, 26.5], lurePt: [-6, 26] });
+      B.lever('lvB', 5.5, 26.5, { label: 'Gate lever' });
+      B.door('lvB', 28.5, -8, 8);
+      // C · Bear's shadow: park Bear in the sunbeam and his shadow turns the shadow-bridge solid
+      B.checkpoint(0, 30);
+      B.sunlamp('sunC', -6.5, 31, 3, { to: [-3, 31.5, 0.6], shade: [-3, 31.5, 1.7, 'gC'] });
+      B.marker('bruiser', -3, 31.5, 0, 'Stand in the sunbeam'); B.tag('spotC');
+      B.pond('stC', -8, 33.5, 8, 37.5, { level: 'mid' });
+      B.ghost('gC', 3, 35.5, 2.6, 5, 0.45, { shadow: true, cross: true, bot: -0.3 });
+      B.lever('lvC', 5, 40, { label: 'Bridge lever' });
+      B.bridgeOn('lvC', -2, 33, -2, 38, 2.6);
+      B.door('lvC', 43, -8, 8, { x: -2 });
+      // D · combo: shutter lever + two mirrors aim a beam on the far gate's sun-lock; badger + gravel on the way
+      B.checkpoint(-5, 45);
+      B.lever('shD', -6, 47.5, { label: 'Shutter lever' });
+      B.sunlamp('sunD', -6, 50.5, 3, { need: 'shD', to: 'mD1' });
+      B.mirror('mD1', -1, 50.5, 1.6, [{ to: [-1, 46, 0.3] }, { to: 'mD2' }], { label: 'Sun mirror' });
+      B.mirror('mD2', 4.5, 54, 1.6, [{ to: [7, 50, 0.3] }, { lights: 'gD', to: [2, 57.4, 1.6] }], { label: 'Sun mirror' });
+      B.ghost('gD', 2, 57.4, 2.4, 0.5, 2.6, { bot: 0.9 });
+      B.gravel(-1, 52.5, 7.5, 56);
+      B.badger('bdD', 1, 54, { yaw: -Math.PI / 2, ring: 5, lure: [7, 47], lurePt: [6.5, 47.5] });
+      B.door('lit:gD', 58, -8, 8);
+      B.checkpoint(0, 59.5);
+      B.puzzle('mirror', 'Sun step', ['scout', 'trickster'], ['lvA'], { hint: '🪽 Turn the mirror so the sunbeam hits the ghost step · 🐾 climb up and pull the lever.', track: [['lit:gA', 'scout', 'turn the sun mirror onto the ghost step', -2, 6, 1.6], ['lvA', 'trickster', 'hop up the sun step and pull the lever', 4, 12.4, 4.4]] });
+      B.puzzle('badger', 'Sleepy Badger', ['trickster'], ['lvB'], { hint: '🐾 Sneak behind the badger (or throw an acorn at the far stump to lure him) and pull the gate lever.', track: [['lvB', 'trickster', 'sneak 🐾 past the badger, pull the lever', 5.5, 26.5]] });
+      B.puzzle('shadow', 'Shadow bridge', ['bruiser', 'trickster'], ['lvC'], { hint: '🐻 Stand Bear in the sunbeam · 🐾 cross the shadow bridge and pull the lever.', track: [['shade:gC', 'bruiser', 'stand in the sunbeam to cast a shadow bridge', -3, 31.5], ['lvC', 'trickster', 'cross the shadow bridge, pull the lever', 5, 40]] });
+      B.puzzle('beam', 'Sun-lock gate', ['trickster', 'scout'], ['lit:gD'], { hint: '🐾 Open the shutter · 🪽 aim both mirrors at the gate’s sun-lock. Gravel is noisy — lure the badger first!', track: [['shD', 'trickster', 'open the shutter lever', -6, 47.5], ['lit:gD', 'scout', 'aim both mirrors at the gate’s sun-lock', -1, 50.5, 1.6]] });
+    },
+  },
   // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
   a2_lab: {
     goal: 'Lab', act2: true, key: 'puzzles', ceil: 9, exit: [0, 30], par: 0,

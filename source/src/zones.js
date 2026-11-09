@@ -51,7 +51,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['trailhead_trials', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
+export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 
 const MAPS = {
   // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
@@ -1111,7 +1111,9 @@ export function createZones(scene, ctx) {
     ghost(id, x, z, w, d, top, o = {}) {
       const r = this.wall(x, z, w, d, top, { bot: o.bot ?? top - 0.6, c: o.shadow ? 0x6a5a9a : 0xfff0a0 }); r.s.off = true;
       r.m.material = new THREE.MeshLambertMaterial({ color: o.shadow ? 0x8a7ad0 : 0xfff3b0, transparent: true, opacity: 0.25, emissive: o.shadow ? 0x2a2050 : 0x806a20, emissiveIntensity: 0.3, depthWrite: false });
-      AA().ghosts.push({ id, r, shadow: !!o.shadow, on: false, sig: (o.shadow ? 'shade:' : 'lit:') + id });
+      const gh = { id, r, shadow: !!o.shadow, on: false, sig: (o.shadow ? 'shade:' : 'lit:') + id };
+      if (o.cross) { gh.cr = { x0: A.x + x - w / 2, z0: A.z + z - d / 2, x1: A.x + x + w / 2, z1: A.z + z + d / 2, on: false, thin: false }; crossings.push(gh.cr); }
+      AA().ghosts.push(gh);
     },
     // ---- M2 Water Level ----
     pond(id, x0, z0, x1, z1, o = {}) {
@@ -1257,7 +1259,7 @@ export function createZones(scene, ctx) {
         }
       }
       for (let i = n; i < S.beamPool.length; i++) S.beamPool[i].visible = false;
-      for (const g of S.ghosts) { const want = g.shadow ? shade.has(g.id) : lit.has(g.id); if (want !== g.on) { g.on = want; g.r.s.off = !want; g.r.m.material.opacity = want ? 0.95 : 0.25; g.r.m.material.depthWrite = want; g.r.m.material.emissiveIntensity = want ? 0.6 : 0.3; if (want) { fx(g.r.m.position.x, g.r.m.position.y, g.r.m.position.z); tst(g.shadow ? '🌑 Bear\'s shadow made the bridge solid!' : '✨ The sunbeam made the ghost step solid!', 1500); } } setSig(g.sig, want); }
+      for (const g of S.ghosts) { const want = g.shadow ? shade.has(g.id) : lit.has(g.id); if (want !== g.on) { g.on = want; g.r.s.off = !want; if (g.cr) g.cr.on = want; g.r.m.material.opacity = want ? 0.95 : 0.25; g.r.m.material.depthWrite = want; g.r.m.material.emissiveIntensity = want ? 0.6 : 0.3; if (want) { fx(g.r.m.position.x, g.r.m.position.y, g.r.m.position.z); tst(g.shadow ? '🌑 Bear\'s shadow made the bridge solid!' : '✨ The sunbeam made the ghost step solid!', 1500); } } setSig(g.sig, want); }
     }
     // ---- water level: logs + turtle naps handled in enemies ----
     for (const L of S.logs) {
@@ -2041,6 +2043,7 @@ export function createZones(scene, ctx) {
   function status() { return { id, exit: exitAt ? { x: exitAt.x - A.x, z: exitAt.z - A.z, open: exitOpen, n: crewAtExit() } : null, starGot, sig: { ...sig }, puzzles: puzzles.map(p => ({ id: p.id, done: p.done, req: p.req })), keyDone, picked, keyDew, props: props.filter(p => p.act).map(p => ({ act: p.act, cls: p.cls, sig: p.sig, label: p.label, x: p.x, y: p.y, z: p.z, done: !!p.done, b: p.b || null, from: p.from || null })), plates: plates.map(p => ({ sig: p.sig, x: p.x, y: p.y, z: p.z, heavy: p.heavy, holder: p.holder })), nodes: nodes.map(n => ({ kind: n.kind, x: n.m.position.x, y: n.m.position.y, z: n.m.position.z, done: n.done, sig: n.sig })), picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, show: k.show || null, who: k.who || null, night: k.nightOnly })), hoops: hoops.map(h => ({ x: h.m.position.x, y: h.m.position.y, z: h.m.position.z, got: h.got })), A: { ...A }, baseY }; }
   return {
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
+    crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
     act, wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status,
     skipKid() { if (!recipe || !recipe.kid || !recipe.act2 || keyDone) return false; complete('Trail skipped'); return true; },
     toggleSneak(v) { if (!a2) return false; sneak = v == null ? !sneak : !!v; ctx.onSneak?.(sneak); tst(sneak ? '🐾 Sneaking: slow, quiet paws' : '🏃 Walking normally', 1200); return sneak; }, sneakOn: () => !!(a2 && sneak), isAct2: () => !!a2,
