@@ -48,7 +48,7 @@ export function createPhys(solids, heightAt) {
     resolve(p, rad, h, step = 0.55) {
       let hit = false;
       for (let pass = 0; pass < 2; pass++) near(p.x, p.z, s => {
-        if (p.y + step >= s.top || p.y + h <= s.y0) return;
+        if (s.owner === p || p.y + step >= s.top || p.y + h <= s.y0) return;
         const f = foot(s, p.x, p.z);
         if (f.d < rad) { const m = rad - f.d; p.x += f.nx * m; p.z += f.nz * m; hit = true; }
       });

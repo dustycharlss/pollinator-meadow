@@ -24,11 +24,12 @@ import { createOnboarding } from './onboarding.js';
 import { createItems } from './items.js';
 import { createCosmetics, EMOTES } from './cosmetics.js';
 import { createValley, PATCHES, HEAL_PACKUP } from './valley.js';
-import { createZones } from './zones.js';
+import { createZones, READY_LEVELS } from './zones.js';
 // Adventure refocus (Nov 9): build mode, species buildings, resource economy, Command wheel/helper AI,
 // heal meter + Pack Up gate are cut. Levels end when their goal is met. Petals are the score.
 export const ADVENTURE = true;
 document.body.classList.toggle('adv', ADVENTURE);
+import { CLASSES, CLASS_OF, CLASS_ORDER, classOf, badgeImg } from './classes.js';
 import { createCrew, STARTER_CREW, SKILLS, crewTags, priceForCrew, isFlyer, crewValid } from './crew.js';
 import { createContests } from './contests.js';
 import { createPackUp } from './packup.js';
@@ -493,7 +494,8 @@ function stepPlayer(dt, t) {
   else if (input.actPressed) {
     input.actPressed = false; pressed = true;
     // Rival tidy-up taps only while a dismantle is already underway (start it from Interact wheel)
-    if (playing && tiers && tiers.act(t)) { }
+    if (playing && valleySession && zones && zones.act()) { }
+    else if (playing && tiers && tiers.act(t)) { }
     else if (playing && rivals && rivals.dismantle) { rivals.tapDismantle(); }
     else if (playing && coop.onAction(p, sp, cur, t)) { if (sp.ground) { p.digT = 0.45; p.digCd = 0.35 * AB.fx.digCd; } }
     else if (sp.ground) { if (p.digCd <= 0) { p.digT = 0.45; p.digCd = 0.35 * AB.fx.digCd; gather(p, sp, t, AB.dig, true); } }
@@ -615,6 +617,7 @@ function stepParked(id, dt, t) {
 }
 
 function gather(p, sp, t, reach, dig, extra) {
+  if (ADVENTURE) return; // adventure refocus: no flower gathering economy (Petals are level pickups)
   if (tiers && tiers.carrying && !extra) return;
   const B = world.blooms, bit = 1 << POLS.indexOf(polOf(cur)), AB = abOf(cur); let got = 0, sawFull = false, near = 0; if (AB.autodig) dig = true;
   const cy = sp.ground ? p.y : p.y + 0.9;
@@ -638,6 +641,7 @@ function gather(p, sp, t, reach, dig, extra) {
   else if (dig && !near && t - msgT > 1.2) { msgT = t; toast('🔎 Nothing buried here — follow the sparkles', 1600); }
 }
 function nestCheck(p, sp, t, force) {
+  if (ADVENTURE) { p.carried = 0; return; }
   const n = nests[cur]; const d = Math.hypot(p.x - n.x, p.z - n.z);
   if ((force || (d < 9 && p.y < n.y + 30)) && p.carried > 0) {
     const amt = p.carried, was = n.stage; p.carried = 0; save.gear[cur].bank += amt; const up = n.set(n.units + amt, true); save.units[cur] = n.units; persist();
@@ -844,7 +848,8 @@ function renderValleyMap() {
   }
   const def = vSelPatch ? valley.def(vSelPatch) : null;
   const st = vSelPatch ? valley.get(vSelPatch) : null;
-  const gate = def ? valley.canStart(def.id, crew.tags()) : { ok: false, why: 'Pick a patch' };
+  let gate = def ? valley.canStart(def.id, crew.tags()) : { ok: false, why: 'Pick a patch' };
+  if (ADVENTURE && def && !READY_LEVELS.has(def.id)) gate = { ok: false, why: 'Coming soon!' };
   const stars = def && def.neighbor && def.neighbor !== 'all'
     ? ' · ' + '★'.repeat(Math.floor(valley.friendship(def.neighbor))) + '☆'.repeat(3 - Math.floor(valley.friendship(def.neighbor)))
     : '';
@@ -865,17 +870,20 @@ function openTeamPick(after) {
 }
 function renderTeamPick() {
   const un = new Set(teamUnlocked());
-  $('tpSlots').innerHTML = [0, 1, 2].map(i => { const id = tpSel[i]; return id ? `<button class="tps on" data-r="${i}">${SPECIES[id].emoji}<small>${SPECIES[id].name}</small><i>✕</i></button>` : `<button class="tps" disabled>＋<small>slot ${i + 1}</small></button>`; }).join('');
-  $('tpList').innerHTML = SPECIES_ORDER.map(id => { const sp = SPECIES[id], on = tpSel.includes(id), lk = !un.has(id), sk = SKILLS[id];
-    return `<button class="tpc ${on ? 'on' : ''} ${lk ? 'lk' : ''}" data-s="${id}" ${lk ? 'disabled' : ''}><span>${lk ? '🔒' : sp.emoji}</span><b>${sp.name}</b><small>${isFlyer(id) ? '🪽 flyer' : '🐾 walker'}${id === 'robin' ? ' + walker' : ''}${sk ? ' · ' + sk.name : ''}</small></button>`; }).join('');
+  // Three-class crew: one slot per class (Scout · Trickster · Bruiser)
+  tpSel = CLASS_ORDER.map(c => tpSel.find(id => CLASS_OF[id] === c)).filter(Boolean);
+  $('tpSlots').innerHTML = CLASS_ORDER.map((c, i) => { const C = CLASSES[c], id = tpSel.find(q => CLASS_OF[q] === c); return id ? `<button class="tps on" data-s="${id}" style="border-color:${C.color}">${SPECIES[id].emoji}<small>${SPECIES[id].name}</small><img class="tpsB" src="${C.badge}" alt=""><i>✕</i></button>` : `<button class="tps" disabled style="border-color:${C.color}"><img class="tpsB0" src="${C.badge}" alt=""><small>${C.name}</small></button>`; }).join('');
+  $('tpList').innerHTML = CLASS_ORDER.map(c => { const C = CLASSES[c];
+    return `<div class="tpClass" style="--cc:${C.color}"><div class="tpcH"><img src="${C.badge}" alt=""><b>${C.name}</b><small>${C.tag}</small></div><div class="tpcRow">` + SPECIES_ORDER.filter(id => CLASS_OF[id] === c).map(id => { const sp = SPECIES[id], on = tpSel.includes(id), lk = !un.has(id), sk = SKILLS[id];
+      return `<button class="tpc ${on ? 'on' : ''} ${lk ? 'lk' : ''}" data-s="${id}" ${lk ? 'disabled' : ''}><span>${lk ? '🔒' : sp.emoji}</span><b>${sp.name}</b><small>${sk ? sk.name : ''}</small></button>`; }).join('') + '</div></div>'; }).join('');
   const v = crewValid(tpSel);
-  $('tpWhy').textContent = v.ok ? '✓ Great team! Tap a portrait in-level to swap instantly.' : (tpSel.length < 3 ? `Pick ${3 - tpSel.length} more · need a flyer and a walker` : v.why);
+  $('tpWhy').textContent = v.ok ? '✓ One of each class! In a level, tap a portrait to swap — friends you leave stay put.' : `Pick one of each: ${CLASS_ORDER.filter(c => !tpSel.some(id => CLASS_OF[id] === c)).map(c => CLASSES[c].em + ' ' + CLASSES[c].name).join(' · ')}`;
   $('tpWhy').classList.toggle('bad', !v.ok && tpSel.length === 3);
   $('tpGo').disabled = !v.ok;
 }
 $('tpList').addEventListener('click', e => { const c = e.target.closest('.tpc'); if (!c || c.disabled) return; const id = c.dataset.s; audio.blip(2);
-  const i = tpSel.indexOf(id); if (i >= 0) tpSel.splice(i, 1); else if (tpSel.length < 3) tpSel.push(id); else { tpSel[2] = id; } renderTeamPick(); });
-$('tpSlots').addEventListener('click', e => { const c = e.target.closest('.tps.on'); if (!c) return; tpSel.splice(+c.dataset.r, 1); audio.blip(1); renderTeamPick(); });
+  const i = tpSel.indexOf(id); if (i >= 0) tpSel.splice(i, 1); else { tpSel = tpSel.filter(q => CLASS_OF[q] !== CLASS_OF[id]); tpSel.push(id); } renderTeamPick(); });
+$('tpSlots').addEventListener('click', e => { const c = e.target.closest('.tps.on'); if (!c) return; tpSel = tpSel.filter(q => q !== c.dataset.s); audio.blip(1); renderTeamPick(); });
 $('tpDef').onclick = () => { tpSel = [...STARTER_CREW]; renderTeamPick(); };
 $('tpBack').onclick = () => closeOv('teamPick');
 $('tpGo').onclick = () => {
@@ -891,9 +899,12 @@ $('tpGo').onclick = () => {
   const f = tpAfter; tpAfter = null; f && f();
 };
 // teammates (crew minus active) trail the active animal loosely
-function followerIds() { if (!crew || !playing || rts.on) return []; return crew.get().filter(id => id !== cur && P[id]); }
+// Three-class valley levels: crew you swap away from STAY where you left them (they keep holding plates).
+function crewOthers() { if (!crew) return []; return crew.get().filter(id => id !== cur && P[id]); }
+function followerIds() { if (!crew || !playing || rts.on || (valleySession && classStay())) return []; return crewOthers(); }
+function classStay() { return true; }
 function followSlot(id) { const f = followerIds(), k = f.indexOf(id); return k < 0 ? null : { side: k ? 1 : -1, back: 3.2 + k * 1.6 }; }
-function placeFollowers(snap) { const L = P[cur]; if (!L) return; for (const id of followerIds()) { const s = followSlot(id), p = P[id]; const tx = L.x - Math.sin(L.yaw) * s.back + Math.cos(L.yaw) * s.side * 2.4, tz = L.z - Math.cos(L.yaw) * s.back - Math.sin(L.yaw) * s.side * 2.4; if (snap || Math.hypot(p.x - L.x, p.z - L.z) > 45) { p.x = tx; p.z = tz; p.y = Math.max(heightAt(tx, tz), L.y) + 0.5; p.vy = 0; p.grounded = false; p.goto = null; } } }
+function placeFollowers(snap) { const L = P[cur]; if (!L) return; const F = snap ? crewOthers() : followerIds(); for (const id of F) { const k = F.indexOf(id), s = { side: k ? 1 : -1, back: 3.2 + k * 1.6 }, p = P[id]; const tx = L.x - Math.sin(L.yaw) * s.back + Math.cos(L.yaw) * s.side * 2.4, tz = L.z - Math.cos(L.yaw) * s.back - Math.sin(L.yaw) * s.side * 2.4; if (snap || Math.hypot(p.x - L.x, p.z - L.z) > 45) { p.x = tx; p.z = tz; p.y = Math.max(heightAt(tx, tz), L.y) + 0.5; p.vy = 0; p.grounded = false; p.goto = null; } } }
 function startValleyPatch(patchId) {
   if (!valley || !crew) return;
   const gate = valley.canStart(patchId, crew.tags());
@@ -961,14 +972,16 @@ function renderCrewDock() {
     const sp = SPECIES[id], sk = SKILLS[id];
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = i === crew.active ? 'on' : '';
-    b.innerHTML = `${sp.emoji}<small>${i + 1}</small>`;
-    b.title = `${sp.name} — ${sk ? sk.name : ''}`;
+    const cl = classOf(id);
+    b.className = (i === crew.active ? 'on ' : '') + 'cls-' + cl.id;
+    b.style.borderColor = cl.color;
+    b.innerHTML = `${sp.emoji}<small>${i + 1}</small>${badgeImg(id, 'dockB')}`;
+    b.title = `${sp.name} — ${cl.name}: ${cl.tag}`;
     let holdT = 0, holdTimer = null;
     b.onpointerdown = e => {
       e.preventDefault();
       holdT = performance.now();
-      holdTimer = setTimeout(() => { toast(`${sp.emoji} ${sk ? sk.name : sp.name}`, 1800); holdTimer = null; }, 260);
+      holdTimer = setTimeout(() => { toast(`${sp.emoji} ${sp.name} · ${classOf(id).em} ${classOf(id).name}: ${classOf(id).tag}`, 3000); holdTimer = null; }, 260);
     };
     b.onpointerup = e => {
       e.preventDefault();
@@ -1626,7 +1639,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
+  zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${SPECIES[id]?.emoji || ''} ${SPECIES[id]?.name || id}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
   helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
@@ -1937,7 +1950,7 @@ function wheelOpts() {
       { icon: '📋', ik: 'animals', label: 'Animals', on: () => openHub('animals') },
     ]; } },
     int: { el: 'bInt', enabled: () => playing && !paused, tap: () => interactTap(), why: whyToast, options: () => {
-      const p = P[cur], opts = [];
+      const p = P[cur], opts = valleySession && zones ? zones.wheelOpts() : [];
       const home = nearHome();
       // Home context
       if (ADVENTURE) { if (home && p.carried > 0) opts.push({ icon: '🏠', ik: 'return-home', label: 'Deliver', on: () => depositNow() }); }
@@ -1967,6 +1980,7 @@ function wheelOpts() {
 }
 function interactTap() {
   const p = P[cur];
+  if (valleySession && zones && zones.act()) return;
   if (packup && packup.active) { packup.tap(p); return; }
   if (nearHome() && p.carried > 0) { depositNow(); return; }
   if (nearHome() && !ADVENTURE) return openShop();

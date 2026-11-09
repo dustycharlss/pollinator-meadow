@@ -9,14 +9,14 @@ export const UNLOCK_ALL_LEVELS = true;
 export const PACKUP_REFUND = 0.5;
 
 export const PATCHES = [
-  { id: 'sunny_hollow', name: 'Sunny Hollow', emoji: '☀️', need: ['flyer', 'walker'], neighbor: 'bee', contest: null, blurb: 'Warm clearing by the Home Stump. Find Petals and a secret Starseed.' },
-  { id: 'creek_bend', name: 'Creek Bend', emoji: '🌊', need: ['bridge', 'flyer'], neighbor: 'robin', contest: null, blurb: 'A U-shaped creek with stepped banks. Cross the water and grab Petals.' },
-  { id: 'moon_meadow', name: 'Moon Meadow', emoji: '🌙', need: ['night'], neighbor: 'moth', contest: null, blurb: 'Climb the Hollow Oak. Night falls every 3 minutes.' },
-  { id: 'log_jam', name: 'Log Jam', emoji: '🪵', need: ['bear', 'pollinate'], neighbor: 'bear', contest: null, blurb: 'Canyon log jams and a tall tower to climb.' },
-  { id: 'picnic_lawn', name: 'Picnic Lawn', emoji: '🧺', need: ['raccoon', 'robin'], neighbor: 'raccoon', contest: null, blurb: 'A giant picnic blanket beside a lemonade stream.' },
-  { id: 'cliff_orchard', name: 'Cliff Orchard', emoji: '🍎', need: ['bat', 'hummingbird'], neighbor: 'bat', contest: null, blurb: 'Four cliff ledges, a boulder stair and a waterfall.' },
-  { id: 'windy_rise', name: 'Windy Rise', emoji: '💨', need: ['butterfly', 'bumblebee'], neighbor: 'butterfly', contest: null, blurb: 'Windy terraces and canopy sky roads.' },
-  { id: 'festival_glade', name: 'Festival Glade', emoji: '🎉', need: ['crew_all_roles'], neighbor: 'all', contest: null, blurb: 'The big finale: Ribbon Creek, the knoll and every trick you know.' },
+  { id: 'sunny_hollow', name: 'Sunny Hollow', emoji: '☀️', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'bee', contest: null, blurb: 'Warm clearing by the Home Stump. Find Petals and a secret Starseed.' },
+  { id: 'creek_bend', name: 'Creek Bend', emoji: '🌊', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'robin', contest: null, blurb: 'A U-shaped creek with stepped banks. Cross the water and grab Petals.' },
+  { id: 'moon_meadow', name: 'Moon Meadow', emoji: '🌙', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'moth', contest: null, blurb: 'Climb the Hollow Oak. Night falls every 3 minutes.' },
+  { id: 'log_jam', name: 'Log Jam', emoji: '🪵', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'bear', contest: null, blurb: 'Canyon log jams and a tall tower to climb.' },
+  { id: 'picnic_lawn', name: 'Picnic Lawn', emoji: '🧺', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'raccoon', contest: null, blurb: 'A giant picnic blanket beside a lemonade stream.' },
+  { id: 'cliff_orchard', name: 'Cliff Orchard', emoji: '🍎', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'bat', contest: null, blurb: 'Four cliff ledges, a boulder stair and a waterfall.' },
+  { id: 'windy_rise', name: 'Windy Rise', emoji: '💨', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'butterfly', contest: null, blurb: 'Windy terraces and canopy sky roads.' },
+  { id: 'festival_glade', name: 'Festival Glade', emoji: '🎉', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'all', contest: null, blurb: 'The big finale: Ribbon Creek, the knoll and every trick you know.' },
 ];
 
 const STATES = ['wilted', 'in_progress', 'blooming', 'wild'];
@@ -174,6 +174,7 @@ export function missingNeeds(need, crewTags) {
     else if (n === 'bridge' && !(tags.has('bridge') || tags.has('bear') || tags.has('opossum') || tags.has('wood-night'))) miss.push('bridge builder');
     else if (n === 'night' && !(tags.has('night') || tags.has('night-high') || tags.has('wood-night') || tags.has('moth') || tags.has('bat') || tags.has('opossum'))) miss.push('night animal');
     else if (n === 'pollinate' && !(tags.has('pollinate') || tags.has('bee') || tags.has('bumblebee'))) miss.push('pollinator');
+    else if (n.startsWith('cls-')) { if (!tags.has(n)) miss.push(n.slice(4)); }
     else if (n === 'crew_all_roles') {
       if (!tags.has('flyer')) miss.push('flyer');
       if (!tags.has('walker')) miss.push('walker');

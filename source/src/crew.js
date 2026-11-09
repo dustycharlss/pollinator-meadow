@@ -1,9 +1,12 @@
 // Crew of three + crew-mix pricing (overhaul-123).
 import { SPECIES, SPECIES_ORDER } from './data.js';
 import { ARCH, priceFor } from './species.js';
+import { CLASS_OF, CLASSES, crewClassCheck } from './classes.js';
 
 export const CREW_SIZE = 3;
-export const STARTER_CREW = ['bee', 'robin', 'bear'];
+export const STARTER_CREW = ['bee', 'raccoon', 'bear'];
+// Adventure refocus: the crew is a fixed trio, one per class (Scout, Trickster, Bruiser)
+export const FIXED_TRIO = true;
 /** Beta: every species selectable from the start. Set false later to restore unlock-by-play. */
 export const UNLOCK_ALL_SPECIES = true;
 
@@ -32,6 +35,7 @@ export function tagsOf(id) {
   if (!SPECIES[id]?.mv?.fly || id === 'robin') out.add('walker');
   if (id === 'bear' || id === 'opossum') out.add('bridge');
   if (SPECIES[id]?.nocturnal) out.add('night');
+  if (CLASS_OF[id]) out.add('cls-' + CLASS_OF[id]);
   if (id === 'bee' || id === 'bumblebee') out.add('pollinate');
   return [...out];
 }
@@ -46,9 +50,9 @@ export function crewValid(crew) {
   if (!crew || crew.length !== CREW_SIZE) return { ok: false, why: 'Need 3 friends' };
   if (new Set(crew).size !== CREW_SIZE) return { ok: false, why: 'Pick three different friends' };
   for (const id of crew) if (!SPECIES[id]) return { ok: false, why: 'Unknown animal' };
-  const tags = crewTags(crew);
-  if (!tags.includes('flyer')) return { ok: false, why: 'Need at least one flyer' };
-  if (!tags.includes('walker')) return { ok: false, why: 'Need at least one walker' };
+  // Three-class crew: one Scout + one Trickster + one Bruiser (Lost Vikings swap loop)
+  const cc = crewClassCheck(crew);
+  if (!cc.ok) return { ok: false, why: cc.dup ? 'One of each class: Scout + Trickster + Bruiser' : 'Need a ' + cc.miss.map(c => CLASSES[c].name).join(' + '), miss: cc.miss };
   return { ok: true };
 }
 
@@ -81,6 +85,7 @@ export function createCrew(ctx) {
   C.tags = () => crewTags(C.members);
   C.valid = () => crewValid(C.members);
   C.set = (ids) => {
+    if (FIXED_TRIO) ids = [...STARTER_CREW];
     const v = crewValid(ids);
     if (!v.ok) return v;
     // must be unlocked (skipped while UNLOCK_ALL_SPECIES — unlock-by-play later)
@@ -95,7 +100,8 @@ export function createCrew(ctx) {
   };
   C.loadFromValley = () => {
     const v = ctx.valley?.data;
-    if (v?.crew?.length === 3) C.members = v.crew.slice();
+    if (FIXED_TRIO) C.members = [...STARTER_CREW];
+    else if (v?.crew?.length === 3 && crewValid(v.crew).ok) C.members = v.crew.slice();
     else C.members = [...STARTER_CREW];
     C.active = Math.max(0, C.members.indexOf(C.activeId()));
     if (C.active < 0) C.active = 0;
