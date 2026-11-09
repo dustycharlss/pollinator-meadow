@@ -51,7 +51,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
+export const READY_LEVELS = new Set(['trailhead_trials', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 
 const MAPS = {
   // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
@@ -867,12 +867,14 @@ export function createZones(scene, ctx) {
   const a2New = () => ({ en: [], cps: [], cp: null, hides: [], ghosts: [], mirrors: [], srcs: [], beamPool: [], shades: [], ponds: [], logs: [], seeds: [], drips: [], pads: [], winds: [], puffs: [], acorn: null, rings: [], smokes: [], glowSteps: [], hidden: [], gifts: [], season: 'summer', seasonal: [], creeks: [], slides: [], bonks: 0, burst: null, pingT: -99, pingNext: 0, wind: -1, night: false, lastCur: null, stuck: null, dew: null, borrow: null, movers: [], gravel: [], swoosh: 0, safeT: 0, cpEl: null, terr: null, light: null, outlines: [] });
   const AA = () => a2 || (a2 = a2New());
   const gearHas = k => !!(gear[k] || (a2 && a2.borrow && a2.borrow[k]));
-  const gearOn = k => gearHas(k) && !!gear[k === 'lantern' ? 'eqL' : 'eqW'];
+  const eqK = k => k === 'lantern' ? 'eqL' : 'eqW';
+  const borrowed = k => !gear[k] && !!(a2 && a2.borrow && a2.borrow[k]); // Trailhead loan: equip flags live on the loan, never saved
+  const gearOn = k => gearHas(k) && !!(borrowed(k) ? a2.borrow[eqK(k)] : gear[eqK(k)]);
   const GEAR_OF = { scout: 'lantern', trickster: 'whistle' };
   const GEAR_INFO = { lantern: { em: '🏮', name: 'Glow Lantern' }, whistle: { em: '🎶', name: 'Echo Whistle' } };
   function setGear(k, on) {
     if (!gearHas(k)) { tst(`🔒 Find the ${GEAR_INFO[k].name} in Owl Wood first`, 2000); return false; }
-    gear[k === 'lantern' ? 'eqL' : 'eqW'] = !!on; gearSave();
+    if (borrowed(k)) a2.borrow[eqK(k)] = !!on; else { gear[eqK(k)] = !!on; gearSave(); }
     tst(`${GEAR_INFO[k].em} ${GEAR_INFO[k].name} ${on ? 'on' : 'off'}`, 1400); ctx.audio?.sample?.('ui2/gear-equip-clink', 0.4);
     if (k === 'whistle' && on && a2) a2.pingNext = t; // ping right away
     ctx.onGear?.(); return true;
@@ -1179,6 +1181,8 @@ export function createZones(scene, ctx) {
     mudSlide(s, ax, az, ha, bx2, bz, hb, o = {}) { const a = L2W(ax, az, ha), b = L2W(bx2, bz, hb), L = Math.hypot(b.x - a.x, b.z - a.z), m = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.2, L), mat(0x6a4a28)); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.05, (a.z + b.z) / 2); m.rotation.y = Math.atan2(b.x - a.x, b.z - a.z); m.rotation.x = Math.atan2(a.y - b.y, L); group.add(m);
       props.push({ kind: 'slide', act: 'slide', cls: 'trickster', sig: s, x: a.x, y: a.y, z: a.z, b, r: 2.2, need: 'spring', needWhy: 'The chute is frozen or dry — ring the 🌱 Spring bell for mud', label: o.label || 'Mud chute', two: true, icon: badge('trickster', a.x, a.y + 2, a.z, 0.9) }); },
     split(map) { recipe.splitAt = map; },
+    /** run fn(on, api) when signal s flips; api: night(v), season(s) */
+    onSig(s, fn) { let last = false; steps.push({ sig: s, fn: on => { if (on === last) return; last = on; fn(on, { night: v => setNightA2(v), season: v => setSeason(v) }); } }); },
     /** the last boulder slides much farther in winter (ice): to (x,z) with slot height, sets iceSig */
     iceSlot(iceSig, x, z, slotH = 0.6) { const pr = props.filter(q => q.kind === 'boulder').pop(); if (!pr) return; pr.ice = { x: A.x + x, z: A.z + z, top: gy(x, z) + slotH }; pr.iceSig = iceSig; },
     bridgeOn(s, x1, z1, x2, z2, w = 3) { const mx = (x1 + x2) / 2, mz = (z1 + z2) / 2, L = Math.hypot(x2 - x1, z2 - z1), yaw = Math.atan2(x2 - x1, z2 - z1), g = Math.max(gy(x1, z1), gy(x2, z2));
@@ -1686,7 +1690,8 @@ export function createZones(scene, ctx) {
           if (pr.lureOf) { const e = pr.lureOf; e.lure = { x: e.lureAt.x, z: e.lureAt.z, phase: 'go' }; e.awakeT = 0; pr.G.rotation.z = 0; tst(`🌰 Thunk! The ${e.name} waddles off to check the noise…`, 2200); }
           else tst(`🎯 Bonk! ${pr.label} hit`, 1800); ctx.audio?.chime?.(); }
       }
-      if (pr.kind === 'tbell') { if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0; }
+      if (pr.kind === 'tbell') { if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0; 
+        { const inside = c === 'scout' && dFlat(p, pr) < 1.4 && p.y > pr.y - 1.3 && p.y < pr.y + 1.6; if (inside && !pr.inside && t - (pr.ringT ?? -99) > 1.5) ringBell(pr); pr.inside = inside; } } // toggle bells: fly into one to ring it once
       if (pr.kind === 'bell') {
         if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0;
         if (!pr.done && c === 'scout' && dFlat(p, pr) < 2.4 && p.y > pr.y - 1.2 && p.y < pr.y + 6.5) ringBell(pr);
@@ -1903,8 +1908,8 @@ export function createZones(scene, ctx) {
     at: (c, x, z, r) => { const q = posOf(crewOfCls(c)); return !!q && Math.hypot(q.x - A.x - x, q.z - A.z - z) < r && q.y - gy(q.x - A.x, q.z - A.z) < 1.3; },
     held: s => plates.some(pl => pl.sig === s && pl.holder),
     season: () => a2 ? a2.season : 'summer', night: () => !!(a2 && a2.night), wind: () => a2 ? a2.wind : -1,
-    carry: c => !!(a2 && a2.acorn && a2.acorn.by && CLASS_OF[a2.acorn.by] === c), borrow: () => { AA().borrow = { lantern: true, whistle: true }; ctx.onGear?.(); return true; },
-    gearOn: k => gearOn(k), sneak: () => sneak, pinged: () => !!sig.ping, lit: id => !!sig['lit:' + id],
+    carry: c => !!(a2 && a2.acorn && a2.acorn.by && CLASS_OF[a2.acorn.by] === c), borrow: () => { const S = AA(); if (!S.borrow) { S.borrow = { lantern: true, whistle: true, eqL: true, eqW: true }; S.pingNext = t; ctx.onGear?.(); } return true; },
+    gearOn: k => gearOn(k), sneak: () => sneak, dew: () => !!(a2 && a2.dew), pinged: () => !!sig.ping, lit: id => !!sig['lit:' + id],
     curY: () => { const p = ctx.getP(); return p.y - gy(p.x - A.x, p.z - A.z); },
   };
   function kidDom() {
@@ -1963,6 +1968,7 @@ export function createZones(scene, ctx) {
     if (pt === 'joy') return { el: null, x: innerWidth * 0.26, y: innerHeight - 150, drag: true };
     if (st.nearPt) { const p = ctx.getP(); if (Math.hypot(p.x - A.x - st.nearPt[0], p.z - A.z - st.nearPt[1]) > st.nearPt[2]) return null; }
     if (pt === 'jump') return R(document.getElementById('bJump'));
+    if (pt === 'sneak') return R(document.getElementById('bSneak'));
     if (pt === 'int') return nearOwn && st.glow && st.glow.includes(nearOwn.sig) ? R(document.getElementById('bInt')) : null;
     if (pt.startsWith('dock:')) { const c = pt.slice(5); return clsOfCur() === c ? null : R(document.querySelector('#crewDock button.cls-' + c)); }
     if (pt === 'exit' && exitAt && crewIn(ctx.getP())) { for (const c of ['scout', 'trickster', 'bruiser']) { const id = crewOfCls(c); if (id && id !== ctx.cur() && !crewIn(ctx.parked(id))) return R(document.querySelector('#crewDock button.cls-' + c)); } }
@@ -2036,6 +2042,7 @@ export function createZones(scene, ctx) {
   return {
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
     act, wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status,
+    skipKid() { if (!recipe || !recipe.kid || !recipe.act2 || keyDone) return false; complete('Trail skipped'); return true; },
     toggleSneak(v) { if (!a2) return false; sneak = v == null ? !sneak : !!v; ctx.onSneak?.(sneak); tst(sneak ? '🐾 Sneaking: slow, quiet paws' : '🏃 Walking normally', 1200); return sneak; }, sneakOn: () => !!(a2 && sneak), isAct2: () => !!a2,
     gearInfo(c) { const k = GEAR_OF[c]; if (!k || !a2) return null; return { k, em: GEAR_INFO[k].em, name: GEAR_INFO[k].name, has: gearHas(k), on: gearOn(k), borrowed: !gear[k] && gearHas(k) }; },
     toggleGear(c) { const k = GEAR_OF[c || CLASS_OF[ctx.cur()]]; if (!k || !a2) return false; return setGear(k, !gearOn(k)); },

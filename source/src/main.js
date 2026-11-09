@@ -964,6 +964,7 @@ function openTrailSign(kind) {
   $('tsIcons').innerHTML = icons; openOv('trailSign'); audio.music?.jingle?.('win');
 }
 $('tsOk').onclick = () => { closeOv('trailSign'); vActPage = 2; const nx = ACT2_PATCHES.find(d => valley.act2Gate(d.id).ok && !valley.beaten(d.id)); if (nx) vSelPatch = nx.id; openValleyMap(); };
+if ($('bSkipT')) $('bSkipT').onclick = () => zones && zones.skipKid && zones.skipKid();
 if ($('bSneak')) $('bSneak').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); input.hooks.sneak?.(); });
 function openCrewTent(after) { openTeamPick(after || renderValleyMap); }
 // ---- Team picker (crew of 3): in-game overlay, replaces browser prompt
@@ -1043,6 +1044,7 @@ function startValleyPatch(patchId) {
     const p0 = P[cur] || { x: 0, z: 0 };
     // Anchor the map so local (0,0) home sits on the player; then snap onto the new heightfield.
     zones.load(patchId, { x: p0.x, z: p0.z });
+    document.body.classList.toggle('skipT', patchId === 'trailhead_trials' && !!valley.data.trailBadge);
     { const h = zones.homePos ? zones.homePos() : p0; unifyHomes(h.x, h.z, members[0]); p0.x = h.x + 4; p0.z = h.z + 4; }
     const p = P[cur];
     if (p) {
