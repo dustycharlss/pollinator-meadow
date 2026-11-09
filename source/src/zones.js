@@ -48,7 +48,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['sunny_hollow']);
+export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend']);
 
 const MAPS = {
   sunny_hollow: {
@@ -98,11 +98,15 @@ const MAPS = {
   },
 
   creek_bend: {
-    goal: 'Gather 10 Petals · bridge the creek, fix the ford, ring the willow bell',
-    key: 'puzzles', pick: 10, pickTier: 'petal', ceil: 11,
+    goal: 'Bridge the creek, fix the ford, ring the willow bell · then all three to the 🏁 exit across the water',
+    key: 'puzzles', ceil: 11, exit: [16, 19], par: 300,
+    banter: {
+      start: ['🦝 Raccoon: Uh-oh. That creek is way too deep to swim.', '🐝 Bee: Not for me! I\'ll just fly over.', '🐻 Bear: Then you two find me a path. I\'m not a fish.'],
+      end: ['🐻 Bear: Dry paws! Best day ever.', '🐝 Bee: Great holding, Raccoon!', '🦝 Raccoon: Any time. Plates are my thing.'],
+    },
     bounds: { x0: -26, x1: 26, z0: -12, z1: 24 }, deep: [[-26, 7, 26, 12]],
-    crew: 'Bee or Butterfly · Opossum · Bear',
-    intro: ['🌊 Creek Bend: the creek is too deep to swim — only Scouts fly over.', 'Leave a friend on a plate and they keep holding it while you swap!'],
+    crew: 'Bee · Raccoon · Bear',
+    intro: ['🌊 Only the Scout can fly over deep water. 🐾 Tricksters cross thin planks. 🐻 Bear needs a stone ford.', 'Leave a friend on a plate and they keep holding it while you swap!'],
     build(B) {
       B.rim(11); B.water();
       B.home(0, 0);
@@ -121,14 +125,15 @@ const MAPS = {
       B.cage(5, 19.5, 3.6, 3.6, 3, { base: 5.2, cracked: 'w', crackSig: 'branch', look: 'hedge', label: 'Willow branches' });
       B.bell('willow', 5.4, 19.5, 6.8, { label: 'Willow bell' });
       B.tree(7.5, 21.6, 1.2, 5.2);
-      // 4 · Honey Log (bonus team lift)
-      B.node('team', 19, 18, 0.4, { sig: 'honey' });
-      [[-6, -4], [6, -5], [-14, 2], [18, 3], [-17, 17], [-10, 21], [16, 15], [21, 21], [10, 14]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9));
+      // 4 · Secret: a Starseed on the tall east rock (boost from Bear once he's across)
+      B.wall(22, 23, 3, 3, 5.2, { look: 'stone' });
+      B.pickup('star', 22, 23, 6.0, { who: ['trickster'], whyNot: 'Too far up to carry for a Scout — boost your Trickster off Bear!', set: 'creekStar' });
+      [[-6, -4], [6, -5], [-14, 2], [18, 3], [-17, 17], [-10, 21], [16, 15], [12, 22], [10, 14]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9));
       [[0, 17.5], [2, 21], [8.5, 17]].forEach(([x, z]) => B.pickup('petal', x, z, 6.0));
       B.puzzle('plank', 'Plank Bridge', ['trickster'], ['plank'], { hint: '🐾 Swap to your Trickster and build the Plank Bridge at the narrow creek (west).' });
       B.puzzle('ford', 'Ford stones', ['scout', 'bruiser'], ['ford'], { hint: '🪽 Ring the blossom switch across the creek, then 🐻 shove the boulder into the ford.' });
       B.puzzle('willow', 'Willow Lookout', ['trickster', 'bruiser', 'scout'], ['willow'], { hint: '🐾 Park your Trickster on the dam plate · 🐻 Bear climbs and smashes the branches · 🪽 Scout rings the willow bell.' });
-      B.puzzle('honey', 'Honey Log', ['bruiser'], ['honey'], { req: false, hint: '🐻 Bear can lift the Honey Log alone.' });
+      B.puzzle('creekStar', 'Secret Starseed', ['bruiser', 'trickster'], ['creekStar'], { req: false, hint: '🐻 Park Bear by the tall east rock, then boost your Trickster up.' });
     },
   },
 
