@@ -48,7 +48,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow']);
+export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam']);
 
 const MAPS = {
   sunny_hollow: {
@@ -188,11 +188,15 @@ const MAPS = {
   },
 
   log_jam: {
-    goal: 'Clear the three jams · lift 2 Honey Logs',
-    key: 'puzzles', needNodes: 2, ceil: 12,
+    goal: 'Clear the three jams · then all three up the tower to the 🏁 exit',
+    key: 'puzzles', ceil: 12, exit: [0, 30, 2.6, 9.4], par: 420,
+    banter: {
+      start: ['🐝 Bee: Whoa, logs everywhere! The canyon is all jammed up.', '🐻 Bear: Logs? Finally, a job for me!', '🦝 Raccoon: You push, I climb. Deal?'],
+      end: ['🦝 Raccoon: Look how high we are!', '🐝 Bee: Bear built us a whole staircase!', '🐻 Bear: I\'m basically a builder now.'],
+    },
     bounds: { x0: -9, x1: 9, z0: -10, z1: 34 },
     crew: 'Bee or Bumblebee · Raccoon · Bear',
-    intro: ['🪵 Log Jam: Bear builds the way — shove logs into stair slots.', 'Heavy plates only hold while Bear sits on them.'],
+    intro: ['🪵 Bear builds the way — shove logs into stair slots.', 'Heavy plates only hold while Bear sits on them.'],
     build(B) {
       const C = { look: 'cliff' };
       B.wall(-9.4, 12, 1, 46, 12, C); B.wall(9.4, 12, 1, 46, 12, C); B.wall(0, -10.4, 20, 1, 12, C); B.wall(0, 34.4, 20, 1, 12, C);
@@ -203,7 +207,7 @@ const MAPS = {
       B.boulder('logA', -5, 0.5, 3.6, 4.4, { kind: 'log', w: 2.4, d: 1.4, h: 1.0, slotH: 2.4, label: 'Loose log' });
       B.boulder('logB', 5, -3, 6.4, 4.4, { kind: 'log', w: 2.4, d: 1.4, h: 1.0, slotH: 4.6, label: 'Loose log' });
       B.lever('jam1', 5.2, 6, { base: 7, label: 'Drain lever' });
-      B.node('team', -5, 10.5, 0.4, { sig: 'h1' });
+      for (let i = 0; i < 4; i++) B.pickup('petal', -6.5 + i, 10.5, 0.9);
       // Jam 2 (12 tall): heavy plate opens a high gap; Scout flies through and rings the gate bell
       B.wall(-5.1, 15, 7.6, 1.6, 12, C); B.wall(0, 15, 2.4, 1.6, 12, { ...C, bot: 3.4 }); B.wall(1.9, 15, 1.4, 1.6, 12, C);
       B.wall(4, 15, 2.8, 1.6, 4.8, C); B.wall(4, 15, 2.8, 1.6, 12, { ...C, bot: 7.4 }); B.wall(7.1, 15, 3.4, 1.6, 12, C);
@@ -211,7 +215,7 @@ const MAPS = {
       B.gate('jam2', 0, 15, 2.4, 1.6, 3.4, { latch: true, label: 'Jam 2' });
       B.plate('gap', 4, 12, { heavy: true, label: 'heavy plate' });
       B.bell('jam2', 0, 17.6, 3.0, { label: 'Gate bell' });
-      B.node('team', 5, 20.5, 0.4, { sig: 'h2' });
+      for (let i = 0; i < 4; i++) B.pickup('petal', 3.5 + i, 20.5, 0.9);
       // Tower Jam: log ramp → vine → pebble throw drops the rope → Scout hooks it → stairs for all
       B.wall(0, 29, 10, 6, 9.4, { look: 'log' });
       B.boulder('logC', -5.5, 19.5, -3, 24.8, { kind: 'log', w: 2.2, d: 1.6, h: 1.0, slotH: 2.6, label: 'Ramp log' });
@@ -219,15 +223,16 @@ const MAPS = {
       B.vine(-3, 24.4, 2.6, -3, 25.4, 7.3, { need: ['logC'], needWhy: 'Shove the ramp log under the vine first (Bear)', label: 'Vine' });
       B.target('rope', 8.6, 23, 8.2, { from: { x: -3, z: 25.4, r: 1.7, minH: 6.8 }, range: 14, label: 'Rope target', fromWhy: 'Climb the vine to the ledge first, then throw' });
       B.bell('hook', 3, 25.4, 10.2, { need: ['rope'], needWhy: 'The rope is still tied up — a Trickster must knock it down first', label: 'Rope hook' });
-      B.steps('hook', [[6.9, 31, 3, 1.8, 2.4], [6.9, 29, 3, 1.8, 4.8], [6.9, 27, 3, 1.8, 7.2]]);
-      B.node('heavy', 0, 30, 9.4, { sig: 'pond' });
-      B.node('team', -6.5, 30.5, 0.4, { sig: 'h3' });
+      B.steps('hook', [[6.9, 32.4, 3, 1.6, 1.9], [6.9, 30.8, 3, 1.6, 3.8], [6.9, 29.2, 3, 1.6, 5.7], [6.9, 27.6, 3, 1.6, 7.6]]);
+      // secret: Starseed on a high nook beside the tower — boost a Trickster off Bear
+      B.wall(-7.2, 31.5, 3, 3, 5.2, { look: 'log' });
+      B.pickup('star', -7.2, 31.5, 6.0, { who: ['trickster'], whyNot: 'Too heavy for a Scout — boost your Trickster off Bear!', set: 'jamStar' });
       B.cave(0, 33);
       [[-3, -5], [3, -6], [0, 11], [-6, 18], [3, 21], [0, 23]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9));
       B.puzzle('jam1', 'Stair builder', ['bruiser', 'trickster'], ['jam1'], { hint: '🐻 Shove both loose logs into the stair slots · 🐾 climb up and pull the drain lever.' });
       B.puzzle('jam2', 'Heavy plate', ['bruiser', 'scout'], ['jam2'], { hint: '🐻 Park Bear on the heavy plate · 🪽 fly through the high gap and ring the gate bell.' });
       B.puzzle('tower', 'Tower climb', ['bruiser', 'trickster', 'scout'], ['hook'], { hint: '🐻 Shove the ramp log · 🐾 climb the vine and throw at the rope · 🪽 ring the rope hook.' });
-      B.puzzle('pond', 'Tower Dew Pond', ['bruiser'], ['pond'], { req: false });
+      B.puzzle('jamStar', 'Secret Starseed', ['bruiser', 'trickster'], ['jamStar'], { req: false, hint: '🐻 Park Bear by the high nook west of the tower, then boost your Trickster.' });
     },
   },
 
@@ -501,8 +506,8 @@ export function createZones(scene, ctx) {
     reed(x, z, h) { const g = gy(x, z), m = new THREE.Mesh(new THREE.BoxGeometry(0.3, h, 0.3), mat(0x5a9a3a)); m.position.set(A.x + x, g + h / 2, A.z + z); group.add(m); },
     home(x, z) { homeAt = { x: A.x + x, z: A.z + z }; }, // t148u: the crew nest is the single home
     // Level exit: all three friends must stand inside once every required puzzle is solved
-    exit(x, z, r = 3) {
-      const y = gy(x, z) + 0.06, G = new THREE.Group(); G.position.set(A.x + x, y, A.z + z); group.add(G);
+    exit(x, z, r = 3, base = 0) {
+      const y = gy(x, z) + base + 0.06, G = new THREE.Group(); G.position.set(A.x + x, y, A.z + z); group.add(G);
       const ringM = new THREE.Mesh(new THREE.TorusGeometry(r, 0.18, 8, 40), mat(0x9a8f7a, 0.95)); ringM.rotation.x = -Math.PI / 2; G.add(ringM);
       const disc = new THREE.Mesh(new THREE.CircleGeometry(r - 0.1, 32), new THREE.MeshBasicMaterial({ color: 0xffe07a, transparent: true, opacity: 0.12, depthWrite: false })); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.02; G.add(disc);
       const pole = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.4, 0.22), mat(0x8a5a2b, 0.9)); pole.position.set(r * 0.7, 1.7, 0); G.add(pole);
@@ -713,7 +718,7 @@ export function createZones(scene, ctx) {
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
     recipe.build(B);
-    { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3); }
+    { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); }
     // Bruiser "standing platform" (Olaf shield move): a solid on Bear's back while he's parked
     bearPad = addSolid({ type: 'cyl', x: 0, z: 0, r: 1.15, y0: -99, top: -98, kind: 'zone', off: true, pad: true });
     if (recipe.night) { nightOn = true; ctx.setNight(true); }
@@ -778,7 +783,14 @@ export function createZones(scene, ctx) {
   /** nearest interactable prop (any class) */
   function nearest(p) {
     let best = null, bd = 1e9;
-    for (const pr of props) { if (!pr.act) continue; const d = propNear(p, pr); if (d < pr.r && d < bd) { bd = d; best = pr; } }
+    // prefer: own-class puzzle props > own-class travel props (vine/knothole/dirt) > other classes; a throw only counts from its spot
+    const c = clsOfCur();
+    for (const pr of props) {
+      if (!pr.act) continue; const d = propNear(p, pr); if (!(d < pr.r)) continue;
+      let sc = d + (pr.two ? 50 : 0) + (pr.cls && pr.cls !== c ? 100 : 0);
+      if (pr.act === 'throw' && pr.from && (dFlat(p, pr.from) > pr.from.r || p.y < pr.from.minY - 0.3)) sc += 200;
+      if (sc < bd) { bd = sc; best = pr; }
+    }
     return best;
   }
   function tween(p, to, dur, arc, done) { tw = { p, a: { x: p.x, y: p.y, z: p.z }, b: to, t: 0, d: dur, arc, done }; }
