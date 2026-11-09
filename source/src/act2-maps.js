@@ -250,6 +250,47 @@ export const MAPS2 = {
       B.puzzle('nest', 'Bramble garden', ['trickster', 'scout', 'bruiser'], ['plD'], { hint: '🐾 Pluck the strand, snip the web, plant · 🪽 water · 🐻 bounce to the gate plate.', track: [['wD', 'trickster', 'pluck the strand, then snip the web', 2, 51.5], ['planted:sD', 'trickster', 'sneak in behind the spider, plant the seed', -6.8, 52.2], ['grown:sD', 'scout', 'bring a dewdrop to the seed', 5.5, 46, 2.4], ['plD', 'bruiser', 'slip in while she looks away, bounce up to the gate plate', -6.8, 54.4]] });
     },
   },
+  // ===== 12 · Weathervane Hill — M4 Wind Vanes + E4 Patrol Crow =====
+  weathervane_hill: {
+    goal: 'Weathervane Hill', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 57], par: 480,
+    bounds: { x0: -9, x1: 9, z0: -8, z1: 61 },
+    crew: 'Bee · Raccoon · Bear',
+    banter: { start: ['🦝 Raccoon: Crank a vane and the wind flips for the whole hill!', '🐻 Bear: I’m too heavy for wind. I’ll hold the dandelion rafts.'], end: ['🐝 Bee: The crow never spotted me under the leaves!', '🦝 Raccoon: Raft rides are the best rides.'] },
+    build(B) {
+      B.home(0, -5); B.lane(-8, 8, -7, 60);
+      [[6.5, -4], [-6.5, 30], [6.5, 46]].forEach(([x, z], i) => B.tree(x, z, 0.85 + (i % 2) * 0.1));
+      // A · teach: the wind blows DOWN the hill. Crank the vane so it blows UP, Bear holds the raft while Raccoon boards, then lets go
+      B.checkpoint(0, -1);
+      B.vane('vA', 4.5, 2.5, { label: 'Vane crank' });
+      B.windZone(-8, 3, 8, 14, { dz: 1, push: 5, lift: 3, h: 6 });
+      B.wall(-3.5, 13, 5, 3, 5, { look: 'stone' });
+      B.puffRaft('rA', -3.5, 7.5, [-3.5, 12.6, 5]);
+      B.lever('lvA', -3.5, 13.3, { base: 5, label: 'Hilltop lever' });
+      B.door('lvA', 16, -8, 8);
+      // B · teach the crow: it circles and swoops at flyers in its cone. Hide under leaf canopies, or fly while its back is turned
+      B.checkpoint(0, 18);
+      B.crow('crB', 0, 26, 4.2, 4.6, { speed: 2.6 });
+      B.hide('canopy', -4.5, 22, 2.4, 4.2); B.hide('canopy', 4.5, 29, 2.4, 4.2);
+      B.wall(0, 26, 0.6, 0.6, 4.4, { look: 'bark' }); B.bell('blB', 0, 26, 5, { label: 'Crow-post bell' });
+      B.door('blB', 33, -8, 8);
+      B.onSig('blB', (on, api) => { if (on) api.wind(-1); });
+      // C · combo: wind + crow + raft. Bee rings the gust bell, Raccoon rafts to the ridge lever, the crow circles above both
+      B.checkpoint(0, 35);
+      B.vane('vC', -5.5, 36.5, { label: 'Vane crank' });
+      B.windZone(-8, 38, 8, 50, { dz: 1, push: 6, lift: 3, h: 7 });
+      B.crow('crC', 0, 44, 5, 5.2, { speed: 3, ang: 2 });
+      B.hide('canopy', -1.5, 41, 2.4, 4.4); B.hide('canopy', 4.5, 47, 2.2, 4.4);
+      B.wall(5.5, 41.5, 0.6, 0.6, 5.4, { look: 'bark' }); B.bell('blC', 5.5, 41.5, 6, { label: 'Gust bell' });
+      B.wall(-4.5, 48.5, 6, 3, 5.4, { look: 'stone' });
+      B.puffRaft('rC', -4.5, 43.5, [-4.5, 48.2, 5.4]);
+      B.lever('lvC', -4.5, 49, { base: 5.4, label: 'Ridge lever' });
+      B.door(['blC', 'lvC'], 52, -8, 8);
+      B.checkpoint(0, 54);
+      B.puzzle('raft', 'Dandelion raft', ['trickster', 'bruiser'], ['lvA'], { hint: '🐾 Crank the vane so the wind blows UP · 🐻 hold the raft · 🐾 hop on · 🐻 let go!', track: [['wind:up', 'trickster', 'crank the vane so the wind blows up the hill', 4.5, 2.5], ['raft:rA', 'bruiser', 'hold the raft, Raccoon hops on, then Bear steps off', -3.5, 7.5], ['lvA', 'trickster', 'pull the hilltop lever', -3.5, 13.3, 5]] });
+      B.puzzle('crow', 'Crow post', ['scout'], ['blB'], { hint: '🪽 Wait under a leaf canopy until the crow’s back is turned, then fly up and ring the bell.', track: [['blB', 'scout', 'hide under the leaves, then ring the crow-post bell', 0, 26, 5]] });
+      B.puzzle('ridge', 'Windy ridge', ['scout', 'trickster', 'bruiser'], ['blC', 'lvC'], { hint: '🐾 Wind up · 🪽 ring the gust bell when the crow looks away · 🐻 + 🐾 raft to the ridge lever.', track: [['wind:up', 'trickster', 'crank the vane: wind up!', -5.5, 36.5], ['blC', 'scout', 'dodge the crow, ring the gust bell', 5.5, 41.5, 6], ['lvC', 'trickster', 'raft up to the ridge lever (Bear holds, then lets go)', -4.5, 43.5]] });
+    },
+  },
   // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
   a2_lab: {
     goal: 'Lab', act2: true, key: 'puzzles', ceil: 9, exit: [0, 30], par: 0,

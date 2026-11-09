@@ -51,7 +51,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
+export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'weathervane_hill', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 
 const MAPS = {
   // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
@@ -1184,7 +1184,7 @@ export function createZones(scene, ctx) {
       props.push({ kind: 'slide', act: 'slide', cls: 'trickster', sig: s, x: a.x, y: a.y, z: a.z, b, r: 2.2, need: 'spring', needWhy: 'The chute is frozen or dry — ring the 🌱 Spring bell for mud', label: o.label || 'Mud chute', two: true, icon: badge('trickster', a.x, a.y + 2, a.z, 0.9) }); },
     split(map) { recipe.splitAt = map; },
     /** run fn(on, api) when signal s flips; api: night(v), season(s) */
-    onSig(s, fn) { let last = false; steps.push({ sig: s, fn: on => { if (on === last) return; last = on; fn(on, { night: v => setNightA2(v), season: v => setSeason(v) }); } }); },
+    onSig(s, fn) { let last = false; steps.push({ sig: s, fn: on => { if (on === last) return; last = on; fn(on, { night: v => setNightA2(v), season: v => setSeason(v), wind: v => { const S = AA(); if (S.wind === v) return; S.wind = v; setSig('wind:up', v > 0); setSig('wind:down', v < 0); for (const V of S.vanes || []) V.rotation.y = v > 0 ? 0 : Math.PI; tst(v > 0 ? '🌬️ The wind blows UP the hill' : '🌬️ The wind swung round — it blows DOWN the hill again', 2200); } }); } }); },
     /** the last boulder slides much farther in winter (ice): to (x,z) with slot height, sets iceSig */
     iceSlot(iceSig, x, z, slotH = 0.6) { const pr = props.filter(q => q.kind === 'boulder').pop(); if (!pr) return; pr.ice = { x: A.x + x, z: A.z + z, top: gy(x, z) + slotH }; pr.iceSig = iceSig; },
     bridgeOn(s, x1, z1, x2, z2, w = 3) { const mx = (x1 + x2) / 2, mz = (z1 + z2) / 2, L = Math.hypot(x2 - x1, z2 - z1), yaw = Math.atan2(x2 - x1, z2 - z1), g = Math.max(gy(x1, z1), gy(x2, z2));
