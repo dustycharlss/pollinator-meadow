@@ -705,6 +705,14 @@ body.kidTut.inRound #kidCard{display:flex}
 @keyframes kidPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
 @keyframes kidConf{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
 @keyframes kidStar{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.25);opacity:1}100%{transform:scale(1) translateY(-40px);opacity:0}}
+#skinPick{z-index:40}#skinPick .panel{color:var(--ink);background:var(--cream);max-width:min(560px,96vw);max-height:92vh;overflow-y:auto}
+#skinPick h2{margin:0 0 2px;text-align:center}.spSub{text-align:center;font-size:12px;font-weight:700;opacity:.8;margin:0 0 6px}
+.spRow{border:3px solid var(--cc);border-radius:16px;padding:6px;margin:6px 0;background:rgba(255,255,255,.4)}.spH{display:flex;align-items:center;gap:6px;margin-bottom:4px}.spH img{width:30px;height:30px}.spH b{font-size:15px}.spH small{font-size:10px;opacity:.75;line-height:1.15}
+.spCards{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}.spc{flex:0 0 auto;width:74px;border:3px solid rgba(59,38,20,.25);border-radius:14px;background:rgba(255,255,255,.7);padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:1px;font:inherit;color:var(--ink);cursor:pointer}
+.spc .spI{width:58px;height:58px;display:flex;align-items:center;justify-content:center}.spc .spI img{width:58px;height:58px}.spc .spI i{font-style:normal;font-size:34px}.spc b{font-size:11px}.spc small{font-size:9px;opacity:.6}
+.spc.on{border-color:var(--cc);background:#fff;box-shadow:0 0 0 2px var(--cc),0 3px 0 rgba(59,38,20,.35)}.spc.on b::before{content:'✓ '}
+#crewDock button:has(.dkI){padding:0}#crewDock .dkI{width:44px;height:44px;pointer-events:none;display:block;margin:0 auto}@media (orientation:landscape) and (max-height:560px){#crewDock .dkI{width:36px;height:36px}}
+body.adv #vTent{display:flex!important;justify-content:center;gap:8px}
 </style>
 </head>
 <body>
@@ -754,7 +762,7 @@ body.kidTut.inRound #kidCard{display:flex}
   <div id="vPatches" hidden></div>
   <div id="vDetail">Pick a patch</div>
   <div id="vCrew"></div>
-  <div id="vTent"><button class="pill" id="vEditCrew">⛺ Crew Tent</button></div>
+  <div id="vTent"><button class="pill" id="vEditCrew">⛺ Crew Tent</button><button class="pill" id="vSkins">🎨 Skins</button></div>
   <div id="vActions">
     <button class="big sec" id="vBack">◀ Title</button>
     <button class="big" id="vFree" disabled>🌿 Free roam</button>
@@ -770,6 +778,7 @@ body.kidTut.inRound #kidCard{display:flex}
   <button class="big" id="festOk">Back to Valley</button>
 </div></div>
 <div id="healMeter" aria-label="Heal meter"><div class="hmStack"><div id="healStage"></div><img class="hmTrackImg" src="./ui/valley/heal/heal-meter-track.png" alt=""><div class="hmFillWrap" id="healFillWrap"><img src="./ui/valley/heal/heal-meter-fill.png" alt="" width="128" height="144"></div></div><div class="hmPill"><span id="healPct">0%</span></div></div>
+<div class="ov" id="skinPick"><div class="panel"><h2>🎨 Pick your looks</h2><p class="spSub">Every animal in a row has the same powers — it's just a new look!</p><div id="spRows"></div><button class="big" id="spDone">✓ Done</button></div></div>
 <div id="crewDock" aria-label="Crew swap"></div>
 <button id="packBtn" type="button">📦 Pack Up</button>
 
@@ -816,7 +825,7 @@ body.kidTut.inRound #kidCard{display:flex}
   <div class="tp on" id="tpGame"><h2>⏸ Paused</h2><p id="pauseInfo" style="text-align:center;font-weight:700"></p>
   <button class="big" id="pResume">▶ Resume</button>
   <div class="row2"><button class="big sec" id="pRestart">↻ Restart round</button><button class="big sec" id="pValley">🗺️ Back to Valley</button><button class="big sec" id="pQuit">⌂ Quit to title</button></div>
-  <div class="row2"><button class="big sec" id="pJournal">📖 Journal</button><button class="big sec" id="pSettings">⚙ Settings</button><button class="big sec" id="bNight">🌙 Day / night</button><button class="big sec" id="bSeason">🌸 Season</button><button class="big sec" id="bInfo">ℹ Credits</button><button class="big sec" id="pTech">🧬 Tech tree</button><button class="big sec" id="pAdmin">🛠 Admin</button></div>
+  <div class="row2"><button class="big sec" id="pSkins">🎨 Skins</button><button class="big sec" id="pJournal">📖 Journal</button><button class="big sec" id="pSettings">⚙ Settings</button><button class="big sec" id="bNight">🌙 Day / night</button><button class="big sec" id="bSeason">🌸 Season</button><button class="big sec" id="bInfo">ℹ Credits</button><button class="big sec" id="pTech">🧬 Tech tree</button><button class="big sec" id="pAdmin">🛠 Admin</button></div>
 </div>
   <div class="tp" id="tpAnimals"></div>
   <div class="tp" id="tpInv"></div>

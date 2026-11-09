@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { WATER_RECTS, WATER_Y } from './data.js';
 import { setZoneHeight } from './world.js';
 import { CLASSES, CLASS_OF, ACTS, classOf } from './classes.js';
+import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
 import { waterSurface, FOAM_MAT } from './water.js';
 
@@ -1355,7 +1356,7 @@ export function createZones(scene, ctx) {
       const pets = picks.filter(k => k.tier === 'petal' && !k.nightOnly), got = pets.filter(k => k.got).length;
       const sub = [nearOwn ? `🤝 Tap Interact: ${ACTS[nearOwn.act].verb}` : '', pets.length ? `🌸 ${got}/${pets.length}` : '', starGot ? '⭐ found' : ''].filter(Boolean).join(' · ');
       const txt = objCache ? objCache.text : '', key = txt + '|' + sub + '|' + (objCache?.color || '');
-      if (key !== E.key) { E.key = key; E.tx.textContent = txt; E.sub.textContent = sub; E.T.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.Ar.style.setProperty('--oc', objCache?.color || '#ffd23f'); }
+      if (key !== E.key) { E.key = key; E.tx.textContent = skinText(txt); E.sub.textContent = sub; E.T.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.Ar.style.setProperty('--oc', objCache?.color || '#ffd23f'); }
       E.T.style.display = txt ? 'flex' : 'none'; E.T.classList.toggle('go', !!nearOwn);
       document.body.classList.toggle('intReady', !!nearOwn);
     }
@@ -1498,7 +1499,7 @@ export function createZones(scene, ctx) {
       kid.i = i; kid.kd = keyDone;
       const icons = keyDone ? ['⭐', '⭐', '⭐'] : st.icons, words = keyDone ? 'You did it!' : st.say;
       D.ic.innerHTML = icons.map(x => `<span>${x}</span>`).join('');
-      D.w.textContent = words;
+      D.w.textContent = skinText(words);
       const N = kid.steps[kid.steps.length - 1].n;
       D.dots.innerHTML = Array.from({ length: N }, (_, k) => `<i class="${k + 1 < st.n || keyDone ? 'ok' : k + 1 === st.n ? 'now' : ''}"></i>`).join('');
       D.C.style.setProperty('--kc', st.color ? CLASSES[st.color].color : '#ffd23f');

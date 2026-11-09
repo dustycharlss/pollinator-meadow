@@ -1,3 +1,4 @@
+import { skinText } from './skins.js';
 // Pip tips (Fern onboarding.json) — progressive unlocks + tip card.
 const ADV = () => document.body.classList.contains('adv');
 const BEATS_OLD = [
@@ -60,7 +61,7 @@ export function createOnboarding(ctx) {
     O.beat = b; O.shownAt = performance.now() / 1000;
     const relaxed = ctx.round?.()?.mode === 'relaxed';
     card.style.display = 'flex';
-    card.querySelector('#pipTxt').textContent = relaxed && b.relaxed ? b.relaxed : b.pip;
+    card.querySelector('#pipTxt').textContent = skinText(relaxed && b.relaxed ? b.relaxed : b.pip);
     card.querySelector('#pipImg').src = `./ui/portraits/${PORTRAIT[b.portrait] || PORTRAIT.hello}`;
     if (b.id === 'hello') ctx.audio?.sample?.('ui2/toad-ribbit-hello', 0.5);
     if (b.unlock) ctx.audio?.sample?.('ui2/control-unlock-tada', 0.45);

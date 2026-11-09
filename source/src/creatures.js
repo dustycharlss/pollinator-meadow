@@ -53,46 +53,60 @@ function makeBatSkinned(gltf, size) {
   return { wrap, box, mixer, flyAct };
 }
 
+const RMAT = {};
+/** One rideable creature. `look` = which animal's model/wings to wear (a class skin), `size` = visual size (class default). */
+async function buildRider(scene, id, look = id, size = null) {
+  const sp = SPECIES[id], lk = SPECIES[look] || sp, sz = size || lk.size;
+  if (!SPECIES[look] || lk.ground) { const gr = makeGroundRider(look, sz); gr.visible = false; scene.add(gr); return gr; }
+  const skin = RMAT.skin ||= new THREE.MeshLambertMaterial({ color: 0xf2c9a0 }), tunic = RMAT.tunic ||= new THREE.MeshLambertMaterial({ color: 0x2fb7a6 }), cap = RMAT.cap ||= new THREE.MeshLambertMaterial({ color: 0xe8553d });
+  const gltf = await loadGLB(lk.model); const root = new THREE.Group(), body = new THREE.Group();
+  root.rotation.order = 'YXZ'; root.add(body);
+  const rot = MODEL_ROT[lk.model] || [0, 0, 0];
+  if (gltf) {
+    // Bat has a real Flying clip (integration-map clips + clip_alias) — keep skin + mixer.
+    if (look === 'bat' && gltf.animations && gltf.animations.some(a => /Flying/i.test(a.name))) {
+      const sk = makeBatSkinned(gltf, sz);
+      body.add(sk.wrap); body.userData.box = sk.box; root.userData.box = sk.box;
+      root.userData.mixer = sk.mixer; root.userData.flyAct = sk.flyAct;
+    } else {
+      const { parts, box } = bakeParts(gltf, { size: sz, mode: 'max', rot, ground: false });
+      const bird = BIRD_IDS.has(look);
+      const flap = bird ? null : (lk.flap || BAT_FLAP);
+      for (const p of parts) {
+        const span = Math.max(box.max.x, -box.min.x) * 2;
+        const m = flap ? flapMat(p.material, flap, span, TINT[lk.model]) : lambertFrom(p.material);
+        const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh);
+        if (flap) (root.userData.flapMats ||= []).push(m);
+      }
+      body.userData.box = box; root.userData.box = box;
+      if (bird) attachBirdWings(root, body, { ...lk, size: sz });
+    }
+  }
+  // tiny rider
+  const top = body.userData.box ? body.userData.box.max.y : sz * 0.2, k = sz * 0.17;
+  const person = new THREE.Group();
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.28, 0.35, 3, 8), tunic); torso.position.y = 0.45;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 10, 8), skin); head.position.y = 1.0;
+  const hat = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.45, 8), cap); hat.position.y = 1.35; hat.rotation.x = -0.25;
+  person.add(torso, head, hat); person.scale.setScalar(k * 1.5); person.position.set(0, top * 0.55, -sz * 0.04);
+  body.add(person); root.userData.person = person; root.visible = false; scene.add(root); root.userData.body = body;
+  return root;
+}
 /** Build the rideable creature (with a tiny rider on its back). */
 export async function buildRiders(scene) {
   const riders = {};
-  const skin = new THREE.MeshLambertMaterial({ color: 0xf2c9a0 }), tunic = new THREE.MeshLambertMaterial({ color: 0x2fb7a6 }), cap = new THREE.MeshLambertMaterial({ color: 0xe8553d });
-  for (const id of Object.keys(SPECIES)) {
-    const sp = SPECIES[id];
-    if (sp.ground) { const gr = makeGroundRider(id, sp.size); gr.visible = false; scene.add(gr); riders[id] = gr; continue; }
-    const gltf = await loadGLB(sp.model); const root = new THREE.Group(), body = new THREE.Group();
-    root.rotation.order = 'YXZ'; root.add(body);
-    const rot = MODEL_ROT[sp.model] || [0, 0, 0];
-    if (gltf) {
-      // Bat has a real Flying clip (integration-map clips + clip_alias) — keep skin + mixer.
-      if (id === 'bat' && gltf.animations && gltf.animations.some(a => /Flying/i.test(a.name))) {
-        const sk = makeBatSkinned(gltf, sp.size);
-        body.add(sk.wrap); body.userData.box = sk.box; root.userData.box = sk.box;
-        root.userData.mixer = sk.mixer; root.userData.flyAct = sk.flyAct;
-      } else {
-        const { parts, box } = bakeParts(gltf, { size: sp.size, mode: 'max', rot, ground: false });
-        const bird = BIRD_IDS.has(id);
-        const flap = bird ? null : (sp.flap || BAT_FLAP);
-        for (const p of parts) {
-          const span = Math.max(box.max.x, -box.min.x) * 2;
-          const m = flap ? flapMat(p.material, flap, span, TINT[sp.model]) : lambertFrom(p.material);
-          const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh);
-          if (flap) (root.userData.flapMats ||= []).push(m);
-        }
-        body.userData.box = box; root.userData.box = box;
-        if (bird) attachBirdWings(root, body, sp);
-      }
-    }
-    // tiny rider
-    const top = body.userData.box ? body.userData.box.max.y : sp.size * 0.2, k = sp.size * 0.17;
-    const person = new THREE.Group();
-    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.28, 0.35, 3, 8), tunic); torso.position.y = 0.45;
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 10, 8), skin); head.position.y = 1.0;
-    const hat = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.45, 8), cap); hat.position.y = 1.35; hat.rotation.x = -0.25;
-    person.add(torso, head, hat); person.scale.setScalar(k * 1.5); person.position.set(0, top * 0.55, -sp.size * 0.04);
-    body.add(person); root.userData.person = person; root.visible = false; scene.add(root); riders[id] = root; root.userData.body = body;
-  }
+  for (const id of Object.keys(SPECIES)) riders[id] = await buildRider(scene, id);
   return riders;
+}
+/** A class skin: crew member `baseId` (physics/hitbox unchanged) wearing `skinId`'s model at the class's size. */
+const SKIN_SIZE = { robin: 1.75, opossum: 1.9, raccoon: 1.9, moose: 3.0, batw: 1.9 };
+export async function buildSkinRider(scene, baseId, skinId) {
+  const look = (skinId === 'bat' && SPECIES[baseId]?.ground) ? 'batw' : skinId; // walking blocky bat for the Trickster
+  const size = SPECIES[look]?.ground || !SPECIES[look] ? (SKIN_SIZE[look] || SPECIES[baseId].size) : SPECIES[baseId].size;
+  const R = await buildRider(scene, baseId, look, size);
+  R.userData.skin = skinId;
+  const U = R.userData; if (!SPECIES[look]?.ground && SPECIES[look] && U.box && U.body) U.body.position.y = -U.box.min.y;
+  return R;
 }
 
 /** Ambient creature populations as InstancedMeshes. */

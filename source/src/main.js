@@ -3,7 +3,8 @@ import { SPECIES, SPECIES_ORDER, STAGE_AT, WORLD_R, ZONES, WATER_Y, inWater } fr
 import { ABILITIES, abilityFx } from './abilities.js';
 import { buildMeadow } from './meadow.js';
 import { buildWorld, heightAt, meadowHeightAt, setZoneHeight, timeU, POLS, polOf } from './world.js';
-import { buildRiders, buildAmbient, updateFlaps } from './creatures.js';
+import { buildRiders, buildAmbient, updateFlaps, buildSkinRider } from './creatures.js';
+import { SKINS, SKIN_BASE, SKIN_INFO, skinOfCls, skinOf, skinName, skinEm, setSkin, skinText } from './skins.js';
 import { buildGroundAmbient, animateGround, animateBirdWings, isBird } from './animals.js';
 import { buildNests } from './nests.js';
 import { createInput } from './input.js';
@@ -211,19 +212,19 @@ function selectSpecies(id, first) {
   const prev = cur; cur = id; save.species = id; persist(); input.jump = false;
   if (!first && prev !== id) { cam.swoop = 1.3; voice(id, 0.4, 0.6) || VOICE[id] || audio.blip(6); fx.burst(P[id].x, P[id].y + 2.2, P[id].z, 16, 4); }
   const sp = SPECIES[id], p = P[id];
-  $('spEm').textContent = sp.emoji; $('spName').textContent = sp.name; $('actTxt').textContent = sp.actName; $('actEm').textContent = sp.actEmoji; /* stamChip hidden — stamina is a world ring */
+  $('spEm').textContent = skinEm(id); $('spName').textContent = skinName(id); $('actTxt').textContent = sp.actName; $('actEm').textContent = sp.actEmoji; /* stamChip hidden — stamina is a world ring */
   if (sp.nocturnal !== curNight) setNight(sp.nocturnal, true);
   journalUnlock('a:' + id, sp.name);
   world.sparkle.setSpecies(id, performance.now() / 1000);
   if (first) { cam.yaw = p.yaw; cam.fx = p.x; cam.fz = p.z; cam.fy = p.y; } cam.pitch = 0.35; fxColor(sp.color); buildTray(); coopTipT = 0;
-  updateHud(); if (looks) looks.apply(riders[id]); if (!first) toast(`${sp.emoji} ${sp.name}${sp.mv.fly ? ' · ' + PAT_NAME[id] : ''}`, 2200);
+  updateHud(); if (looks) looks.apply(riders[id]); if (!first) toast(ADVENTURE ? `${skinEm(id)} ${skinName(id)}` : `${sp.emoji} ${sp.name}${sp.mv.fly ? ' · ' + PAT_NAME[id] : ''}`, 2200);
   buildCards(); setActLabel(); if (build && build.active) renderBTray(true);
 }
 function setNight(v, auto) { clock.set(v ? NIGHT_T : DAY_T); if (!auto) state.skipT = 0; syncNightFlag(); }
 function syncNightFlag() { const v = nightOf(clock.t) > 0.5; if (v === curNight) return; if (state.musicLive) { moodOver = v ? 'dusk' : 'morning'; moodOverT = performance.now() / 1000 + 26; } curNight = v; $('bNight').textContent = v ? '☀️ Switch to day' : '🌙 Switch to night'; }
 
 // ---------- HUD ----------
-let toastT = 0; function toast(msg, ms = 2400) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+let toastT = 0; function toast(msg, ms = 2400) { const t = $('toast'); t.textContent = skinText(msg); t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
 function setHint(s) { $('hint').textContent = s; }
 function updateHud() {
   const sp = SPECIES[cur], p = P[cur], n = nests[cur];
@@ -236,7 +237,7 @@ function updateHud() {
   $('dewTxt').textContent = `${save.dew.length} / ${world.platforms.count}`;
 }
 function renderMenuTeam() { const b = $('menuTeam'); if (!b) return; if (!crew) { b.innerHTML = ''; return; }
-  b.innerHTML = `<b>🐾 Your team</b><span class="mt">${crew.get().map(id => `<button class="mtc ${id === cur ? 'on' : ''}" data-id="${id}">${SPECIES[id].emoji}<small>${SPECIES[id].name}</small></button>`).join('')}</span><button class="pill" id="mtEdit">✏️ Change team</button>`;
+  b.innerHTML = `<b>🐾 Your team</b><span class="mt">${crew.get().map(id => `<button class="mtc ${id === cur ? 'on' : ''}" data-id="${id}">${skinEm(id)}<small>${skinName(id)}</small></button>`).join('')}</span><button class="pill" id="mtEdit">✏️ Change team</button>`;
   b.querySelectorAll('.mtc').forEach(c => c.onclick = () => { const id = c.dataset.id; if (valleySession) crew.swapById(id); else selectSpecies(id); closeMenu(); });
   $('mtEdit').onclick = () => { closeMenu(); openTeamPick(() => { if ($('menu')) renderMenuTeam(); }); }; }
 function buildCards() {
@@ -564,7 +565,7 @@ function stepPlayer(dt, t) {
   R.position.set(p.x, p.y, p.z); R.rotation.y = p.yaw;
   if (sp.ground) {
     animateGround(R, dt, t, Math.min(1, p.speed / mv.run), !p.grounded, flapping, p.digT > 0 ? Math.sin((1 - p.digT / 0.45) * Math.PI) : 0);
-    if (sp.id === 'robin') wingAmp(R, p, dt, p.grounded ? 0.06 : flapping ? 1 : 0.35);
+    if (sp.id === 'robin' || R.userData.skin === 'robin') wingAmp(R, p, dt, p.grounded ? 0.06 : flapping ? 1 : 0.35);
   } else {
     const tp = fo && fo.pitch != null ? fo.pitch : (flapping ? 0.2 : (p.grounded ? 0 : -0.1)), tr = fo ? fo.roll : 0, kk = Math.min(1, dt * (sp.id === 'bat' ? 12 : 8));
     R.rotation.x += (tp - R.rotation.x) * kk; R.rotation.z += (tr - R.rotation.z) * kk;
@@ -612,7 +613,7 @@ function stepParked(id, dt, t) {
   R.position.set(p.x, p.y, p.z); R.rotation.y = p.yaw;
   if (sp.ground) {
     animateGround(R, dt, t, p.speed ? 0.7 : 0, !p.grounded, false, 0);
-    if (sp.id === 'robin') wingAmp(R, p, dt, p.grounded ? 0.04 : 0.7);
+    if (sp.id === 'robin' || R.userData.skin === 'robin') wingAmp(R, p, dt, p.grounded ? 0.04 : 0.7);
   } else { const kk = Math.min(1, dt * 8); R.rotation.x += (0 - R.rotation.x) * kk; R.rotation.z += (0 - R.rotation.z) * kk; const bird = isBird(id); U.body.position.y = -(U.box ? U.box.min.y : 0) + (bird ? 0 : (p.grounded ? Math.sin(t * 1.7 + id.length) * 0.015 : 0)); if (U.birdWings) animateBirdWings(R, t, { air: !p.grounded, flapping: !p.grounded, grounded: !!p.grounded }); wingAmp(R, p, dt, p.grounded ? 0.12 : 0.8); }
   placeShadow(id, p, sp);
   const m = marks[id]; m.visible = playing; m.position.set(p.x, p.y + sp.size * 0.9 + 2.4 + Math.sin(t * 2 + p.x) * 0.12, p.z);
@@ -869,7 +870,7 @@ function onSeasonChange() {
 const adm = { allowSwap: false, speed: 1, game: 1, fly: false, stam: false, grow: 1, respawn: 1, showFps: false, helperSpeed: 1, playerEdge: 0.2, rivalReact: true };
 let round, terr, build, admin, simT = 1, dirty = false;
 const fmtT = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-const BLOCK = ['pause', 'results', 'settings', 'how', 'confirm', 'credits', 'journal', 'menu'];
+const BLOCK = ['skinPick', 'pause', 'results', 'settings', 'how', 'confirm', 'credits', 'journal', 'menu'];
 function syncPause() { const b = BLOCK.some(id => $(id).classList.contains('on')) || shopOpen; paused = !playing || b; input.active = playing && !b && !rts.on && !techOpen; }
 const openOv = id => { $(id).classList.add('on'); syncPause(); };
 const closeOv = id => { $(id).classList.remove('on'); syncPause(); };
@@ -904,7 +905,7 @@ function renderValleyMap() {
   crew.loadFromValley();
   if (!vSelPatch && ADVENTURE) { const tg = valley.get('training_garden'); vSelPatch = tg && tg.state !== 'wild' ? 'training_garden' : (valley.nextPlayable() || 'sunny_hollow'); }
   const wildN = valley.patches.filter(p => valley.get(p.id).state === 'wild').length;
-  $('vSub').textContent = (ADVENTURE ? `${wildN}/${valley.patches.length} cleared · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick a level, then ▶ Play (or ⏱ Timed)` : `${wildN}/8 wild · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick 🌿 Free roam or ⏱ Challenge for any open level`);
+  $('vSub').textContent = (ADVENTURE ? `${wildN}/${valley.patches.length} cleared · crew ${crew.get().map(id => skinEm(id)).join('')} · pick a level, then ▶ Play (or ⏱ Timed)` : `${wildN}/8 wild · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick 🌿 Free roam or ⏱ Challenge for any open level`);
   paintValleyMap({
     getState: id => valley.get(id),
     selected: vSelPatch,
@@ -916,7 +917,7 @@ function renderValleyMap() {
     const sp = SPECIES[id], sk = SKILLS[id];
     const el = document.createElement('div');
     el.className = 'vc on';
-    el.innerHTML = `${sp.emoji} ${sp.name}<br><small>${sk ? sk.name : ''}</small>`;
+    el.innerHTML = ADVENTURE ? `${skinEm(id)} ${skinName(id)}<br><small>${classOf(id).name}</small>` : `${sp.emoji} ${sp.name}<br><small>${sk ? sk.name : ''}</small>`;
     crewBox.appendChild(el);
   }
   const def = vSelPatch ? valley.def(vSelPatch) : null;
@@ -1027,6 +1028,56 @@ function startValleyPatch(patchId) {
   onb?.note?.('valleyIn');
   toast(ADVENTURE ? `${def.emoji} ${def.name} · solve it with your crew!` : `${def.emoji} ${def.name} · heal the meadow with your crew!`, 3200);
 }
+// ---------- class skins (cosmetic only: physics/hitbox/abilities stay on bee · raccoon · bear) ----------
+const baseRiders = {}, skinRiderP = {}, skinThumbs = {};
+const getSkinRider = (base, sk) => (skinRiderP[base + ':' + sk] ||= buildSkinRider(scene, base, sk));
+async function applySkins() {
+  if (!riders) return;
+  for (const c of CLASS_ORDER) {
+    const base = SKIN_BASE[c], sk = skinOfCls(c);
+    const R = sk === base ? baseRiders[base] : await getSkinRider(base, sk);
+    const old = riders[base]; if (!R || old === R) continue;
+    R.position.copy(old.position); R.rotation.order = 'YXZ'; R.rotation.copy(old.rotation); R.visible = old.visible; old.visible = false;
+    riders[base] = R; if (looks && base === cur) looks.apply(R);
+  }
+  (async () => { let n = 0; for (const c of CLASS_ORDER) { const k = skinOfCls(c); if (!skinThumbs[k]) { try { await skinThumb(c, k); n++; } catch (e) {} } } if (n) renderCrewDock(); })();
+  if (P[cur]) { $('spEm').textContent = skinEm(cur); $('spName').textContent = skinName(cur); }
+  renderCrewDock(); renderMenuTeam?.();
+}
+async function skinThumb(c, sk) {
+  if (skinThumbs[sk]) return skinThumbs[sk];
+  const base = SKIN_BASE[c], R = sk === base ? baseRiders[base] : await getSkinRider(base, sk);
+  const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x8a7a60, 2.4)); const dl = new THREE.DirectionalLight(0xffffff, 2.2); dl.position.set(3, 6, 5); sc.add(dl);
+  const par = R.parent, vis = R.visible, pos = R.position.clone(), rot = R.rotation.clone(), lay = [];
+  sc.add(R); R.position.set(0, 0, 0); R.rotation.set(0, 1.05, 0); R.visible = true; R.traverse(q => { lay.push([q, q.layers.mask]); q.layers.enable(0); });
+  if (R.userData.mixer) R.userData.mixer.update(1 / 60); // settle skinned rigs out of their bind pose
+  R.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(R, true), ctr = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
+  const cm = new THREE.PerspectiveCamera(30, 1, 0.05, 200), d = Math.max(sz.x, sz.y, sz.z) * 2.15;
+  cm.position.set(ctr.x + d * 0.3, ctr.y + d * 0.3, ctr.z + d * 0.9); cm.lookAt(ctr);
+  const W = 128, rt = new THREE.WebGLRenderTarget(W, W); rt.texture.colorSpace = THREE.SRGBColorSpace;
+  const prevT = renderer.getRenderTarget(), cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha();
+  renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(sc, cm);
+  const px = new Uint8Array(W * W * 4); renderer.readRenderTargetPixels(rt, 0, 0, W, W, px);
+  renderer.setRenderTarget(prevT); renderer.setClearColor(cc, ca); rt.dispose();
+  par ? par.add(R) : sc.remove(R); R.position.copy(pos); R.rotation.copy(rot); R.visible = vis; for (const [q, m] of lay) q.layers.mask = m;
+  const cv = document.createElement('canvas'); cv.width = cv.height = W; const g2 = cv.getContext('2d'), im = g2.createImageData(W, W);
+  for (let y = 0; y < W; y++) im.data.set(px.subarray((W - 1 - y) * W * 4, (W - y) * W * 4), y * W * 4);
+  g2.putImageData(im, 0, 0);
+  return (skinThumbs[sk] = cv.toDataURL());
+}
+let skinAfter = null;
+function openSkinPick(after) { skinAfter = after || null; renderSkinPick(); openOv('skinPick'); }
+function renderSkinPick() {
+  $('spRows').innerHTML = CLASS_ORDER.map(c => { const C = CLASSES[c], on = skinOfCls(c);
+    return `<div class="spRow" style="--cc:${C.color}"><div class="spH"><img src="${C.badge}" alt=""><b>${C.name}</b><small>${C.tag}</small></div><div class="spCards">` +
+      SKINS[c].map(k => `<button class="spc ${k === on ? 'on' : ''}" data-c="${c}" data-s="${k}"><span class="spI">${skinThumbs[k] ? `<img src="${skinThumbs[k]}" alt="">` : `<i>${SKIN_INFO[k].em}</i>`}</span><b>${SKIN_INFO[k].name}</b>${k === SKIN_BASE[c] ? '<small>default</small>' : ''}</button>`).join('') + '</div></div>'; }).join('');
+  (async () => { for (const c of CLASS_ORDER) for (const k of SKINS[c]) { if (skinThumbs[k]) continue; try { const u = await skinThumb(c, k); const el = $('spRows').querySelector(`.spc[data-s="${k}"] .spI`); if (el) el.innerHTML = `<img src="${u}" alt="">`; } catch (e) { console.warn('skin thumb', k, e); } } })();
+}
+$('spRows').addEventListener('click', async e => { const b = e.target.closest('.spc'); if (!b) return; audio.blip(2); setSkin(b.dataset.c, b.dataset.s); renderSkinPick(); await applySkins(); if ($('valley').classList.contains('on')) renderValleyMap(); });
+$('spDone').onclick = () => { closeOv('skinPick'); const f = skinAfter; skinAfter = null; f && f(); };
+if ($('vSkins')) $('vSkins').onclick = () => openSkinPick();
+if ($('pSkins')) $('pSkins').onclick = () => openSkinPick();
 function renderCrewDock() {
   const dock = $('crewDock'); if (!dock) return;
   dock.innerHTML = '';
@@ -1052,13 +1103,13 @@ function renderCrewDock() {
     const cl = classOf(id);
     b.className = (i === crew.active ? 'on ' : '') + 'cls-' + cl.id;
     b.style.borderColor = cl.color;
-    b.innerHTML = `${sp.emoji}<small>${i + 1}</small>${badgeImg(id, 'dockB')}`;
-    b.title = `${sp.name} — ${cl.name}: ${cl.tag}`;
+    { const th = skinThumbs[skinOf(id)]; b.innerHTML = `${th ? `<img class="dkI" src="${th}" alt="${skinName(id)}">` : skinEm(id)}<small>${i + 1}</small>${badgeImg(id, 'dockB')}`; }
+    b.title = `${skinName(id)} — ${cl.name}: ${cl.tag}`;
     let holdT = 0, holdTimer = null;
     b.onpointerdown = e => {
       e.preventDefault();
       holdT = performance.now();
-      holdTimer = setTimeout(() => { toast(`${sp.emoji} ${sp.name} · ${classOf(id).em} ${classOf(id).name}: ${classOf(id).tag}`, 3000); holdTimer = null; }, 260);
+      holdTimer = setTimeout(() => { toast(`${skinEm(id)} ${skinName(id)} · ${classOf(id).name}: ${classOf(id).tag}`, 3000); holdTimer = null; }, 260);
     };
     b.onpointerup = e => {
       e.preventDefault();
@@ -1492,7 +1543,7 @@ function worldTick(dt, st) {
         lines.push('⭐⭐⭐ Great job, friends!');
       } else if (res) {
         const st = res.stars; lines.push(`🌸 Petals ${res.petals}/${res.petalsTotal} ${st.petals ? '⭐' : '☆'} · ⭐ Starseed ${st.star ? '⭐' : '☆'} · ⏱ ${fmtT(res.time)}${res.par ? ' / par ' + fmtT(res.par) : ''} ${st.par ? '⭐' : '☆'}`);
-        lines.push(...res.end);
+        lines.push(...res.end.map(skinText));
         const S = (valley.data.stars = valley.data.stars || {}), old = S[res.id] || { n: 0 };
         S[res.id] = { n: Math.max(old.n || 0, res.n), petals: !!(old.petals || st.petals), star: !!(old.star || st.star), par: !!(old.par || st.par), best: Math.min(old.best || 1e9, res.time) }; valley.save();
       }
@@ -1726,12 +1777,14 @@ async function boot() {
     const sh = new THREE.Mesh(new THREE.CircleGeometry(1, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })); sh.rotation.x = -Math.PI / 2; scene.add(sh); shadows[id] = sh;
     const mk = badge(SPECIES[id].emoji, 3.0); mk.visible = false; scene.add(mk); marks[id] = mk;
   }
+  for (const id of SPECIES_ORDER) baseRiders[id] = riders[id];
+  await applySkins();
   round = createRound(); round.reset(settings.len); round.onEnd = showResults;
   DCL.TERR[0] = scene.children.length; terr = await createTerritory(scene, { heightAt, nestPts: nestInfo.map(n => [n.x, n.z]), quality: QUALITY });
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${SPECIES[id]?.emoji || ''} ${SPECIES[id]?.name || id}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
@@ -1764,7 +1817,7 @@ async function boot() {
       renderCrewDock();
       onb?.note?.('crewSwap');
       audio.sample?.('ui/select-pop', 0.35);
-      toast(`${SPECIES[id].emoji} ${SPECIES[id].name}`, 900);
+      toast(`${skinEm(id)} ${skinName(id)}`, 900);
     },
   });
   crew.loadFromValley();
