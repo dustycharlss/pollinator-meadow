@@ -713,6 +713,43 @@ body.kidTut.inRound #kidCard{display:flex}
 .spc.on{border-color:var(--cc);background:#fff;box-shadow:0 0 0 2px var(--cc),0 3px 0 rgba(59,38,20,.35)}.spc.on b::before{content:'✓ '}
 #crewDock button:has(.dkI){padding:0}#crewDock .dkI{width:44px;height:44px;pointer-events:none;display:block;margin:0 auto}@media (orientation:landscape) and (max-height:560px){#crewDock .dkI{width:36px;height:36px}}
 body.adv #vTent{display:flex!important;justify-content:center;gap:8px}
+
+/* ---- Act 2 (Fern act2-mechanics-levels.md) ---- */
+#vActs{display:flex;gap:6px;justify-content:center;margin:2px 0 6px}
+.vAct{border:3px solid #3b2614;background:#fff3d8;color:#3b2614;border-radius:12px;padding:5px 10px;font:800 13px system-ui;box-shadow:0 2px 0 #3b2614;cursor:pointer}
+.vAct.on{background:#ffd23f}
+.vAct .lk{opacity:.7}
+#vAct2Page{border:3px solid #3b2614;border-radius:14px;background:linear-gradient(#bfe3a8,#e8f5c8);padding:8px;margin:0 auto}
+#vAct2Page[hidden]{display:none}
+#vA2Note{text-align:center;font:800 12px/1.3 system-ui;color:#3b2614;margin:0 0 6px}
+#vA2Grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.a2t{position:relative;border:3px solid #3b2614;border-radius:14px;background:#fff3d8;color:#3b2614;padding:6px 2px 5px;font:800 11px/1.15 system-ui;box-shadow:0 3px 0 #3b2614;cursor:pointer;min-height:86px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.a2t .e{font-size:30px;line-height:1.1}
+.a2t small{font-weight:700;font-size:9.5px;opacity:.8}
+.a2t .st{font-size:10px;letter-spacing:-1px}
+.a2t.sel{background:#ffd23f;box-shadow:0 0 0 3px #3b2614,0 3px 0 #3b2614}
+.a2t.lock{background:#d8d2c4;filter:saturate(.3)}
+.a2t.lock .e{opacity:.55}
+.a2t .n{position:absolute;left:4px;top:3px;font-size:10px;background:#7fc6e8;border:2px solid #3b2614;border-radius:7px;padding:0 3px}
+.a2t.tt{grid-column:1/-1;flex-direction:row;justify-content:center;min-height:52px;gap:8px}
+.a2t.tt .e{font-size:26px}
+.a2t .done{position:absolute;right:4px;top:2px;font-size:12px}
+@media (orientation:landscape) and (max-height:560px){#vA2Grid{grid-template-columns:repeat(4,1fr)}.a2t{min-height:64px}.a2t .e{font-size:22px}}
+#bSneak{display:none;position:absolute;right:12px;bottom:100px;width:60px;height:60px;font-size:11px;flex-direction:column;font-weight:800;line-height:1.05;background:rgba(160,120,220,.35)}
+#bSneak span{font-size:22px}
+#bSneak.on{background:#b48cff;color:#fff;box-shadow:0 0 0 3px #fff,0 0 14px #b48cff}
+body.a2.inRound #bSneak{display:flex}
+body.kidTut #bSneak{display:none!important}
+#crewDock button .gearS{position:absolute;left:-8px;bottom:-8px;width:26px;height:26px;border-radius:50%;border:2px solid #3b2614;background:#fff3d8;font-size:14px;line-height:22px;padding:0;display:flex;align-items:center;justify-content:center;opacity:.55;box-shadow:0 2px 0 #3b2614}
+#crewDock button .gearS.on{opacity:1;background:#ffe27a;box-shadow:0 0 10px #ffd23f,0 2px 0 #3b2614}
+#crewDock button .gearS.bor::after{content:'';position:absolute;inset:-4px;border:2px dashed #fff;border-radius:50%}
+.a2Mark{position:fixed;transform:translate(-50%,-100%);pointer-events:none;z-index:6;font:900 26px/1 system-ui;text-shadow:0 2px 0 #3b2614,0 0 6px #fff;display:none}
+.a2Mark.q{color:#ffd23f}.a2Mark.x{color:#ff4040;font-size:32px}.a2Mark.z{color:#cfe8ff;font-size:16px}
+#trailSign .tsP{text-align:center;max-width:360px}
+#trailSign .tsSign{font-size:56px}
+#tsIcons{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:26px;margin:8px 0 12px}
+#tsIcons span{background:#fff3d8;border:2px solid #3b2614;border-radius:10px;padding:2px 5px}
+#a2Cp{position:fixed;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 58px);transform:translateX(-50%);z-index:7;font:800 12px system-ui;background:#fff3d8;border:2px solid #3b2614;border-radius:10px;padding:2px 8px;display:none;pointer-events:none}
 </style>
 </head>
 <body>
@@ -751,13 +788,17 @@ body.adv #vTent{display:flex!important;justify-content:center;gap:8px}
   <button class="bb wb" id="bAct" style="--r:137px;--b:13px"><span id="actEm">⚡</span><b id="actTxt">Boost</b></button>
   <button class="bb" id="bJump"><span>⤒</span><b>Jump</b></button>
   <button class="bb" id="bSwap" hidden><span>⇄</span><b>Swap</b></button>
+  <button class="bb" id="bSneak" type="button" aria-pressed="false"><span>🐾</span><b>Sneak</b></button>
 </div>
+<div class="ov" id="trailSign"><div class="panel tsP"><div class="tsSign">🪧</div><h2 id="tsH">Pip found a new trail sign!</h2><p id="tsTx"></p><div id="tsIcons"></div><button class="big" id="tsOk">Let's go! ▶</button></div></div>
 <div id="wheelUi"></div>
 
 
 <div class="ov" id="valley"><div class="vWrap">
   <h2>🗺️ Valley Map</h2>
   <div class="vSub" id="vSub">Guide your crew of three through each level</div>
+  <div id="vActs"><button type="button" class="vAct on" id="vAct1">🗺️ Act 1 · Valley</button><button type="button" class="vAct" id="vAct2">🥾 Act 2 · Trail</button></div>
+  <div id="vAct2Page" hidden><div id="vA2Note"></div><div id="vA2Grid"></div></div>
   <div id="vMapStage"><img id="vMapImg" alt="Valley map"><div id="vSlots"></div></div>
   <div id="vPatches" hidden></div>
   <div id="vDetail">Pick a patch</div>

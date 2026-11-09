@@ -47,6 +47,18 @@ export const ACTS = {
   plank: { cls: 'trickster', verb: 'Build Bridge', icon: '🪵' },
   shove: { cls: 'bruiser', verb: 'Shove', icon: '💪' },
   smash: { cls: 'bruiser', verb: 'Smash', icon: '💥' },
+  // Act 2 kit
+  aim: { cls: 'scout', verb: 'Turn Mirror', icon: '🪞' },
+  sluice: { cls: 'trickster', verb: 'Turn Sluice', icon: '🚰' },
+  plant: { cls: 'trickster', verb: 'Plant Seed', icon: '🌰' },
+  cut: { cls: 'trickster', verb: 'Cut Web', icon: '✂️' },
+  pluck: { cls: 'trickster', verb: 'Pluck Strand', icon: '🎸' },
+  leaf: { cls: 'trickster', verb: 'Float Leaf', icon: '🍃' },
+  crank: { cls: 'trickster', verb: 'Crank Vane', icon: '🌀' },
+  slide: { cls: 'trickster', verb: 'Belly-slide', icon: '🛷' },
+  stomp: { cls: 'bruiser', verb: 'Stomp Puff', icon: '🍄' },
+  pick: { cls: null, verb: 'Pick Up', icon: '🌰' },
+  drop: { cls: null, verb: 'Hand Off', icon: '⭕' },
 };
 /** valley crews need one of each class */
 export function crewClassCheck(ids) {

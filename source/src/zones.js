@@ -8,6 +8,7 @@ import { CLASSES, CLASS_OF, ACTS, classOf } from './classes.js';
 import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
 import { waterSurface, FOAM_MAT } from './water.js';
+import { MAPS2 } from './act2-maps.js';
 
 // team-lift sizes follow the class (Fern): Scout = tiny, Trickster = medium, Bruiser = bear
 export const SIZE = Object.fromEntries(Object.entries(CLASS_OF).map(([id, c]) => [id, CLASSES[c].size]));
@@ -478,6 +479,7 @@ const MAPS = {
   },
 };
 
+Object.assign(MAPS, MAPS2);
 export function createZones(scene, ctx) {
   const group = new THREE.Group(); scene.add(group);
   let solids = [], picks = [], nodes = [], hoops = [], nightDews = [], star = null;
@@ -485,7 +487,7 @@ export function createZones(scene, ctx) {
   let tutorI = 0, tutorT = -99, endLines = [], result = null;
   let exitAt = null, exitOpen = false, exitMesh = null, exitLabel = null, starGot = false;
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
-  let sampleH = null, waterMeshes = [];
+  let sampleH = null, waterMeshes = [], terrMesh = null;
   // three-class puzzle state
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
@@ -514,7 +516,7 @@ export function createZones(scene, ctx) {
     }
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
     const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
-    mesh.position.set(A.x + cx, baseY, A.z + cz); group.add(mesh);
+    mesh.position.set(A.x + cx, baseY, A.z + cz); group.add(mesh); terrMesh = mesh;
     sampleH = (lx, lz) => {
       if (lx < x0 - 4 || lx > x1 + 4 || lz < z0 - 4 || lz > z1 + 4) return null;
       let rel = fn(lx, lz);
@@ -815,7 +817,7 @@ export function createZones(scene, ctx) {
       const n = this.node('heaviest', x, z, h);
       star = { node: n, caps: caps.map(([cx, cz, ch]) => ({ x: A.x + cx, z: A.z + cz, y: gy(cx, cz) + ch })), carry: false, safe: { x: A.x, z: A.z + 2 }, mesh: null, lastY: 0, dropped: 0 };
     },
-    puzzle(pid, label, cls, sigs, o = {}) { puzzles.push({ id: pid, label, cls, sigs, req: o.req !== false, hint: o.hint || '', done: false }); },
+    puzzle(pid, label, cls, sigs, o = {}) { puzzles.push({ id: pid, label, cls, sigs, req: o.req !== false, hint: o.hint || '', done: false, track: o.track || null }); },
     // ---- Training Garden kit (t159u) ----
     /** white picket fence around a rect + tall invisible walls so nobody (not even a Scout) leaves the path */
     fence(x0, z0, x1, z1) {
@@ -852,6 +854,478 @@ export function createZones(scene, ctx) {
     },
     tag(k) { const pr = props[props.length - 1]; if (pr && !pr.sig) pr.sig = k; },
   };
+
+  // =====================================================================================================
+  // ---- Act 2 kit (Fern act2-mechanics-levels.md): checkpoints, sneak, readable sneak-only enemies, ----
+  // ---- and the 8 new mechanics. No fighting: a catch is a gentle bonk back to the last checkpoint. ----
+  // =====================================================================================================
+  const GEAR_KEY = 'pm_gear_v1';
+  const gearLoad = () => { try { return JSON.parse(localStorage.getItem(GEAR_KEY) || '{}') || {}; } catch (e) { return {}; } };
+  let gear = gearLoad(); // { lantern, whistle (found) , eqL, eqW (equipped) }
+  const gearSave = () => { try { localStorage.setItem(GEAR_KEY, JSON.stringify(gear)); } catch (e) {} };
+  let sneak = false, a2 = null;
+  const a2New = () => ({ en: [], cps: [], cp: null, hides: [], ghosts: [], mirrors: [], srcs: [], beamPool: [], shades: [], ponds: [], logs: [], seeds: [], drips: [], pads: [], winds: [], puffs: [], acorn: null, rings: [], smokes: [], glowSteps: [], hidden: [], gifts: [], season: 'summer', seasonal: [], creeks: [], slides: [], bonks: 0, burst: null, pingT: -99, pingNext: 0, wind: -1, night: false, lastCur: null, stuck: null, dew: null, borrow: null, movers: [], gravel: [], swoosh: 0, safeT: 0, cpEl: null, terr: null, light: null, outlines: [] });
+  const AA = () => a2 || (a2 = a2New());
+  const gearHas = k => !!(gear[k] || (a2 && a2.borrow && a2.borrow[k]));
+  const gearOn = k => gearHas(k) && !!gear[k === 'lantern' ? 'eqL' : 'eqW'];
+  const GEAR_OF = { scout: 'lantern', trickster: 'whistle' };
+  const GEAR_INFO = { lantern: { em: '🏮', name: 'Glow Lantern' }, whistle: { em: '🎶', name: 'Echo Whistle' } };
+  function setGear(k, on) {
+    if (!gearHas(k)) { tst(`🔒 Find the ${GEAR_INFO[k].name} in Owl Wood first`, 2000); return false; }
+    gear[k === 'lantern' ? 'eqL' : 'eqW'] = !!on; gearSave();
+    tst(`${GEAR_INFO[k].em} ${GEAR_INFO[k].name} ${on ? 'on' : 'off'}`, 1400); ctx.audio?.sample?.('ui2/gear-equip-clink', 0.4);
+    if (k === 'whistle' && on && a2) a2.pingNext = t; // ping right away
+    ctx.onGear?.(); return true;
+  }
+  const sprite = (e, s) => emojiSprite(e, s);
+  const bx = (w, h, d, c, x, y, z, e = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c, e)); m.position.set(x, y, z); return m; };
+  const L2W = (x, z, base = 0) => ({ x: A.x + x, y: gy(x, z) + base, z: A.z + z });
+  const posOfId = id => id === ctx.cur() ? ctx.getP() : ctx.parked(id);
+  const idOfCls = c => ctx.crewIds().find(i => CLASS_OF[i] === c);
+  function moveTween(q, to, dur, arc, done) { AA().movers.push({ q, a: { x: q.x, y: q.y, z: q.z }, b: to, t: 0, d: dur, arc, done }); }
+  function a2Burst(x, z, r) { const S = AA(); S.burst = { x, z, r, t }; }
+  // sector (cone) on the ground facing local +Z; ring = circle outline + faint disc
+  function coneMesh(r, half, col = 0xfff27a) {
+    const g = new THREE.CircleGeometry(r, 28, -Math.PI / 2 - half, half * 2).rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    m.renderOrder = 4; return m;
+  }
+  function ringMesh(r, col = 0xfff27a) {
+    const G = new THREE.Group();
+    const o = new THREE.Mesh(new THREE.RingGeometry(r - 0.18, r, 56).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.75, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    const d = new THREE.Mesh(new THREE.CircleGeometry(r - 0.18, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+    o.renderOrder = 4; d.renderOrder = 3; G.add(o, d); G.userData.mats = [o.material, d.material]; return G;
+  }
+  const AWCOL = { idle: 0xfff27a, sus: 0xffa020, alert: 0xff3030, sleep: 0x9ad0ff, calm: 0xbfefff };
+  // ---------- critter models (cute blocky, facing +Z) ----------
+  const MODEL = {
+    badger() { const G = new THREE.Group(); G.add(bx(1.5, 0.8, 2.1, 0x6b6b72, 0, 0.55, 0), bx(1.6, 0.25, 2.2, 0x55555c, 0, 0.98, 0), bx(0.95, 0.75, 0.85, 0xf2f2f2, 0, 0.62, 1.35), bx(0.25, 0.77, 0.87, 0x2a2a2e, -0.25, 0.62, 1.35), bx(0.25, 0.77, 0.87, 0x2a2a2e, 0.25, 0.62, 1.35), bx(0.3, 0.25, 0.25, 0x1a1a1a, 0, 0.55, 1.85));
+      for (const [x, z] of [[-0.55, 0.7], [0.55, 0.7], [-0.55, -0.7], [0.55, -0.7]]) G.add(bx(0.35, 0.35, 0.4, 0x3a3a40, x, 0.18, z)); return G; },
+    turtle() { const G = new THREE.Group(); G.add(bx(1.9, 0.7, 2.1, 0x4f8a3a, 0, 0.5, 0), bx(1.3, 0.45, 1.5, 0x6fae4a, 0, 1.0, 0), bx(0.7, 0.2, 0.8, 0x8bc65a, 0, 1.3, 0), bx(0.6, 0.5, 0.75, 0x9ac270, 0, 0.5, 1.35), bx(0.5, 0.12, 0.2, 0x3a2a1a, 0, 0.42, 1.73));
+      for (const [x, z] of [[-0.9, 0.7], [0.9, 0.7], [-0.9, -0.7], [0.9, -0.7]]) G.add(bx(0.45, 0.3, 0.45, 0x8bb060, x, 0.18, z)); return G; },
+    spider() { const G = new THREE.Group(); G.add(bx(1.1, 0.85, 1.3, 0x3a2a3a, 0, 0.9, -0.2), bx(0.7, 0.55, 0.6, 0x4a3448, 0, 0.85, 0.65), bx(0.14, 0.14, 0.06, 0xff3030, -0.15, 0.95, 0.96, 0.8), bx(0.14, 0.14, 0.06, 0xff3030, 0.15, 0.95, 0.96, 0.8), bx(0.3, 0.1, 0.06, 0x2a1a2a, 0, 1.12, 0.96));
+      for (let i = 0; i < 4; i++) for (const s of [-1, 1]) { const l = bx(1.2, 0.12, 0.12, 0x2a1a2a, s * 0.9, 0.6, 0.45 - i * 0.35); l.rotation.z = s * 0.5; G.add(l); } return G; },
+    crow() { const G = new THREE.Group(); G.add(bx(0.8, 0.7, 1.4, 0x222228, 0, 0, 0), bx(0.6, 0.55, 0.55, 0x2a2a30, 0, 0.2, 0.85), bx(0.2, 0.15, 0.4, 0xffc93c, 0, 0.15, 1.25), bx(0.6, 0.12, 0.7, 0x1a1a20, 0, 0.05, -0.95));
+      const wl = bx(1.4, 0.1, 0.7, 0x1a1a20, -0.95, 0.1, 0), wr = bx(1.4, 0.1, 0.7, 0x1a1a20, 0.95, 0.1, 0); G.add(wl, wr); G.userData.wings = [wl, wr]; return G; },
+    nest() { const G = new THREE.Group(); G.add(bx(1.5, 1.9, 1.5, 0xd8c49a, 0, 1.0, 0), bx(1.6, 0.2, 1.6, 0xb8a47a, 0, 0.6, 0), bx(1.6, 0.2, 1.6, 0xb8a47a, 0, 1.3, 0), bx(0.5, 0.5, 0.1, 0x3a2a1a, 0, 0.5, 0.76));
+      const W = new THREE.Group(); for (let i = 0; i < 5; i++) { const w = new THREE.Group(); w.add(bx(0.3, 0.22, 0.4, 0xffd23f, 0, 0, 0, 0.3), bx(0.31, 0.08, 0.41, 0x1a1a1a, 0, 0, 0.05)); w.userData.a = i / 5 * 6.28; W.add(w); } G.add(W); G.userData.wasps = W; return G; },
+    owl() { const G = new THREE.Group(); G.add(bx(1.2, 1.5, 1.0, 0x8a6440, 0, 0.75, 0), bx(0.9, 0.9, 0.2, 0xd8b98a, 0, 0.75, 0.48));
+      const eL = bx(0.34, 0.34, 0.08, 0xffd23f, -0.25, 1.15, 0.55, 0.9), eR = bx(0.34, 0.34, 0.08, 0xffd23f, 0.25, 1.15, 0.55, 0.9); G.add(eL, eR, bx(0.16, 0.2, 0.18, 0xe0a030, 0, 0.95, 0.58), bx(0.2, 0.35, 0.2, 0x6a4a30, -0.45, 1.6, 0), bx(0.2, 0.35, 0.2, 0x6a4a30, 0.45, 1.6, 0)); G.userData.eyes = [eL, eR]; return G; },
+    fox() { const G = new THREE.Group(); G.add(bx(0.9, 0.75, 1.9, 0xe8762a, 0, 0.65, 0), bx(0.75, 0.7, 0.75, 0xe8762a, 0, 0.9, 1.15), bx(0.5, 0.35, 0.45, 0xfff3e6, 0, 0.75, 1.55), bx(0.15, 0.15, 0.12, 0x1a1a1a, 0, 0.8, 1.8), bx(0.22, 0.35, 0.15, 0xe8762a, -0.25, 1.4, 1.1), bx(0.22, 0.35, 0.15, 0xe8762a, 0.25, 1.4, 1.1), bx(0.4, 0.4, 1.1, 0xe8762a, 0, 0.75, -1.4), bx(0.42, 0.42, 0.35, 0xfff3e6, 0, 0.75, -2.0));
+      for (const [x, z] of [[-0.3, 0.6], [0.3, 0.6], [-0.3, -0.6], [0.3, -0.6]]) G.add(bx(0.22, 0.5, 0.22, 0x3a2414, x, 0.25, z)); return G; },
+    sprinkler() { const G = new THREE.Group(); G.add(bx(0.3, 0.8, 0.3, 0x8a8a90, 0, 0.4, 0)); const H = new THREE.Group(); H.position.y = 0.9; H.add(bx(0.55, 0.3, 0.55, 0x3aa0e8, 0, 0, 0), bx(0.15, 0.15, 0.5, 0x2a6a9a, 0, 0.05, 0.4)); G.add(H); G.userData.head = H; return G; },
+    mower() { const G = new THREE.Group(); G.add(bx(2.2, 0.9, 1.8, 0xd83a3a, 0, 0.75, 0), bx(1.6, 0.35, 1.2, 0x2a2a2a, 0, 1.3, 0), bx(0.15, 1.4, 0.15, 0x6a6a70, -0.6, 1.7, -0.9), bx(0.15, 1.4, 0.15, 0x6a6a70, 0.6, 1.7, -0.9), bx(1.35, 0.15, 0.15, 0x6a6a70, 0, 2.4, -0.9));
+      for (const [x, z] of [[-1.05, 0.7], [1.05, 0.7], [-1.05, -0.7], [1.05, -0.7]]) G.add(bx(0.3, 0.6, 0.6, 0x1a1a1a, x, 0.3, z)); return G; },
+  };
+  // ---------- enemies ----------
+  const EN_NAME = { badger: 'Sleepy Badger', turtle: 'Snapping Turtle', spider: 'Grumpy Spider', crow: 'Patrol Crow', nest: 'Wasp Nest', owl: 'Night Owl', fox: 'Prowling Fox', sprinkler: 'Sprinkler', mower: 'Lawnmower' };
+  function enemy(kind, id, x, z, o = {}) {
+    const S = AA(), w = L2W(x, z, o.base || 0), G = MODEL[kind](); G.position.set(w.x, w.y + (o.lift || 0), w.z); G.rotation.y = o.yaw || 0; group.add(G);
+    const F = new THREE.Group(); F.position.set(w.x, w.y + 0.12, w.z); group.add(F); // awareness decals live on the ground
+    const e = { kind, id, name: EN_NAME[kind], G, F, x: w.x, y: w.y, z: w.z, gy: w.y, yaw: o.yaw || 0, baseYaw: o.yaw || 0, home: { x: w.x, z: w.z }, st: 'idle', sus: 0, grace: o.grace ?? 1, alertT: -99, peek: !!(o.peek || recipe.peek), o, cone: null, ring: null, el: null };
+    if (o.cone) { e.cone = coneMesh(o.cone[0], o.cone[1]); F.add(e.cone); }
+    if (o.ring) { e.ring = ringMesh(o.ring); F.add(e.ring); }
+    const el = document.createElement('div'); el.className = 'a2Mark'; document.body.appendChild(el); e.el = el;
+    S.en.push(e); return e;
+  }
+  const inCone = (e, q, r, half, yaw = e.yaw) => { const dx = q.x - e.x, dz = q.z - e.z, d = Math.hypot(dx, dz); if (d > r) return false; if (d < 0.6) return true; return (dx * Math.sin(yaw) + dz * Math.cos(yaw)) / d >= Math.cos(half); };
+  const flatD = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+  function bearAt(q, r) { const bid = idOfCls('bruiser'); if (!bid || bid === ctx.cur()) return false; const b = ctx.parked(bid); return !!b && flatD(b, q) < r && Math.abs(b.y - q.y) < 2.8; }
+  function hidden(q, kind) { const S = AA(); return S.hides.some(h => (!kind || h.kind === kind || (kind === 'canopy' && h.kind === 'canopy')) && flatD(h, q) < h.r && (h.kind !== 'canopy' || q.y < h.y)); }
+  function losBlocked(e, q) { // trunks between the owl and the animal block its gaze
+    for (const h of AA().hides) { if (h.kind !== 'trunk') continue; const ax = q.x - e.x, az = q.z - e.z, L = Math.hypot(ax, az); if (L < 0.1) continue; const u = ((h.x - e.x) * ax + (h.z - e.z) * az) / (L * L); if (u <= 0.05 || u >= 1) continue; const px = e.x + ax * u, pz = e.z + az * u; if (Math.hypot(h.x - px, h.z - pz) < h.r) return true; }
+    return false;
+  }
+  function noiseOf(p, id) {
+    const c = CLASS_OF[id]; if (c === 'scout' && !p.grounded && p.y - gy(p.x - A.x, p.z - A.z) > 0.5) return 0; // flying is silent
+    const S = AA(), onGravel = S.gravel.some(r => p.x > r.x0 && p.x < r.x1 && p.z > r.z0 && p.z < r.z1);
+    const spd = Math.hypot(p.vx || 0, p.vz || 0); if (spd < 0.6) return 0;
+    if (c === 'bruiser' && S.night && recipe.quietBear) return 0; // the bear sleep-walks quietly at night
+    if (onGravel) return 6;
+    return sneak ? 1 : c === 'bruiser' ? 7 : 5.5;
+  }
+  // detection per kind → true when the active animal is noticed right now
+  function sees(e, p, id) {
+    const S = AA(), c = CLASS_OF[id], q = p;
+    if (Math.abs(q.y - e.gy) > (e.kind === 'crow' || e.kind === 'owl' ? 9 : 3.2) && e.kind !== 'crow') return false;
+    switch (e.kind) {
+      case 'badger': {
+        if (e.asleepAll) return false;
+        const n = noiseOf(p, id), awake = t < (e.awakeT || -1), R = e.o.ring;
+        if (inCone(e, q, e.o.cone[0], e.o.cone[1]) && (c !== 'scout' || p.grounded)) return true;
+        if (awake && flatD(e, q) < R && (c !== 'scout' || p.grounded)) return true;
+        return n > 1 && flatD(e, q) < R;
+      }
+      case 'turtle': if (t < (e.napT || -1)) return false; if (c === 'scout' && !p.grounded) return false; return inCone(e, q, e.o.cone[0], e.o.cone[1]);
+      case 'spider': if (c === 'scout') return false; return inCone(e, q, e.o.cone[0], e.o.cone[1]);
+      case 'crow': { const air = !p.grounded || c === 'scout'; if (!air) return false; if (hidden(q, 'canopy') || bearAt(q, 2.2)) return false; return inCone({ x: e.x, z: e.z }, q, e.o.cone[0], e.o.cone[1], e.yaw); }
+      case 'nest': { if (e.calm) return false; if (S.smokes.some(s => t < s.until && flatD(s, q) < s.r)) return false; return flatD(e, q) < e.o.ring && q.y - e.gy < 4; }
+      case 'owl': if (!S.night) return false; if (!inCone(e, q, e.o.cone[0], e.o.cone[1])) return false; return !losBlocked(e, q);
+      case 'fox': {
+        const tiny = c === 'scout', hide = tiny && (hidden(q, 'log') || bearAt(q, 1.8));
+        if (hide) return false;
+        if (inCone(e, q, e.o.cone[0], e.o.cone[1])) return true;
+        if (!tiny || sneak || S.season === 'winter') return false; // sneaking + winter snow hide scent
+        return flatD(e, q) < e.o.ring;
+      }
+      case 'sprinkler': if (e.paused) return false; return q.y - e.gy < 3 && inCone(e, q, e.o.r, e.o.beam, e.sweepYaw);
+      case 'mower': return e.live && Math.abs(q.x - e.x) < 1.5 && Math.abs(q.z - e.z) < 1.3 && q.y - e.gy < 1.6;
+    }
+    return false;
+  }
+  function bonk(e) {
+    const S = AA(), p = ctx.getP(); if (tw) tw = null;
+    fx(p.x, p.y + 0.6, p.z);
+    const cp = S.cp || { x: homeAt ? homeAt.x : A.x, y: gy((homeAt ? homeAt.x : A.x) - A.x, (homeAt ? homeAt.z : A.z) - A.z), z: homeAt ? homeAt.z : A.z };
+    p.x = cp.x + 0.6; p.y = cp.y + 0.8; p.z = cp.z - 0.6; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; S.stuck = null;
+    S.bonks++; S.safeT = t + 1.6; e.alertT = t; e.sus = 0;
+    if (S.acorn && S.acorn.by === ctx.cur()) acornBack();
+    fx(p.x, p.y + 0.6, p.z); ctx.audio?.sample?.('ui/error-bonk', 0.5);
+    tst(`💫 Bonk! The ${e.name} spotted you — poof, back to the 🚩 flag`, 2400);
+  }
+  function updEnemies(dt, cam, p, cur) {
+    const S = AA(), c = CLASS_OF[cur];
+    for (const e of S.en) {
+      // per-kind motion
+      if (e.kind === 'badger') {
+        if (e.lure) { const L = e.lure, d = flatD(e, L); if (L.phase === 'go') { if (d > 0.4) { const v = Math.min(d, 2.4 * dt); e.x += (L.x - e.x) / d * v; e.z += (L.z - e.z) / d * v; e.yaw = Math.atan2(L.x - e.x, L.z - e.z); } else { L.phase = 'sit'; L.until = t + (e.o.lureT || 12); } }
+          else if (L.phase === 'sit' && t > L.until) L.phase = 'back';
+          else if (L.phase === 'back') { const H = e.home, dh = flatD(e, H); if (dh > 0.4) { const v = Math.min(dh, 2 * dt); e.x += (H.x - e.x) / dh * v; e.z += (H.z - e.z) / dh * v; e.yaw = Math.atan2(H.x - e.x, H.z - e.z); } else { e.lure = null; e.yaw = e.baseYaw; if (e.lurePr) { e.lurePr.done = false; if (e.lurePr.icon) e.lurePr.icon.visible = true; } } } }
+        if (S.burst && t - S.burst.t < 0.1 && flatD(e, S.burst) < e.o.ring + 3) { e.awakeT = t + 6; }
+        e.G.rotation.z = Math.sin(t * 1.6) * 0.03;
+      } else if (e.kind === 'turtle') {
+        const pond = e.o.pond && S.ponds.find(q => q.id === e.o.pond);
+        if (pond && pond.level === 'high') e.napT = t + (e.o.nap || 14);
+        if (e.look && t > e.look.until) e.look = null;
+        const want = e.look ? Math.atan2(e.look.x - e.x, e.look.z - e.z) : e.baseYaw; e.yaw += Math.atan2(Math.sin(want - e.yaw), Math.cos(want - e.yaw)) * Math.min(1, dt * 3);
+        const nap = t < (e.napT || -1); e.G.position.y += ((nap ? e.gy - 0.9 : e.gy) - e.G.position.y) * Math.min(1, dt * 3);
+      } else if (e.kind === 'spider') {
+        if (e.look && t > e.look.until) e.look = null;
+        const L = e.look || e.watch, want = L ? Math.atan2(L.x - e.x, L.z - e.z) : e.baseYaw; e.yaw += Math.atan2(Math.sin(want - e.yaw), Math.cos(want - e.yaw)) * Math.min(1, dt * 4);
+      } else if (e.kind === 'crow') {
+        const o = e.o; e.ang = (e.ang ?? 0) + dt * o.speed / o.R; e.x = A.x + o.cx + Math.cos(e.ang) * o.R; e.z = A.z + o.cz + Math.sin(e.ang) * o.R;
+        e.yaw = Math.atan2(-Math.sin(e.ang), Math.cos(e.ang)); e.G.position.set(e.x, e.gy + o.h, e.z); e.F.position.set(e.x, e.gy + 0.12, e.z);
+        const wg = e.G.userData.wings; if (wg) { wg[0].rotation.z = Math.sin(t * 9) * 0.5; wg[1].rotation.z = -Math.sin(t * 9) * 0.5; }
+      } else if (e.kind === 'nest') {
+        e.calm = S.smokes.some(s => t < s.until && flatD(s, e) < s.r + 1.5);
+        const W = e.G.userData.wasps; W.children.forEach((w, i) => { const a = w.userData.a + t * (e.calm ? 0.4 : 2.2), rr = e.calm ? 1.1 : (e.st === 'alert' ? 2.6 : 1.7); w.position.set(Math.cos(a) * rr, 1.2 + Math.sin(t * 3 + i) * 0.4 - (e.calm ? 0.8 : 0), Math.sin(a) * rr); });
+      } else if (e.kind === 'owl') {
+        e.yaw = e.baseYaw + Math.sin(t * (e.o.sweepV || 0.45)) * (e.o.sweep || 1.1);
+        for (const m of e.G.userData.eyes) m.scale.y = S.night ? (Math.sin(t * 0.9) > 0.97 ? 0.15 : 1) : 0.12;
+      } else if (e.kind === 'fox') {
+        const pts = e.o.path; if (pts && !e.peek) { e.k = e.k ?? 0; const tg = L2W(pts[e.k][0], pts[e.k][1]), d = flatD(e, tg); if (d < 0.4) e.k = (e.k + 1) % pts.length; else { const v = Math.min(d, (e.o.speed || 1.6) * dt); e.x += (tg.x - e.x) / d * v; e.z += (tg.z - e.z) / d * v; const wy = Math.atan2(tg.x - e.x, tg.z - e.z); e.yaw += Math.atan2(Math.sin(wy - e.yaw), Math.cos(wy - e.yaw)) * Math.min(1, dt * 4); } }
+        if (e.ring) e.ring.visible = S.season !== 'winter';
+      } else if (e.kind === 'sprinkler') {
+        e.paused = !!(e.o.pause && isOn(e.o.pause)); if (!e.paused) e.ph = (e.ph || 0) + dt * (e.o.speed || 0.8);
+        e.sweepYaw = e.baseYaw + Math.sin(e.ph || 0) * (e.o.sweep || 1.2); e.G.userData.head.rotation.y = e.sweepYaw - e.baseYaw; if (e.cone) { e.cone.rotation.y = e.sweepYaw - e.baseYaw; e.cone.visible = !e.paused; }
+      } else if (e.kind === 'mower') {
+        const o = e.o, ph = (t + (o.off || 0)) % o.period, run = o.period - o.dur; e.live = ph > run; const k = e.live ? (ph - run) / o.dur : 0;
+        e.x = A.x + o.x0 + (o.x1 - o.x0) * k; e.G.position.x = e.x; e.warn = !e.live && ph > run - 1.6;
+      }
+      if (e.kind !== 'crow' && e.kind !== 'mower') { e.G.position.x = e.x; e.G.position.z = e.z; e.F.position.x = e.x; e.F.position.z = e.z; }
+      if (e.kind !== 'sprinkler') e.G.rotation.y = e.yaw; else e.G.rotation.y = e.baseYaw;
+      if (e.cone && e.kind !== 'sprinkler') e.cone.rotation.y = e.yaw;
+      // awareness: ? (grace) then ! (react)
+      const asleep = (e.kind === 'owl' && !S.night) || (e.kind === 'turtle' && t < (e.napT || -1)) || e.calm || e.paused;
+      let see = !asleep && t > S.safeT && !tw && sees(e, p, cur);
+      const grace = e.kind === 'owl' && gearOn('lantern') && c === 'scout' ? 0.35 : e.grace;
+      if (see) e.sus += dt; else e.sus = Math.max(0, e.sus - dt * 0.8);
+      if (e.peek) e.sus = Math.min(e.sus, grace * 0.9); // Trailhead peeks never catch anyone
+      let st = asleep ? 'sleep' : e.sus > 0.02 ? 'sus' : 'idle';
+      if (t - e.alertT < 1.3) st = 'alert';
+      else if (e.sus >= grace) { bonk(e); st = 'alert'; }
+      if (e.kind === 'mower' && e.warn) st = 'sus';
+      if (e.kind === 'mower' && e.live) st = 'alert';
+      e.st = st;
+      const col = AWCOL[st === 'sleep' ? 'sleep' : st], op = { idle: 0.26, sus: 0.42, alert: 0.55, sleep: 0.12 }[st];
+      if (e.cone) { e.cone.material.color.setHex(col); e.cone.material.opacity = op; }
+      if (e.ring) { e.ring.userData.mats[0].color.setHex(col); e.ring.userData.mats[1].color.setHex(col); e.ring.userData.mats[0].opacity = st === 'sleep' ? 0.35 : 0.8; e.ring.userData.mats[1].opacity = op * 0.45; const R = e.kind === 'badger' && t < (e.awakeT || -1) ? 1.15 : 1; e.ring.scale.set(R, 1, R); }
+      // floating ? / ! / 💤 marker
+      const mk = st === 'alert' ? '!' : st === 'sus' ? '?' : st === 'sleep' ? (e.kind === 'turtle' && e.napT ? `💤${Math.max(0, Math.ceil(e.napT - t))}` : '💤') : (e.peek ? '💤' : '');
+      const hy = e.kind === 'crow' ? e.o.h + 1.6 : e.kind === 'owl' ? 2.6 + (e.o.lift || 0) : 2.4;
+      _v.set(e.x, e.gy + hy, e.z).project(cam);
+      const on = mk && _v.z < 1 && Math.abs(_v.x) < 1.1 && Math.abs(_v.y) < 1.1 && flatD(e, p) < 34;
+      e.el.style.display = on ? 'block' : 'none';
+      if (on) { e.el.textContent = mk; e.el.className = 'a2Mark ' + (mk === '!' ? 'x' : mk === '?' ? 'q' : 'z'); e.el.style.left = ((_v.x + 1) / 2 * innerWidth) + 'px'; e.el.style.top = ((1 - _v.y) / 2 * innerHeight) + 'px'; }
+    }
+  }
+  // ---------- builder kit ----------
+  Object.assign(B, {
+    /** checkpoint flag: touching it makes it your return spot after a bonk */
+    checkpoint(x, z, base = 0) {
+      const S = AA(), w = L2W(x, z, base), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
+      G.add(bx(0.16, 2.4, 0.16, 0x8a5a2b, 0, 1.2, 0)); const f = bx(0.9, 0.55, 0.06, 0xb0b0b0, 0.5, 2.05, 0, 0.3); G.add(f);
+      const rg = ringMesh(1.3, 0xffffff); rg.position.y = 0.06; G.add(rg);
+      S.cps.push({ x: w.x, y: w.y, z: w.z, G, f, rg, on: false });
+    },
+    lane(x0, x1, z0, z1, o = {}) { // tall invisible walls with a low visible hedge: keeps everyone on the trail
+      const h = o.h ?? 2.2, look = o.look || 'hedge';
+      for (const [x, z, w, d] of [[x0 - 0.5, (z0 + z1) / 2, 1, z1 - z0 + 1], [x1 + 0.5, (z0 + z1) / 2, 1, z1 - z0 + 1], [(x0 + x1) / 2, z0 - 0.5, x1 - x0 + 2, 1], [(x0 + x1) / 2, z1 + 0.5, x1 - x0 + 2, 1]]) {
+        const r = this.wall(x, z, w, d, h, { look }); const g = r.g;
+        addSolid({ type: 'box', x: A.x + x, z: A.z + z, hx: w / 2, hz: d / 2, yaw: 0, y0: g + h - 0.1, top: g + 30, kind: 'zone', fadeM: true });
+      }
+    },
+    /** a hedge wall across the lane with a door that opens on `sig`; invisible above so nobody flies over */
+    door(s, z, x0, x1, o = {}) {
+      const dw = o.w ?? 3.2, dx = o.x ?? 0, h = o.h ?? 3.4, look = o.look || 'hedge';
+      const L = dx - dw / 2 - x0, R = x1 - (dx + dw / 2);
+      if (L > 0.05) this.wall(x0 + L / 2, z, L, 1, h, { look }); if (R > 0.05) this.wall(x1 - R / 2, z, R, 1, h, { look });
+      const g = gy(0, z);
+      addSolid({ type: 'box', x: A.x + (x0 + x1) / 2, z: A.z + z, hx: (x1 - x0) / 2, hz: 0.5, yaw: 0, y0: g + h - 0.2, top: g + 30, kind: 'zone', fadeM: true });
+      if (L > 0.05) addSolid({ type: 'box', x: A.x + x0 + L / 2, z: A.z + z, hx: L / 2, hz: 0.5, yaw: 0, y0: g - 1, top: g + 30, kind: 'zone', fadeM: true });
+      if (R > 0.05) addSolid({ type: 'box', x: A.x + x1 - R / 2, z: A.z + z, hx: R / 2, hz: 0.5, yaw: 0, y0: g - 1, top: g + 30, kind: 'zone', fadeM: true });
+      if (!s) return null;
+      const gt = this.gate(s, dx, z, dw, 0.7, h - 0.2, { latch: o.held ? false : true, label: o.label || 'Gate' });
+      gt.lock = emojiSprite('🔒', 1.3); gt.lock.position.set(A.x + dx, g + h + 0.6, A.z + z - 0.5); group.add(gt.lock);
+      return gt;
+    },
+    hide(kind, x, z, r, h = 3) { // canopy (crow), trunk (owl), log (fox)
+      const S = AA(), w = L2W(x, z);
+      if (kind === 'canopy') { const G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) G.add(bx(0.25, h, 0.25, 0x6b4a30, sx * r * 0.6, h / 2, sz * r * 0.6)); G.add(bx(r * 1.9, 0.35, r * 1.9, 0x4f9a3e, 0, h + 0.1, 0), bx(r * 1.4, 0.3, r * 1.4, 0x6ab84f, 0, h + 0.4, 0)); fades.push({ roots: [G], x0: w.x - r, x1: w.x + r, z0: w.z - r, z1: w.z + r, y0: w.y + h - 0.5, y1: w.y + h + 1, a: 1 }); }
+      if (kind === 'trunk') { this.tree(x, z, r * 1.6); }
+      if (kind === 'log') { const G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.0, 1.1, 2.6, 0x8b6a45, -0.55, 0.55, 0), bx(1.0, 1.1, 2.6, 0x8b6a45, 0.55, 0.55, 0), bx(2.1, 0.3, 2.6, 0x9c7850, 0, 1.2, 0), bx(1.2, 0.85, 0.05, 0x2a1a10, 0, 0.5, 1.31)); }
+      S.hides.push({ kind, x: w.x, z: w.z, y: w.y + h, r: kind === 'trunk' ? r * 0.7 : r });
+    },
+    badger(id, x, z, o = {}) { const e = enemy('badger', id, x, z, { cone: [3.2, 0.6], ring: o.ring || 5.5, ...o }); if (o.lure) { const [lx, lz, lh = 1.2] = o.lure; this.target('lure:' + id, lx, lz, lh, { range: o.lureRange || 14, label: o.lureLabel || 'Far bush' }); const pr = props[props.length - 1]; pr.lureOf = e; e.lurePr = pr; e.lureAt = L2W(o.lurePt ? o.lurePt[0] : lx, o.lurePt ? o.lurePt[1] : lz); } return e; },
+    turtle(id, x, z, o = {}) { const e = enemy('turtle', id, x, z, { cone: [4.6, 0.95], ...o }); if (o.leaf) { const [lx, lz] = o.leaf; this.lever('leaf:' + id, lx, lz, { label: 'Floating leaf' }); const pr = props[props.length - 1]; pr.act = 'leaf'; pr.re = true; pr.turtle = e; pr.leafAt = L2W(o.leafTo ? o.leafTo[0] : lx, o.leafTo ? o.leafTo[1] : lz); } return e; },
+    spider(id, x, z, o = {}) { return enemy('spider', id, x, z, { cone: [4.8, 0.55], ...o }); },
+    crow(id, cx, cz, R, h, o = {}) { const e = enemy('crow', id, cx + R, cz, { cone: [4.2, 0.6], cx, cz, R, h, speed: o.speed || 3.2, ...o }); e.ang = o.ang || 0; return e; },
+    wasps(id, x, z, o = {}) { return enemy('nest', id, x, z, { ring: o.r || 5, grace: 0.9, lift: o.lift || 0, ...o }); },
+    owl(id, x, z, o = {}) { const base = o.perch ?? 3.5; this.wall(x, z, 0.7, 0.7, base, { look: 'bark' }); return enemy('owl', id, x, z, { cone: [o.r || 11, o.half || 0.36], lift: base, ...o }); },
+    fox(id, x, z, o = {}) { return enemy('fox', id, x, z, { cone: [3.6, 0.55], ring: o.ring || 5, ...o }); },
+    sprinkler(id, x, z, o = {}) { const e = enemy('sprinkler', id, x, z, { r: o.r || 7, beam: o.beam || 0.22, ...o }); e.cone = coneMesh(e.o.r, e.o.beam, 0x7fd8ff); e.F.add(e.cone); e.F.rotation.y = e.baseYaw; e.grace = o.grace ?? 0.45; return e; },
+    mower(id, x0, x1, z, o = {}) { const e = enemy('mower', id, x0, z, { x0, x1, period: o.period || 9, dur: o.dur || 3.2, yaw: Math.PI / 2, ...o }); e.grace = 0.05; const L = Math.abs(x1 - x0), m = new THREE.Mesh(new THREE.PlaneGeometry(L + 2, 2.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff6a3a, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); const w = L2W((x0 + x1) / 2, z); m.position.set(w.x, w.y + 0.1, w.z); group.add(m); e.lane = m; return e; },
+    gravel(x0, z0, x1, z1) { const S = AA(); S.gravel.push({ x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1 }); const w = L2W((x0 + x1) / 2, (z0 + z1) / 2); const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.08, z1 - z0), mat(0xb8b0a0)); m.position.set(w.x, w.y + 0.05, w.z); group.add(m); for (let i = 0; i < 14; i++) { const s = bx(0.3, 0.15, 0.3, 0x8a8478, w.x + (Math.sin(i * 7.1) * 0.5) * (x1 - x0), w.y + 0.1, w.z + (Math.cos(i * 3.3) * 0.5) * (z1 - z0)); group.add(s); } },
+    // ---- M1 Light & Shadow ----
+    sunlamp(id, x, z, h, o = {}) { const w = L2W(x, z, h); this.cyl(x, z, 0.9, h - 0.4, 0x8b6a45); const cr = new THREE.Mesh(new THREE.OctahedronGeometry(0.6), mat(0xffe680, 0.9)); cr.position.set(w.x, w.y + 0.2, w.z); group.add(cr); AA().srcs.push({ id, x: w.x, y: w.y + 0.2, z: w.z, need: o.need, to: o.to, cr, shade: o.shade }); },
+    mirror(id, x, z, h, aims, o = {}) {
+      const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
+      const post = bx(0.2, h, 0.2, 0x8b6a45, 0, -h / 2, 0); G.add(post); const F = new THREE.Group(); G.add(F); F.add(bx(1.3, 1.3, 0.12, 0xdff4ff, 0, 0.3, 0, 0.5), bx(1.5, 0.15, 0.2, 0xffd23f, 0, 1.0, 0), bx(1.5, 0.15, 0.2, 0xffd23f, 0, -0.4, 0));
+      const m = { id, x: w.x, y: w.y + 0.3, z: w.z, aims: aims.map(a => ({ ...a, pt: Array.isArray(a.to) ? L2W(a.to[0], a.to[1], a.to[2] ?? 0.6) : null })), k: o.k || 0, F };
+      AA().mirrors.push(m);
+      props.push({ kind: 'mirror', act: 'aim', cls: 'scout', sig: 'mir:' + id, x: w.x, y: w.y, z: w.z, r: 2.8, re: true, label: o.label || 'Sun mirror', mir: m, G, icon: badge('scout', w.x, w.y + 1.9, w.z, 0.9) });
+    },
+    /** ghost platform: solid only while the sunbeam lands on it (shadow:true → while Bear's shadow covers it) */
+    ghost(id, x, z, w, d, top, o = {}) {
+      const r = this.wall(x, z, w, d, top, { bot: o.bot ?? top - 0.6, c: o.shadow ? 0x6a5a9a : 0xfff0a0 }); r.s.off = true;
+      r.m.material = new THREE.MeshLambertMaterial({ color: o.shadow ? 0x8a7ad0 : 0xfff3b0, transparent: true, opacity: 0.25, emissive: o.shadow ? 0x2a2050 : 0x806a20, emissiveIntensity: 0.3, depthWrite: false });
+      AA().ghosts.push({ id, r, shadow: !!o.shadow, on: false, sig: (o.shadow ? 'shade:' : 'lit:') + id });
+    },
+    // ---- M2 Water Level ----
+    pond(id, x0, z0, x1, z1, o = {}) {
+      const S = AA(), w = L2W((x0 + x1) / 2, (z0 + z1) / 2), W2 = x1 - x0, D2 = z1 - z0;
+      const mud = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2).rotateX(-Math.PI / 2), mat(0x6a5030)); mud.position.set(w.x, w.y + 0.04, w.z); group.add(mud);
+      const wm = waterSurface(new THREE.PlaneGeometry(W2 + 0.4, D2 + 0.4).rotateX(-Math.PI / 2), { color: 0x1f8cff, repeat: [W2 / 6, D2 / 6] }); wm.position.set(w.x, w.y + 0.2, w.z); group.add(wm); waterMeshes.push(wm);
+      const rect = { x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1, off: false };
+      deep.push(rect);
+      const pd = { id, rect, wm, mud, gy: w.y, level: o.level || 'mid', wr: [] };
+      S.ponds.push(pd); setPond(pd, pd.level, true); return pd;
+    },
+    sluice(pondId, x, z, level, o = {}) { this.lever(`${pondId}:${level}:lv`, x, z, { label: o.label || `Sluice · ${level} water` }); const pr = props[props.length - 1]; pr.act = 'sluice'; pr.re = true; pr.pond = pondId; pr.level = level; },
+    floatLog(id, pondId, ax, az, bx2, bz, o = {}) { // Bear rides it across at high water
+      const S = AA(), a = L2W(ax, az), b = L2W(bx2, bz), yaw = o.yaw || 0, wd = o.w || 2.6, dd = o.d || 2.2;
+      const m = new THREE.Group(); m.add(bx(wd, 0.7, dd, 0x8b6a45, 0, 0, 0), bx(wd + 0.05, 0.35, 0.5, 0xd9b07a, 0, 0, 0)); group.add(m);
+      const s = addSolid({ type: 'box', x: a.x, z: a.z, hx: wd / 2, hz: dd / 2, yaw: 0, y0: a.y - 1, top: a.y + 0.5, kind: 'zone', off: true });
+      const cr = { x0: 0, z0: 0, x1: 0, z1: 0, on: false, thin: false }; crossings.push(cr);
+      S.logs.push({ id, pond: pondId, a, b, m, s, cr, k: 0, dir: 1, wd, dd, x: a.x, z: a.z, season: o.season });
+    },
+    // ---- M3 Seed Growing ----
+    seed(id, x, z, o = {}) {
+      const S = AA(), w = L2W(x, z, o.base || 0), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
+      G.add(bx(1.4, 0.2, 1.4, 0x7a5a30, 0, 0.1, 0)); const sprout = bx(0.25, 0.5, 0.25, 0x6fbf4a, 0, 0.45, 0); sprout.visible = false; G.add(sprout);
+      const sd = { id, x: w.x, y: w.y, z: w.z, G, sprout, planted: false, grown: false, grow: o.grow || 'vine', pad: null };
+      props.push({ kind: 'seed', act: 'plant', cls: 'trickster', sig: 'planted:' + id, x: w.x, y: w.y, z: w.z, r: 2.2, label: o.label || 'Seed spot', need: o.need, needWhy: o.needWhy, seed: sd, icon: badge('trickster', w.x, w.y + 1.8, w.z, 0.9) });
+      if (sd.grow === 'vine') { const [ax, az, ha, bxx, bz, hb] = o.vine; this.vine(ax, az, ha, bxx, bz, hb, { need: 'grown:' + id, needWhy: 'Grow the vine first: plant the seed (Trickster), then water it (Scout)', label: o.vineLabel || 'Vine ladder' }); const vp = props[props.length - 1]; vp.leaves = group.children.slice(-Math.max(2, Math.ceil((vp.b.y - vp.y) / 0.9))); vp.leaves.forEach(l => { l.visible = false; }); sd.vine = vp; }
+      else { const pw = L2W(o.padAt ? o.padAt[0] : x, o.padAt ? o.padAt[1] : z, o.base || 0); const P = new THREE.Group(); P.position.set(pw.x, pw.y, pw.z); P.add(bx(0.5, 0.7, 0.5, 0xf3eee0, 0, 0.35, 0), bx(2.2, 0.5, 2.2, 0xe04848, 0, 0.85, 0, 0.15), bx(0.4, 0.12, 0.4, 0xffffff, 0.5, 1.12, 0.3), bx(0.35, 0.12, 0.35, 0xffffff, -0.5, 1.12, -0.4)); P.visible = false; group.add(P); sd.pad = { x: pw.x, y: pw.y + 1.1, z: pw.z, P, v: o.v || { bruiser: 22, trickster: 15, scout: 11 } }; sd.pad.s = addSolid({ type: 'cyl', x: pw.x, z: pw.z, r: 1.1, y0: pw.y - 1, top: pw.y + 1.1, kind: 'zone', off: true }); S.pads.push(sd); }
+      S.seeds.push(sd); return sd;
+    },
+    drip(x, z, h = 2.4) { const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.6, 0.12, 0.9, 0x5fae4a, 0, 0, 0)); const d = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), mat(0x7fd8ff, 0.7)); d.position.y = -0.4; G.add(d); this.cyl(x, z, 0.12, h, 0x3f8a35); AA().drips.push({ x: w.x, y: w.y, z: w.z, G, d }); },
+    // ---- M4 Wind Vanes ----
+    vane(id, x, z, o = {}) { const w = L2W(x, z), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(0.25, 3.2, 0.25, 0x6a6a70, 0, 1.6, 0)); const V = new THREE.Group(); V.position.y = 3.3; V.add(bx(0.12, 0.12, 2.4, 0x3a3a40, 0, 0, 0), bx(0.1, 0.9, 0.9, 0xff6bd6, 0, 0, -1.1, 0.3), bx(0.3, 0.3, 0.4, 0xffd23f, 0, 0, 1.2)); G.add(V);
+      props.push({ kind: 'vane', act: 'crank', cls: 'trickster', sig: 'vane:' + id, x: w.x, y: w.y, z: w.z, r: 2.4, re: true, label: o.label || 'Vane crank', V, icon: badge('trickster', w.x, w.y + 4.4, w.z, 0.9) }); AA().vanes = (AA().vanes || []).concat([V]); },
+    windZone(x0, z0, x1, z1, o = {}) { // gusts follow the vane; wind +1 = along (dx,dz)
+      const S = AA(), dl = Math.hypot(o.dx ?? 0, o.dz ?? 1) || 1, n = 40, pos = new Float32Array(n * 3);
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 0.35, transparent: true, opacity: 0.8 })); pts.frustumCulled = false; group.add(pts);
+      const seeds = Array.from({ length: n }, (_, i) => ({ u: Math.random(), v: Math.random(), h: 0.8 + Math.random() * (o.h || 6) }));
+      S.winds.push({ x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1, dx: (o.dx ?? 0) / dl, dz: (o.dz ?? 1) / dl, push: o.push || 7, lift: o.lift || 0, pts, seeds, gy: gy((x0 + x1) / 2, (z0 + z1) / 2) });
+    },
+    puffRaft(id, x, z, top, o = {}) { const S = AA(), w = L2W(x, z), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(2.4, 0.4, 2.4, 0xf3f6ff, 0, 0.3, 0, 0.2), bx(1.6, 0.6, 1.6, 0xffffff, 0, 0.7, 0, 0.25), bx(0.2, 1.4, 0.2, 0x6fbf4a, 0, -0.4, 0));
+      const s = addSolid({ type: 'box', x: w.x, z: w.z, hx: 1.2, hz: 1.2, yaw: 0, y0: w.y - 1, top: w.y + 0.5, kind: 'zone' }); S.puffs.push({ id, x: w.x, y: w.y, z: w.z, G, s, top: L2W(top[0], top[1], top[2]), used: false });
+      props.push({ kind: 'marker', cls: 'bruiser', x: w.x, y: w.y, z: w.z, r: 1.6, label: 'Hold the raft', sig: 'raftHold:' + id, done: false, icon: badge('bruiser', w.x, w.y + 2.6, w.z, 0.9), ring: ringMesh(1.6, 0xff8a1f).children[0] }); group.add(props[props.length - 1].ring); props[props.length - 1].ring.position.set(w.x, w.y + 0.62, w.z);
+    },
+    // ---- M5 Carry Chain ----
+    acornChain(id, rings, o = {}) {
+      const S = AA(), m = new THREE.Group(); m.add(bx(0.9, 0.8, 0.9, 0xffc93c, 0, 0, 0, 0.5), bx(1.0, 0.35, 1.0, 0x8b5a2b, 0, 0.45, 0), bx(0.15, 0.3, 0.15, 0x5a3b22, 0, 0.75, 0)); group.add(m);
+      const R = rings.map((r, i) => { const w = L2W(r.x, r.z, r.h || 0); const rg = ringMesh(1.2, CLASSES[r.who].color); rg.position.set(w.x, w.y + 0.08, w.z); group.add(rg); const pr = { kind: 'ring', act: 'pick', cls: r.who, sig: `${id}:r${i}`, x: w.x, y: w.y, z: w.z, r: 2.2, re: true, label: r.home ? 'Acorn home' : 'Hand-off ring', icon: badge(r.who, w.x, w.y + 2.2, w.z, 0.85) }; props.push(pr); return { ...r, i, w, rg, pr }; });
+      S.acorn = { id, m, rings: R, at: o.start || 0, last: o.start || 0, by: null, dropT: -99, home: false, timed: !!o.timed };
+    },
+    // ---- M5 Wasp smoke ----
+    puffShroom(id, x, z, o = {}) { const w = L2W(x, z), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(0.4, 0.6, 0.4, 0xf3eee0, 0, 0.3, 0), bx(1.4, 0.5, 1.4, 0xb08aff, 0, 0.75, 0, 0.2), bx(0.3, 0.1, 0.3, 0xffffff, 0.3, 1.02, 0.2));
+      props.push({ kind: 'shroom', act: 'stomp', cls: 'bruiser', sig: 'smoke:' + id, x: w.x, y: w.y, z: w.z, r: 2.4, re: true, label: o.label || 'Puff-mushroom', smokeR: o.r || 6, dur: o.dur || 6, G, icon: badge('bruiser', w.x, w.y + 2.0, w.z, 0.9) }); },
+    // ---- M6 Day/Night + gear ----
+    toggleBell(id, x, z, h, onRing, o = {}) { const g = gy(x, z), G = new THREE.Group(); const bl = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.7, 0.9, 8), mat(o.col || COL.gold, 0.4)); G.add(bl); G.add(bx(0.3, 0.3, 0.3, 0x6b4a30, 0, 0.55, 0)); if (o.em) { const sp = emojiSprite(o.em, 1.2); sp.position.y = 1.4; G.add(sp); } G.position.set(A.x + x, g + h, A.z + z); group.add(G);
+      props.push({ kind: 'tbell', act: 'bell', cls: 'scout', sig: id, x: A.x + x, y: g + h, z: A.z + z, r: 3.2, re: true, label: o.label || 'Bell', G, bell: bl, onRing, icon: badge('scout', A.x + x, g + h + (o.em ? 2.2 : 1.3), A.z + z, 0.9) }); },
+    dayNightBell(x, z, h, o = {}) { this.toggleBell('dnBell', x, z, h, () => setNightA2(!AA().night), { label: o.label || 'Day/Night bell', em: '🌗', col: 0xc9b6ff }); },
+    glowStep(x, z, w, d, top, o = {}) { const r = this.wall(x, z, w, d, top, { bot: top - 0.5, c: 0x9fe8ff }); r.m.material = new THREE.MeshLambertMaterial({ color: 0x9fe8ff, emissive: 0x3aa0e8, emissiveIntensity: 0.9, transparent: true, opacity: 0.0, depthWrite: false }); r.s.off = true; AA().glowSteps.push({ r, x: A.x + x, z: A.z + z, on: false }); },
+    hiddenStep(x, z, w, d, top) { const r = this.wall(x, z, w, d, top, { bot: top - 0.4, c: 0xc9b6ff }); r.m.material = new THREE.MeshBasicMaterial({ color: 0xd9c6ff, transparent: true, opacity: 0, depthWrite: false, wireframe: false }); AA().hidden.push({ r, x: A.x + x, z: A.z + z, kind: 'step' }); },
+    hiddenLever(s, x, z, o = {}) { this.lever(s, x, z, o); const pr = props[props.length - 1]; pr.secret = true; pr.found = false; pr.G.visible = false; pr.icon.visible = false; const sv = pr.act; pr.act = null; pr._act = sv; AA().hidden.push({ pr, x: pr.x, z: pr.z, kind: 'switch' }); },
+    gift(kind, x, z, h = 0.6) { const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.1, 0.8, 1.1, 0x5fae4a, 0, 0, 0, 0.3), bx(1.15, 0.18, 0.2, 0xff6bd6, 0, 0.1, 0, 0.4), bx(0.2, 0.18, 1.15, 0xff6bd6, 0, 0.1, 0, 0.4)); const sp = emojiSprite(GEAR_INFO[kind].em, 1.1); sp.position.y = 1.2; G.add(sp);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloMap(), color: new THREE.Color(0xffe680), transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false })); halo.scale.set(3, 3, 1); G.add(halo);
+      AA().gifts.push({ kind, x: w.x, y: w.y, z: w.z, G, got: false }); },
+    // ---- M7 Seasons ----
+    seasonBells(x, z, h) { [['summer', '☀️', 0xffd23f], ['winter', '❄️', 0xbfe8ff], ['spring', '🌱', 0x8be07a]].forEach(([s, em, col], i) => this.toggleBell('bell:' + s, x + (i - 1) * 2.6, z, h, () => setSeason(s), { label: `${s[0].toUpperCase() + s.slice(1)} bell`, em, col })); },
+    creek(id, x0, z0, x1, z1) { const pd = this.pond(id, x0, z0, x1, z1, { level: 'mid' }); const ice = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.2, z1 - z0), new THREE.MeshLambertMaterial({ color: 0xe8f6ff, emissive: 0x6aa8d0, emissiveIntensity: 0.25, transparent: true, opacity: 0.92 })); ice.position.set(A.x + (x0 + x1) / 2, pd.gy + 0.22, A.z + (z0 + z1) / 2); ice.visible = false; group.add(ice); pd.ice = ice; pd.creek = true; AA().creeks.push(pd); return pd; },
+    snowPile(s, x, z, w, d, h) { this.cracked(s, x, z, w, d, h, { label: 'Snow pile' }); const pr = props[props.length - 1]; pr.m.material = mat(0xf4f8ff); pr.G.visible = false; pr.snow = true; pr.need = 'winter'; pr.needWhy = 'Only in winter'; AA().seasonal.push({ pr, when: 'winter' }); },
+    mudSlide(s, ax, az, ha, bx2, bz, hb, o = {}) { const a = L2W(ax, az, ha), b = L2W(bx2, bz, hb), L = Math.hypot(b.x - a.x, b.z - a.z), m = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.2, L), mat(0x6a4a28)); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.05, (a.z + b.z) / 2); m.rotation.y = Math.atan2(b.x - a.x, b.z - a.z); m.rotation.x = Math.atan2(a.y - b.y, L); group.add(m);
+      props.push({ kind: 'slide', act: 'slide', cls: 'trickster', sig: s, x: a.x, y: a.y, z: a.z, b, r: 2.2, need: 'spring', needWhy: 'The chute is frozen or dry — ring the 🌱 Spring bell for mud', label: o.label || 'Mud chute', two: true, icon: badge('trickster', a.x, a.y + 2, a.z, 0.9) }); },
+    split(map) { recipe.splitAt = map; },
+    /** the last boulder slides much farther in winter (ice): to (x,z) with slot height, sets iceSig */
+    iceSlot(iceSig, x, z, slotH = 0.6) { const pr = props.filter(q => q.kind === 'boulder').pop(); if (!pr) return; pr.ice = { x: A.x + x, z: A.z + z, top: gy(x, z) + slotH }; pr.iceSig = iceSig; },
+    bridgeOn(s, x1, z1, x2, z2, w = 3) { const mx = (x1 + x2) / 2, mz = (z1 + z2) / 2, L = Math.hypot(x2 - x1, z2 - z1), yaw = Math.atan2(x2 - x1, z2 - z1), g = Math.max(gy(x1, z1), gy(x2, z2));
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.35, L), mat(0xc69c6d)); m.position.set(A.x + mx, g + 0.2, A.z + mz); m.rotation.y = yaw; m.visible = false; group.add(m);
+      const sd = addSolid({ type: 'box', x: A.x + mx, z: A.z + mz, hx: w / 2, hz: L / 2, yaw: -yaw, y0: g - 3, top: g + 0.38, kind: 'zone', off: true });
+      const c = { x0: A.x + Math.min(x1, x2) - w / 2, z0: A.z + Math.min(z1, z2) - 0.4, x1: A.x + Math.max(x1, x2) + w / 2, z1: A.z + Math.max(z1, z2) + 0.4, on: false, thin: false }; crossings.push(c);
+      steps.push({ sig: s, fn: on => { if (on && !c.on) { c.on = true; m.visible = true; sd.off = false; tst('🌉 A sturdy bridge rose up!', 2000); } } }); },
+  });
+  function setNightA2(v) { const S = AA(); S.night = !!v; setSig('night', S.night); setSig('day', !S.night); ctx.setNight(S.night); tst(S.night ? '🌙 Night! The owl wakes up…' : '☀️ Day! The owl dozes off.', 2000); }
+  function setSeason(s) {
+    const S = AA(); if (S.season === s) { tst(`${s} already`, 900); return; } S.season = s;
+    for (const k of ['summer', 'winter', 'spring']) setSig(k, k === s);
+    for (const pd of S.creeks) { setPond(pd, s === 'winter' ? 'ice' : 'mid'); }
+    for (const it of S.seasonal) { const on = s === it.when && !it.pr.done; it.pr.s.off = !on; it.pr.m.visible = on; }
+    if (terrMesh) { const m = terrMesh.material; if (s === 'winter') { m.color.set(0xffffff); m.emissive = new THREE.Color(0x9ab0c8); m.emissiveIntensity = 0.75; } else if (s === 'spring') { m.color.set(0xdfffd0); m.emissive = new THREE.Color(0x203010); m.emissiveIntensity = 0.3; } else { m.color.set(0xffffff); m.emissive = new THREE.Color(0); m.emissiveIntensity = 0; } m.needsUpdate = true; }
+    tst({ summer: '☀️ Summer! The creek flows — logs can float.', winter: '❄️ Winter! The creek freezes, snow hides your scent.', spring: '🌱 Spring! Mud for sliding and vines can grow.' }[s], 2400);
+  }
+  function setPond(pd, level, quiet) {
+    pd.level = level; const dry = level === 'low' || level === 'ice';
+    pd.rect.off = dry;
+    for (const r of pd.wr) { const i = WATER_RECTS.indexOf(r); if (i >= 0) WATER_RECTS.splice(i, 1); } pd.wr = [];
+    if (!dry) { const R = pd.rect, st = 1.4; for (let x = R.x0 + 0.7; x < R.x1; x += st) for (let z = R.z0 + 0.7; z < R.z1; z += st) { const r = { x, z, hw: st * 0.55, hd: st * 0.55 }; WATER_RECTS.push(r); pd.wr.push(r); } }
+    pd.wm.visible = !dry; pd.wm.position.y = pd.gy + (level === 'high' ? 0.55 : 0.2); if (pd.ice) pd.ice.visible = level === 'ice';
+    for (const k of ['low', 'mid', 'high']) setSig(`${pd.id}:${k}`, level === k);
+    if (!quiet) tst({ low: '🚰 Water down — the pond bed is dry!', mid: '🚰 Water at the middle', high: '🌊 Water up high — logs float!', ice: '❄️ The creek froze solid' }[level], 1800);
+  }
+  /** Act-2 Interact verbs */
+  function a2Act(pr, p) {
+    const S = AA();
+    switch (pr.act) {
+      case 'aim': { const m = pr.mir; m.k = (m.k + 1) % m.aims.length; m.F.rotation.y = m.k * 0.9; tst('🪞 Mirror turned', 900); ctx.audio?.sample?.('ui2/lantern-click', 0.4); return true; }
+      case 'sluice': { const pd = S.ponds.find(q => q.id === pr.pond); if (pd) setPond(pd, pr.level); pr.arm.rotation.z = pr.arm.rotation.z > 0 ? -0.5 : 0.5; ctx.audio?.sample?.('ui2/lantern-click', 0.5); return true; }
+      case 'plant': { const sd = pr.seed; if (sd.planted) { say('🌱 Planted! Now a Scout brings a 💧 dewdrop from a drip leaf', 2200); return true; } sd.planted = true; sd.sprout.visible = true; pr.done = true; setSig(pr.sig); tst('🌰 Seed planted! A Scout must water it with a dewdrop 💧', 2400); return true; }
+      case 'cut': { const sp = pr.spider; if (sp && !sp.look && !pr.web.free) { sp.alertT = t; bonk(sp); return true; } pr.done = true; pr.web.s.off = true; pr.web.G.visible = false; setSig(pr.sig); tst('✂️ Snip! The web is cut', 1600); return true; }
+      case 'pluck': { const sp = pr.spider; if (sp) sp.look = { x: pr.x, z: pr.z, until: t + 8 }; tst('🎸 Twang! The spider turns to look…', 1600); return true; }
+      case 'leaf': { const tu = pr.turtle; if (tu) tu.look = { x: pr.leafAt.x, z: pr.leafAt.z, until: t + 9 }; tst('🍃 The leaf floats by — the turtle watches it', 1800); return true; }
+      case 'crank': { S.wind *= -1; setSig('wind:up', S.wind > 0); setSig('wind:down', S.wind < 0); for (const V of S.vanes || []) V.rotation.y = S.wind > 0 ? 0 : Math.PI; tst(S.wind > 0 ? '🌬️ The wind turns — it blows UP the hill now' : '🌬️ The wind turns — it blows DOWN the hill now', 2000); return true; }
+      case 'slide': { const to = pr._atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.3, z: to.z }, 0.7, 0.2); setSig(pr.sig); tst('🛷 Wheee! Belly-slide!', 1200); return true; }
+      case 'stomp': { const until = t + pr.dur; S.smokes.push({ x: pr.x, z: pr.z, r: pr.smokeR, until, m: smokeCloud(pr.x, pr.y, pr.z, pr.smokeR) }); setSig(pr.sig); a2Burst(pr.x, pr.z, 6); tst('🍄 Poof! A calm smoke cloud — walk through it', 2000); return true; }
+      case 'pick': { const ac = S.acorn; const R = ac.rings.find(r => r.pr === pr); if (!R || ac.at !== R.i || ac.by) return true; ac.by = ctx.cur(); ac.at = -1; ac.last = R.i; tst('🌰 Got the Golden Acorn! Carry it to the next ring', 1600); return true; }
+      case 'drop': { const ac = S.acorn; const R = ac.rings.find(r => r.pr === pr); if (!R || ac.by !== ctx.cur()) return true; ac.by = null; ac.at = R.i; ac.dropT = t; setSig(R.pr.sig); if (R.home) { ac.home = true; setSig(ac.id + ':home'); tst('🌰 The Golden Acorn is home!', 2200); ctx.audio?.chime?.(); } else tst('⭕ Hand-off! The next friend picks it up', 1600); return true; }
+    }
+    return false;
+  }
+  function acornBack() { const ac = AA().acorn; if (!ac) return; ac.by = null; ac.at = ac.last; tst('🌰 The acorn floats back to its ring', 1600); }
+  function smokeCloud(x, y, z, r) { const G = new THREE.Group(); G.position.set(x, y, z); for (let i = 0; i < 9; i++) { const a = i / 9 * 6.28, s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.32, 8, 6), new THREE.MeshLambertMaterial({ color: 0xf4f0ff, transparent: true, opacity: 0.45, depthWrite: false })); s.position.set(Math.cos(a) * r * 0.55, 0.8 + (i % 3) * 0.6, Math.sin(a) * r * 0.55); G.add(s); } group.add(G); return G; }
+  function beamSeg(i, a, b) { const S = AA(); let m = S.beamPool[i]; if (!m) { m = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff27a, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })); m.renderOrder = 6; group.add(m); S.beamPool[i] = m; }
+    const d = new THREE.Vector3(b.x - a.x, b.y - a.y, b.z - a.z), L = d.length(); m.visible = L > 0.05; m.scale.set(1, L, 1); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
+  function a2Update(dt, cam, p, cur) {
+    const S = a2; if (!S) return; const c = CLASS_OF[cur], ids = ctx.crewIds();
+    // split start: place the crew in their own areas
+    if (recipe.splitAt && !S.splitDone && t > 0.05) { S.splitDone = true; for (const k of ['scout', 'trickster', 'bruiser']) { const id = idOfCls(k), q = id && posOfId(id), at = recipe.splitAt[k]; if (!q || !at) continue; q.x = A.x + at[0]; q.z = A.z + at[1]; q.y = gy(at[0], at[1]) + (at[2] || 0) + 0.6; q.vx = q.vy = q.vz = 0; q._safe = { x: q.x, z: q.z }; q.goto = null; } }
+    if (S.lastCur !== cur) { if (S.lastCur && recipe.splitAt) { ctx.swoop?.(); tst('💨 Swoosh!', 700); ctx.audio?.sample?.('ui/select-pop', 0.3); } S.lastCur = cur; }
+    // movers (parked-body tweens: raft launches)
+    for (let i = S.movers.length - 1; i >= 0; i--) { const mv = S.movers[i]; mv.t += dt; const k = Math.min(1, mv.t / mv.d), e = k * k * (3 - 2 * k); const q = mv.q; q.x = mv.a.x + (mv.b.x - mv.a.x) * e; q.z = mv.a.z + (mv.b.z - mv.a.z) * e; q.y = mv.a.y + (mv.b.y - mv.a.y) * e + Math.sin(k * Math.PI) * mv.arc; q.vx = q.vz = q.vy = 0; q._safe = { x: q.x, z: q.z }; if (k >= 1) { S.movers.splice(i, 1); mv.done?.(); } }
+    // checkpoints
+    for (const cp of S.cps) { if (flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3 && S.cp !== cp) { S.cp = cp; if (!cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
+    // stuck in a web
+    if (S.stuck) { if (t > S.stuck.until || S.stuck.who !== cur) S.stuck = null; else { p.x = S.stuck.x; p.z = S.stuck.z; p.y = S.stuck.y; p.vx = p.vz = p.vy = 0; } }
+    // ---- light & shadow ----
+    if (S.srcs.length) {
+      let n = 0; const lit = new Set(), shade = new Set();
+      const bear = idOfCls('bruiser'), bq = bear && posOfId(bear);
+      const checkShade = (sh) => { if (sh && bq && Math.hypot(bq.x - A.x - sh[0], bq.z - A.z - sh[1]) < (sh[2] || 1.6)) shade.add(sh[3]); };
+      for (const s of S.srcs) {
+        const on = isOn(s.need); s.cr.material = mat(on ? 0xffe680 : 0x8a8060, on ? 0.95 : 0.1); if (!on) continue;
+        let from = s, to = s.to, hops = 0; checkShade(s.shade);
+        while (to && hops++ < 6) {
+          const m = typeof to === 'string' ? S.mirrors.find(q => q.id === to) : null;
+          if (m) { beamSeg(n++, from, m); const aim = m.aims[m.k]; if (!aim) break; if (aim.shade) checkShade(aim.shade); if (aim.lights) lit.add(aim.lights); from = m; if (typeof aim.to === 'string') { to = aim.to; continue; } if (aim.pt) beamSeg(n++, m, aim.pt); break; }
+          else if (Array.isArray(to)) { beamSeg(n++, from, L2W(to[0], to[1], to[2] ?? 0.5)); if (s.lights) lit.add(s.lights); break; } else break;
+        }
+      }
+      for (let i = n; i < S.beamPool.length; i++) S.beamPool[i].visible = false;
+      for (const g of S.ghosts) { const want = g.shadow ? shade.has(g.id) : lit.has(g.id); if (want !== g.on) { g.on = want; g.r.s.off = !want; g.r.m.material.opacity = want ? 0.95 : 0.25; g.r.m.material.depthWrite = want; g.r.m.material.emissiveIntensity = want ? 0.6 : 0.3; if (want) { fx(g.r.m.position.x, g.r.m.position.y, g.r.m.position.z); tst(g.shadow ? '🌑 Bear\'s shadow made the bridge solid!' : '✨ The sunbeam made the ghost step solid!', 1500); } } setSig(g.sig, want); }
+    }
+    // ---- water level: logs + turtle naps handled in enemies ----
+    for (const L of S.logs) {
+      const pd = S.ponds.find(q => q.id === L.pond); const floatOK = pd && (L.season ? (S.season === L.season && pd.level === 'mid') : pd.level === 'high');
+      const y = pd ? pd.gy + (floatOK ? (pd.level === 'high' ? 0.55 : 0.2) : -0.6) : L.a.y; const bid = idOfCls('bruiser'), bq = bid && posOfId(bid);
+      const onIt = q => q && Math.abs(q.x - L.x) < L.wd / 2 + 0.2 && Math.abs(q.z - L.z) < L.dd / 2 + 0.2 && Math.abs(q.y - (y + 0.35)) < 0.8;
+      if (floatOK && onIt(bq) && L.k < 1) { const old = { x: L.x, z: L.z }; L.k = Math.min(1, L.k + dt / (Math.hypot(L.b.x - L.a.x, L.b.z - L.a.z) / 2.2)); L.x = L.a.x + (L.b.x - L.a.x) * L.k; L.z = L.a.z + (L.b.z - L.a.z) * L.k; for (const id of ids) { const q = posOfId(id); if (onIt(q)) { q.x += L.x - old.x; q.z += L.z - old.z; q._safe = { x: q.x, z: q.z }; } } if (L.k >= 1 && !L.arrived) { L.arrived = true; setSig('log:' + L.id); tst('🪵 The log floated across!', 1600); } }
+      L.m.position.set(L.x, y, L.z); L.s.x = L.x; L.s.z = L.z; L.s.top = y + 0.35; L.s.y0 = y - 1; L.s.off = !floatOK;
+      L.cr.on = floatOK; L.cr.x0 = L.x - L.wd / 2 - 0.3; L.cr.x1 = L.x + L.wd / 2 + 0.3; L.cr.z0 = L.z - L.dd / 2 - 0.3; L.cr.z1 = L.z + L.dd / 2 + 0.3;
+    }
+    // ---- seeds: dew carry + growing + mushroom bounce ----
+    for (const d of S.drips) { d.d.position.y = -0.4 - ((t * 0.6) % 1) * 0.3; if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
+    if (S.dew) { const q = posOfId(S.dew.who); if (q) S.dew.m.position.set(q.x, q.y + 1.4 + Math.sin(t * 4) * 0.1, q.z); }
+    for (const sd of S.seeds) {
+      if (sd.planted && !sd.grown && S.dew && S.dew.who === cur && flatD(sd, p) < 2.0 && Math.abs(p.y - sd.y) < 3) { sd.grown = true; S.dew.m.removeFromParent(); S.dew = null; setSig('grown:' + sd.id); fx(sd.x, sd.y + 1, sd.z); ctx.audio?.chime?.();
+        if (sd.vine) { sd.vine.leaves.forEach(l => { l.visible = true; }); tst('🌿 A vine ladder grew! Tricksters can climb it', 2200); } if (sd.pad) { sd.pad.P.visible = true; sd.pad.s.off = false; tst('🍄 A bouncy mushroom grew! Bear bounces highest', 2200); } }
+      if (sd.vine && sd.grown) sd.vine.leaves.forEach((l, i) => { l.scale.setScalar(Math.min(1, (l.userData.g = (l.userData.g || 0) + dt * 2) - i * 0.12) || 0.001); });
+    }
+    for (const sd of S.pads) { if (!sd.grown) continue; const pd = sd.pad; if (flatD(pd, p) < 1.3 && Math.abs(p.y - pd.y) < 0.6 && p.vy <= 0.1) { p.vy = pd.v[c] || 14; p.grounded = false; p.y = pd.y + 0.1; p._gY = -1e9; fx(pd.x, pd.y, pd.z); ctx.audio?.blip?.(5); pd.P.scale.y = 0.6; if (c === 'bruiser') setSig('bounce:' + sd.id); } pd.P.scale.y += (1 - pd.P.scale.y) * Math.min(1, dt * 6); }
+    // ---- wind ----
+    for (const w of S.winds) {
+      const inZ = p.x > w.x0 && p.x < w.x1 && p.z > w.z0 && p.z < w.z1;
+      if (inZ && !p.grounded && c !== 'bruiser') { p.x += w.dx * S.wind * w.push * dt; p.z += w.dz * S.wind * w.push * dt; if (S.wind > 0 && w.lift) p.vy = Math.max(p.vy, Math.min(p.vy + w.lift * dt, 4)); }
+      const pos = w.pts.geometry.attributes.position; w.seeds.forEach((s, i) => { s.u = (s.u + dt * 0.3 * S.wind + 1) % 1; const along = w.dz !== 0, fz = along ? s.u : s.v, fxx = along ? s.v : s.u; pos.setXYZ(i, w.x0 + fxx * (w.x1 - w.x0), w.gy + s.h, w.z0 + fz * (w.z1 - w.z0)); }); pos.needsUpdate = true;
+    }
+    for (const pf of S.puffs) {
+      const bid = idOfCls('bruiser'), tid = idOfCls('trickster'), bq = bid && posOfId(bid), tq = tid && posOfId(tid);
+      const held = bq && flatD(bq, pf) < 1.7 && Math.abs(bq.y - pf.y) < 1.4, on = tq && flatD(tq, pf) < 1.5 && tq.y > pf.y + 0.2 && Math.abs(tq.y - pf.y) < 1.6;
+      setSig('raftHold:' + pf.id, held);
+      pf.G.position.y = pf.y + (held ? 0 : Math.sin(t * 3) * 0.12);
+      if (!pf.used && on && !held && S.wind > 0) { pf.used = true; setSig('raft:' + pf.id); tst('🌬️ Whoosh! The dandelion raft floats up!', 2000); const to = { x: pf.top.x, y: pf.top.y + 0.6, z: pf.top.z }; if (tid === cur) tween(p, to, 1.6, 2.5); else moveTween(tq, to, 1.6, 2.5); }
+      else if (!pf.used && on && !held && S.wind < 0 && t - (pf.hintT || -9) > 4) { pf.hintT = t; say('🌬️ The wind blows down the hill — crank the vane so it blows UP', 2200); }
+    }
+    // ---- carry chain ----
+    if (S.acorn) {
+      const ac = S.acorn, carrier = ac.by && posOfId(ac.by);
+      if (carrier) ac.m.position.set(carrier.x, carrier.y + 2.0 + Math.sin(t * 4) * 0.08, carrier.z); else { const R = ac.rings[ac.at]; if (R) ac.m.position.set(R.w.x, R.w.y + 0.8 + Math.sin(t * 2) * 0.12, R.w.z); }
+      ac.m.rotation.y += dt * 1.5;
+      if (ac.timed && !ac.by && !ac.home && ac.at !== ac.last && t - ac.dropT > 5 && ac.dropT > 0) { ac.at = ac.last; ac.dropT = -99; tst('🌰 Too slow — the acorn floated back. Have the next friend waiting!', 2200); }
+      for (const R of ac.rings) {
+        const pr = R.pr, here = ac.at === R.i && !ac.by;
+        if (here && !ac.home && !R.home) { pr.act = 'pick'; pr.cls = R.who; }
+        else if (ac.by && ac.at !== R.i && !(R.home && ac.home)) { pr.act = 'drop'; pr.cls = CLASS_OF[ac.by]; if (R.home && CLASS_OF[ac.by] !== 'bruiser') pr.act = null; }
+        else pr.act = null;
+        const glow = here && ac.timed && t - ac.dropT < 5 ? 0.6 + 0.4 * Math.sin(t * 10) : here ? 0.9 : ac.by ? 0.55 : 0.25;
+        R.rg.userData.mats[0].opacity = glow; R.rg.userData.mats[1].opacity = glow * 0.3; pr.icon.visible = !!pr.act;
+      }
+    }
+    // ---- smoke ----
+    for (let i = S.smokes.length - 1; i >= 0; i--) { const s = S.smokes[i], left = s.until - t; s.m.children.forEach((b, k) => { b.material.opacity = Math.max(0, Math.min(0.45, left * 0.2)); b.position.y = 0.8 + (k % 3) * 0.6 + Math.sin(t * 2 + k) * 0.15; }); if (left <= 0) { s.m.removeFromParent(); S.smokes.splice(i, 1); } }
+    // ---- night gear ----
+    const sid = idOfCls('scout'), sq = sid && posOfId(sid), lantern = gearOn('lantern') && sq;
+    if (lantern) { if (!S.light) { S.light = new THREE.PointLight(0xffd27a, 3, 12); group.add(S.light); } S.light.visible = true; S.light.position.set(sq.x, sq.y + 1.6, sq.z); } else if (S.light) S.light.visible = false;
+    for (const gs of S.glowSteps) { const want = !!lantern && flatD(gs, sq) < 6.5; if (want !== gs.on) { gs.on = want; gs.r.s.off = !want; } gs.r.m.material.opacity += ((gs.on ? 0.85 : 0) - gs.r.m.material.opacity) * Math.min(1, dt * 6); }
+    const tid = idOfCls('trickster'), tq = tid && posOfId(tid);
+    if (gearOn('whistle') && tq && tid === cur && t >= S.pingNext) { S.pingNext = t + 8; S.pingT = t; a2Burst(tq.x, tq.z, 7); ctx.audio?.sample?.('ui2/item-produced', 0.4); const ring = ringMesh(1, 0xc9b6ff); ring.position.set(tq.x, tq.y + 0.2, tq.z); group.add(ring); S.outlines.push({ m: ring, t0: t });
+      let found = 0; for (const h of S.hidden) { if (Math.hypot(h.x - tq.x, h.z - tq.z) > 16) continue; h.showT = t; if (h.kind === 'switch' && !h.pr.found) { h.pr.found = true; h.pr.act = h.pr._act; h.pr.G.visible = true; h.pr.icon.visible = true; found++; } }
+      tst(found ? '🎶 Echo-ping! A hidden switch appeared' : '🎶 Echo-ping! Hidden paths glow for 5 s', 1600); setSig('ping'); }
+    for (const h of S.hidden) if (h.kind === 'step') { const on = t - (h.showT ?? -99) < 5; h.r.m.material.opacity = on ? 0.55 + 0.25 * Math.sin(t * 6) : 0; }
+    for (let i = S.outlines.length - 1; i >= 0; i--) { const o = S.outlines[i], k = (t - o.t0) / 1.2; o.m.scale.set(1 + k * 14, 1, 1 + k * 14); o.m.userData.mats[0].opacity = Math.max(0, 0.8 * (1 - k)); if (k >= 1) { o.m.removeFromParent(); S.outlines.splice(i, 1); } }
+    for (const gf of S.gifts) { if (gf.got) continue; gf.G.rotation.y += dt; gf.G.position.y = gf.y + Math.sin(t * 2) * 0.15; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; gear[gf.kind] = true; gear[gf.kind === 'lantern' ? 'eqL' : 'eqW'] = true; gearSave(); setSig('gift:' + gf.kind); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GEAR_INFO[gf.kind].em} You found the ${GEAR_INFO[gf.kind].name}! Tap ${GEAR_INFO[gf.kind].em} on the ${gf.kind === 'lantern' ? 'Scout' : 'Trickster'}'s picture (or G) to switch it on/off`, 4200); } }
+    // ---- webs: Scouts get stuck for 3 s and the spider turns to look ----
+    for (const pr of props) if (pr.kind === 'web' && !pr.done && c === 'scout' && !S.stuck && t > S.safeT && Math.abs(p.x - pr.x) < pr.ww / 2 + 0.6 && Math.abs(p.z - pr.z) < 1.3 && p.y - pr.y < pr.wh) { S.stuck = { who: cur, x: p.x, y: p.y, z: p.z, until: t + 3 }; if (pr.spider) pr.spider.look = { x: pr.x, z: pr.z, until: t + 3.5 }; tst('🕸️ Stuck in the web for 3 seconds!', 1800); }
+    updEnemies(dt, cam, p, cur);
+  }
+  B.web = function (s, x, z, w, h, o = {}) { const r = this.wall(x, z, w, 0.4, h, { c: 0xffffff }); r.m.material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false }); const G = new THREE.Group(); G.add(r.m); group.add(G);
+    for (let i = 0; i < 6; i++) { const l = bx(w * 1.05, 0.06, 0.06, 0xffffff, A.x + x, r.g + 0.3 + i * h / 6, A.z + z, 0.3); G.add(l); const l2 = bx(0.06, h, 0.06, 0xffffff, A.x + x - w / 2 + i * w / 5, r.g + h / 2, A.z + z, 0.3); G.add(l2); }
+    const pr = { kind: 'web', act: 'cut', cls: 'trickster', sig: s, x: A.x + x, y: r.g, z: A.z + z, r: 2.6, ww: w, wh: h, label: o.label || 'Spider web', web: { s: r.s, G }, spider: o.spider ? AA().en.find(e => e.id === o.spider) : null, icon: badge('trickster', A.x + x, r.g + h + 0.8, A.z + z, 0.9) };
+    if (pr.spider) pr.spider.watch = { x: pr.x, z: pr.z }; props.push(pr); };
+  B.strand = function (spiderId, x, z, o = {}) { const w = L2W(x, z), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(0.2, 2.6, 0.2, 0x8b6a45, 0, 1.3, 0), bx(0.05, 2.4, 0.05, 0xffffff, 0.3, 1.4, 0, 0.5));
+    props.push({ kind: 'strand', act: 'pluck', cls: 'trickster', sig: 'pluck:' + spiderId, x: w.x, y: w.y, z: w.z, r: 2.2, re: true, label: o.label || 'Web strand', spider: AA().en.find(e => e.id === spiderId), G, icon: badge('trickster', w.x, w.y + 3.2, w.z, 0.9) }); };
+  function a2Clear() { if (a2) { for (const e of a2.en) e.el.remove(); } a2 = null; sneak = false; document.body.classList.remove('a2'); ctx.onSneak?.(false); }
 
   /** Lush leafy frame outside the play rect — instanced blocky trees/bushes (phone-cheap). */
   function buildLeafyBackdrop(bounds) {
@@ -918,7 +1392,7 @@ export function createZones(scene, ctx) {
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
     tutorI = 0; tutorT = -99; endLines = []; result = null;
     if (exitLabel) exitLabel.remove(); exitAt = null; exitOpen = false; exitMesh = null; exitLabel = null; starGot = false;
-    kidClear();
+    kidClear(); a2Clear(); terrMesh = null;
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
   function load(pid, anchor) {
@@ -930,11 +1404,20 @@ export function createZones(scene, ctx) {
     { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); }
     buildLeafyBackdrop(recipe.bounds);
     decorateProps();
+    if (recipe.act2) a2Init();
     // Bruiser "standing platform" (Olaf shield move): a solid on Bear's back while he's parked
     bearPad = addSolid({ type: 'cyl', x: 0, z: 0, r: 1.15, y0: -99, top: -98, kind: 'zone', off: true, pad: true });
     if (recipe.night) { nightOn = true; ctx.setNight(true); }
     else if (recipe.nightCycle) { nightOn = false; ctx.setNight(false); }
     introQ = recipe.kid ? [] : [...(recipe.banter?.start || []), ...(recipe.intro || [])]; // the goal lives in the objective tracker now
+  }
+  function a2Init() {
+    const S = AA(); document.body.classList.add('a2'); sneak = false; ctx.onSneak?.(false);
+    for (const k of ['summer', 'winter', 'spring']) setSig(k, k === S.season);
+    setSig('day', true); setSig('night', false); setSig('wind:down', S.wind < 0); setSig('wind:up', S.wind > 0);
+    for (const it of S.seasonal) { const on = S.season === it.when; it.pr.s.off = !on; it.pr.m.visible = on; }
+    if (recipe.night) setNightA2(true);
+    S.cp = null;
   }
   function crewAt(x, z, r) {
     const p = ctx.getP(); let n = Math.hypot(p.x - x, p.z - z) < r ? 1 : 0;
@@ -982,6 +1465,8 @@ export function createZones(scene, ctx) {
     const hasStar = picks.some(k => k.tier === 'star');
     result = { id, petals: got, petalsTotal: pets.length, star: starGot, hasStar, time: Math.round(t), par: recipe.par || 0,
       stars: { petals: got >= pets.length, star: !hasStar || starGot, par: !recipe.par || t <= recipe.par }, end: recipe.banter?.end || [] };
+    if (recipe.noStars) result.noStars = true;
+    if (a2) { result.bonks = a2.bonks; if (a2.borrow) { a2.borrow = null; ctx.onGear?.(); } }
     if (recipe.kid) { result.kid = true; result.stars = { petals: true, star: true, par: true }; confetti(true); setTimeout(() => kid && confetti(true), 700); }
     result.n = Object.values(result.stars).filter(Boolean).length;
     tst(`🏆 ${why}! ${'⭐'.repeat(result.n)}${'☆'.repeat(3 - result.n)}`, 3400); ctx.audio?.chime?.(); ctx.onComplete?.(result);
@@ -1018,6 +1503,9 @@ export function createZones(scene, ctx) {
     if (pr.cls !== c) { say(`${C.em} Only a ${C.name} can ${ACTS[pr.act].verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
     if (pr.need && !isOn(pr.need)) { say('🔒 ' + (pr.needWhy || 'Not yet — something else has to happen first'), 2600); return true; }
     const atB = pr._atB;
+    if (a2 && a2Act(pr, p)) { if (pr.icon && pr.done && !pr.two) pr.icon.visible = false; return true; }
+    if (a2 && (pr.act === 'shove' || pr.act === 'smash')) a2Burst(pr.x, pr.z, 8);
+    if (a2 && pr.act === 'shove' && pr.ice && a2.season === 'winter') { pr.to = pr.ice; if (pr.iceSig) pr.sig = pr.iceSig; tst('⛸️ On the ice it slides a looong way!', 1800); }
     switch (pr.act) {
       case 'bell': ringBell(pr); break;
       case 'lever': pr.done = true; pr.arm.rotation.z = -0.5; pr.knob.position.x = 0.3; setSig(pr.sig); ctx.audio?.sample?.('ui2/lantern-click', 0.5); tst(`🎚️ ${pr.label} pulled!`, 1800); break;
@@ -1052,6 +1540,7 @@ export function createZones(scene, ctx) {
     return true;
   }
   function ringBell(pr) {
+    if (pr.kind === 'tbell') { pr.ringT = t; pr.onRing?.(); ctx.audio?.sample?.('contest/win-jingle', 0.4); return; }
     if (pr.done) return;
     if (pr.need && !isOn(pr.need)) { say('🔒 ' + (pr.needWhy || 'Not yet'), 2400); return; }
     pr.done = true; pr.ringT = t; setSig(pr.sig); if (pr.icon) pr.icon.visible = false;
@@ -1094,7 +1583,7 @@ export function createZones(scene, ctx) {
   function inRect(x, z, r) { return x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1; }
   function deepBlock(q, idd, isCur) {
     if (!deep.length || CLASS_OF[idd] === 'scout') return;
-    const inD = deep.some(r => inRect(q.x, q.z, r));
+    const inD = deep.some(r => !r.off && inRect(q.x, q.z, r));
     const cr = crossings.find(c => c.on && inRect(q.x, q.z, c));
     const thinBlock = cr && cr.thin && CLASS_OF[idd] === 'bruiser';
     if (inD && (!cr || thinBlock)) {
@@ -1153,6 +1642,7 @@ export function createZones(scene, ctx) {
       }
       if (nightOn && dewPulseT >= 0 && t - dewPulseT > (recipe.dewWindow || 8)) pulseNightDews(false);
     }
+    if (a2) a2Update(dt, cam, p, cur);
     // plates: held by anyone standing on them (active or parked); heavy needs the Bruiser
     for (const pl of plates) {
       let holder = null;
@@ -1178,6 +1668,7 @@ export function createZones(scene, ctx) {
     for (const st of steps) {
       const on = isOn(st.sig);
       if (st.r && on && st.r.s.off) { st.r.s.off = false; st.r.m.visible = true; tst('🪜 A new way up appeared!', 1800); }
+      if (st.fn) st.fn(on);
       if (st.deco) { const ty = on ? st.down : st.up; st.deco.position.y += (ty - st.deco.position.y) * Math.min(1, dt * 2); }
     }
     // shove anims + acorn projectiles + bell scouting by touch
@@ -1191,8 +1682,11 @@ export function createZones(scene, ctx) {
       }
       if (pr.proj) {
         pr.proj.t += dt; const k = Math.min(1, pr.proj.t / 0.7); pr.proj.m.position.lerpVectors(pr.proj.a, pr.proj.b, k); pr.proj.m.position.y += Math.sin(k * Math.PI) * 2.5;
-        if (k >= 1) { pr.proj.m.removeFromParent(); pr.proj = null; setSig(pr.sig); pr.G.rotation.z = 0.6; if (pr.icon) pr.icon.visible = false; tst(`🎯 Bonk! ${pr.label} hit`, 1800); ctx.audio?.chime?.(); }
+        if (k >= 1) { pr.proj.m.removeFromParent(); pr.proj = null; setSig(pr.sig); pr.G.rotation.z = 0.6; if (pr.icon) pr.icon.visible = false;
+          if (pr.lureOf) { const e = pr.lureOf; e.lure = { x: e.lureAt.x, z: e.lureAt.z, phase: 'go' }; e.awakeT = 0; pr.G.rotation.z = 0; tst(`🌰 Thunk! The ${e.name} waddles off to check the noise…`, 2200); }
+          else tst(`🎯 Bonk! ${pr.label} hit`, 1800); ctx.audio?.chime?.(); }
       }
+      if (pr.kind === 'tbell') { if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0; }
       if (pr.kind === 'bell') {
         if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0;
         if (!pr.done && c === 'scout' && dFlat(p, pr) < 2.4 && p.y > pr.y - 1.2 && p.y < pr.y + 6.5) ringBell(pr);
@@ -1298,6 +1792,9 @@ export function createZones(scene, ctx) {
       if (pr.kind === 'plate') { const pl = pr.plate, solved = puzzles.some(q => q.done && q.sigs.includes(pl.sig)); st = solved ? 'done' : pl.holder ? 'held' : 'active'; if (solved && pl.icon) pl.icon.visible = false; }
       else if (pr.two) st = (pr.needIn && !isOn(pr.needIn)) || (pr.need && !isOn(pr.need)) ? 'locked' : 'travel';
       else st = pr.done ? 'done' : (pr.need && !isOn(pr.need)) ? 'locked' : 'active';
+      if (pr.secret && !pr.found) { h.halo.visible = false; h.ring.visible = false; continue; }
+      if (pr.kind === 'ring') st = pr.act ? 'active' : 'locked';
+      else if (pr.re && st === 'active' && !(objCache && objCache.pr === pr)) st = 'travel';
       const focus = objCache && objCache.pr === pr, pulse = 0.5 + 0.5 * Math.sin(t * 3.4 + pr.x);
       const ha = { active: 0.5 + 0.35 * pulse, travel: 0.28, locked: 0.14, held: 0.12, done: 0 }[st], ra = { active: 0.85, travel: 0.4, locked: 0.22, held: 0.35, done: 0 }[st];
       h.halo.visible = ha > 0; h.halo.material.opacity = ha; h.halo.material.depthTest = !(focus && st === 'active'); // the current goal shines through walls
@@ -1336,6 +1833,7 @@ export function createZones(scene, ctx) {
       return null;
     };
     for (const pz of reqLeft()) {
+      if (pz.track) { const tk = pz.track.find(q => !sig[q[0]]); if (tk) { const [, c, text, x, z, h = 0.6] = tk, C = c ? CLASSES[c] : null, w = { x: A.x + x, y: gy(x, z) + h, z: A.z + z }; let best = null, bd = 2.2; for (const q of props) { if (!q.act) continue; const d = Math.hypot(q.x - w.x, q.z - w.z); if (d < bd) { bd = d; best = q; } } return { text: C ? `${C.name}: ${text}` : text, cls: c || null, color: C ? C.color : '#ffd23f', x: w.x, y: w.y, z: w.z, pr: best }; } }
       for (const k of pz.sigs) { const r = findFor(k, 0); if (r) return r; }
       if (!fb) fb = pz;
     }
@@ -1404,6 +1902,9 @@ export function createZones(scene, ctx) {
     em: c => { const id = crewOfCls(c); return id ? String(nameOf(id)).split(' ')[0] : CLASSES[c].em; },
     at: (c, x, z, r) => { const q = posOf(crewOfCls(c)); return !!q && Math.hypot(q.x - A.x - x, q.z - A.z - z) < r && q.y - gy(q.x - A.x, q.z - A.z) < 1.3; },
     held: s => plates.some(pl => pl.sig === s && pl.holder),
+    season: () => a2 ? a2.season : 'summer', night: () => !!(a2 && a2.night), wind: () => a2 ? a2.wind : -1,
+    carry: c => !!(a2 && a2.acorn && a2.acorn.by && CLASS_OF[a2.acorn.by] === c), borrow: () => { AA().borrow = { lantern: true, whistle: true }; ctx.onGear?.(); return true; },
+    gearOn: k => gearOn(k), sneak: () => sneak, pinged: () => !!sig.ping, lit: id => !!sig['lit:' + id],
     curY: () => { const p = ctx.getP(); return p.y - gy(p.x - A.x, p.z - A.z); },
   };
   function kidDom() {
@@ -1472,11 +1973,13 @@ export function createZones(scene, ctx) {
     const p = ctx.getP(), D = kidDom();
     if (clsOfCur() === 'scout') { p.stam = 1; p.tired = false; } // little wings never get tired here
     if (!kid.init && t > 0.05) {
-      kid.init = true; herd({ scout: [-2.5, -3.5], bruiser: [3, -5.5] }); p.x = A.x + 0.5; p.z = A.z - 3; p.y = gy(0.5, -3) + 0.5; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; p.yaw = 0; ctx.camYaw?.(0);
+      const KS = recipe.kidStart || { me: [0.5, -3], scout: [-2.5, -3.5], bruiser: [3, -5.5] };
+      kid.init = true; herd({ scout: KS.scout, bruiser: KS.bruiser, trickster: KS.trickster }); p.x = A.x + KS.me[0]; p.z = A.z + KS.me[1]; p.y = gy(KS.me[0], KS.me[1]) + 0.5; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; p.yaw = 0; ctx.camYaw?.(0);
     }
     // gentle safety net: anyone who ends up outside the path pops back to the last safe spot
     const lx = p.x - A.x, lz = p.z - A.z;
-    if (Math.abs(lx) < 4.9 && lz > -9.2 && lz < 65.2 && p.y > baseY - 3) { if (p.grounded) kid.safe = { x: p.x, y: p.y, z: p.z }; }
+    const KB = recipe.kidBounds || { x0: -4.9, x1: 4.9, z0: -9.2, z1: 65.2 };
+    if (lx > KB.x0 && lx < KB.x1 && lz > KB.z0 && lz < KB.z1 && p.y > baseY - 3) { if (p.grounded) kid.safe = { x: p.x, y: p.y, z: p.z }; }
     else if (kid.safe && !tw) { p.x = kid.safe.x; p.y = kid.safe.y + 0.5; p.z = kid.safe.z; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; fx(p.x, p.y, p.z); }
     // flowers: touch to pick
     for (const f of kidObjs) {
@@ -1532,6 +2035,10 @@ export function createZones(scene, ctx) {
   function status() { return { id, exit: exitAt ? { x: exitAt.x - A.x, z: exitAt.z - A.z, open: exitOpen, n: crewAtExit() } : null, starGot, sig: { ...sig }, puzzles: puzzles.map(p => ({ id: p.id, done: p.done, req: p.req })), keyDone, picked, keyDew, props: props.filter(p => p.act).map(p => ({ act: p.act, cls: p.cls, sig: p.sig, label: p.label, x: p.x, y: p.y, z: p.z, done: !!p.done, b: p.b || null, from: p.from || null })), plates: plates.map(p => ({ sig: p.sig, x: p.x, y: p.y, z: p.z, heavy: p.heavy, holder: p.holder })), nodes: nodes.map(n => ({ kind: n.kind, x: n.m.position.x, y: n.m.position.y, z: n.m.position.z, done: n.done, sig: n.sig })), picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, show: k.show || null, who: k.who || null, night: k.nightOnly })), hoops: hoops.map(h => ({ x: h.m.position.x, y: h.m.position.y, z: h.m.position.z, got: h.got })), A: { ...A }, baseY }; }
   return {
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
-    act, wheelOpts, deepRects: () => deep.map(r => ({ ...r })), status, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
+    act, wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status,
+    toggleSneak(v) { if (!a2) return false; sneak = v == null ? !sneak : !!v; ctx.onSneak?.(sneak); tst(sneak ? '🐾 Sneaking: slow, quiet paws' : '🏃 Walking normally', 1200); return sneak; }, sneakOn: () => !!(a2 && sneak), isAct2: () => !!a2,
+    gearInfo(c) { const k = GEAR_OF[c]; if (!k || !a2) return null; return { k, em: GEAR_INFO[k].em, name: GEAR_INFO[k].name, has: gearHas(k), on: gearOn(k), borrowed: !gear[k] && gearHas(k) }; },
+    toggleGear(c) { const k = GEAR_OF[c || CLASS_OF[ctx.cur()]]; if (!k || !a2) return false; return setGear(k, !gearOn(k)); },
+    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, cp: !!a2.cp, dew: !!a2.dew, acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })) } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }
