@@ -327,6 +327,47 @@ export const MAPS2 = {
       B.puzzle('chain', 'Hornet relay', ['trickster', 'scout', 'bruiser'], ['acC:home'], { hint: '🐻 Smoke + walk to the far ring · 🐾 climb the acorn up the vine · 🪽 fly it high over the nest · 🐻 carry it home. Hand-offs must be caught within 5 s!', track: [['acC:r1', 'trickster', 'carry the acorn up the vine to the ledge ring', -3, 36], ['acC:r2', 'scout', 'fly the acorn high over the nest to the far ring', -5, 40.8, 4.4], ['acC:home', 'bruiser', 'catch it and carry it home', 4.5, 52]] });
     },
   },
+  // ===== 14 · Owl Wood — M6 Day/Night + E6 Night Owl, and the night gear (Glow Lantern + Echo Whistle) =====
+  owl_wood: {
+    goal: 'Owl Wood', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 61], par: 480,
+    bounds: { x0: -9, x1: 9, z0: -8, z1: 65 },
+    crew: 'Bee · Raccoon · Bear',
+    banter: { start: ['🐝 Bee: Something shiny on that stump… a lantern?!', '🦝 Raccoon: The old owl only wakes at night. Stay behind the big trunks!'], end: ['🐝 Bee: My lantern makes glowing steps!', '🦝 Raccoon: And my whistle finds secret switches. Best. Gear. Ever.'] },
+    build(B) {
+      B.home(0, -5); B.lane(-8, 8, -7, 64);
+      [[6.5, -4], [-6.5, 36], [6.5, 58]].forEach(([x, z], i) => B.tree(x, z, 0.85 + (i % 2) * 0.1));
+      // A · the Glow Lantern: Bee flies up to the gift on the stump, then her lantern makes glow-steps solid for Raccoon
+      B.checkpoint(0, -1);
+      B.wall(-5, 4, 2.6, 2.6, 3.2, { look: 'bark' });
+      B.gift('lantern', -5, 4, 3.8);
+      B.glowStep(2.5, 6.5, 2.4, 2, 1.3); B.glowStep(2.5, 8.6, 2.4, 2, 2.6); B.glowStep(2.5, 10.7, 2.4, 2, 3.9);
+      B.wall(2.5, 13, 4, 2.6, 3.9, { look: 'stone' });
+      B.lever('lvA', 2.5, 13.2, { base: 3.9, label: 'Ledge lever' });
+      B.door('lvA', 16, -8, 8);
+      // B · night and the owl: ring the night bell → the moon gate opens, but the owl wakes. Sneak trunk to trunk to its lever
+      B.checkpoint(0, 18);
+      B.dayNightBell(4.5, 19.5, 2, { label: 'Night bell' });
+      B.door('night', 22, -8, 8, { label: 'Moon gate' });
+      B.owl('owB', 0, 32, { perch: 3.5, yaw: Math.PI, r: 9, half: 0.34 });
+      B.hide('trunk', -3.5, 25.5, 1.2); B.hide('trunk', -4, 29.5, 1.2); B.hide('trunk', 3.5, 27, 1.2);
+      B.lever('lvB', -6.5, 33.2, { label: 'Owl-tree lever' });
+      B.door('lvB', 36, -8, 8);
+      // C · combo, still night: Raccoon finds the Echo Whistle, pings the hidden steps + secret lever; Bear sneaks behind a trunk to the plate
+      B.checkpoint(0, 38);
+      B.gift('whistle', 5.5, 39.5);
+      B.owl('owC', 0, 54, { perch: 3.5, yaw: Math.PI, r: 9, half: 0.34, sweep: 0.5 });
+      B.hide('trunk', -4, 49.5, 1.0); B.hide('trunk', 2, 46, 1.0);
+      B.hiddenStep(5.5, 45.5, 2.2, 2, 1.3); B.hiddenStep(5.5, 47.6, 2.2, 2, 2.6);
+      B.wall(5.5, 50.2, 3, 3, 3.9, { look: 'stone' });
+      B.hiddenLever('hlC', 5.5, 50.4, { base: 3.9, label: 'Secret lever' });
+      B.plate('plC', -6.2, 51, { heavy: true, label: 'Root plate' });
+      B.door(['hlC', 'plC'], 57, -8, 8);
+      B.checkpoint(0, 59);
+      B.puzzle('lantern', 'Glow Lantern', ['scout', 'trickster'], ['lvA'], { hint: '🪽 Fly up to the gift on the stump · stay near the steps with the 🏮 on · 🐾 climb the glow-steps to the lever.', track: [['gift:lantern', 'scout', 'fly up to the shiny gift on the stump', -5, 4, 3.2], ['lvA', 'trickster', 'climb the glow-steps while Bee’s lantern shines, pull the lever', 2.5, 6.5]] });
+      B.puzzle('owl', 'Night owl', ['scout', 'trickster'], ['lvB'], { hint: '🪽 Ring the night bell to open the moon gate · 🐾 sneak trunk to trunk while the owl looks away · pull the lever.', track: [['night', 'scout', 'ring the night bell', 4.5, 19.5, 2], ['lvB', 'trickster', 'hide behind the trunks, sneak to the owl-tree lever', -6.5, 33.2]] });
+      B.puzzle('echo', 'Echo whistle', ['trickster', 'bruiser'], ['hlC', 'plC'], { hint: '🐾 Grab the gift · the 🎶 whistle pings hidden steps + a secret lever · 🐻 sneak behind the trunk onto the root plate.', track: [['gift:whistle', 'trickster', 'grab the gift on the quiet side', 5.5, 39.5], ['hlC', 'trickster', 'ping, climb the hidden steps, pull the secret lever', 5.5, 45.5], ['plC', 'bruiser', 'sneak behind the trunk onto the root plate', -6.2, 51]] });
+    },
+  },
   // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
   a2_lab: {
     goal: 'Lab', act2: true, key: 'puzzles', ceil: 9, exit: [0, 30], par: 0,

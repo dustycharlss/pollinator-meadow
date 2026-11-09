@@ -51,7 +51,7 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'weathervane_hill', 'hornet_hedge', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
+export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'weathervane_hill', 'hornet_hedge', 'owl_wood', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 
 const MAPS = {
   // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
@@ -1321,7 +1321,7 @@ export function createZones(scene, ctx) {
       tst(found ? '🎶 Echo-ping! A hidden switch appeared' : '🎶 Echo-ping! Hidden paths glow for 5 s', 1600); setSig('ping'); }
     for (const h of S.hidden) if (h.kind === 'step') { const on = t - (h.showT ?? -99) < 5; h.r.m.material.opacity = on ? 0.55 + 0.25 * Math.sin(t * 6) : 0; }
     for (let i = S.outlines.length - 1; i >= 0; i--) { const o = S.outlines[i], k = (t - o.t0) / 1.2; o.m.scale.set(1 + k * 14, 1, 1 + k * 14); o.m.userData.mats[0].opacity = Math.max(0, 0.8 * (1 - k)); if (k >= 1) { o.m.removeFromParent(); S.outlines.splice(i, 1); } }
-    for (const gf of S.gifts) { if (gf.got) continue; gf.G.rotation.y += dt; gf.G.position.y = gf.y + Math.sin(t * 2) * 0.15; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; gear[gf.kind] = true; gear[gf.kind === 'lantern' ? 'eqL' : 'eqW'] = true; gearSave(); setSig('gift:' + gf.kind); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GEAR_INFO[gf.kind].em} You found the ${GEAR_INFO[gf.kind].name}! Tap ${GEAR_INFO[gf.kind].em} on the ${gf.kind === 'lantern' ? 'Scout' : 'Trickster'}'s picture (or G) to switch it on/off`, 4200); } }
+    for (const gf of S.gifts) { if (gf.got) continue; gf.G.rotation.y += dt; gf.G.position.y = gf.y + Math.sin(t * 2) * 0.15; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; gear[gf.kind] = true; gear[gf.kind === 'lantern' ? 'eqL' : 'eqW'] = true; gearSave(); if (gf.kind === 'whistle') S.pingNext = t; setSig('gift:' + gf.kind); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GEAR_INFO[gf.kind].em} You found the ${GEAR_INFO[gf.kind].name}! Tap ${GEAR_INFO[gf.kind].em} on the ${gf.kind === 'lantern' ? 'Scout' : 'Trickster'}'s picture (or G) to switch it on/off`, 4200); } }
     // ---- webs: Scouts get stuck for 3 s and the spider turns to look ----
     for (const pr of props) if (pr.kind === 'web' && !pr.done && c === 'scout' && !S.stuck && t > S.safeT && Math.abs(p.x - pr.x) < pr.ww / 2 + 0.6 && Math.abs(p.z - pr.z) < 1.3 && p.y - pr.y < pr.wh) { S.stuck = { who: cur, x: p.x, y: p.y, z: p.z, until: t + 3 }; if (pr.spider) pr.spider.look = { x: pr.x, z: pr.z, until: t + 3.5 }; tst('🕸️ Stuck in the web for 3 seconds!', 1800); }
     updEnemies(dt, cam, p, cur);
