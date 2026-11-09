@@ -9,6 +9,7 @@ export const UNLOCK_ALL_LEVELS = true;
 export const PACKUP_REFUND = 0.5;
 
 export const PATCHES = [
+  { id: 'training_garden', name: 'Training Garden', emoji: '🌱', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Start here! A tiny garden path that shows you every trick, one at a time.' },
   { id: 'sunny_hollow', name: 'Sunny Hollow', emoji: '☀️', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'bee', contest: null, blurb: 'Warm clearing by the Home Stump. Find Petals and a secret Starseed.' },
   { id: 'creek_bend', name: 'Creek Bend', emoji: '🌊', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'robin', contest: null, blurb: 'A U-shaped creek with stepped banks. Cross the water and grab Petals.' },
   { id: 'moon_meadow', name: 'Moon Meadow', emoji: '🌙', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: 'moth', contest: null, blurb: 'Climb the Hollow Oak. Night falls every 3 minutes.' },

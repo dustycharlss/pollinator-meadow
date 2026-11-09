@@ -7,6 +7,7 @@ export const MAP = {
   portrait: {
     file: U('ui/valley/valley-map-portrait.png'), w: 1080, h: 1920,
     slots: [
+      { patch: 'training_garden', rect: [648, 1652, 216, 216], rect_norm: [0.6, 0.8604, 0.2, 0.1125] },
       { patch: 'sunny_hollow', rect: [216, 1562, 216, 216], rect_norm: [0.2, 0.8135, 0.2, 0.1125] },
       { patch: 'creek_bend', rect: [648, 1370, 216, 216], rect_norm: [0.6, 0.7135, 0.2, 0.1125] },
       { patch: 'moon_meadow', rect: [205, 1169, 216, 216], rect_norm: [0.1898, 0.6089, 0.2, 0.1125] },
@@ -20,6 +21,7 @@ export const MAP = {
   landscape: {
     file: U('ui/valley/valley-map-landscape.png'), w: 1920, h: 1080,
     slots: [
+      { patch: 'training_garden', rect: [40, 302, 216, 216], rect_norm: [0.0208, 0.2796, 0.1125, 0.2] },
       { patch: 'sunny_hollow', rect: [65, 691, 216, 216], rect_norm: [0.0339, 0.6398, 0.1125, 0.2] },
       { patch: 'creek_bend', rect: [276, 302, 216, 216], rect_norm: [0.1437, 0.2796, 0.1125, 0.2] },
       { patch: 'moon_meadow', rect: [506, 691, 216, 216], rect_norm: [0.2635, 0.6398, 0.1125, 0.2] },

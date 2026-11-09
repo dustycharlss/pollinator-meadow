@@ -2,6 +2,9 @@
 // ground, grass and flower/tree materials read, so a season change is one smooth blend, not a pile of swaps.
 import * as THREE from 'three';
 
+/** t159u: seasons are off for now — one fixed, pleasant summer; no season UI, no transitions. */
+export const SEASONS_ENABLED = false;
+export const FIXED_SEASON = 1; // summer
 export const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
 export const SEASON_INFO = [
   { id: 'spring', emoji: '🌸', name: 'Spring', blurb: 'Fresh green, mist and soft rain.' },
@@ -95,14 +98,16 @@ export function createClock(saved) {
     t: saved && isFinite(saved.t) ? ((saved.t % 1) + 1) % 1 : DAY_T, day: saved && saved.day | 0 || 0,
     season: saved && saved.season >= 0 && saved.season < 4 ? saved.season | 0 : 0, sv: 0, DAY_S: 540, SEASON_DAYS: 2, changed: 0
   };
+  if (!SEASONS_ENABLED) c.season = FIXED_SEASON;
   c.sv = c.season;
   c.speed = 1;
   c.set = (t) => { c.t = ((t % 1) + 1) % 1; };
-  c.setSeason = (s, snap) => { c.season = ((s % 4) + 4) % 4; if (snap) c.sv = c.season; c.changed++; };
+  c.setSeason = (s, snap) => { if (!SEASONS_ENABLED) { c.season = c.sv = FIXED_SEASON; return; } c.season = ((s % 4) + 4) % 4; if (snap) c.sv = c.season; c.changed++; };
   c.nextSeason = () => { c.day = Math.floor(c.day / c.SEASON_DAYS) * c.SEASON_DAYS + c.SEASON_DAYS; c.setSeason(c.season + 1); };
   c.update = (dt) => {
     c.t += dt * c.speed / c.DAY_S;
-    if (c.t >= 1) { c.t -= 1; c.day++; if (c.day % c.SEASON_DAYS === 0) c.setSeason(c.season + 1); }
+    if (c.t >= 1) { c.t -= 1; c.day++; if (SEASONS_ENABLED && c.day % c.SEASON_DAYS === 0) c.setSeason(c.season + 1); }
+    if (!SEASONS_ENABLED) { c.season = c.sv = FIXED_SEASON; return; }
     const f = (((c.season - c.sv) % 4) + 4) % 4;
     if (f > 3.9) c.sv = c.season;
     else if (f > 0) { c.sv += Math.min(f, dt / 5); if (c.sv >= 4) c.sv -= 4; if (f < 1e-4) c.sv = c.season; }

@@ -6,6 +6,7 @@ import { WATER_RECTS, WATER_Y } from './data.js';
 import { setZoneHeight } from './world.js';
 import { CLASSES, CLASS_OF, ACTS, classOf } from './classes.js';
 import { loadGLB, lambertFrom } from './models.js';
+import { waterSurface, FOAM_MAT } from './water.js';
 
 // team-lift sizes follow the class (Fern): Scout = tiny, Trickster = medium, Bruiser = bear
 export const SIZE = Object.fromEntries(Object.entries(CLASS_OF).map(([id, c]) => [id, CLASSES[c].size]));
@@ -48,9 +49,75 @@ function terrainFrom(spec) {
 const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (Math.PI * 2 / n) * i).filter((t, i) => !skip.includes(i)).map(t => [Math.cos(t) * rx, Math.sin(t) * rz + cz]);
 
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
-export const READY_LEVELS = new Set(['sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
+export const READY_LEVELS = new Set(['training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 
 const MAPS = {
+  // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
+  training_garden: {
+    goal: 'Training Garden', kid: true, startCls: 'trickster',
+    key: 'puzzles', ceil: 8, exit: [0, 62], par: 0,
+    bounds: { x0: -10, x1: 10, z0: -10, z1: 66 },
+    crew: 'Bee · Raccoon · Bear',
+    banter: { start: [], end: [] },
+    build(B) {
+      B.home(-3, -7);
+      B.fence(-5, -9.5, 5, 65.5);
+      [[-8, -4], [8, 6], [-8, 18], [8, 30], [-8, 42], [8, 54], [-8, 62]].forEach(([x, z], i) => B.tree(x, z, 0.9 + (i % 3) * 0.1));
+      // 1 · walk to the flower
+      B.kidFlower('f1', 0, 5);
+      B.kidGate('f1', 8);
+      // 2 · jump onto the step
+      B.wall(0, 12, 4, 3, 1.0, { look: 'wood' });
+      B.kidFlower('f2', 0, 12, 1.0);
+      B.kidGate('f2', 15.5);
+      // 4 · bee flies over the low wall and rings the bell (the wall sinks)
+      B.gate('bell4', 0, 19, 10, 1, 4.4, { label: 'Low wall', look: 'hedge', latch: true });
+      B.bell('bell4', 0, 22.5, 2.2, { label: 'Bell' });
+      // 5 · raccoon pulls the lever → gate
+      B.lever('lever5', 3, 26.5, { label: 'Lever' });
+      B.kidGate('lever5', 29.5);
+      // 6 · bear shoves the block → a step up the ledge
+      B.wall(0, 37.5, 10, 3, 2.6, { look: 'stone' });
+      B.boulder('block6', -2.6, 32, 0, 35, { kind: 'boulder', w: 2.4, d: 2, h: 1.2, slotH: 1.2, label: 'Block' });
+      // 7 · teamwork: bear holds the plate, bee flies through the door, rings the bell
+      B.plate('p7', -2.6, 43, { heavy: true, label: 'plate' });
+      B.kidGate('door7', 46.5, { held: true });
+      B.bell('b7', 0, 49.5, 2.0, { label: 'Bell' });
+      // 8 · bear boost: raccoon hops on bear's back to the high ledge lever
+      B.wall(3.2, 54, 3.6, 3.4, 4.4, { look: 'stone' });
+      B.marker('bruiser', 3.2, 51, 0.1, 'Bear spot'); B.tag('spot8');
+      B.lever('lever8', 3.2, 54.2, { base: 4.4, label: 'Lever' });
+      B.kidGate('lever8', 57.5);
+      B.puzzle('kid', 'Training Garden', ['scout', 'trickster', 'bruiser'], ['lever8']);
+    },
+    // stations: [station#, icons, words (Pip ≤5 words), done(K), {point, glow, trail, herd, color}]
+    steps: K => {
+      const E = c => K.em(c);
+      const bearSpot = () => K.at('bruiser', 3.2, 51, 1.5);
+      return [
+        { n: 1, icons: ['🌼'], say: 'Walk to the flower!', point: 'joy', glow: ['f1'], trail: [[1.5, -2], [0, 3.6]], tgt: [0, 0.6, 5], done: () => K.sig('f1') },
+        { n: 2, icons: ['⬆️', '🌼'], say: 'Jump up!', point: 'jump', nearPt: [0, 12, 3.6], glow: ['f2'], trail: [[0, 7], [0, 10]], tgt: [0, 1.9, 12], done: () => K.sig('f2'), herd: { scout: [-3, 11], bruiser: [3, 11] } },
+        { n: 3, icons: ['👆', E('scout')], say: `Tap the ${E('scout')}!`, point: 'dock:scout', color: 'scout', latch: false, done: () => K.cls() === 'scout' || K.sig('bell4') },
+        { n: 4, icons: [E('scout'), '⬆️', '🔔'], say: 'Fly up! Ring it!', point: 'jump', hold: true, glow: ['bell4'], color: 'scout', trail: [[-1, 14], [0, 18], [0, 21.5]], tgt: [0, 2.2, 22.5], done: () => K.sig('bell4'), herd: { trickster: [-3, 21], bruiser: [3, 20.5] } },
+        { n: 5, icons: ['👆', E('trickster')], say: `Tap the ${E('trickster')}!`, point: 'dock:trickster', color: 'trickster', latch: false, done: () => K.cls() === 'trickster' || K.sig('lever5') },
+        { n: 5, icons: [E('trickster'), '🎚️'], say: 'Pull the lever!', point: 'int', glow: ['lever5'], color: 'trickster', trail: [[-2, 22], [2.4, 25.4]], tgt: [3, 0.8, 26.5], done: () => K.sig('lever5'), herd: { scout: [-3, 27], bruiser: [0, 27.5] } },
+        { n: 6, icons: ['👆', E('bruiser')], say: `Tap the ${E('bruiser')}!`, point: 'dock:bruiser', color: 'bruiser', latch: false, done: () => K.cls() === 'bruiser' || K.sig('block6') },
+        { n: 6, icons: [E('bruiser'), '💪', '🧱'], say: 'Push the block!', point: 'int', glow: ['block6'], color: 'bruiser', trail: [[0, 28.5], [-2.6, 30]], tgt: [-2.6, 1.4, 32], done: () => K.sig('block6') },
+        { n: 6, icons: [E('bruiser'), '⬆️'], say: 'Climb up!', point: 'jump', nearPt: [0, 35, 3.4], color: 'bruiser', trail: [[-1, 32.4], [0, 34]], tgt: [0, 3, 35], done: () => K.curY() > 2.4 || K.sig('b7'), herd: { scout: [-3, 37.5, 2.6], trickster: [3, 37.5, 2.6] } },
+        { n: 7, icons: [E('bruiser'), '➡️', '🟧'], say: 'Sit on the plate!', glow: ['p7'], color: 'bruiser', trail: [[0, 39.6], [-2.6, 41.6]], tgt: [-2.6, 0.4, 43], latch: false, done: () => K.held('p7') || K.sig('b7') },
+        { n: 7, icons: ['👆', E('scout')], say: `Now tap the ${E('scout')}!`, point: 'dock:scout', color: 'scout', latch: false, done: () => (K.cls() === 'scout' && K.held('p7')) || K.sig('b7') },
+        { n: 7, icons: [E('scout'), '🚪', '🔔'], say: 'Fly in! Ring it!', glow: ['b7'], color: 'scout', trail: [[0, 41], [0, 46.5], [0, 48.6]], tgt: [0, 2, 49.5], done: () => K.sig('b7'), herd: { trickster: [-2.5, 48.5], bruiser: [-1, 49.5] } },
+        { n: 8, icons: ['👆', E('bruiser')], say: `Tap the ${E('bruiser')}!`, point: 'dock:bruiser', color: 'bruiser', latch: false, done: () => K.cls() === 'bruiser' || bearSpot() || K.sig('lever8') },
+        { n: 8, icons: [E('bruiser'), '➡️', '⭕'], say: 'Stand in the circle!', glow: ['spot8'], color: 'bruiser', trail: [[0, 49.5], [2.6, 50.6]], tgt: [3.2, 0.3, 51], latch: false, done: () => bearSpot() || K.sig('lever8') },
+        { n: 8, icons: ['👆', E('trickster')], say: `Tap the ${E('trickster')}!`, point: 'dock:trickster', color: 'trickster', latch: false, done: () => (K.cls() === 'trickster' && bearSpot()) || K.sig('lever8') },
+        { n: 8, icons: [E('trickster'), '⬆️', E('bruiser')], say: `Jump on ${E('bruiser')}!`, point: 'jump', hold: true, nearPt: [3.2, 51, 2.6], trail: [[-2, 48.6], [2.4, 50.2]], color: 'trickster', glow: ['spot8'], tgt: [3.2, 2, 51], latch: false, done: () => (K.cls() === 'trickster' && K.curY() > 1.5) || K.sig('lever8') },
+        { n: 8, icons: [E('trickster'), '⬆️', '⬆️'], say: 'Jump up high!', point: 'jump', hold: true, color: 'trickster', tgt: [3.2, 4.6, 53.4], latch: false, done: () => (K.cls() === 'trickster' && K.curY() > 4.1) || K.sig('lever8') },
+        { n: 8, icons: [E('trickster'), '🎚️'], say: 'Pull the lever!', point: 'int', glow: ['lever8'], color: 'trickster', tgt: [3.2, 5.2, 54.2], done: () => K.sig('lever8'), herd: { scout: [-2.5, 56], bruiser: [-0.5, 56] } },
+        { n: 9, icons: ['🏁', E('scout'), E('trickster'), E('bruiser')], say: 'Everyone to the flag!', point: 'exit', glow: ['exit'], trail: [[0, 57.5], [0, 60]], tgt: [0, 1, 62], done: () => false },
+      ];
+    },
+  },
+
   sunny_hollow: {
     goal: 'Ring the Sunflower bell, pull the lever, shove the log · then all three to the 🏁 exit',
     key: 'puzzles', ceil: 12, exit: [0, -10],
@@ -206,7 +273,7 @@ const MAPS = {
       B.gate('jam1', 0, 6, 2.2, 1.6, 7, { latch: true, label: 'Jam 1' });
       B.boulder('logA', -5, 0.5, 3.6, 4.4, { kind: 'log', w: 2.4, d: 1.4, h: 1.0, slotH: 2.4, label: 'Loose log' });
       B.boulder('logB', 5, -3, 6.4, 4.4, { kind: 'log', w: 2.4, d: 1.4, h: 1.0, slotH: 4.6, label: 'Loose log' });
-      B.lever('jam1', 5.2, 6, { base: 7, label: 'Drain lever' });
+      B.lever('jam1', 5.2, 6, { base: 7, label: 'Drain lever', need: ['logA', 'logB'], needWhy: 'Build the log stair first — Bear shoves both loose logs' });
       for (let i = 0; i < 4; i++) B.pickup('petal', -6.5 + i, 10.5, 0.9);
       // Jam 2 (12 tall): heavy plate opens a high gap; Scout flies through and rings the gate bell
       B.wall(-5.1, 15, 7.6, 1.6, 12, C); B.wall(0, 15, 2.4, 1.6, 12, { ...C, bot: 3.4 }); B.wall(1.9, 15, 1.4, 1.6, 12, C);
@@ -419,6 +486,7 @@ export function createZones(scene, ctx) {
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
   let sampleH = null, waterMeshes = [];
   // three-class puzzle state
+  let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
   let sig = {}, props = [], gates = [], plates = [], puzzles = [], deep = [], crossings = [], steps = [], tw = null, lastProg = 0, hintT = 0, bearPad = null, windT = 0, introQ = [];
   const mats = new Map();
@@ -439,8 +507,8 @@ export function createZones(scene, ctx) {
       const lx = pos.getX(i) + cx, lz = pos.getZ(i) + cz;
       let rel = fn(lx, lz); if (rel == null) rel = -4;
       pos.setY(i, rel);
-      if (rel < -1.2) { col[i * 3] = lem ? 0.9 : 0.25; col[i * 3 + 1] = lem ? 0.75 : 0.55; col[i * 3 + 2] = lem ? 0.3 : 0.75; }
-      else if (rel < 0) { col[i * 3] = 0.75; col[i * 3 + 1] = 0.65; col[i * 3 + 2] = 0.4; }
+      if (rel < -1.2) { col[i * 3] = lem ? 0.9 : 0.08; col[i * 3 + 1] = lem ? 0.75 : 0.32; col[i * 3 + 2] = lem ? 0.3 : 0.72; }
+      else if (rel < 0.05) { col[i * 3] = 0.42; col[i * 3 + 1] = 0.33; col[i * 3 + 2] = 0.2; } // darker muddy bank so the shore reads
       else { const g = 0.5 + 0.06 * Math.sin(lx * 0.7) * Math.cos(lz * 0.6); col[i * 3] = 0.36; col[i * 3 + 1] = g; col[i * 3 + 2] = 0.28; }
     }
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
@@ -484,11 +552,17 @@ export function createZones(scene, ctx) {
   const nameOf = id => ctx.speciesName ? ctx.speciesName(id) : id;
 
   const B = {
-    water(c = 0x3aa0e8) {
+    water(c = 0x1f8cff) {
+      // t159u: saturated, rippling surface + white foam lines at the shore (top face only, so no z-fighting)
+      const lem = c === 0xffd65a, foamM = FOAM_MAT();
       for (const r of recipe.deep || []) {
         const w = r[2] - r[0], d = r[3] - r[1];
-        const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.15, d), new THREE.MeshLambertMaterial({ color: c, emissive: 0x0b3a66, emissiveIntensity: 0.25, transparent: true, opacity: 0.78 }));
+        const m = waterSurface(new THREE.PlaneGeometry(w + 1.4, d + 1.4).rotateX(-Math.PI / 2), { color: lem ? c : 0x1f8cff, repeat: [(w + 1.4) / 6, (d + 1.4) / 6], lemonade: lem });
         m.position.set(A.x + (r[0] + r[2]) / 2, baseY - 0.9, A.z + (r[1] + r[3]) / 2); group.add(m); waterMeshes.push(m);
+        // foam where the water meets the bank (~0.37 outside the rect, where the bank slope crosses the surface)
+        for (const [fx, fz, fw, fd] of [[(r[0] + r[2]) / 2, r[1] - 0.37, w + 0.7, 0.32], [(r[0] + r[2]) / 2, r[3] + 0.37, w + 0.7, 0.32], [r[0] - 0.37, (r[1] + r[3]) / 2, 0.32, d + 0.7], [r[2] + 0.37, (r[1] + r[3]) / 2, 0.32, d + 0.7]]) {
+          const f = new THREE.Mesh(new THREE.PlaneGeometry(fw, fd).rotateX(-Math.PI / 2), foamM); f.position.set(A.x + fx, baseY - 0.86, A.z + fz); f.renderOrder = 4; group.add(f); waterMeshes.push(f);
+        }
       }
     },
     /** solid block: top/bot heights are relative to local ground at (x,z) */
@@ -635,20 +709,23 @@ export function createZones(scene, ctx) {
     },
     /** shove: Bruiser pushes a log/boulder/basket into its slot (becomes stair, ford, or plate weight) */
     boulder(s, x, z, sx, sz, o = {}) {
+      // t159u: ONE clean blocky mesh per block (the old box + dressed model overlapped and z-fought), tinted
+      // top / ends, ground-snapped with gy(); the slot ghost is a flat decal with polygonOffset.
       const base = o.base || 0, g0 = gy(x, z) + base, g1 = gy(sx, sz) + base, H = Math.max(o.h, o.slotH) + 2;
-      const col = o.kind === 'log' ? 0x8b6a45 : o.kind === 'basket' ? 0xc8a060 : 0x9a968c;
+      const K = o.kind === 'log' ? { side: 0x8b6a45, top: 0x9c7850, end: 0xd9b07a } : o.kind === 'basket' ? { side: 0xc8a060, top: 0xa07838, end: 0xc8a060 } : { side: 0x9a968c, top: 0xbab6aa, end: 0x9a968c };
+      const longX = o.w >= o.d, sideM = mat(K.side), endM = mat(K.end), topM = mat(K.top), botM = mat(0x5a4a3a);
+      const mats6 = o.kind === 'log' ? (longX ? [endM, endM, topM, botM, sideM, sideM] : [sideM, sideM, topM, botM, endM, endM]) : [sideM, sideM, topM, botM, sideM, sideM];
       const holder = new THREE.Group(); holder.position.set(A.x + x, g0 + o.h - H / 2, A.z + z); group.add(holder);
-      const m = new THREE.Mesh(new THREE.BoxGeometry(o.w, H, o.d), mat(col)); holder.add(m);
-      // the model only covers the visible top part
-      const vis = new THREE.Group(); vis.position.y = H / 2 - o.h / 2; holder.add(vis);
-      const key = o.kind === 'log' ? GLB.log : o.kind === 'basket' ? GLB.basket : GLB.boulder;
-      dress(vis, null, key, o.w * 1.05, Math.max(o.h, 1), o.d * 1.05, o.kind === 'log' && o.d > o.w ? Math.PI / 2 : 0);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(o.w, H, o.d), mats6); holder.add(m);
+      if (o.kind === 'log') { // two end rings, set just proud of the end faces (no coplanar faces)
+        for (const sgn of [-1, 1]) { const ring = new THREE.Mesh(new THREE.BoxGeometry(longX ? 0.04 : Math.min(o.w, o.h) * 0.55, Math.min(o.w, o.d, o.h) * 0.55, longX ? Math.min(o.d, o.h) * 0.55 : 0.04), mat(0xa8784a)); ring.position.set(longX ? sgn * (o.w / 2 + 0.03) : 0, H / 2 - o.h / 2, longX ? 0 : sgn * (o.d / 2 + 0.03)); holder.add(ring); }
+      }
       const s0 = addSolid({ type: 'box', x: A.x + x, z: A.z + z, hx: o.w / 2, hz: o.d / 2, yaw: 0, y0: g0 + o.h - H, top: g0 + o.h, kind: 'zone' });
       props.push({ kind: 'boulder', act: 'shove', cls: 'bruiser', sig: s, x: A.x + x, y: g0, z: A.z + z, r: Math.max(o.w, o.d) / 2 + 1.9, need: o.need, needWhy: o.needWhy, label: o.label || 'Boulder',
         holder, s: s0, H, to: { x: A.x + sx, z: A.z + sz, top: g1 + o.slotH }, from: { x: A.x + x, z: A.z + z, top: g0 + o.h }, cross: o.cross, icon: badge('bruiser', A.x + x, g0 + o.h + 1.4, A.z + z) });
-      // ghost slot marker
-      const gm = new THREE.Mesh(new THREE.BoxGeometry(o.w, 0.12, o.d), new THREE.MeshBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.45 }));
-      gm.position.set(A.x + sx, Math.max(g1 + 0.1, g1 + o.slotH - (o.slotH > 0.8 ? o.slotH : 0) + 0.1), A.z + sz); group.add(gm); props[props.length - 1].ghost = gm;
+      // ghost slot marker: a flat decal on the ground (depthWrite off + polygonOffset → no flicker)
+      const gm = new THREE.Mesh(new THREE.PlaneGeometry(o.w, o.d).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.45, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
+      gm.position.set(A.x + sx, g1 + 0.16, A.z + sz); gm.renderOrder = 3; group.add(gm); props[props.length - 1].ghost = gm;
     },
     cracked(s, x, z, w, d, top, o = {}) {
       const r = this.wall(x, z, w, d, top, { bot: o.base > 0 ? o.base : -1.5, c: 0xa07a50 });
@@ -735,9 +812,45 @@ export function createZones(scene, ctx) {
       star = { node: n, caps: caps.map(([cx, cz, ch]) => ({ x: A.x + cx, z: A.z + cz, y: gy(cx, cz) + ch })), carry: false, safe: { x: A.x, z: A.z + 2 }, mesh: null, lastY: 0, dropped: 0 };
     },
     puzzle(pid, label, cls, sigs, o = {}) { puzzles.push({ id: pid, label, cls, sigs, req: o.req !== false, hint: o.hint || '', done: false }); },
+    // ---- Training Garden kit (t159u) ----
+    /** white picket fence around a rect + tall invisible walls so nobody (not even a Scout) leaves the path */
+    fence(x0, z0, x1, z1) {
+      const g = gy((x0 + x1) / 2, (z0 + z1) / 2), pts = [];
+      const run = (ax, az, bx, bz) => { const L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.round(L / 1.1)); for (let i = 0; i <= n; i++) pts.push([ax + (bx - ax) * i / n, az + (bz - az) * i / n]); };
+      run(x0, z0, x1, z0); run(x1, z0, x1, z1); run(x1, z1, x0, z1); run(x0, z1, x0, z0);
+      const post = new THREE.InstancedMesh(new THREE.BoxGeometry(0.28, 1.3, 0.28), mat(0xfff6e6), pts.length), M = new THREE.Matrix4();
+      pts.forEach(([x, z], i) => { M.makeTranslation(A.x + x, gy(x, z) + 0.55, A.z + z); post.setMatrixAt(i, M); }); group.add(post);
+      for (const [x, z, w, d] of [[(x0 + x1) / 2, z0, x1 - x0, 0.14], [(x0 + x1) / 2, z1, x1 - x0, 0.14], [x0, (z0 + z1) / 2, 0.14, z1 - z0], [x1, (z0 + z1) / 2, 0.14, z1 - z0]]) {
+        for (const hh of [0.45, 0.95]) { const r = new THREE.Mesh(new THREE.BoxGeometry(w, 0.16, d), mat(0xfff6e6)); r.position.set(A.x + x, g + hh, A.z + z); group.add(r); }
+        addSolid({ type: 'box', x: A.x + x, z: A.z + z, hx: Math.max(w, 0.6) / 2, hz: Math.max(d, 0.6) / 2, yaw: 0, y0: g - 6, top: g + 20, kind: 'zone', fadeM: true }); // fadeM: the camera may sit outside the fence
+      }
+    },
+    /** a gate across the whole path: wooden door + a big lock + an invisible wall above it (no flying over) */
+    kidGate(s, z, o = {}) {
+      const gt = this.gate(s, 0, z, 10, 0.6, 2.8, { latch: o.held ? false : true, label: 'Gate' });
+      const g = gy(0, z);
+      gt.extra = addSolid({ type: 'box', x: A.x, z: A.z + z, hx: 5, hz: 0.3, yaw: 0, y0: g + 2.7, top: g + 20, kind: 'zone', fadeM: true });
+      gt.lock = emojiSprite('🔒', 1.6); gt.lock.position.set(A.x, g + 3.8, A.z + z - 0.4); group.add(gt.lock);
+      return gt;
+    },
+    kidFlower(key, x, z, base = 0) {
+      const g = gy(x, z) + base, G = new THREE.Group();
+      const stem = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.0, 0.2), mat(0x3f8a35)); stem.position.y = 0.5; G.add(stem);
+      const head = new THREE.Group(); head.position.y = 1.15; G.add(head);
+      const mid = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), mat(0xffd23f, 0.5)); head.add(mid);
+      for (let i = 0; i < 4; i++) { const pe = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.42, 0.3), mat(0xff7fbf, 0.45)); const a = i * Math.PI / 2; pe.position.set(Math.cos(a) * 0.42, Math.sin(a) * 0.42, 0); head.add(pe); }
+      G.position.set(A.x + x, g, A.z + z); group.add(G);
+      const col = new THREE.Color(0xffd23f);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloMap(), color: col, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false })); halo.scale.set(3, 3, 1); halo.position.set(A.x + x, g + 1.15, A.z + z); group.add(halo);
+      const ring = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.5, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      ring.position.set(A.x + x, g + 0.08, A.z + z); group.add(ring);
+      kidObjs.push({ key, x: A.x + x, y: g, z: A.z + z, G, head, halo, ring, got: false });
+    },
+    tag(k) { const pr = props[props.length - 1]; if (pr && !pr.sig) pr.sig = k; },
   };
 
-  const say = (s, d = 2200) => { if (t - msgT > 1.6) { msgT = t; ctx.toast(s, d); } };
+  function tst(s, d) { if (recipe && recipe.kid) return; ctx.toast(s, d); }
+  const say = (s, d = 2200) => { if (t - msgT > 1.6) { msgT = t; tst(s, d); } };
   function clear() {
     WATER_RECTS.length = 0; setZoneHeight(null);
     sampleH = null; waterMeshes = [];
@@ -749,6 +862,7 @@ export function createZones(scene, ctx) {
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
     tutorI = 0; tutorT = -99; endLines = []; result = null;
     if (exitLabel) exitLabel.remove(); exitAt = null; exitOpen = false; exitMesh = null; exitLabel = null; starGot = false;
+    kidClear();
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
   function load(pid, anchor) {
@@ -763,7 +877,7 @@ export function createZones(scene, ctx) {
     bearPad = addSolid({ type: 'cyl', x: 0, z: 0, r: 1.15, y0: -99, top: -98, kind: 'zone', off: true, pad: true });
     if (recipe.night) { nightOn = true; ctx.setNight(true); }
     else if (recipe.nightCycle) { nightOn = false; ctx.setNight(false); }
-    introQ = [...(recipe.banter?.start || []), ...(recipe.intro || [])]; // the goal lives in the objective tracker now
+    introQ = recipe.kid ? [] : [...(recipe.banter?.start || []), ...(recipe.intro || [])]; // the goal lives in the objective tracker now
   }
   function crewAt(x, z, r) {
     const p = ctx.getP(); let n = Math.hypot(p.x - x, p.z - z) < r ? 1 : 0;
@@ -776,7 +890,7 @@ export function createZones(scene, ctx) {
   function checkKey() {
     if (!recipe || keyDone) return;
     if (reqLeft().length) return;
-    if (!exitOpen) { exitOpen = true; setExitLook(); ctx.toast('🏁 The exit is open! Bring all three friends to the flag.', 3400); ctx.audio?.chime?.(); }
+    if (!exitOpen) { exitOpen = true; setExitLook(); tst('🏁 The exit is open! Bring all three friends to the flag.', 3400); ctx.audio?.chime?.(); }
     if (exitAt && crewAtExit() >= 3) complete('All three friends made it');
   }
   const keyGoalMet = () => !recipe || keyDone;
@@ -794,7 +908,7 @@ export function createZones(scene, ctx) {
   function updateExit(cam) {
     if (!exitAt || !exitLabel) return;
     exitMesh.flag.rotation.y = Math.sin(t * 2) * 0.25;
-    exitMesh.beam.material.opacity = exitOpen ? 0.38 + 0.14 * Math.sin(t * 3) : 0.1;
+    exitMesh.beam.material.opacity = exitOpen ? 0.38 + 0.14 * Math.sin(t * 3) : recipe.kid ? 0 : 0.1;
     const v = new THREE.Vector3(exitAt.x, exitAt.y + 4, exitAt.z); v.project(cam);
     const p = ctx.getP(), pd = Math.hypot(p.x - exitAt.x, p.z - exitAt.z), on = exitOpen && !keyDone && v.z < 1 && pd < 40;
     exitLabel.style.display = on ? 'block' : 'none';
@@ -807,8 +921,9 @@ export function createZones(scene, ctx) {
     const hasStar = picks.some(k => k.tier === 'star');
     result = { id, petals: got, petalsTotal: pets.length, star: starGot, hasStar, time: Math.round(t), par: recipe.par || 0,
       stars: { petals: got >= pets.length, star: !hasStar || starGot, par: !recipe.par || t <= recipe.par }, end: recipe.banter?.end || [] };
+    if (recipe.kid) { result.kid = true; result.stars = { petals: true, star: true, par: true }; confetti(true); setTimeout(() => kid && confetti(true), 700); }
     result.n = Object.values(result.stars).filter(Boolean).length;
-    ctx.toast(`🏆 ${why}! ${'⭐'.repeat(result.n)}${'☆'.repeat(3 - result.n)}`, 3400); ctx.audio?.chime?.(); ctx.onComplete?.(result);
+    tst(`🏆 ${why}! ${'⭐'.repeat(result.n)}${'☆'.repeat(3 - result.n)}`, 3400); ctx.audio?.chime?.(); ctx.onComplete?.(result);
   }
   const clsOfCur = () => CLASS_OF[ctx.cur()] || 'trickster';
   const d3 = (p, q) => Math.hypot(p.x - q.x, (p.y + 0.6) - q.y, p.z - q.z);
@@ -844,13 +959,13 @@ export function createZones(scene, ctx) {
     const atB = pr._atB;
     switch (pr.act) {
       case 'bell': ringBell(pr); break;
-      case 'lever': pr.done = true; pr.arm.rotation.z = -0.5; pr.knob.position.x = 0.3; setSig(pr.sig); ctx.audio?.sample?.('ui2/lantern-click', 0.5); ctx.toast(`🎚️ ${pr.label} pulled!`, 1800); break;
+      case 'lever': pr.done = true; pr.arm.rotation.z = -0.5; pr.knob.position.x = 0.3; setSig(pr.sig); ctx.audio?.sample?.('ui2/lantern-click', 0.5); tst(`🎚️ ${pr.label} pulled!`, 1800); break;
       case 'slip': {
         if (!atB && pr.needIn && !isOn(pr.needIn)) { say('🔒 ' + (pr.needWhy || 'Closed'), 2400); return true; }
-        const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.55, 0.3); ctx.toast('🕳️ Slipped through!', 1000); break;
+        const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.55, 0.3); tst('🕳️ Slipped through!', 1000); break;
       }
-      case 'vine': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.1, z: to.z }, 1.1, 0); ctx.toast(atB ? '🌿 Climbing down' : '🌿 Climbing up the vine!', 1200); break; }
-      case 'dig': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.9, -1.6); if (!pr.done) { pr.done = true; setSig(pr.sig); } ctx.toast('⛏️ Dug through the tunnel!', 1200); break; }
+      case 'vine': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.1, z: to.z }, 1.1, 0); tst(atB ? '🌿 Climbing down' : '🌿 Climbing up the vine!', 1200); break; }
+      case 'dig': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.9, -1.6); if (!pr.done) { pr.done = true; setSig(pr.sig); } tst('⛏️ Dug through the tunnel!', 1200); break; }
       case 'throw': {
         if (pr.from && (dFlat(p, pr.from) > pr.from.r || p.y < pr.from.minY - 0.3)) { say('🌰 ' + (pr.fromWhy || 'Get to a better spot to throw from'), 2600); return true; }
         throwAcorn(p, pr); break;
@@ -858,18 +973,18 @@ export function createZones(scene, ctx) {
       case 'plank': {
         pr.cross.on = true; pr.holder.visible = true; pr.s.off = false; pr.ghost.visible = false; clearWaterIn(pr.cross.x0, pr.cross.z0, pr.cross.x1, pr.cross.z1);
         for (const q of props) if (q.act === 'plank' && q.holder === pr.holder) { q.done = true; if (q.icon) q.icon.visible = false; }
-        setSig(pr.sig); ctx.toast(`🪵 ${pr.label}: Plank Bridge built!${pr.cross.thin ? ' (too thin for Bear)' : ''}`, 2400); ctx.audio?.chime?.(); break;
+        setSig(pr.sig); tst(`🪵 ${pr.label}: Plank Bridge built!${pr.cross.thin ? ' (too thin for Bear)' : ''}`, 2400); ctx.audio?.chime?.(); break;
       }
       case 'shove': {
         pr.done = true; const s = pr.s, to = pr.to;
         pr.anim = { t: 0, a: { x: pr.from.x, z: pr.from.z, top: pr.from.top }, b: to };
         if (pr.ghost) pr.ghost.visible = false;
-        ctx.toast(`💪 Shove! ${pr.label} slides into place`, 1800); ctx.audio?.sample?.('build/place-thunk', 0.5);
+        tst(`💪 Shove! ${pr.label} slides into place`, 1800); ctx.audio?.sample?.('build/place-thunk', 0.5);
         break;
       }
       case 'smash': {
         pr.done = true; pr.s.off = true; pr.m.visible = false; pr.G.visible = false; setSig(pr.sig);
-        fx(pr.x, pr.y + 1.2, pr.z); ctx.toast(`💥 Poof! ${pr.label} tumbles open in a puff of leaves`, 2000); ctx.audio?.sample?.('build/dismantle-pop-apart', 0.5); break;
+        fx(pr.x, pr.y + 1.2, pr.z); tst(`💥 Poof! ${pr.label} tumbles open in a puff of leaves`, 2000); ctx.audio?.sample?.('build/dismantle-pop-apart', 0.5); break;
       }
     }
     if (pr.icon && pr.done && !pr.two) pr.icon.visible = false;
@@ -880,12 +995,12 @@ export function createZones(scene, ctx) {
     if (pr.need && !isOn(pr.need)) { say('🔒 ' + (pr.needWhy || 'Not yet'), 2400); return; }
     pr.done = true; pr.ringT = t; setSig(pr.sig); if (pr.icon) pr.icon.visible = false;
     if (pr.lantern) { pr.bell.material = mat(0xffe08a, 1.0); const L = new THREE.PointLight(0xffd27a, 2, 9); L.position.copy(pr.G.position); group.add(L); }
-    ctx.audio?.sample?.(pr.lantern ? 'ui2/lantern-click' : 'contest/win-jingle', 0.45); ctx.toast(pr.lantern ? `🏮 ${pr.label} lit!` : `🔔 Ding! ${pr.label} rang`, 1800);
+    ctx.audio?.sample?.(pr.lantern ? 'ui2/lantern-click' : 'contest/win-jingle', 0.45); tst(pr.lantern ? `🏮 ${pr.label} lit!` : `🔔 Ding! ${pr.label} rang`, 1800);
   }
   function throwAcorn(p, pr) {
     const a = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.4, 0.35), mat(0x8b5a2b)); a.position.set(p.x, p.y + 1.2, p.z); group.add(a);
     pr.done = true; pr.proj = { m: a, t: 0, a: a.position.clone(), b: new THREE.Vector3(pr.x, pr.y, pr.z) };
-    ctx.toast('🌰 Throw!', 900); ctx.audio?.blip?.(3);
+    tst('🌰 Throw!', 900); ctx.audio?.blip?.(3);
   }
   /** Interact / Act button: returns true if a puzzle prop handled it */
   function act() {
@@ -929,12 +1044,12 @@ export function createZones(scene, ctx) {
   function update(dt, cam) {
     if (!recipe) return; t += dt;
     const p = ctx.getP(), cur = ctx.cur(), c = clsOfCur(), size = SIZE[cur] || 'medium', ids = ctx.crewIds();
-    if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; ctx.toast(introQ.shift(), 3000); }
+    if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; tst(introQ.shift(), 3000); }
     // guided tutorial (Sunny Hollow): one Pip line per step, repeated every 25 s until that step is done
     else if (recipe.tutor && !keyDone) {
       while (tutorI < recipe.tutor.length && sig[recipe.tutor[tutorI].until]) { tutorI++; tutorT = -99; }
       const st = recipe.tutor[tutorI];
-      if (st && !(st.optional && exitOpen && t - tutorT < 60) && t - tutorT > 25 && t - msgT > 3.2) { tutorT = t; msgT = t; lastProg = t; ctx.toast(st.say, 4200); }
+      if (st && !(st.optional && exitOpen && t - tutorT < 60) && t - tutorT > 25 && t - msgT > 3.2) { tutorT = t; msgT = t; lastProg = t; tst(st.say, 4200); }
     }
     // player tween (slip / climb / dig)
     if (tw) {
@@ -983,8 +1098,8 @@ export function createZones(scene, ctx) {
       const chk = (q, idd) => { if (!q || holder) return; if (Math.hypot(q.x - pl.x, q.z - pl.z) < pl.r && Math.abs(q.y - pl.y) < 1.2 && (!pl.heavy || CLASS_OF[idd] === 'bruiser')) holder = idd; };
       chk(p, cur); for (const cid of ids) if (cid !== cur) chk(ctx.parked(cid), cid);
       if (holder !== pl.holder) {
-        if (holder && holder !== cur) ctx.toast(`📌 ${nameOf(holder)} is holding the ${pl.label}!`, 2000);
-        else if (holder) ctx.toast(`🟩 ${pl.label} held — swap to a friend, ${nameOf(holder)} will stay put`, 2200);
+        if (holder && holder !== cur) tst(`📌 ${nameOf(holder)} is holding the ${pl.label}!`, 2000);
+        else if (holder) tst(`🟩 ${pl.label} held — swap to a friend, ${nameOf(holder)} will stay put`, 2200);
         pl.holder = holder;
       }
       setSig(pl.sig, !!holder);
@@ -995,27 +1110,27 @@ export function createZones(scene, ctx) {
     for (const g of gates) {
       if (g.latch === 'auto') g.latch = !g.need.some(k => plates.some(pl => pl.sig === k));
       const want = g.open && g.latch ? true : isOn(g.need);
-      if (want !== g.open) { g.open = want; g.s.off = want; if (want) { ctx.audio?.sample?.('ui2/gear-equip-clink', 0.35); say(`🚪 ${g.label} opened!`, 1400); } }
+      if (want !== g.open) { g.open = want; g.s.off = want; if (g.extra) g.extra.off = want; if (g.lock) g.lock.visible = !want; if (want) { ctx.audio?.sample?.('ui2/gear-equip-clink', 0.35); say(`🚪 ${g.label} opened!`, 1400); } }
       g.k += ((g.open ? 1 : 0) - g.k) * Math.min(1, dt * 6);
       g.m.position.y = g.y - g.k * (g.h - 0.1); g.stripe.position.y = g.m.position.y; g.m.visible = g.k < 0.97; g.stripe.visible = g.m.visible;
     }
     for (const st of steps) {
       const on = isOn(st.sig);
-      if (st.r && on && st.r.s.off) { st.r.s.off = false; st.r.m.visible = true; ctx.toast('🪜 A new way up appeared!', 1800); }
+      if (st.r && on && st.r.s.off) { st.r.s.off = false; st.r.m.visible = true; tst('🪜 A new way up appeared!', 1800); }
       if (st.deco) { const ty = on ? st.down : st.up; st.deco.position.y += (ty - st.deco.position.y) * Math.min(1, dt * 2); }
     }
     // shove anims + acorn projectiles + bell scouting by touch
     for (const pr of props) {
       if (pr.anim) {
-        pr.anim.t += dt; const k = Math.min(1, pr.anim.t / 0.8), e = k * k * (3 - 2 * k), a = pr.anim.a, b = pr.anim.b;
+        pr.anim.t += dt; const k = Math.min(1, pr.anim.t / 0.9), e = k * k * k * (k * (6 * k - 15) + 10), a = pr.anim.a, b = pr.anim.b;
         const x = a.x + (b.x - a.x) * e, z = a.z + (b.z - a.z) * e, top = a.top + (b.top - a.top) * e;
         pr.holder.position.set(x, top - pr.H / 2, z); pr.s.x = x; pr.s.z = z; pr.s.top = top; pr.s.y0 = top - pr.H;
         if (pr.icon) pr.icon.visible = false;
-        if (k >= 1) { pr.anim = null; setSig(pr.sig); if (pr.cross) { const cr = { x0: A.x + pr.cross[0], z0: A.z + pr.cross[1], x1: A.x + pr.cross[2], z1: A.z + pr.cross[3], on: true, thin: false }; crossings.push(cr); clearWaterIn(cr.x0, cr.z0, cr.x1, cr.z1); ctx.toast('🪨 A sturdy crossing — Bear can walk across now!', 2200); } fx(x, top, z); }
+        if (k >= 1) { pr.anim = null; setSig(pr.sig); if (pr.cross) { const cr = { x0: A.x + pr.cross[0], z0: A.z + pr.cross[1], x1: A.x + pr.cross[2], z1: A.z + pr.cross[3], on: true, thin: false }; crossings.push(cr); clearWaterIn(cr.x0, cr.z0, cr.x1, cr.z1); tst('🪨 A sturdy crossing — Bear can walk across now!', 2200); } fx(x, top, z); }
       }
       if (pr.proj) {
         pr.proj.t += dt; const k = Math.min(1, pr.proj.t / 0.7); pr.proj.m.position.lerpVectors(pr.proj.a, pr.proj.b, k); pr.proj.m.position.y += Math.sin(k * Math.PI) * 2.5;
-        if (k >= 1) { pr.proj.m.removeFromParent(); pr.proj = null; setSig(pr.sig); pr.G.rotation.z = 0.6; if (pr.icon) pr.icon.visible = false; ctx.toast(`🎯 Bonk! ${pr.label} hit`, 1800); ctx.audio?.chime?.(); }
+        if (k >= 1) { pr.proj.m.removeFromParent(); pr.proj = null; setSig(pr.sig); pr.G.rotation.z = 0.6; if (pr.icon) pr.icon.visible = false; tst(`🎯 Bonk! ${pr.label} hit`, 1800); ctx.audio?.chime?.(); }
       }
       if (pr.kind === 'bell') {
         if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0;
@@ -1028,7 +1143,7 @@ export function createZones(scene, ctx) {
     // hoops (sequence)
     for (const h of hoops) if (!h.got && Math.hypot(p.x - h.m.position.x, p.z - h.m.position.z) < 1.8 && Math.abs(p.y + 0.5 - h.m.position.y) < 1.8) {
       if (h.prev && !sig[h.prev]) { say('💫 Start with the first hoop!', 1200); continue; }
-      h.got = true; h.m.material = mat(0x8be07a, 0.6); setSig(h.sig); ctx.toast('💫 Hoop!', 900);
+      h.got = true; h.m.material = mat(0x8be07a, 0.6); setSig(h.sig); tst('💫 Hoop!', 900);
     }
     // pickups
     for (const k of picks) {
@@ -1041,13 +1156,13 @@ export function createZones(scene, ctx) {
         k.got = true; k.m.visible = false; k.alive = false; addHeal(TIER[k.tier].heal); ctx.audio?.sample?.('ui2/item-produced', 0.4); picked++;
         if (k.tier === 'dew') keyDew++;
         if (k.set) setSig(k.set);
-        if (k.tier === 'star') { starGot = true; ctx.toast('⭐ Secret Starseed found!', 1800); ctx.onStar?.(); } else ctx.onPick?.();
+        if (k.tier === 'star') { starGot = true; tst('⭐ Secret Starseed found!', 1800); ctx.onStar?.(); } else ctx.onPick?.();
         lastProg = t;
       }
     }
     // team lifts
     for (const n of nodes) {
-      if (n.need && !isOn(n.need)) { n.label.style.display = 'none'; continue; } else if (n.need && !n.done && !n.m.visible) { n.m.visible = true; ctx.toast(`✨ ${NODE[n.kind].name} appeared!`, 1800); }
+      if (n.need && !isOn(n.need)) { n.label.style.display = 'none'; continue; } else if (n.need && !n.done && !n.m.visible) { n.m.visible = true; tst(`✨ ${NODE[n.kind].name} appeared!`, 1800); }
       if (n.done) { n.label.style.display = 'none'; continue; }
       n.body.rotation.y += dt * 0.4;
       const need = NEED[n.kind][size], have = crewAt(n.m.position.x, n.m.position.z, 4.2), pd = Math.hypot(p.x - n.m.position.x, p.z - n.m.position.z);
@@ -1057,8 +1172,8 @@ export function createZones(scene, ctx) {
       if (pd < 3.2 && Math.abs(p.y - n.m.position.y) < 3) {
         if (have >= need) {
           n.done = true; nodesDone++; const N = NODE[n.kind]; addHeal(TIER[N.tier].heal * N.amt); setSig(n.sig);
-          ctx.toast(n.kind === 'heaviest' ? '💪 You lifted the Starheart together!' : `💪 Lifted the ${N.name}!`, 2400); ctx.audio?.chime?.();
-          if (star && n === star.node) { star.carry = true; star.mesh = n.body; n.m.remove(n.body); group.add(n.body); ctx.toast('⭐ Carry the Starheart home — gently down the caps!', 3200); }
+          tst(n.kind === 'heaviest' ? '💪 You lifted the Starheart together!' : `💪 Lifted the ${N.name}!`, 2400); ctx.audio?.chime?.();
+          if (star && n === star.node) { star.carry = true; star.mesh = n.body; n.m.remove(n.body); group.add(n.body); tst('⭐ Carry the Starheart home — gently down the caps!', 3200); }
           else n.m.visible = false;
         } else { n.wob = 0.5; say(`😅 Too heavy! ${need - have} more friend${need - have > 1 ? 's' : ''} close by (${have}/${need}) — 🐻 Bear lifts more`); }
       }
@@ -1070,9 +1185,9 @@ export function createZones(scene, ctx) {
       if (vy < -14 && t - s.dropped > 1.5) {
         s.dropped = t; s.carry = false; const low = s.caps.filter(cc => cc.y < p.y).sort((a, b) => b.y - a.y)[0] || s.caps[0];
         const nn = star.node; nn.done = false; nn.m.position.set(low.x, low.y, low.z); nn.m.add(s.mesh); s.mesh.position.set(0, 1, 0); nn.m.visible = true;
-        ctx.toast('💫 Whoops! The Starheart bounced onto a lower cap. Go get it!', 2800);
+        tst('💫 Whoops! The Starheart bounced onto a lower cap. Go get it!', 2800);
       } else if (Math.hypot(p.x - s.safe.x, p.z - s.safe.z) < 4.5 && p.y < gy(0, 2) + 2.5) {
-        s.carry = false; s.mesh.visible = false; star = null; setSig('starHome'); ctx.toast('⭐ The Starheart is home!', 2600);
+        s.carry = false; s.mesh.visible = false; star = null; setSig('starHome'); tst('⭐ The Starheart is home!', 2600);
       }
     }
     // puzzles
@@ -1080,10 +1195,11 @@ export function createZones(scene, ctx) {
       if (pz.done || !pz.sigs.every(k => sig[k])) continue;
       pz.done = true; setSig(pz.id); addHeal(pz.req ? 0.1 : 0.04);
       const left = reqLeft().length;
-      ctx.toast(`🧩 ${pz.label} solved! ${pz.cls.map(k => CLASSES[k].em).join('')}${left ? ` · ${left} to go` : ''}`, 2600); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.();
+      tst(`🧩 ${pz.label} solved! ${pz.cls.map(k => CLASSES[k].em).join('')}${left ? ` · ${left} to go` : ''}`, 2600); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.();
     }
     // Pip hint after 45 s without progress
-    if (t - lastProg > 45 && t - hintT > 45) { const nx = reqLeft()[0] || puzzles.find(q => !q.done); if (nx && nx.hint) { hintT = t; ctx.toast(`🐦 ${nx.hint}`, 4200); } }
+    if (t - lastProg > 45 && t - hintT > 45) { const nx = reqLeft()[0] || puzzles.find(q => !q.done); if (nx && nx.hint) { hintT = t; tst(`🐦 ${nx.hint}`, 4200); } }
+    if (recipe.kid) updateKid(dt);
     checkKey(); updateExit(cam); updateHighlights(dt); updateTracker(cam);
   }
   // ---- objective highlights (t158u): every live puzzle prop glows in the colour of the class that solves it ----
@@ -1102,20 +1218,20 @@ export function createZones(scene, ctx) {
       if (!cls || pr.kind === 'marker') continue;
       const col = new THREE.Color(CLASSES[cls].color);
       const air = pr.kind === 'bell' || pr.kind === 'target';
-      const hy = { bell: 0, target: 0, lever: 0.9, boulder: pr.from ? pr.from.top - pr.y - 0.5 : 1, cracked: 1.4, slip: 0, vine: 1.2, dig: 0.4, plank: 0.4, plate: 0.4 }[pr.kind] ?? 0.6;
+      const hy = { bell: 0, target: 0, lever: 0.9, boulder: pr.from ? pr.from.top - pr.y + 0.8 : 1, cracked: 1.4, slip: 0, vine: 1.2, dig: 0.4, plank: 0.4, plate: 0.4 }[pr.kind] ?? 0.6;
       const big = pr.kind === 'boulder' || pr.kind === 'cracked';
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloMap(), color: col, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }));
       const hs = big ? 4.4 : 2.6; halo.scale.set(hs, hs, 1); halo.position.set(pr.x, pr.y + hy, pr.z); halo.renderOrder = 5; group.add(halo);
       const gyw = air ? gy(pr.x - A.x, pr.z - A.z) : pr.y;
-      const R = pr.kind === 'plate' ? (pr.plate.heavy ? 1.75 : 1.45) : big ? Math.max(1.4, pr.r - 1.4) : 1.15;
-      const ring = new THREE.Mesh(new THREE.RingGeometry(R - 0.2, R, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }));
+      const R = pr.kind === 'plate' ? (pr.plate.heavy ? 1.75 : 1.45) : pr.kind === 'boulder' ? Math.hypot(pr.s.hx, pr.s.hz) + 0.45 : big ? Math.max(1.4, pr.r - 1.4) : 1.15;
+      const ring = new THREE.Mesh(new THREE.RingGeometry(R - 0.2, R, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
       ring.position.set(pr.x, gyw + 0.14, pr.z); ring.renderOrder = 4; group.add(ring);
       pr.hl = { halo, ring, s: hs, cls };
     }
   }
   function updateHighlights(dt) {
     for (const pr of props) {
-      if (pr.kind === 'marker') { pr.ring.material.opacity = 0.45 + 0.35 * (0.5 + 0.5 * Math.sin(t * 3)); continue; }
+      if (pr.kind === 'marker') { pr.ring.material.opacity = 0.45 + 0.35 * (0.5 + 0.5 * Math.sin(t * 3)); if (kid && kid.glow) { const on = kid.glow.has(pr.sig); pr.ring.visible = on; pr.icon.visible = on; } continue; }
       const h = pr.hl; if (!h) continue;
       let st;
       if (pr.kind === 'plate') { const pl = pr.plate, solved = puzzles.some(q => q.done && q.sigs.includes(pl.sig)); st = solved ? 'done' : pl.holder ? 'held' : 'active'; if (solved && pl.icon) pl.icon.visible = false; }
@@ -1123,9 +1239,11 @@ export function createZones(scene, ctx) {
       else st = pr.done ? 'done' : (pr.need && !isOn(pr.need)) ? 'locked' : 'active';
       const focus = objCache && objCache.pr === pr, pulse = 0.5 + 0.5 * Math.sin(t * 3.4 + pr.x);
       const ha = { active: 0.5 + 0.35 * pulse, travel: 0.28, locked: 0.14, held: 0.12, done: 0 }[st], ra = { active: 0.85, travel: 0.4, locked: 0.22, held: 0.35, done: 0 }[st];
-      h.halo.visible = ha > 0; h.halo.material.opacity = ha; h.halo.material.depthTest = !(focus && st === 'active'); // the current goal shines through walls const sc = h.s * (focus ? 1.5 : 1) * (1 + (st === 'active' ? 0.14 * pulse : 0)); h.halo.scale.set(sc, sc, 1);
+      h.halo.visible = ha > 0; h.halo.material.opacity = ha; h.halo.material.depthTest = !(focus && st === 'active'); // the current goal shines through walls
+      const sc = h.s * (focus ? 1.5 : 1) * (1 + (st === 'active' ? 0.14 * pulse : 0)); h.halo.scale.set(sc, sc, 1);
       h.ring.visible = ra > 0; h.ring.material.opacity = ra; const rs = 1 + (st === 'active' ? 0.1 * pulse : 0); h.ring.scale.set(rs, 1, rs);
       if (pr.icon && pr.kind !== 'plate' && pr.cls) { const want = st === 'locked' ? badgeLockOf(pr.cls) : badgeOf(pr.cls); if (pr.icon.material !== want) pr.icon.material = want; if (focus && st === 'active') pr.icon.position.y += Math.sin(t * 6) * 0.012; }
+      if (kid && kid.glow) { const key = pr.kind === 'plate' ? pr.plate.sig : pr.sig, on = kid.glow.has(key); if (!on) { h.halo.visible = false; h.ring.visible = false; } if (pr.icon) pr.icon.visible = on && !(pr.done && !pr.two) && !(pr.plate && pr.plate.holder); if (pr.plate?.icon) pr.plate.icon.visible = on && !pr.plate.holder; if (pr.ghost) pr.ghost.visible = on && !pr.done; }
       if (st === 'done' && !h.dim) { // solved props dim so the eye skips them
         h.dim = true;
         if (pr.G && !pr.lantern) pr.G.traverse(m => { if (m.isMesh && m.material?.color) { m.material = m.material.clone(); m.material.color.multiplyScalar(0.62); if (m.material.emissiveIntensity) m.material.emissiveIntensity *= 0.25; } });
@@ -1137,6 +1255,7 @@ export function createZones(scene, ctx) {
   const lc = s => /^[A-Z][a-z'-]+( [a-z]|$)/.test(s) ? s[0].toLowerCase() + s.slice(1) : s;
   function objective() {
     if (!recipe || keyDone || !exitAt) return null;
+    if (recipe.kid) return kidObjective();
     if (exitOpen) { const n = crewAtExit(); return { text: `Everyone: walk to the 🏁 exit · ${n}/3`, cls: null, color: '#ffd23f', x: exitAt.x, y: exitAt.y + 1, z: exitAt.z }; }
     let fb = null;
     const seen = new Set();
@@ -1210,10 +1329,148 @@ export function createZones(scene, ctx) {
       });
     }
   }
+  // ---- Training Garden runtime (t159u): one tiny step at a time, a big picture card, a pointing hand ----
+  function emojiSprite(e, s = 1.4) {
+    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+    g.font = '96px system-ui, "Apple Color Emoji", "Noto Color Emoji", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); sp.scale.set(s, s, 1); sp.renderOrder = 9; return sp;
+  }
+  let kid = null;
+  const crewOfCls = c => ctx.crewIds().find(i => CLASS_OF[i] === c);
+  const posOf = id => id === ctx.cur() ? ctx.getP() : ctx.parked(id);
+  const K = {
+    sig: k => !!sig[k], cls: () => clsOfCur(),
+    em: c => { const id = crewOfCls(c); return id ? String(nameOf(id)).split(' ')[0] : CLASSES[c].em; },
+    at: (c, x, z, r) => { const q = posOf(crewOfCls(c)); return !!q && Math.hypot(q.x - A.x - x, q.z - A.z - z) < r && q.y - gy(q.x - A.x, q.z - A.z) < 1.3; },
+    held: s => plates.some(pl => pl.sig === s && pl.holder),
+    curY: () => { const p = ctx.getP(); return p.y - gy(p.x - A.x, p.z - A.z); },
+  };
+  function kidDom() {
+    if (kid.dom) return kid.dom;
+    const C = document.createElement('div'); C.id = 'kidCard';
+    C.innerHTML = '<img id="kidPip" alt="" src="./ui/portraits/guide-happy-blocky.png"><div class="kcB"><div id="kidIc"></div><div id="kidW"></div><div id="kidDots"></div></div>';
+    const H = document.createElement('div'); H.id = 'kidHand'; H.innerHTML = '<i></i><b>Hold</b>';
+    const F = document.createElement('div'); F.id = 'kidFx';
+    document.body.append(C, H, F);
+    return (kid.dom = { C, H, F, ic: C.querySelector('#kidIc'), w: C.querySelector('#kidW'), dots: C.querySelector('#kidDots'), pulse: null });
+  }
+  function kidInit() {
+    kid = { steps: recipe.steps(K), latch: [], herded: [], max: 0, i: -1, dom: null, trails: [], init: false, celebT: -9, safe: null };
+    for (const st of kid.steps) {
+      const G = new THREE.Group(); G.visible = false; group.add(G); kid.trails.push(G);
+      if (!st.trail) continue;
+      const col = new THREE.Color(st.color ? CLASSES[st.color].color : '#ffd23f');
+      const shp = new THREE.Shape(); shp.moveTo(0, 0.55); shp.lineTo(0.6, -0.1); shp.lineTo(0.3, -0.1); shp.lineTo(0, 0.22); shp.lineTo(-0.3, -0.1); shp.lineTo(-0.6, -0.1); shp.closePath();
+      const geo = new THREE.ShapeGeometry(shp).rotateX(-Math.PI / 2);
+      for (let k = 0; k < st.trail.length - 1; k++) {
+        const [ax, az] = st.trail[k], [bx, bz] = st.trail[k + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.floor(L / 1.3)), yaw = Math.atan2(bx - ax, bz - az);
+        for (let j = 0; j <= n; j++) {
+          const x = ax + (bx - ax) * j / n, z = az + (bz - az) * j / n;
+          const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+          m.position.set(A.x + x, gy(x, z) + 0.1, A.z + z); m.rotation.y = yaw + Math.PI; m.userData.k = G.children.length; m.renderOrder = 3; G.add(m);
+        }
+      }
+    }
+    document.body.classList.add('kidTut');
+  }
+  function herd(h) {
+    if (!h) return;
+    for (const c of Object.keys(h)) {
+      const id = crewOfCls(c); if (!id || id === ctx.cur()) continue; const q = ctx.parked(id); if (!q) continue;
+      const [x, z, base] = h[c]; q.x = A.x + x; q.z = A.z + z; q.y = gy(x, z) + (base || 0) + 0.6; q.vx = q.vy = q.vz = 0; q._safe = { x: q.x, z: q.z }; q.goto = null; q.yaw = 0;
+      fx(q.x, q.y + 0.6, q.z);
+    }
+  }
+  function confetti(big) {
+    const F = kidDom().F, cols = ['#ff7fbf', '#ffd23f', '#4aa8ff', '#7dc85a', '#ff8a1f', '#b08aff'];
+    for (let i = 0; i < (big ? 70 : 34); i++) {
+      const e = document.createElement('i'), a = Math.random() * Math.PI * 2, d = 90 + Math.random() * (big ? 220 : 140);
+      e.style.cssText = `background:${cols[i % cols.length]};--dx:${Math.cos(a) * d}px;--dy:${Math.sin(a) * d * 0.8 + 160}px;--r:${Math.random() * 720 - 360}deg;animation-delay:${Math.random() * 0.12}s`;
+      F.appendChild(e); setTimeout(() => e.remove(), 1700);
+    }
+    const s = document.createElement('b'); s.textContent = big ? '🎉' : '⭐'; F.appendChild(s); setTimeout(() => s.remove(), 1300);
+  }
+  function celebrate(st, stationDone) {
+    kid.celebT = t; confetti(stationDone);
+    ctx.audio?.sample?.(stationDone ? 'contest/win-jingle' : 'build/upgrade-sparkle', stationDone ? 0.5 : 0.45);
+    const p = ctx.getP(); fx(p.x, p.y + 1, p.z);
+  }
+  function kidTargetRect(st) {
+    const pt = st.point; if (!pt) return null;
+    const R = el => { if (!el) return null; const r = el.getBoundingClientRect(); return r.width ? { el, x: r.left + r.width / 2, y: r.top + r.height / 2 } : null; };
+    if (pt === 'joy') return { el: null, x: innerWidth * 0.26, y: innerHeight - 150, drag: true };
+    if (st.nearPt) { const p = ctx.getP(); if (Math.hypot(p.x - A.x - st.nearPt[0], p.z - A.z - st.nearPt[1]) > st.nearPt[2]) return null; }
+    if (pt === 'jump') return R(document.getElementById('bJump'));
+    if (pt === 'int') return nearOwn && st.glow && st.glow.includes(nearOwn.sig) ? R(document.getElementById('bInt')) : null;
+    if (pt.startsWith('dock:')) { const c = pt.slice(5); return clsOfCur() === c ? null : R(document.querySelector('#crewDock button.cls-' + c)); }
+    if (pt === 'exit' && exitAt && crewIn(ctx.getP())) { for (const c of ['scout', 'trickster', 'bruiser']) { const id = crewOfCls(c); if (id && id !== ctx.cur() && !crewIn(ctx.parked(id))) return R(document.querySelector('#crewDock button.cls-' + c)); } }
+    return null;
+  }
+  function updateKid(dt) {
+    if (!kid) kidInit();
+    const p = ctx.getP(), D = kidDom();
+    if (clsOfCur() === 'scout') { p.stam = 1; p.tired = false; } // little wings never get tired here
+    if (!kid.init && t > 0.05) {
+      kid.init = true; herd({ scout: [-2.5, -3.5], bruiser: [3, -5.5] }); p.x = A.x + 0.5; p.z = A.z - 3; p.y = gy(0.5, -3) + 0.5; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; p.yaw = 0; ctx.camYaw?.(0);
+    }
+    // gentle safety net: anyone who ends up outside the path pops back to the last safe spot
+    const lx = p.x - A.x, lz = p.z - A.z;
+    if (Math.abs(lx) < 4.9 && lz > -9.2 && lz < 65.2 && p.y > baseY - 3) { if (p.grounded) kid.safe = { x: p.x, y: p.y, z: p.z }; }
+    else if (kid.safe && !tw) { p.x = kid.safe.x; p.y = kid.safe.y + 0.5; p.z = kid.safe.z; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; fx(p.x, p.y, p.z); }
+    // flowers: touch to pick
+    for (const f of kidObjs) {
+      if (f.got) { f.head.rotation.z += dt * 2; continue; }
+      f.head.rotation.y = Math.sin(t * 2) * 0.4; f.head.position.y = 1.15 + Math.sin(t * 3) * 0.08;
+      if (Math.hypot(p.x - f.x, p.z - f.z) < 1.7 && Math.abs(p.y - f.y) < 1.3) { f.got = true; setSig(f.key); }
+    }
+    setSig('door7', K.held('p7') || K.sig('b7'));
+    if (ctx.cur() !== kid.lastCur) { kid.lastCur = ctx.cur(); if (t > 0.2) ctx.camYaw?.(0); } // after a swap, look straight down the path again
+    // which step are we on? (latched steps stay done; "hold" steps can slip back if Bear walks off his plate)
+    let i = 0;
+    for (; i < kid.steps.length; i++) { const st = kid.steps[i]; if (kid.latch[i]) continue; if (st.done()) { if (st.latch !== false) kid.latch[i] = true; continue; } break; }
+    i = Math.min(i, kid.steps.length - 1);
+    if (i > kid.max) {
+      for (let j = kid.max; j < i; j++) { if (!kid.herded[j]) { kid.herded[j] = true; herd(kid.steps[j].herd); } }
+      celebrate(kid.steps[i - 1], kid.steps[i - 1].n !== kid.steps[i].n); kid.max = i;
+    }
+    const st = kid.steps[i];
+    if (i !== kid.i || keyDone !== kid.kd) {
+      kid.i = i; kid.kd = keyDone;
+      const icons = keyDone ? ['⭐', '⭐', '⭐'] : st.icons, words = keyDone ? 'You did it!' : st.say;
+      D.ic.innerHTML = icons.map(x => `<span>${x}</span>`).join('');
+      D.w.textContent = words;
+      const N = kid.steps[kid.steps.length - 1].n;
+      D.dots.innerHTML = Array.from({ length: N }, (_, k) => `<i class="${k + 1 < st.n || keyDone ? 'ok' : k + 1 === st.n ? 'now' : ''}"></i>`).join('');
+      D.C.style.setProperty('--kc', st.color ? CLASSES[st.color].color : '#ffd23f');
+      D.C.classList.remove('pop'); void D.C.offsetWidth; D.C.classList.add('pop');
+      kid.trails.forEach((G, k) => G.visible = k === i && !keyDone);
+      kid.glow = new Set(keyDone ? [] : st.glow || []);
+    }
+    // ground arrows: a wave of light running toward the goal
+    const G = kid.trails[i]; if (G && G.visible) G.children.forEach(m => { m.material.opacity = 0.35 + 0.55 * Math.max(0, Math.sin(t * 5 - m.userData.k * 0.7)); });
+    for (const f of kidObjs) { const on = kid.glow.has(f.key) && !f.got; f.halo.visible = on; f.ring.visible = on; if (on) { const s = 2.6 + 0.5 * Math.sin(t * 4); f.halo.scale.set(s, s, 1); } }
+    // the pointing hand
+    const R = keyDone || t - kid.celebT < 0.7 ? null : kidTargetRect(st);
+    if (D.pulse && (!R || R.el !== D.pulse)) { D.pulse.classList.remove('kidPulse'); D.pulse = null; }
+    if (R) {
+      D.H.style.display = 'block'; D.H.style.left = (R.x - 52) + 'px'; D.H.style.top = (R.y - 24) + 'px';
+      D.H.classList.toggle('drag', !!R.drag); D.H.classList.toggle('hold', !!st.hold);
+      if (R.el && D.pulse !== R.el) { R.el.classList.add('kidPulse'); D.pulse = R.el; }
+    } else D.H.style.display = 'none';
+  }
+  function kidObjective() {
+    const st = kid && kid.steps[kid.i]; if (!st || !st.tgt) return null;
+    const [x, y, z] = st.tgt, c = st.color;
+    return { text: st.say, cls: c || null, color: c ? CLASSES[c].color : '#ffd23f', x: A.x + x, y: gy(x, z) + y, z: A.z + z, pr: props.find(q => st.glow && st.glow.includes(q.sig) && q.act) || null };
+  }
+  function kidClear() {
+    if (kid && kid.dom) { kid.dom.C.remove(); kid.dom.H.remove(); kid.dom.F.remove(); kid.dom.pulse?.classList.remove('kidPulse'); }
+    kid = null; kidObjs = []; document.body.classList.remove('kidTut');
+  }
   function rect() { const b = recipe?.bounds || { x0: -20, x1: 20, z0: -20, z1: 20 }; return { x0: A.x + b.x0, x1: A.x + b.x1, z0: A.z + b.z0, z1: A.z + b.z1 }; }
   function status() { return { id, exit: exitAt ? { x: exitAt.x - A.x, z: exitAt.z - A.z, open: exitOpen, n: crewAtExit() } : null, starGot, sig: { ...sig }, puzzles: puzzles.map(p => ({ id: p.id, done: p.done, req: p.req })), keyDone, picked, keyDew, props: props.filter(p => p.act).map(p => ({ act: p.act, cls: p.cls, sig: p.sig, label: p.label, x: p.x, y: p.y, z: p.z, done: !!p.done, b: p.b || null, from: p.from || null })), plates: plates.map(p => ({ sig: p.sig, x: p.x, y: p.y, z: p.z, heavy: p.heavy, holder: p.holder })), nodes: nodes.map(n => ({ kind: n.kind, x: n.m.position.x, y: n.m.position.y, z: n.m.position.z, done: n.done, sig: n.sig })), picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, show: k.show || null, who: k.who || null, night: k.nightOnly })), hoops: hoops.map(h => ({ x: h.m.position.x, y: h.m.position.y, z: h.m.position.z, got: h.got })), A: { ...A }, baseY }; }
   return {
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
-    act, wheelOpts, status, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
+    act, wheelOpts, deepRects: () => deep.map(r => ({ ...r })), status, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }

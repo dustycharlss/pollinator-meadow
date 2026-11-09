@@ -675,6 +675,36 @@ body.adv #pipCard{left:auto!important;right:8px;transform:none!important;top:cal
 body.adv #pipImg{width:36px;height:36px}
 body.adv #pipCard>div{font-size:12px!important;padding:6px 9px!important;border-radius:12px!important}
 body.adv #pipCard button{font-size:11px!important;padding:3px 8px!important}
+/* Training Garden (t159u): picture card, pointing hand, confetti */
+body.kidTut #objT,body.kidTut #toast,body.kidTut #pipCard,body.kidTut #hint,body.kidTut #bAct{display:none!important}
+#kidCard{position:fixed;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 2px);transform:translateX(-50%);z-index:8;display:none;align-items:center;gap:8px;max-width:calc(100vw - 72px);background:#fff3d8;border:4px solid var(--kc,#ffd23f);border-radius:20px;padding:6px 12px 6px 6px;box-shadow:0 4px 0 rgba(59,38,20,.6);pointer-events:none;color:#3b2614}
+body.kidTut.inRound #kidCard{display:flex}
+#kidCard.pop{animation:kidPop .45s cubic-bezier(.2,1.6,.4,1)}
+#kidPip{width:54px;height:54px;flex:none;filter:drop-shadow(0 2px 0 #3b2614)}
+#kidCard .kcB{display:flex;flex-direction:column;align-items:center}
+#kidIc{display:flex;gap:6px;font-size:40px;line-height:1.1}
+#kidIc span{display:inline-block;animation:kidBob 1.4s ease-in-out infinite}
+#kidIc span:nth-child(2){animation-delay:.15s}#kidIc span:nth-child(3){animation-delay:.3s}#kidIc span:nth-child(4){animation-delay:.45s}
+#kidW{font:900 21px/1.15 system-ui;text-align:center;margin-top:2px}
+#kidDots{display:flex;gap:5px;margin-top:5px}
+#kidDots i{width:11px;height:11px;border-radius:50%;background:#e2d4b4;border:2px solid #3b2614}
+#kidDots i.ok{background:#7dc85a}#kidDots i.now{background:var(--kc,#ffd23f);transform:scale(1.3)}
+#kidHand{position:fixed;z-index:30;width:128px;height:128px;pointer-events:none;display:none}
+#kidHand i{display:block;width:128px;height:128px;background:url(./ui/tutorial/tap-hand-strip.png) 0 0/384px 128px no-repeat;animation:kidTap 1s steps(1) infinite;filter:drop-shadow(0 3px 2px rgba(0,0,0,.35))}
+#kidHand.drag i{animation:kidDrag 1.4s ease-in-out infinite}
+#kidHand b{display:none;position:absolute;left:30px;top:-22px;background:#ffd23f;border:3px solid #3b2614;border-radius:10px;padding:0 8px;font:900 16px system-ui;color:#3b2614}
+#kidHand.hold b{display:block}
+.kidPulse{animation:kidPulse 1s ease-in-out infinite!important;box-shadow:0 0 0 6px rgba(255,210,63,.9),0 0 22px 8px rgba(255,210,63,.8)!important;z-index:20!important}
+#kidFx{position:fixed;left:50%;top:34%;width:0;height:0;z-index:29;pointer-events:none}
+#kidFx i{position:absolute;width:12px;height:16px;border-radius:3px;animation:kidConf 1.5s cubic-bezier(.15,.7,.4,1) forwards}
+#kidFx b{position:absolute;left:-40px;top:-60px;font-size:80px;animation:kidStar 1.2s ease-out forwards}
+@keyframes kidPop{0%{transform:translateX(-50%) scale(.6)}100%{transform:translateX(-50%) scale(1)}}
+@keyframes kidBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes kidTap{0%{background-position:0 0}55%{background-position:-128px 0}70%{background-position:-256px 0}}
+@keyframes kidDrag{0%{transform:translate(0,0)}60%{transform:translate(0,-60px)}100%{transform:translate(0,-60px);opacity:0}}
+@keyframes kidPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+@keyframes kidConf{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
+@keyframes kidStar{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.25);opacity:1}100%{transform:scale(1) translateY(-40px);opacity:0}}
 </style>
 </head>
 <body>

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
+import { waterSurface } from './water.js';
 import { WORLD_R, ZONES, FLOWERS, BLOOMING, DECOR, POND, WATER_Y, WATER_PLANTS, SPECIES, FOODS } from './data.js';
 import { createPhys, buildPlatforms } from './platforms.js';
 import { buildFood } from './food.js';
@@ -85,11 +86,11 @@ export async function buildWorld(scene, { quality = 1, nests = [], renderer }) {
   const gtex = await new THREE.TextureLoader().loadAsync(BASE + 'img/grass.jpg');
   gtex.wrapS = gtex.wrapT = THREE.RepeatWrapping; gtex.colorSpace = THREE.SRGBColorSpace; gtex.anisotropy = 4;
   const ground = new THREE.Mesh(tg, patchSeason(new THREE.MeshLambertMaterial({ map: gtex, vertexColors: true }), 'ground'));
-  scene.add(ground);
+  scene.add(ground); world.ground = ground; // t159u: declutter dips it under level creeks so the water shows
 
   // water
-  const water = new THREE.Mesh(new THREE.CircleGeometry(POND.r * 1.9, 40), new THREE.MeshLambertMaterial({ color: 0x4fb0e0, transparent: true, opacity: 0.78, emissive: 0x0a2a44 }));
-  water.rotation.x = -Math.PI / 2; water.position.set(POND.x, WATER_Y, POND.z); scene.add(water);
+  const water = waterSurface(new THREE.CircleGeometry(POND.r * 1.9, 40).rotateX(-Math.PI / 2), { repeat: [POND.r / 3, POND.r / 3] }); // t159u readable water
+  water.position.set(POND.x, WATER_Y, POND.z); scene.add(water);
   world.water = water;
   { const rim = new THREE.Mesh(new THREE.RingGeometry(POND.r * 1.9, POND.r * 2.05, 48), new THREE.MeshBasicMaterial({ color: 0xfff3c4, transparent: true, opacity: 0.85 })); rim.rotation.x = -Math.PI / 2; rim.position.set(POND.x, WATER_Y + 0.03, POND.z); scene.add(rim); }
 

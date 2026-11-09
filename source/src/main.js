@@ -37,7 +37,7 @@ import { createPackUp } from './packup.js';
 import { paintValleyMap, setHealArt, playPackupBurst } from './valley-art.js';
 const SPECIAL = FEATURES.teamFoods ? SPECIAL0 : [];
 import { ANIMAL_FACTS, MOMENTS } from './moments.js';
-import { SEASONS, SEASON_INFO, SU, LOOK, patchSeason, createClock, nightOf, warmOf, NIGHT_T, DAY_T } from './seasons.js';
+import { SEASONS_ENABLED, SEASONS, SEASON_INFO, SU, LOOK, patchSeason, createClock, nightOf, warmOf, NIGHT_T, DAY_T } from './seasons.js';
 import { buildWeather } from './weather.js';
 import { createGear, GEAR, SLOTS, SLOT_LABEL, RANGE_M, SPEED_M, DRAIN_M, RECH_M, capBonus, costOf, ringMult } from './gear.js';
 import { buildBabies } from './babies.js';
@@ -261,6 +261,7 @@ input.hooks.species = i => {
 input.hooks.night = () => playing && setNight(!curNight);
 input.hooks.season = () => playing && !paused && toggleBuild();
 $('bSeason').onclick = () => playing && clock.nextSeason();
+if (!SEASONS_ENABLED && $('bSeason')) $('bSeason').style.display = 'none'; // t159u: no season UI
 $('bSwap').addEventListener('pointerdown', e => { e.preventDefault(); if (playing && !paused) swapNext(1); });
 $('bSwap').oncontextmenu = e => e.preventDefault();
 $('spChip').onclick = () => swapOK() ? openMenu() : openHub('animals'); $('menuClose').onclick = closeMenu;
@@ -705,12 +706,18 @@ function declutterOn(r) {
   }
   for (const [a, b] of [DCL.NEST, DCL.TERR, DCL.HELP]) for (let i = a; i < b && i < C.length; i++) dclLayer(C[i]);
   for (const so of world.solids) if (so.kind !== 'zone' && so.kind !== 'pond' && !so.off && inR(so.x, so.z, 2)) { so.off = true; DCL.solids.push(so); }
+  // t159u: the meadow's grass ground sat above level creeks and hid the water — dip it under every level water rect
+  const G = world.ground, D = zones?.deepRects?.() || [];
+  if (G && D.length) { const pa = G.geometry.attributes.position, tf = G.matrixWorld, v = new THREE.Vector3(), save = [];
+    for (let i = 0; i < pa.count; i++) { v.set(pa.getX(i), pa.getY(i), pa.getZ(i)).applyMatrix4(tf); if (D.some(r => v.x > r.x0 - 1.6 && v.x < r.x1 + 1.6 && v.z > r.z0 - 1.6 && v.z < r.z1 + 1.6)) { save.push([i, pa.getY(i)]); pa.setY(i, pa.getY(i) - 8); } }
+    if (save.length) { pa.needsUpdate = true; G.geometry.computeBoundingSphere(); DCL.ground = save; } }
 }
 function declutterOff() {
   DCL.on = false; CLIP.on = false;
   for (const o of DCL.layered) o.traverse(q => { if (q.userData._dl != null) { q.layers.mask = q.userData._dl; delete q.userData._dl; } });
   for (const e of DCL.inst) { const a = e.o.instanceMatrix.array; e.idx.forEach((k, j) => a.set(e.save[j], k * 16)); e.o.instanceMatrix.needsUpdate = true; }
   for (const so of DCL.solids) so.off = false;
+  if (DCL.ground && world.ground) { const pa = world.ground.geometry.attributes.position; for (const [i, y] of DCL.ground) pa.setY(i, y); pa.needsUpdate = true; world.ground.geometry.computeBoundingSphere(); DCL.ground = null; }
   DCL.layered = []; DCL.inst = []; DCL.solids = [];
   for (const id of SPECIES_ORDER) { if (riders[id]) riders[id].traverse(q => q.layers.enable(0)); if (marks[id]) marks[id].scale.set(3, 1.5, 1); }
 }
@@ -852,6 +859,7 @@ function updateDrift() {
   else meadow.drift.set('snow', 0.28 * k);
 }
 function onSeasonChange() {
+  if (!SEASONS_ENABLED) return;
   const si = SEASON_INFO[clock.season]; $('bSeason').textContent = si.emoji + ' Season: ' + si.name;
   if (playing) { toast(`${si.emoji} ${si.name} · ${si.blurb}`, 3600); audio.chime(); }
   journalUnlock('m:s' + clock.season, si.name); persist();
@@ -894,8 +902,9 @@ function closeValleyMap() {
 function renderValleyMap() {
   if (!valley || !crew) return;
   crew.loadFromValley();
+  if (!vSelPatch && ADVENTURE) { const tg = valley.get('training_garden'); vSelPatch = tg && tg.state !== 'wild' ? 'training_garden' : (valley.nextPlayable() || 'sunny_hollow'); }
   const wildN = valley.patches.filter(p => valley.get(p.id).state === 'wild').length;
-  $('vSub').textContent = (ADVENTURE ? `${wildN}/8 cleared · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick a level, then ▶ Play (or ⏱ Timed)` : `${wildN}/8 wild · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick 🌿 Free roam or ⏱ Challenge for any open level`);
+  $('vSub').textContent = (ADVENTURE ? `${wildN}/${valley.patches.length} cleared · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick a level, then ▶ Play (or ⏱ Timed)` : `${wildN}/8 wild · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick 🌿 Free roam or ⏱ Challenge for any open level`);
   paintValleyMap({
     getState: id => valley.get(id),
     selected: vSelPatch,
@@ -992,6 +1001,8 @@ function startValleyPatch(patchId) {
   setLead(members[0], true);
   // ensure all crew animals exist as playable
   for (const id of members) if (!P[id]) initPlayer(id);
+  // kids' Training Garden starts on the Trickster so the first swap lesson is "tap the Scout"
+  const sc0 = zones?.MAPS?.[patchId]?.startCls, lead0 = (sc0 && members.find(id => CLASS_OF[id] === sc0)) || members[0];
   selectSpecies(members[0], true);
   crew.active = 0;
   healAmt = valley.get(patchId).heal || 0;
@@ -1010,6 +1021,7 @@ function startValleyPatch(patchId) {
     }
     placeFollowers(true);
   }
+  if (lead0 !== members[0]) crew.swapById(lead0);
   renderCrewDock();
   updateHealUi();
   onb?.note?.('valleyIn');
@@ -1066,6 +1078,7 @@ function endValleyPatchWild() {
   if (!valleySession) return;
   const id = valleySession.patchId;
   valley.markWild(id, { at: Date.now(), heal: 1 });
+  { const k = PATCHES.findIndex(p => p.id === id); if (k >= 0 && PATCHES[k + 1]) vSelPatch = PATCHES[k + 1].id; }
   const def = valley.def(id);
   toast(ADVENTURE ? `🏆 ${def.name} cleared!` : `🌿 ${def.name} is wild forever!`, 3200);
   valleySession = null; zones?.clear();
@@ -1474,7 +1487,10 @@ function worldTick(dt, st) {
     if (ADVENTURE && zones && zones.keyGoalMet() && valleySession && !valleySession.ending) {
       valleySession.ending = true; audio.music?.jingle?.('win');
       const res = zones.result?.() || null, lines = [];
-      if (res) {
+      if (res && res.kid) {
+        const S = (valley.data.stars = valley.data.stars || {}); S[res.id] = { n: 3, petals: true, star: true, par: true, best: Math.min(S[res.id]?.best || 1e9, res.time) }; valley.save();
+        lines.push('⭐⭐⭐ Great job, friends!');
+      } else if (res) {
         const st = res.stars; lines.push(`🌸 Petals ${res.petals}/${res.petalsTotal} ${st.petals ? '⭐' : '☆'} · ⭐ Starseed ${st.star ? '⭐' : '☆'} · ⏱ ${fmtT(res.time)}${res.par ? ' / par ' + fmtT(res.par) : ''} ${st.par ? '⭐' : '☆'}`);
         lines.push(...res.end);
         const S = (valley.data.stars = valley.data.stars || {}), old = S[res.id] || { n: 0 };
@@ -1715,7 +1731,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${SPECIES[id]?.emoji || ''} ${SPECIES[id]?.name || id}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${SPECIES[id]?.emoji || ''} ${SPECIES[id]?.name || id}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true) });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
