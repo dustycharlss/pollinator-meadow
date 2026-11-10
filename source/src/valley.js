@@ -53,6 +53,7 @@ export const PATCHES = [
   { act: 3, n: 23, id: 'grand_garden', name: 'Grand Garden', emoji: '🪴', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Sprinklers, wasps and a gnome climb. Every gear piece, and a very slow snail.', teach: 'Gear swap · snail escort' },
   { act: 3, n: 24, id: 'starheart_summit', name: 'Starheart Summit', emoji: '🌟', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'The finale: four rings of everything, with every rescued friend helping.', teach: 'Finale · all friends' },
   // Meadow Hub (S1): the home glade between levels — not a level (no exit, no stars)
+  { act: 'lab', id: 'act3_lab', name: 'Practice Yard', emoji: '🧪', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'A sandbox to try calling a baby friend, and new ways to move sleepy critters.', teach: 'Escort + enemy lures' },
   { act: 'hub', id: 'meadow_hub', name: 'Meadow Hub', emoji: '🏡', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Home glade. Pick your crew, visit rescued friends, choose a level.' },
 ];
 export const ACT1_PATCHES = PATCHES.filter(p => !p.act);
@@ -227,9 +228,9 @@ export function createValley(ctx) {
     },
     /** one open patch at a time for MVP — first non-wild, or continue in_progress/blooming */
     nextPlayable() {
-      const mid = PATCHES.find(p => p.act !== 'hub' && ['in_progress', 'blooming'].includes(V.patches[p.id].state));
+      const mid = PATCHES.find(p => p.act !== 'hub' && p.act !== 'lab' && ['in_progress', 'blooming'].includes(V.patches[p.id].state));
       if (mid) return mid.id;
-      const wilt = PATCHES.find(p => p.act !== 'hub' && V.patches[p.id].state === 'wilted');
+      const wilt = PATCHES.find(p => p.act !== 'hub' && p.act !== 'lab' && V.patches[p.id].state === 'wilted');
       return wilt ? wilt.id : null;
     },
     canStart(id, crewTags) {

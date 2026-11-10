@@ -38,6 +38,7 @@ export function createInput(canvas) {
     const k = e.key.toLowerCase(); if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
     if (keys[k]) return; keys[k] = true;
     if (k === 'shift') hooks.sneak && hooks.sneak();
+    if (k === 'c') hooks.call && hooks.call();
     if (k === ' ') inp.jumpPressed = true;
     if (k === 'e' || k === 'x') inp.actPressed = true;
     if (k >= '1' && k <= '9') hooks.species && hooks.species(+k - 1); else if (k === '0') hooks.species && hooks.species(9);

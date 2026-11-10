@@ -747,6 +747,10 @@ body.adv #vTent{display:flex!important;justify-content:center;gap:8px}
 #bSneak.on{background:#b48cff;color:#fff;box-shadow:0 0 0 3px #fff,0 0 14px #b48cff}
 body.a2.inRound #bSneak{display:flex}
 body.kidTut:not(.a2) #bSneak{display:none!important}
+#bCall{display:none;position:absolute;right:12px;bottom:168px;width:60px;height:60px;font-size:11px;flex-direction:column;font-weight:800;line-height:1.05;background:rgba(80,180,120,.4)}
+#bCall span{font-size:22px}
+#bCall.on{background:#5ecb8a;color:#fff;box-shadow:0 0 0 3px #fff,0 0 14px #5ecb8a}
+body.a2.inRound.hasEscort #bCall{display:flex}
 #bSkipT{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:14px;z-index:40;padding:8px 16px;border-radius:999px;border:3px solid #fff;background:#ffd23f;font-weight:900;font-size:15px;color:#3a2a10;box-shadow:0 3px 0 rgba(0,0,0,.25)}
 body.skipT.inRound #bSkipT{display:block}
 #crewDock button .gearS{position:absolute;left:-8px;bottom:-8px;width:26px;height:26px;border-radius:50%;border:2px solid #3b2614;background:#fff3d8;font-size:14px;line-height:22px;padding:0;display:flex;align-items:center;justify-content:center;opacity:.55;box-shadow:0 2px 0 #3b2614}
@@ -798,6 +802,7 @@ body.skipT.inRound #bSkipT{display:block}
   <button class="bb" id="bJump"><span>⤒</span><b>Jump</b></button>
   <button class="bb" id="bSwap" hidden><span>⇄</span><b>Swap</b></button>
   <button class="bb" id="bSneak" type="button" aria-pressed="false"><span>🐾</span><b>Sneak</b></button>
+  <button class="bb" id="bCall" type="button"><span>📣</span><b>Call</b></button>
 </div>
 <button id="bSkipT" type="button">⏭ Skip trail</button>
 <div class="ov" id="trailSign"><div class="panel tsP"><div class="tsSign">🪧</div><h2 id="tsH">Pip found a new trail sign!</h2><p id="tsTx"></p><div id="tsIcons"></div><button class="big" id="tsOk">Let's go! ▶</button></div></div>

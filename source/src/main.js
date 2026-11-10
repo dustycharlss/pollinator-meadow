@@ -353,6 +353,7 @@ function gearSet(id, tiers) { save.gear[id].t = tiers.slice(); abCache[id] = nul
 $('shopChip').onclick = () => openShop(); $('shClose').onclick = closeShop;
 input.hooks.shop = () => { if (zones && zones.isAct2 && zones.isAct2() && playing) { zones.toggleGear(); renderCrewDock(); return; } return shopOpen ? closeShop() : openShop(); };
 input.hooks.sneak = () => { if (playing && !paused && zones && zones.isAct2 && zones.isAct2()) zones.toggleSneak(); };
+input.hooks.call = () => { if (playing && !paused && zones && zones.callEscort) zones.callEscort(); };
 $('shRows').addEventListener('click', e => { const b = e.target.closest('.buy'); if (b) { buyGear(cur, +b.dataset.s); return; } const r = e.target.closest('.shr'); if (r) { shopSel = +r.dataset.s; renderShop(); previewShop(); audio.blip(1); } });
 
 // ---------- co-op UI: tray, tip pill, journal ----------
@@ -993,6 +994,7 @@ function openTrailSign(kind) {
 $('tsOk').onclick = () => { if ($('trailSign').dataset.mode === 'hub') { $('trailSign').dataset.mode = ''; closeOv('trailSign'); return; } closeOv('trailSign'); vActPage = 2; const nx = ACT2_PATCHES.find(d => valley.act2Gate(d.id).ok && !valley.beaten(d.id)); if (nx) vSelPatch = nx.id; openValleyMap(); };
 if ($('bSkipT')) $('bSkipT').onclick = () => zones && zones.skipKid && zones.skipKid();
 if ($('bSneak')) $('bSneak').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); input.hooks.sneak?.(); });
+if ($('bCall')) $('bCall').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); input.hooks.call?.(); });
 function openCrewTent(after) { openTeamPick(after || renderValleyMap); }
 // ---- Team picker (crew of 3): in-game overlay, replaces browser prompt
 let tpSel = [], tpAfter = null;
@@ -1228,6 +1230,7 @@ function onHubStation(k) {
   else if (k === 'bench') toast('🔧 Badger Bramble: The Gear Bench is still being built — new gear arrives soon!', 3200);
   else if (k === 'closet') { toast('👗 Costume Closet · looks are just for fun', 2200); openSkinPick(() => {}); }
   else if (k === 'stars') { vActPage = 3; openValleyMap(); }
+  else if (k === 'lab') startValleyPatch('act3_lab');
 }
 function hubArrived() {
   if (noSave) return; // startNew is reloading the page — the fresh page runs this again
@@ -2062,6 +2065,7 @@ async function boot() {
     const p = pendingStart; pendingStart = null;
     startNew(p.len);
   } else if (NEWFLAG && NEWFLAG.patch && valley) { const pid = NEWFLAG.patch; if (valley.get(pid)?.state === 'wilted') valley.setState(pid, 'in_progress'); startValleyPatch(pid); } else if (NEWFLAG) startNew(NEWFLAG.len || settings.len);
+  else if (/[?&]lab=act3\b/.test(location.search) && valley) startValleyPatch('act3_lab');
   window.__game = { get tiers() { return tiers; }, startValleyPatch, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
     tp: (x, z, up = 0) => { const p = P[cur]; p.x = x; p.z = z; p.y = world.phys.floor(x, z, 99, 99).y + up; p.vx = p.vz = p.vy = 0; },
     teleportNearFlower: () => { const B = world.blooms; const arr = B.byPol[polOf(cur)]; const i = arr[0]; const p = P[cur]; p.x = B.x[i] - 1; p.z = B.z[i]; p.y = Math.max(heightAt(p.x, p.z), B.y[i] - 0.5); p.vy = 0; } };
