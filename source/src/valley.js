@@ -43,9 +43,32 @@ export const PATCHES = [
   { act: 2, n: 14, id: 'owl_wood', name: 'Owl Wood', emoji: '🦉', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Ring day and night. Find the Glow Lantern and Echo Whistle. Hide from the Night Owl.', teach: 'Day/Night + night gear · Night Owl' },
   { act: 2, n: 15, id: 'frost_hollow', name: 'Frost Hollow', emoji: '❄️', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Ring summer, winter or spring. Freeze the creek, slide in the mud, sneak past the Fox.', teach: 'Seasons (ice + mud) · Prowling Fox' },
   { act: 2, n: 16, id: 'backyard_split', name: 'Backyard Split', emoji: '🏡', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'The Act 2 finale: the crew starts split up across a giant backyard. Dodge the sprinkler and mower!', teach: 'Two-Room Split · Garden Hazards' },
+  // ---- Act 3 (Fern act3-integration.md): mixes known tricks + one new gear piece / enemy interaction, plus an escort baby ----
+  { act: 3, n: 17, id: 'ember_ridge', name: 'Ember Ridge', emoji: '🔥', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Wind + seasons + the new Bubble Pouch. Bring the badger cub home.', teach: 'Bubble Pouch · damp the embers' },
+  { act: 3, n: 18, id: 'flooded_mill', name: 'Flooded Mill', emoji: '🏚️', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Raise and lower the water, pass the millstone gear. Three ducklings follow in a line.', teach: 'Turtle ride · carry chain' },
+  { act: 3, n: 19, id: 'night_market', name: 'Night Market', emoji: '🏮', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Lantern bait for the owl, a split crew and an owlet looking for its parent.', teach: 'Owl bait · two-room split' },
+  { act: 3, n: 20, id: 'mirror_caves', name: 'Mirror Caves', emoji: '💎', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Crystal mirrors, echo pings and webs. The new Pebble Sling turns far crystals.', teach: 'Pebble Sling · 3-bounce beam' },
+  { act: 3, n: 21, id: 'storm_orchard', name: 'Storm Orchard', emoji: '⛈️', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Windy apple terraces and crows. Ride the new Leaf Glider.', teach: 'Leaf Glider · crow lure' },
+  { act: 3, n: 22, id: 'thaw_valley', name: 'Thaw Valley', emoji: '🔔', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'The Master Bell changes season, time and wind at once. Help the fawn.', teach: 'Master Bell A · B · C' },
+  { act: 3, n: 23, id: 'grand_garden', name: 'Grand Garden', emoji: '🪴', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Sprinklers, wasps and a gnome climb. Every gear piece, and a very slow snail.', teach: 'Gear swap · snail escort' },
+  { act: 3, n: 24, id: 'starheart_summit', name: 'Starheart Summit', emoji: '🌟', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'The finale: four rings of everything, with every rescued friend helping.', teach: 'Finale · all friends' },
+  // Meadow Hub (S1): the home glade between levels — not a level (no exit, no stars)
+  { act: 'hub', id: 'meadow_hub', name: 'Meadow Hub', emoji: '🏡', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Home glade. Pick your crew, visit rescued friends, choose a level.' },
 ];
 export const ACT1_PATCHES = PATCHES.filter(p => !p.act);
 export const ACT2_PATCHES = PATCHES.filter(p => p.act === 2);
+export const ACT3_PATCHES = PATCHES.filter(p => p.act === 3);
+export const ACT3_IDS = ACT3_PATCHES.map(p => p.id);
+export const HUB_ID = 'meadow_hub';
+/** S1 rescued friends → the hub feature each one opens (fox kit + turtle are decoration and banter only) */
+export const HUB_FRIENDS = {
+  badger: { name: 'Badger Bramble', em: '🦡', level: 17, opens: 'bench' },
+  ducklings: { name: 'the Ducklings', em: '🐥', level: 18, opens: 'dock' },
+  turtle: { name: 'Shelly the Turtle', em: '🐢', level: 18, opens: null },
+  owlet: { name: 'the Owlet', em: '🦉', level: 19, opens: 'stars' },
+  fawn: { name: 'the Fawn', em: '🦌', level: 22, opens: 'closet' },
+  foxkit: { name: 'the Fox kit', em: '🦊', level: 22, opens: null },
+};
 
 const STATES = ['wilted', 'in_progress', 'blooming', 'wild'];
 
@@ -69,6 +92,8 @@ export function defaultValley() {
     beaten: [],
     act2Seen: false,
     trailBadge: false,
+    act3Seen: false,
+    friends: [], // S1 rescued friends living in the Meadow Hub
   };
 }
 
@@ -94,6 +119,7 @@ export function loadValley() {
     if (d.stars && typeof d.stars === 'object') base.stars = d.stars;
     if (Array.isArray(d.beaten)) base.beaten = d.beaten.filter(id => patchDef(id));
     base.act2Seen = !!d.act2Seen; base.trailBadge = !!d.trailBadge;
+    base.act3Seen = !!d.act3Seen; if (Array.isArray(d.friends)) base.friends = d.friends.filter(f => typeof f === 'string');
     return base;
   } catch (e) { return defaultValley(); }
 }
@@ -168,6 +194,23 @@ export function createValley(ctx) {
       if (!api.beaten(prev)) return { ok: false, why: `Finish ${patchDef(prev).name} first` };
       return { ok: true };
     },
+    /** Act 3 story gate: beat level 16 → Meadow Hub cutscene → 17 opens; then 17→24 in order */
+    act3Gate(id) {
+      const k = ACT3_IDS.indexOf(id); if (k < 0) return { ok: true };
+      if (!LEVEL_GATES_ENABLED) return { ok: true };
+      if (testUnlock()) return { ok: true, test: true };
+      if (!api.beaten('backyard_split')) return { ok: false, why: 'Beat level 16, Backyard Split, first' };
+      if (!V.act3Seen) return { ok: false, why: 'Visit the Meadow Hub first' };
+      if (k === 0) return { ok: true };
+      const prev = ACT3_IDS[k - 1];
+      if (!api.beaten(prev)) return { ok: false, why: `Finish ${patchDef(prev).name} first` };
+      return { ok: true };
+    },
+    act3Open() { return !LEVEL_GATES_ENABLED || testUnlock() || (api.beaten('backyard_split') && !!V.act3Seen); },
+    /** S1: rescued friends who moved into the hub (?friends=all previews them all for testing) */
+    friends() { try { if (/[?&]friends=all\b/.test(location.search)) return Object.keys(HUB_FRIENDS); } catch (e) {} return (V.friends || []).filter(f => HUB_FRIENDS[f]); },
+    hasFriend(f) { return api.friends().includes(f); },
+    addFriend(f) { if (!HUB_FRIENDS[f]) return false; V.friends = V.friends || []; if (V.friends.includes(f)) return false; V.friends.push(f); saveValley(V); return true; },
     friendsReady() {
       return PATCHES.every(p => {
         if (!p.neighbor || p.neighbor === 'all') return true;
@@ -184,20 +227,21 @@ export function createValley(ctx) {
     },
     /** one open patch at a time for MVP — first non-wild, or continue in_progress/blooming */
     nextPlayable() {
-      const mid = PATCHES.find(p => ['in_progress', 'blooming'].includes(V.patches[p.id].state));
+      const mid = PATCHES.find(p => p.act !== 'hub' && ['in_progress', 'blooming'].includes(V.patches[p.id].state));
       if (mid) return mid.id;
-      const wilt = PATCHES.find(p => V.patches[p.id].state === 'wilted');
+      const wilt = PATCHES.find(p => p.act !== 'hub' && V.patches[p.id].state === 'wilted');
       return wilt ? wilt.id : null;
     },
     canStart(id, crewTags) {
       const def = patchDef(id), st = V.patches[id];
       if (!def || !st) return { ok: false, why: 'Unknown patch' };
       if (def.act === 2) { const g = api.act2Gate(id); if (!g.ok) return g; }
+      if (def.act === 3) { const g = api.act3Gate(id); if (!g.ok) return g; }
       // When UNLOCK_ALL_LEVELS, wild patches are replayable (heal resets on start).
       if (st.state === 'wild' && !UNLOCK_ALL_LEVELS && LEVEL_GATES_ENABLED) return { ok: false, why: 'Already wild — postcard mode later' };
       if (!UNLOCK_ALL_LEVELS && LEVEL_GATES_ENABLED && !def.act) {
         // one open at a time
-        const busy = PATCHES.find(p => p.id !== id && ['in_progress', 'blooming'].includes(V.patches[p.id].state));
+        const busy = PATCHES.find(p => p.id !== id && p.act !== 'hub' && ['in_progress', 'blooming'].includes(V.patches[p.id].state));
         if (busy && st.state === 'wilted') return { ok: false, why: `Finish ${busy.name} first` };
         // sequential unlock: prior patches must be wild (except continue)
         const idx = PATCHES.findIndex(p => p.id === id);

@@ -637,6 +637,13 @@ body.inRound #healMeter,body.inRound #crewDock{display:flex}
 body.inRound #crewDock:empty{display:none}
 @media (orientation:landscape) and (max-height:560px){#crewDock{bottom:auto;top:calc(max(8px,env(safe-area-inset-top)) + 104px);right:auto;left:max(6px,env(safe-area-inset-left));flex-direction:row;flex-wrap:wrap;max-height:calc(100vh - 220px);width:min(320px,calc(50vw - 110px))}#crewDock button{width:46px;height:46px;font-size:23px;flex:0 0 auto}}
 body.inRound.packReady #packBtn{display:block}
+#bHubMap{display:none;position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:9;border:3px solid #3b2614;background:#ffe07a;color:#3b2614;font:800 16px system-ui;border-radius:16px;padding:9px 18px;box-shadow:0 3px 0 #3b2614;cursor:pointer}
+body.inRound.inHub #bHubMap{display:block}
+body.inHub #healMeter{display:none!important}
+.zoneNode.hubLbl{background:#fff8e0;border-color:#3b2614;white-space:nowrap}
+.a2t.soon{background:#ece6d6}
+.a2t.soon small{opacity:.7}
+
 
 .zoneNode{position:fixed;transform:translate(-50%,-100%);pointer-events:none;background:rgba(255,255,255,.85);border-radius:12px;padding:2px 8px;font:600 14px system-ui;color:#5a3b22;z-index:20;display:none;white-space:nowrap}
 body.adv #bBuild,body.adv #bRts,body.adv #nestBar,body.adv #shopChip,body.adv #dewChip,body.adv #healMeter,body.adv #rtsBar,body.adv #possBar,body.adv #pTech,body.adv #hubTabs [data-tab="tech"],body.adv #hubTabs [data-tab="inv"],body.adv #goalWrap,body.adv #rD,body.adv #rS,body.adv #bTray,body.adv #bBar,body.adv #bmHint,body.adv #shop,body.adv #packBtn{display:none!important}
@@ -800,7 +807,7 @@ body.skipT.inRound #bSkipT{display:block}
 <div class="ov" id="valley"><div class="vWrap">
   <h2>🗺️ Valley Map</h2>
   <div class="vSub" id="vSub">Guide your crew of three through each level</div>
-  <div id="vActs"><button type="button" class="vAct on" id="vAct1">🗺️ Act 1 · Valley</button><button type="button" class="vAct" id="vAct2">🥾 Act 2 · Trail</button></div>
+  <div id="vActs"><button type="button" class="vAct on" id="vAct1">🗺️ Act 1 · Valley</button><button type="button" class="vAct" id="vAct2">🥾 Act 2 · Trail</button><button type="button" class="vAct" id="vAct3">🏡 Act 3 · Friends</button></div>
   <div id="vAct2Page" hidden><div id="vA2Note"></div><div id="vA2Grid"></div></div>
   <div id="vMapStage"><img id="vMapImg" alt="Valley map"><div id="vSlots"></div></div>
   <div id="vPatches" hidden></div>
@@ -809,6 +816,7 @@ body.skipT.inRound #bSkipT{display:block}
   <div id="vTent"><button class="pill" id="vEditCrew">⛺ Crew Tent</button><button class="pill" id="vSkins">🎨 Skins</button></div>
   <div id="vActions">
     <button class="big sec" id="vBack">◀ Title</button>
+    <button class="big sec" id="vHub">🏡 Meadow Hub</button>
     <button class="big" id="vFree" disabled>🌿 Free roam</button>
     <button class="big" id="vGo" disabled>⏱ Challenge</button>
   </div>
@@ -825,6 +833,7 @@ body.skipT.inRound #bSkipT{display:block}
 <div class="ov" id="skinPick"><div class="panel"><h2>🎨 Pick your looks</h2><p class="spSub">Every animal in a row has the same powers — it's just a new look!</p><div id="spRows"></div><button class="big" id="spDone">✓ Done</button></div></div>
 <div id="crewDock" aria-label="Crew swap"></div>
 <button id="packBtn" type="button">📦 Pack Up</button>
+<button id="bHubMap" type="button" aria-label="Level menu">🗺️ Levels</button>
 
 <div id="title" class="on fd"><picture><source media="(orientation:landscape)" srcset="./ui/screens/title-bg-landscape.webp"><img class="fdBg" src="./ui/screens/title-bg-portrait.webp" alt=""></picture><div class="logo" data-slot="logo"><img id="logoImg" src="./img/logo.png" alt="Pollinator Meadow" onerror="this.remove();document.getElementById('logoTxt').hidden=false"><div id="logoTxt" hidden><span class="fl">🌼</span><h1>Pollinator Meadow</h1></div><small>Grow your meadow. Gather, build and bloom.</small></div>
 <button class="fdBtn" id="tChallenge" hidden style="display:none"></button><button class="fdBtn" id="tRelaxed" hidden style="display:none"></button>

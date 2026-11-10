@@ -9,6 +9,7 @@ import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
 import { waterSurface, FOAM_MAT } from './water.js';
 import { MAPS2 } from './act2-maps.js';
+import { MAPS3 } from './act3-maps.js';
 
 // team-lift sizes follow the class (Fern): Scout = tiny, Trickster = medium, Bruiser = bear
 export const SIZE = Object.fromEntries(Object.entries(CLASS_OF).map(([id, c]) => [id, CLASSES[c].size]));
@@ -53,7 +54,7 @@ const ring = (n, rx, rz, cz, skip = []) => Array.from({ length: n }, (_, i) => (
 // Levels that are playable right now; the rest show "coming soon" until their patch ships
 export const READY_LEVELS = new Set(['trailhead_trials', 'sunbeam_grove', 'mill_pond', 'bramble_patch', 'weathervane_hill', 'hornet_hedge', 'owl_wood', 'frost_hollow', 'backyard_split', 'training_garden', 'sunny_hollow', 'creek_bend', 'moon_meadow', 'log_jam', 'picnic_lawn', 'cliff_orchard', 'windy_rise', 'festival_glade']);
 /** a level is playable as soon as its map exists (MAPS / MAPS2), so levels added later need no list edit */
-export const hasLevel = id => !!MAPS[id] && !String(id).startsWith('a2_');
+export const hasLevel = id => !!MAPS[id] && !MAPS[id].hub && !String(id).startsWith('a2_');
 
 const MAPS = {
   // Training Garden (t159u): a tiny fenced kids' tutorial — one thing per station, only the next thing glows.
@@ -481,12 +482,13 @@ const MAPS = {
   },
 };
 
-Object.assign(MAPS, MAPS2);
+Object.assign(MAPS, MAPS2, MAPS3);
 export function createZones(scene, ctx) {
   const group = new THREE.Group(); scene.add(group);
   let solids = [], picks = [], nodes = [], hoops = [], nightDews = [], star = null;
   let homeAt = null, A = { x: 0, z: 0 }, baseY = 0, recipe = null, id = null, picked = 0, keyDone = false, msgT = 0, t = 0;
   let tutorI = 0, tutorT = -99, endLines = [], result = null;
+  let hubPads = [], hubFr = [];
   let exitAt = null, exitOpen = false, exitMesh = null, exitLabel = null, starGot = false;
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
   let sampleH = null, waterMeshes = [], terrMesh = null;
@@ -617,6 +619,23 @@ export function createZones(scene, ctx) {
       addSolid({ type: 'cyl', x: A.x + x, z: A.z + z, r: 0.4, y0: g - 1, top: g + 5.2, kind: 'zone' });
     },
     reed(x, z, h) { const g = gy(x, z), m = new THREE.Mesh(new THREE.BoxGeometry(0.3, h, 0.3), mat(0x5a9a3a)); m.position.set(A.x + x, g + h / 2, A.z + z); group.add(m); },
+    /** S1 Meadow Hub station: step on the ring to open a feature. o.need = friend id that unlocks it */
+    hubPad(key, x, z, o = {}) {
+      const g = gy(x, z), col = o.col || 0xffc93c;
+      const ring = new THREE.Mesh(new THREE.RingGeometry(1.25, 1.65, 28).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
+      ring.position.set(A.x + x, g + 0.09, A.z + z); group.add(ring);
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.2, 0.22), mat(0x8b5e3c)); post.position.set(A.x + x + 1.9, g + 1.1, A.z + z); group.add(post);
+      const sign = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.9, 0.12), mat(0xd8b07a)); sign.position.set(A.x + x + 1.9, g + 2.2, A.z + z); group.add(sign);
+      const em = emojiSprite(o.emoji || '⭐', 1.5); em.position.set(A.x + x, g + 2.6, A.z + z); group.add(em);
+      const el = document.createElement('div'); el.className = 'zoneNode hubLbl'; el.style.display = 'none'; document.body.appendChild(el);
+      hubPads.push({ key, x: A.x + x, z: A.z + z, y: g, r: 1.6, label: o.label || key, need: o.need || null, lockTx: o.lockTx || '', ring, em, el, inside: false, col });
+    },
+    /** S1 rescued friend living in the hub (decor + banter); hidden until rescued unless o.always */
+    friend(kind, x, z, o = {}) {
+      const G = (MODEL[kind] || MODEL.duckling)(), s = o.s || 1; G.scale.setScalar(s); G.rotation.y = o.yaw || 0;
+      G.position.set(A.x + x, gy(x, z) + (o.base || 0), A.z + z); group.add(G);
+      hubFr.push({ id: o.id || kind, G, x: A.x + x, z: A.z + z, y0: G.position.y, ph: hubFr.length * 1.3, say: o.say || [], sayI: 0, near: false });
+    },
     home(x, z) { homeAt = { x: A.x + x, z: A.z + z }; }, // t148u: the crew nest is the single home
     // Level exit: all three friends must stand inside once every required puzzle is solved
     exit(x, z, r = 3, base = 0) {
@@ -918,6 +937,11 @@ export function createZones(scene, ctx) {
     fox() { const G = new THREE.Group(); G.add(bx(0.9, 0.75, 1.9, 0xe8762a, 0, 0.65, 0), bx(0.75, 0.7, 0.75, 0xe8762a, 0, 0.9, 1.15), bx(0.5, 0.35, 0.45, 0xfff3e6, 0, 0.75, 1.55), bx(0.15, 0.15, 0.12, 0x1a1a1a, 0, 0.8, 1.8), bx(0.22, 0.35, 0.15, 0xe8762a, -0.25, 1.4, 1.1), bx(0.22, 0.35, 0.15, 0xe8762a, 0.25, 1.4, 1.1), bx(0.4, 0.4, 1.1, 0xe8762a, 0, 0.75, -1.4), bx(0.42, 0.42, 0.35, 0xfff3e6, 0, 0.75, -2.0));
       for (const [x, z] of [[-0.3, 0.6], [0.3, 0.6], [-0.3, -0.6], [0.3, -0.6]]) G.add(bx(0.22, 0.5, 0.22, 0x3a2414, x, 0.25, z)); return G; },
     sprinkler() { const G = new THREE.Group(); G.add(bx(0.3, 0.8, 0.3, 0x8a8a90, 0, 0.4, 0)); const H = new THREE.Group(); H.position.y = 0.9; H.add(bx(0.55, 0.3, 0.55, 0x3aa0e8, 0, 0, 0), bx(0.15, 0.15, 0.5, 0x2a6a9a, 0, 0.05, 0.4)); G.add(H); G.userData.head = H; return G; },
+    // S1 hub friends (cute blocky, facing +Z)
+    duckling() { const G = new THREE.Group(); G.add(bx(0.55, 0.45, 0.7, 0xffd23f, 0, 0.3, 0), bx(0.4, 0.4, 0.4, 0xffd23f, 0, 0.65, 0.3), bx(0.22, 0.1, 0.2, 0xff9a2a, 0, 0.6, 0.6), bx(0.08, 0.08, 0.05, 0x1a1a1a, -0.12, 0.72, 0.51), bx(0.08, 0.08, 0.05, 0x1a1a1a, 0.12, 0.72, 0.51)); return G; },
+    fawn() { const G = new THREE.Group(); G.add(bx(0.8, 0.7, 1.5, 0xc68a4a, 0, 1.0, 0), bx(0.6, 0.65, 0.6, 0xc68a4a, 0, 1.55, 0.85), bx(0.35, 0.3, 0.3, 0xf2e0c8, 0, 1.4, 1.2), bx(0.12, 0.12, 0.1, 0x1a1a1a, 0, 1.45, 1.36), bx(0.18, 0.35, 0.1, 0xc68a4a, -0.3, 2.0, 0.8), bx(0.18, 0.35, 0.1, 0xc68a4a, 0.3, 2.0, 0.8));
+      for (const [x, z] of [[-0.25, 0.25], [0.15, -0.35], [0.2, 0.45]]) G.add(bx(0.14, 0.05, 0.14, 0xfff3e6, x, 1.36, z));
+      for (const [x, z] of [[-0.28, 0.55], [0.28, 0.55], [-0.28, -0.55], [0.28, -0.55]]) G.add(bx(0.18, 0.7, 0.18, 0x7a5030, x, 0.35, z)); return G; },
     mower() { const G = new THREE.Group(); G.add(bx(2.2, 0.9, 1.8, 0xd83a3a, 0, 0.75, 0), bx(1.6, 0.35, 1.2, 0x2a2a2a, 0, 1.3, 0), bx(0.15, 1.4, 0.15, 0x6a6a70, -0.6, 1.7, -0.9), bx(0.15, 1.4, 0.15, 0x6a6a70, 0.6, 1.7, -0.9), bx(1.35, 0.15, 0.15, 0x6a6a70, 0, 2.4, -0.9));
       for (const [x, z] of [[-1.05, 0.7], [1.05, 0.7], [-1.05, -0.7], [1.05, -0.7]]) G.add(bx(0.3, 0.6, 0.6, 0x1a1a1a, x, 0.3, z)); return G; },
   };
@@ -1401,6 +1425,7 @@ export function createZones(scene, ctx) {
     for (const n of nodes) n.label.remove(); nodes = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
     tutorI = 0; tutorT = -99; endLines = []; result = null;
+    for (const h of hubPads) h.el.remove(); hubPads = []; hubFr = []; document.body.classList.remove('inHub');
     if (exitLabel) exitLabel.remove(); exitAt = null; exitOpen = false; exitMesh = null; exitLabel = null; starGot = false;
     kidClear(); a2Clear(); terrMesh = null;
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
@@ -1411,7 +1436,7 @@ export function createZones(scene, ctx) {
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
     recipe.build(B);
-    { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); }
+    if (!recipe.hub) { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); } else hubInit();
     buildLeafyBackdrop(recipe.bounds);
     decorateProps();
     if (recipe.act2) a2Init();
@@ -1438,7 +1463,7 @@ export function createZones(scene, ctx) {
   function pulseNightDews(want) { for (const d of nightDews) { if (d.got) continue; d.alive = want; d.m.visible = want; } }
   function reqLeft() { return puzzles.filter(p => p.req && !p.done); }
   function checkKey() {
-    if (!recipe || keyDone) return;
+    if (!recipe || keyDone || recipe.hub) return;
     if (reqLeft().length) return;
     if (!exitOpen) { exitOpen = true; setExitLook(); tst('🏁 The exit is open! Bring all three friends to the flag.', 3400); ctx.audio?.chime?.(); }
     if (exitAt && crewAtExit() >= 3) complete('All three friends made it');
@@ -1601,8 +1626,32 @@ export function createZones(scene, ctx) {
       if (isCur) say(thinBlock ? '🐻 Too thin for Bear — he needs the ford or a sturdy crossing' : '💧 Too deep to swim! Only Scouts fly over — build a crossing', 2000);
     } else q._safe = { x: q.x, z: q.z };
   }
+  function hubInit() {
+    const fr = new Set(ctx.friends?.() || []); document.body.classList.add('inHub');
+    for (const f of hubFr) f.G.visible = f.id === 'always' || fr.has(f.id);
+    for (const h of hubPads) { h.open = !h.need || fr.has(h.need); h.ring.material.color.set(h.open ? h.col : 0x9a8f7a); h.ring.material.opacity = h.open ? 0.85 : 0.4; h.em.material.opacity = h.open ? 1 : 0.45; }
+  }
+  function updateHub(dt, cam) {
+    const p = ctx.getP(); if (!p) return;
+    const cover = !!document.querySelector('.ov.on');
+    for (const h of hubPads) {
+      const d = Math.hypot(p.x - h.x, p.z - h.z);
+      h.ring.rotation.y += dt * 0.4; h.em.position.y = h.y + 2.6 + Math.sin(t * 2 + h.x) * 0.12;
+      const v = new THREE.Vector3(h.x, h.y + 3.6, h.z); v.project(cam); const show = !cover && v.z < 1 && d < 30;
+      h.el.style.display = show ? 'block' : 'none';
+      if (show) { h.el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; h.el.style.top = ((1 - v.y) / 2 * innerHeight) + 'px'; h.el.textContent = (h.open ? '' : '🔒 ') + h.label; }
+      if (d < h.r && !h.inside) { h.inside = true; introQ = []; msgT = t; if (h.open) ctx.onHub?.(h.key); else tst(h.lockTx || '🔒 Not open yet', 3000); }
+      else if (d > h.r + 1.2) h.inside = false;
+    }
+    for (const f of hubFr) {
+      if (!f.G.visible) continue; f.G.position.y = f.y0 + Math.abs(Math.sin(t * 3 + f.ph)) * 0.12;
+      const d = Math.hypot(p.x - f.x, p.z - f.z); f.G.rotation.y = Math.atan2(p.x - f.x, p.z - f.z) * (d < 7 ? 1 : 0) + (d < 7 ? 0 : f.G.rotation.y);
+      if (d < 3 && !f.near && f.say.length) { f.near = true; tst(f.say[f.sayI++ % f.say.length], 3000); } else if (d > 4.5) f.near = false;
+    }
+  }
   function update(dt, cam) {
     if (!recipe) return; t += dt;
+    if (recipe.hub) { if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; tst(introQ.shift(), 3000); } updateHub(dt, cam); return; }
     const p = ctx.getP(), cur = ctx.cur(), c = clsOfCur(), size = SIZE[cur] || 'medium', ids = ctx.crewIds();
     if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; tst(introQ.shift(), 3000); }
     // guided tutorial (Sunny Hollow): one Pip line per step, repeated every 25 s until that step is done

@@ -24,7 +24,7 @@ import { createGoals } from './goals.js';
 import { createOnboarding } from './onboarding.js';
 import { createItems } from './items.js';
 import { createCosmetics, EMOTES } from './cosmetics.js';
-import { createValley, PATCHES, HEAL_PACKUP, ACT1_PATCHES, ACT2_PATCHES, ACT1_IDS, testUnlock, LEVEL_GATES_ENABLED } from './valley.js';
+import { createValley, PATCHES, HEAL_PACKUP, ACT1_PATCHES, ACT2_PATCHES, ACT3_PATCHES, ACT1_IDS, HUB_ID, HUB_FRIENDS, testUnlock, LEVEL_GATES_ENABLED } from './valley.js';
 import { createZones, hasLevel } from './zones.js';
 import { CLIP } from './declutter.js';
 // Adventure refocus (Nov 9): build mode, species buildings, resource economy, Command wheel/helper AI,
@@ -920,11 +920,12 @@ function closeValleyMap() {
 }
 function renderValleyMap() {
   if (!valley || !crew) return;
+  if ($('vBack')) $('vBack').textContent = inHub() && playing ? '🏡 Back to Hub' : '◀ Title'; if ($('vHub')) $('vHub').style.display = inHub() && playing ? 'none' : '';
   crew.loadFromValley();
   if (!vSelPatch && ADVENTURE) { const tg = valley.get('training_garden'); vSelPatch = tg && tg.state !== 'wild' ? 'training_garden' : (valley.nextPlayable() || 'sunny_hollow'); }
   const wildN = ACT1_PATCHES.filter(p => valley.beaten(p.id)).length;
   renderActTabs();
-  { const crewS = crew.get().map(id => skinEm(id)).join(''); $('vSub').textContent = ADVENTURE ? (vActPage === 2 ? `Act 2 · ${ACT2_PATCHES.filter(p => valley.beaten(p.id)).length}/${ACT2_PATCHES.length} cleared · crew ${crewS} · pick a stop, then ▶ Play` : `${wildN}/${ACT1_PATCHES.length} cleared · crew ${crewS} · pick a level, then ▶ Play (or ⏱ Timed)`) : `${wildN}/8 wild · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick 🌿 Free roam or ⏱ Challenge for any open level`; }
+  { const crewS = crew.get().map(id => skinEm(id)).join(''); $('vSub').textContent = ADVENTURE ? (vActPage === 3 ? `Act 3 · ${ACT3_PATCHES.filter(p => valley.beaten(p.id)).length}/${ACT3_PATCHES.length} friends home · crew ${crewS} · pick a level, then ▶ Play` : vActPage === 2 ? `Act 2 · ${ACT2_PATCHES.filter(p => valley.beaten(p.id)).length}/${ACT2_PATCHES.length} cleared · crew ${crewS} · pick a stop, then ▶ Play` : `${wildN}/${ACT1_PATCHES.length} cleared · crew ${crewS} · pick a level, then ▶ Play (or ⏱ Timed)`) : `${wildN}/8 wild · crew ${crew.get().map(id => SPECIES[id].emoji).join('')} · pick 🌿 Free roam or ⏱ Challenge for any open level`; }
   paintValleyMap({
     getState: id => valley.get(id),
     selected: vSelPatch,
@@ -942,7 +943,7 @@ function renderValleyMap() {
   const def = vSelPatch ? valley.def(vSelPatch) : null;
   const st = vSelPatch ? valley.get(vSelPatch) : null;
   let gate = def ? valley.canStart(def.id, crew.tags()) : { ok: false, why: 'Pick a patch' };
-  if (def && def.act === 2 && gate.ok && gate.test) gate = { ...gate, why: '' };
+  if (def && (def.act === 2 || def.act === 3) && gate.ok && gate.test) gate = { ...gate, why: '' };
   if (ADVENTURE && def && !hasLevel(def.id) && gate.ok) gate = { ok: false, why: 'Coming soon!' };
   const stars = def && def.neighbor && def.neighbor !== 'all'
     ? ' · ' + '★'.repeat(Math.floor(valley.friendship(def.neighbor))) + '☆'.repeat(3 - Math.floor(valley.friendship(def.neighbor)))
@@ -959,10 +960,12 @@ function renderValleyMap() {
 let vActPage = 1;
 function renderActTabs() {
   const open2 = valley.act1Done() || testUnlock();
-  $('vAct1').classList.toggle('on', vActPage === 1); $('vAct2').classList.toggle('on', vActPage === 2);
+  $('vAct1').classList.toggle('on', vActPage === 1); $('vAct2').classList.toggle('on', vActPage === 2); $('vAct3')?.classList.toggle('on', vActPage === 3);
   $('vAct2').innerHTML = `🥾 Act 2 · Trail${open2 ? '' : ' <span class="lk">🔒</span>'}`;
-  $('vMapStage').hidden = vActPage === 2; $('vMapStage').style.display = vActPage === 2 ? 'none' : '';
-  $('vAct2Page').hidden = vActPage !== 2;
+  if ($('vAct3')) $('vAct3').innerHTML = `🏡 Act 3 · Friends${valley.act3Open() ? '' : ' <span class="lk">🔒</span>'}`;
+  $('vMapStage').hidden = vActPage !== 1; $('vMapStage').style.display = vActPage !== 1 ? 'none' : '';
+  $('vAct2Page').hidden = vActPage === 1;
+  if (vActPage === 3) { renderAct3Grid(); return; }
   if (vActPage !== 2) return;
   const left = ACT1_IDS.filter(id => !valley.beaten(id)).length;
   $('vA2Note').textContent = !LEVEL_GATES_ENABLED ? '🪧 Pip found a new trail! Every level is open — Trailhead Trials shows the new tricks, then play 9 → 16 in any order.' : open2 ? (testUnlock() && !valley.act1Done() ? '🧪 Test mode: Act 2 unlocked for testing' : '🪧 Pip found a new trail! Start with Trailhead Trials, then levels 9 → 16 in order.') : `🔒 Beat levels 1–8 to open the trail · ${left} to go`;
@@ -970,7 +973,15 @@ function renderActTabs() {
     const st = tt ? (done ? '🏅' : '') : (S ? '⭐'.repeat(S.n) + '☆'.repeat(3 - S.n) : '☆☆☆');
     return `<button type="button" class="a2t${tt ? ' tt' : ''}${lk ? ' lock' : ''}${vSelPatch === d.id ? ' sel' : ''}" data-id="${d.id}">${tt ? '' : `<i class="n">${d.n}</i>`}<span class="e">${lk ? '🔒' : d.emoji}</span><div><b>${d.name}</b>${tt ? '<br><small>Act 2 tutorial · new tricks peek</small>' : `<br><small>${d.teach}</small>`}${st ? `<div class="st">${st}</div>` : ''}</div>${done && !tt ? '<span class="done">✅</span>' : ''}</button>`; }).join('');
 }
-$('vAct1').onclick = () => { vActPage = 1; if (vSelPatch && valley.def(vSelPatch)?.act === 2) vSelPatch = null; audio.blip(2); renderValleyMap(); };
+function renderAct3Grid() {
+  const n16 = valley.beaten('backyard_split');
+  $('vA2Note').textContent = !LEVEL_GATES_ENABLED ? '🏡 Act 3 · every level is open! Each one hides a lost baby animal — bring it home to the Meadow Hub. Levels arrive one at a time.' : valley.act3Open() ? (n16 ? '🏡 Bring each lost baby home! Play 17 → 24 in order.' : '🧪 Test mode: Act 3 unlocked for testing') : '🔒 Beat level 16, Backyard Split, to open Act 3';
+  $('vA2Grid').innerHTML = ACT3_PATCHES.map(d => { const g = valley.act3Gate(d.id), lk = !g.ok, soon = !hasLevel(d.id), S = valley.data.stars?.[d.id], done = valley.beaten(d.id);
+    const st = soon ? '' : (S ? '⭐'.repeat(S.n) + '☆'.repeat(3 - S.n) : '☆☆☆');
+    return `<button type="button" class="a2t${lk ? ' lock' : ''}${soon ? ' soon' : ''}${vSelPatch === d.id ? ' sel' : ''}" data-id="${d.id}"><i class="n">${d.n}</i><span class="e">${lk ? '🔒' : d.emoji}</span><div><b>${d.name}</b><br><small>${soon ? '🚧 Coming soon' : d.teach}</small>${st ? `<div class="st">${st}</div>` : ''}</div>${done ? '<span class="done">✅</span>' : ''}</button>`; }).join('');
+}
+$('vAct3') && ($('vAct3').onclick = () => { vActPage = 3; if (!vSelPatch || valley.def(vSelPatch)?.act !== 3) { const nx = ACT3_PATCHES.find(d => hasLevel(d.id) && valley.act3Gate(d.id).ok && !valley.beaten(d.id)) || ACT3_PATCHES[0]; vSelPatch = nx.id; } audio.blip(2); renderValleyMap(); });
+$('vAct1').onclick = () => { vActPage = 1; if (vSelPatch && valley.def(vSelPatch)?.act) vSelPatch = null; audio.blip(2); renderValleyMap(); };
 $('vAct2').onclick = () => { vActPage = 2; if (!vSelPatch || valley.def(vSelPatch)?.act !== 2) { const nx = ACT2_PATCHES.find(d => valley.act2Gate(d.id).ok && !valley.beaten(d.id)) || ACT2_PATCHES[0]; vSelPatch = nx.id; } audio.blip(2); renderValleyMap(); };
 $('vA2Grid').addEventListener('click', e => { const b = e.target.closest('.a2t'); if (!b) return; vSelPatch = b.dataset.id; audio.blip(2); renderValleyMap(); });
 function openTrailSign(kind) {
@@ -979,7 +990,7 @@ function openTrailSign(kind) {
   else { $('tsH').textContent = '🏅 Trailhead badge!'; $('tsTx').textContent = 'You saw every new trick! Level 9, Sunbeam Grove, is open. Use Sneak 🐾 near sleepy critters.'; }
   $('tsIcons').innerHTML = icons; openOv('trailSign'); audio.music?.jingle?.('win');
 }
-$('tsOk').onclick = () => { closeOv('trailSign'); vActPage = 2; const nx = ACT2_PATCHES.find(d => valley.act2Gate(d.id).ok && !valley.beaten(d.id)); if (nx) vSelPatch = nx.id; openValleyMap(); };
+$('tsOk').onclick = () => { if ($('trailSign').dataset.mode === 'hub') { $('trailSign').dataset.mode = ''; closeOv('trailSign'); return; } closeOv('trailSign'); vActPage = 2; const nx = ACT2_PATCHES.find(d => valley.act2Gate(d.id).ok && !valley.beaten(d.id)); if (nx) vSelPatch = nx.id; openValleyMap(); };
 if ($('bSkipT')) $('bSkipT').onclick = () => zones && zones.skipKid && zones.skipKid();
 if ($('bSneak')) $('bSneak').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); input.hooks.sneak?.(); });
 function openCrewTent(after) { openTeamPick(after || renderValleyMap); }
@@ -1073,7 +1084,7 @@ function startValleyPatch(patchId) {
   renderCrewDock();
   updateHealUi();
   onb?.note?.('valleyIn');
-  toast(ADVENTURE ? `${def.emoji} ${def.name} · solve it with your crew!` : `${def.emoji} ${def.name} · heal the meadow with your crew!`, 3200);
+  if (patchId === HUB_ID) { toast('🏡 Meadow Hub · walk to a station! 🪧 Trail Board picks a level', 3200); hubArrived(); } else toast(ADVENTURE ? `${def.emoji} ${def.name} · solve it with your crew!` : `${def.emoji} ${def.name} · heal the meadow with your crew!`, 3200);
 }
 // ---------- class skins (cosmetic only: physics/hitbox/abilities stay on bee · raccoon · bear) ----------
 const baseRiders = {}, skinRiderP = {}, skinThumbs = {};
@@ -1193,12 +1204,41 @@ function endValleyPatchWild() {
   }
   if (newAct2) { valley.data.act2Seen = true; valley.save(); vActPage = 2; vSelPatch = 'trailhead_trials'; openTrailSign('unlock'); return; }
   if (trailDone) { valley.data.trailBadge = true; valley.save(); vActPage = 2; vSelPatch = 'sunbeam_grove'; openTrailSign('badge'); return; }
+  if (id === 'backyard_split' && !valley.data.act3Seen) { valley.data.act3Seen = true; valley.save(); try { sessionStorage.setItem('pm-hubcut', '1'); } catch (e) {} vActPage = 3; enterHub(); return; }
   if (valley.checkFestival() && !valley.data.festivalSeen) {
     valley.data.festivalSeen = true; valley.save();
     openFestival();
   } else {
-    openValleyMap();
+    enterHub();
   }
+}
+// ---------- S1 Meadow Hub: the home glade between levels (replaces the level menu as the main screen) ----------
+function inHub() { return !!valleySession && valleySession.patchId === HUB_ID; }
+function enterHub() {
+  closeOv('results'); closeOv('festival'); closeOv('trailSign');
+  if (!valley || !crew || !zones?.MAPS?.[HUB_ID]) { openValleyMap(); return; }
+  if (inHub()) { closeValleyMap(); closeOv('title'); return; }
+  startValleyPatch(HUB_ID);
+}
+function onHubStation(k) {
+  if (!inHub() || !playing) return; audio.blip?.(2);
+  if (k === 'map') { vActPage = vActPage || 1; openValleyMap(); }
+  else if (k === 'crew') openSkinPick(() => {});
+  else if (k === 'dock') { toast('🐥 Pond Dock · replay any level, stars shown on every tile', 2400); openValleyMap(); }
+  else if (k === 'bench') toast('🔧 Badger Bramble: The Gear Bench is still being built — new gear arrives soon!', 3200);
+  else if (k === 'closet') { toast('👗 Costume Closet · looks are just for fun', 2200); openSkinPick(() => {}); }
+  else if (k === 'stars') { vActPage = 3; openValleyMap(); }
+}
+function hubArrived() {
+  if (noSave) return; // startNew is reloading the page — the fresh page runs this again
+  let cut = false; try { cut = sessionStorage.getItem('pm-hubcut') === '1'; sessionStorage.removeItem('pm-hubcut'); } catch (e) {}
+  if (cut) openHubCut();
+}
+function openHubCut() {
+  $('tsH').textContent = '🏡 Welcome home to the Meadow Hub!';
+  $('tsTx').textContent = 'You beat Act 2! Pip built a cozy glade for the crew. Lost baby animals are waiting out in Act 3 — rescue them and they move in here. Level 17, Ember Ridge, is open!';
+  $('tsIcons').innerHTML = Object.values(HUB_FRIENDS).map(f => `<span title="${f.name}">${f.em}</span>`).join('');
+  $('trailSign').dataset.mode = 'hub'; openOv('trailSign'); audio.music?.jingle?.('win');
 }
 function openFestival() {
   openOv('festival');
@@ -1272,7 +1312,9 @@ function openPause() { $('bPause').classList.remove('pulse');
 }
 // title: Challenge / Relaxed set mode then open Valley Map (overhaul primary path)
 for (const [id, mode] of [['tChallenge', 'challenge'], ['tRelaxed', 'relaxed']]) $(id).onclick = () => { settings.mode = mode; saveSettings(settings); openValleyMap(); };
-if ($('tValley')) $('tValley').onclick = () => openValleyMap();
+if ($('tValley')) $('tValley').onclick = () => { audio.start(); closeOv('title'); enterHub(); };
+if ($('bHubMap')) $('bHubMap').onclick = () => { audio.blip?.(2); openValleyMap(); };
+if ($('vHub')) $('vHub').onclick = () => { audio.blip?.(2); enterHub(); };
 fdTrack($('title'), 'title', C => {
   const m = $('title').querySelector('.menu'), a = fdSlot('title', 'button-challenge'), r = fdSlot('title', 'button-relaxed'); if (!m || !r) return;
   const below = C.vh - (r.y + r.h) - 10, cx = r.x + r.w / 2;
@@ -1281,7 +1323,7 @@ fdTrack($('title'), 'title', C => {
 });
 $('play').onclick = () => { audio.start(); if (savedRound()) confirmDlg('Start a new round?', 'You have a round in progress. A new round will replace it.', 'New round', openPick); else openPick(); };
 
-if ($('vBack')) $('vBack').onclick = () => { closeValleyMap(); openOv('title'); $('title').classList.add('on'); };
+if ($('vBack')) $('vBack').onclick = () => { if (inHub() && playing) { closeValleyMap(); return; } closeValleyMap(); openOv('title'); $('title').classList.add('on'); };
 function startValleyIn(mode) { if (!vSelPatch) return; settings.mode = mode; saveSettings(settings); startValleyPatch(vSelPatch); }
 if ($('vGo')) $('vGo').onclick = () => startValleyIn('challenge');
 if ($('vFree')) $('vFree').onclick = () => startValleyIn('relaxed');
@@ -1840,7 +1882,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), swoop: () => { cam.swoop = 0.9; } });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), swoop: () => { cam.swoop = 0.9; } });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
