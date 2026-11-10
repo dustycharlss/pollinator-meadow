@@ -835,9 +835,9 @@ export function createZones(scene, ctx) {
     },
     /** a gate across the whole path: wooden door + a big lock + an invisible wall above it (no flying over) */
     kidGate(s, z, o = {}) {
-      const gt = this.gate(s, 0, z, 10, 0.6, 2.8, { latch: o.held ? false : true, label: 'Gate' });
+      const W = o.w || 10, gt = this.gate(s, 0, z, W, 0.6, 2.8, { latch: o.held ? false : true, label: 'Gate' });
       const g = gy(0, z);
-      gt.extra = addSolid({ type: 'box', x: A.x, z: A.z + z, hx: 5, hz: 0.3, yaw: 0, y0: g + 2.7, top: g + 20, kind: 'zone', fadeM: true });
+      gt.extra = addSolid({ type: 'box', x: A.x, z: A.z + z, hx: W / 2, hz: 0.3, yaw: 0, y0: g + 2.7, top: g + 20, kind: 'zone', fadeM: true });
       gt.lock = emojiSprite('🔒', 1.6); gt.lock.position.set(A.x, g + 3.8, A.z + z - 0.4); group.add(gt.lock);
       return gt;
     },
@@ -1018,7 +1018,7 @@ export function createZones(scene, ctx) {
         e.yaw = e.baseYaw + Math.sin(t * (e.o.sweepV || 0.45)) * (e.o.sweep || 1.1);
         for (const m of e.G.userData.eyes) m.scale.y = S.night ? (Math.sin(t * 0.9) > 0.97 ? 0.15 : 1) : 0.12;
       } else if (e.kind === 'fox') {
-        const pts = e.o.path; if (pts && !e.peek) { e.k = e.k ?? 0; const tg = L2W(pts[e.k][0], pts[e.k][1]), d = flatD(e, tg); if (d < 0.4) e.k = (e.k + 1) % pts.length; else { const v = Math.min(d, (e.o.speed || 1.6) * dt); e.x += (tg.x - e.x) / d * v; e.z += (tg.z - e.z) / d * v; const wy = Math.atan2(tg.x - e.x, tg.z - e.z); e.yaw += Math.atan2(Math.sin(wy - e.yaw), Math.cos(wy - e.yaw)) * Math.min(1, dt * 4); } }
+        const pts = e.o.path; if (pts && (!e.peek || e.o.roam)) { e.k = e.k ?? 0; const tg = L2W(pts[e.k][0], pts[e.k][1]), d = flatD(e, tg); if (d < 0.4) e.k = (e.k + 1) % pts.length; else { const v = Math.min(d, (e.o.speed || 1.6) * dt); e.x += (tg.x - e.x) / d * v; e.z += (tg.z - e.z) / d * v; const wy = Math.atan2(tg.x - e.x, tg.z - e.z); e.yaw += Math.atan2(Math.sin(wy - e.yaw), Math.cos(wy - e.yaw)) * Math.min(1, dt * 4); } }
         if (e.ring) e.ring.visible = S.season !== 'winter';
       } else if (e.kind === 'sprinkler') {
         e.paused = !!(e.o.pause && isOn(e.o.pause)); if (!e.paused) e.ph = (e.ph || 0) + dt * (e.o.speed || 0.8);
@@ -1046,7 +1046,7 @@ export function createZones(scene, ctx) {
       if (e.cone) { e.cone.material.color.setHex(col); e.cone.material.opacity = op; }
       if (e.ring) { e.ring.userData.mats[0].color.setHex(col); e.ring.userData.mats[1].color.setHex(col); e.ring.userData.mats[0].opacity = st === 'sleep' ? 0.35 : 0.8; e.ring.userData.mats[1].opacity = op * 0.45; const R = e.kind === 'badger' && t < (e.awakeT || -1) ? 1.15 : 1; e.ring.scale.set(R, 1, R); }
       // floating ? / ! / 💤 marker
-      const mk = st === 'alert' ? '!' : st === 'sus' ? '?' : st === 'sleep' ? (e.kind === 'turtle' && e.napT ? `💤${Math.max(0, Math.ceil(e.napT - t))}` : '💤') : (e.peek ? '💤' : '');
+      const mk = st === 'alert' ? '!' : st === 'sus' ? '?' : st === 'sleep' ? (e.kind === 'turtle' && e.napT ? `💤${Math.max(0, Math.ceil(e.napT - t))}` : '💤') : (e.peek && !e.o.roam ? '💤' : '');
       const hy = e.kind === 'crow' ? e.o.h + 1.6 : e.kind === 'owl' ? 2.6 + (e.o.lift || 0) : 2.4;
       _v.set(e.x, e.gy + hy, e.z).project(cam);
       const on = mk && _v.z < 1 && Math.abs(_v.x) < 1.1 && Math.abs(_v.y) < 1.1 && flatD(e, p) < 34;
@@ -2007,6 +2007,8 @@ export function createZones(scene, ctx) {
     i = Math.min(i, kid.steps.length - 1);
     if (i > kid.max) {
       for (let j = kid.max; j < i; j++) { if (!kid.herded[j]) { kid.herded[j] = true; herd(kid.steps[j].herd); } }
+      // a new stop began: lock in every earlier stop's steps so a "Tap the …" card can never slip back to an old stop
+      for (let j = 0; j < i; j++) if (kid.steps[j].n < kid.steps[i].n) kid.latch[j] = true;
       celebrate(kid.steps[i - 1], kid.steps[i - 1].n !== kid.steps[i].n); kid.max = i;
     }
     const st = kid.steps[i];
