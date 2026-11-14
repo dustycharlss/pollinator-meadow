@@ -31,7 +31,7 @@ import { CLIP } from './declutter.js';
 // heal meter + Pack Up gate are cut. Levels end when their goal is met. Petals are the score.
 export const ADVENTURE = true;
 document.body.classList.toggle('adv', ADVENTURE);
-import { CLASSES, CLASS_OF, CLASS_ORDER, classOf, badgeImg } from './classes.js';
+import { CLASSES, CLASS_OF, CLASS_ORDER, classOf, badgeImg, setColorBlind } from './classes.js';
 import { createCrew, STARTER_CREW, SKILLS, crewTags, priceForCrew, isFlyer, crewValid } from './crew.js';
 import { createContests } from './contests.js';
 import { createPackUp } from './packup.js';
@@ -289,7 +289,7 @@ function buildFx() {
   const tex = new THREE.TextureLoader().load(import.meta.env.BASE_URL + 'img/star.png');
   const m = new THREE.PointsMaterial({ map: tex, size: 1.6, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, color: 0xffd23f }); const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts);
   let head = 0;
-  return { m, burst(x, y, z, n = 14, spd = 5) { for (let i = 0; i < n; i++) { const k = head++ % N; pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z; const a = Math.random() * 6.28, b = Math.random() * 2 - 0.5; vel[k * 3] = Math.cos(a) * spd * (0.4 + Math.random()); vel[k * 3 + 1] = b * spd; vel[k * 3 + 2] = Math.sin(a) * spd * (0.4 + Math.random()); life[k] = 0.8 + Math.random() * 0.5; } },
+  return { m, burst(x, y, z, n = 14, spd = 5) { if (reduceOn()) n = Math.min(n, 2); for (let i = 0; i < n; i++) { const k = head++ % N; pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z; const a = Math.random() * 6.28, b = Math.random() * 2 - 0.5; vel[k * 3] = Math.cos(a) * spd * (0.4 + Math.random()); vel[k * 3 + 1] = b * spd; vel[k * 3 + 2] = Math.sin(a) * spd * (0.4 + Math.random()); life[k] = 0.8 + Math.random() * 0.5; } },
     update(dt) { let any = false; for (let k = 0; k < N; k++) { if (life[k] > 0) { life[k] -= dt; any = true; pos[k * 3] += vel[k * 3] * dt; pos[k * 3 + 1] += vel[k * 3 + 1] * dt; pos[k * 3 + 2] += vel[k * 3 + 2] * dt; vel[k * 3 + 1] -= 2 * dt; if (life[k] <= 0) pos[k * 3 + 1] = -9999; } } if (any) g.attributes.position.needsUpdate = true; } };
 }
 function fxColor(c) { fx && fx.m.color.set(c); }
@@ -752,6 +752,7 @@ function updateCamera(dt) {
   if (!playing) { cam.yaw += dt * 0.12; cam.zoomT = 3.4; cam.pitch += (0.5 - cam.pitch) * Math.min(1, dt); }
   else if (idle && p.speed > 1) { let d = p.yaw - cam.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); if (Math.abs(d) < 2.2) cam.yaw += d * 1.4 * (1 - Math.abs(d) / 2.3) * dt; }
   if (playing && !input.orbiting && now - input.lastOrbit > (bm ? 1200 : 2500)) cam.pitch += ((bm ? 0.8 : 0.35) - cam.pitch) * Math.min(1, dt * (bm ? 2.5 : 0.8));
+  if (cam.swoop > 0 && reduceOn()) cam.swoop = 0; // POLISH reduce motion: no swoosh cuts
   const sw = cam.swoop > 0; if (sw) cam.swoop -= dt; const k = 1 - Math.exp(-(!playing ? 0.7 : sw ? 3.5 : 12) * dt); cam.fx += (p.x - cam.fx) * k; cam.fz += (p.z - cam.fz) * k;
   const floorY = p.floorY ?? p.y, tgtY = Math.max(floorY, p.y - 4.5); cam.fy += (tgtY - cam.fy) * (1 - Math.exp(-(!playing ? 0.7 : sw ? 3 : 5) * dt));
   cam.zoom += ((cam.zoomT ?? 1) * (bm ? 1.9 : 1) - cam.zoom) * Math.min(1, dt * 4); const dist = (8 + sp.size * 1.2) * cam.zoom, cp = Math.cos(cam.pitch), spn = Math.sin(cam.pitch);
@@ -977,11 +978,14 @@ function renderActTabs() {
 function renderAct3Grid() {
   const n16 = valley.beaten('backyard_split');
   $('vA2Note').textContent = !LEVEL_GATES_ENABLED ? '🏡 Act 3 · every level is open! Each one hides a lost baby animal — bring it home to the Meadow Hub. Levels arrive one at a time.' : valley.act3Open() ? (n16 ? '🏡 Bring each lost baby home! Play 17 → 24 in order.' : '🧪 Test mode: Act 3 unlocked for testing') : '🔒 Beat level 16, Backyard Split, to open Act 3';
-  $('vA2Grid').innerHTML = ACT3_PATCHES.map(d => { const g = valley.act3Gate(d.id), lk = !g.ok, soon = !hasLevel(d.id), S = valley.data.stars?.[d.id], done = valley.beaten(d.id);
+  // POLISH (GATE-03): only levels whose map exists get a tile, so no listed level ever says "Coming soon"; the rest fold into one note
+  const built = ACT3_PATCHES.filter(d => hasLevel(d.id)), later = ACT3_PATCHES.filter(d => !hasLevel(d.id));
+  const growing = later.length ? `<div class="a2soon">🌱 ${later.length === 1 ? `Level ${later[0].n} is` : `Levels ${later[0].n}–${later[later.length - 1].n} are`} still growing. They arrive one at a time.</div>` : '';
+  $('vA2Grid').innerHTML = built.map(d => { const g = valley.act3Gate(d.id), lk = !g.ok, soon = !hasLevel(d.id), S = valley.data.stars?.[d.id], done = valley.beaten(d.id);
     const st = soon ? '' : (S ? '⭐'.repeat(S.n) + '☆'.repeat(3 - S.n) : '☆☆☆');
-    return `<button type="button" class="a2t${lk ? ' lock' : ''}${soon ? ' soon' : ''}${vSelPatch === d.id ? ' sel' : ''}" data-id="${d.id}"><i class="n">${d.n}</i><span class="e">${lk ? '🔒' : d.emoji}</span><div><b>${d.name}</b><br><small>${soon ? '🚧 Coming soon' : d.teach}</small>${st ? `<div class="st">${st}</div>` : ''}</div>${done ? '<span class="done">✅</span>' : ''}</button>`; }).join('');
+    return `<button type="button" class="a2t${lk ? ' lock' : ''}${soon ? ' soon' : ''}${vSelPatch === d.id ? ' sel' : ''}" data-id="${d.id}"><i class="n">${d.n}</i><span class="e">${lk ? '🔒' : d.emoji}</span><div><b>${d.name}</b><br><small>${soon ? '🚧 Coming soon' : d.teach}</small>${st ? `<div class="st">${st}</div>` : ''}</div>${done ? '<span class="done">✅</span>' : ''}</button>`; }).join('') + growing;
 }
-$('vAct3') && ($('vAct3').onclick = () => { vActPage = 3; if (!vSelPatch || valley.def(vSelPatch)?.act !== 3) { const nx = ACT3_PATCHES.find(d => hasLevel(d.id) && valley.act3Gate(d.id).ok && !valley.beaten(d.id)) || ACT3_PATCHES[0]; vSelPatch = nx.id; } audio.blip(2); renderValleyMap(); });
+$('vAct3') && ($('vAct3').onclick = () => { vActPage = 3; if (!vSelPatch || valley.def(vSelPatch)?.act !== 3) { const nx = ACT3_PATCHES.find(d => hasLevel(d.id) && valley.act3Gate(d.id).ok && !valley.beaten(d.id)) || ACT3_PATCHES.find(d => hasLevel(d.id)) || ACT3_PATCHES[0]; vSelPatch = nx.id; } audio.blip(2); renderValleyMap(); });
 $('vAct1').onclick = () => { vActPage = 1; if (vSelPatch && valley.def(vSelPatch)?.act) vSelPatch = null; audio.blip(2); renderValleyMap(); };
 $('vAct2').onclick = () => { vActPage = 2; if (!vSelPatch || valley.def(vSelPatch)?.act !== 2) { const nx = ACT2_PATCHES.find(d => valley.act2Gate(d.id).ok && !valley.beaten(d.id)) || ACT2_PATCHES[0]; vSelPatch = nx.id; } audio.blip(2); renderValleyMap(); };
 $('vA2Grid').addEventListener('click', e => { const b = e.target.closest('.a2t'); if (!b) return; vSelPatch = b.dataset.id; audio.blip(2); renderValleyMap(); });
@@ -1367,8 +1371,34 @@ $('mix').addEventListener('input', e => { const el = e.target.closest('input[dat
   audio.set(k, v); saveSettings(settings);
   const now = performance.now(); if (now - mixPrevT > 180 && (k === 'sfx' || k === 'master')) { mixPrevT = now; audio.blip(3); } });
 $('sMute').onchange = () => { settings.mute = $('sMute').checked; audio.setMute(settings.mute); saveSettings(settings); };
-function wipeSave() { confirmDlg('Full reset save?', 'This erases your gear, journal, best stars, saved round and settings, then reloads the game.', 'Erase everything', () => { noSave = true; wipeAll(); try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }); }
+function wipeSave() { confirmDlg('Full reset save?', 'This erases your valley progress, rescued friends, gear, outfits, journal, best stars, saved round and settings, then reloads the game.', 'Erase everything', () => { noSave = true; wipeAll(); try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }); }
 $('sWipe').onclick = wipeSave;
+// ===== POLISH · Kids & access (Fern accessibility.md §1 text size, §3 class cues, §4 reduce motion, §7 easy mode) =====
+const TEXT_STEPS = { s: 0.85, m: 1, l: 1.15, xl: 1.3 };
+var mqReduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+// function declarations (hoisted): read by the camera, fx and zones before this block is reached
+function reduceOn() { try { if (!settings) return false; } catch (e) { return false; } if (settings.reduceMotion == null) { mqReduce = mqReduce || (window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null); return !!mqReduce?.matches; } return !!settings.reduceMotion; }
+function easyOn() { try { return !!settings?.easyMode; } catch (e) { return false; } }
+function applyAccess() {
+  const de = document.documentElement;
+  if (!TEXT_STEPS[settings.textSize]) settings.textSize = 'm';
+  de.style.setProperty('--text', TEXT_STEPS[settings.textSize]); de.dataset.text = settings.textSize;
+  de.classList.toggle('reduceMotion', reduceOn()); if (reduceOn()) cam.swoop = 0;
+  document.body.classList.toggle('easyOn', easyOn());
+  setColorBlind(!!settings.colorBlind);
+  const ts = $('sText'); if (ts) for (const b of ts.querySelectorAll('button')) b.classList.toggle('on', b.dataset.v === settings.textSize);
+  if ($('sReduce')) $('sReduce').checked = reduceOn();
+  if ($('sReduceH')) $('sReduceH').textContent = settings.reduceMotion == null ? 'Uses your device setting until you change it.' : 'Saved for this device.';
+  if ($('sEasy')) $('sEasy').checked = easyOn();
+  if ($('sCB')) $('sCB').checked = !!settings.colorBlind;
+  const chip = $('pAccess'); if (chip) chip.textContent = `${easyOn() ? '🌱 Easy on' : '🌱 Easy off'} · 🔠 ${({ s: 'Small', m: 'Medium', l: 'Large', xl: 'Extra large' })[settings.textSize]}`;
+}
+$('sText')?.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings.textSize = b.dataset.v; saveSettings(settings); applyAccess(); audio.blip(2); });
+$('sReduce') && ($('sReduce').onchange = () => { settings.reduceMotion = $('sReduce').checked; saveSettings(settings); applyAccess(); });
+$('sEasy') && ($('sEasy').onchange = () => { settings.easyMode = $('sEasy').checked; saveSettings(settings); applyAccess(); });
+$('sCB') && ($('sCB').onchange = () => { settings.colorBlind = $('sCB').checked; saveSettings(settings); applyAccess(); toast(settings.colorBlind ? '🎨 Color-blind class colors on (rings update on the next level)' : '🎨 Class colors back to normal', 2200); });
+$('pAccess') && ($('pAccess').onclick = () => openOv('settings'));
+mqReduce?.addEventListener?.('change', () => { if (settings.reduceMotion == null) applyAccess(); });
 $('rsAgain').onclick = () => startNew(round.len); $('rsTitle').onclick = toTitle;
 for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => audio.start(), { once: true });
 document.addEventListener('visibilitychange', () => { if (document.hidden && playing && round && !round.over && !paused) openPause(); });
@@ -1654,7 +1684,7 @@ function worldTick(dt, st) {
         const S = (valley.data.stars = valley.data.stars || {}); S[res.id] = { n: 3, petals: true, star: true, par: true, best: Math.min(S[res.id]?.best || 1e9, res.time) }; valley.save();
         lines.push('⭐⭐⭐ Great job, friends!');
       } else if (res) {
-        const st = res.stars; lines.push(`🌸 Petals ${res.petals}/${res.petalsTotal} ${st.petals ? '⭐' : '☆'} · ⭐ Starseed ${st.star ? '⭐' : '☆'} · ⏱ ${fmtT(res.time)}${res.par ? ' / par ' + fmtT(res.par) : ''} ${st.par ? '⭐' : '☆'}`);
+        const st = res.stars; lines.push(`🌸 Petals ${res.petals}/${res.petalsTotal} ${st.petals ? '⭐' : '☆'} · ⭐ Starseed ${st.star ? '⭐' : '☆'} · ⏱ ${fmtT(res.time)}${res.par ? ' / par ' + fmtT(res.par) : ''} ${res.easy ? '· 🌱 Easy mode — time star not used' : st.par ? '⭐' : '☆'}`);
         lines.push(...res.end.map(skinText));
         const S = (valley.data.stars = valley.data.stars || {}), old = S[res.id] || { n: 0 };
         S[res.id] = { n: Math.max(old.n || 0, res.n), petals: !!(old.petals || st.petals), star: !!(old.star || st.star), par: !!(old.par || st.par), best: Math.min(old.best || 1e9, res.time) }; valley.save();
@@ -1896,7 +1926,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), swoop: () => { cam.swoop = 0.9; } });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), swoop: () => { cam.swoop = 0.9; } });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
@@ -2042,7 +2072,7 @@ async function boot() {
   curNight = nightOf(clock.t) > 0.5; $('bNight').textContent = curNight ? '☀️ Switch to day' : '🌙 Switch to night'; $('bSeason').textContent = SEASON_INFO[clock.season].emoji + ' Season: ' + SEASON_INFO[clock.season].name; night = nightOf(clock.t); updateNight(0.01);
   state.musicLive = true; setLoad(1, 'Ready'); $('load').style.opacity = 0; setTimeout(() => $('load').remove(), 700);
   buildCards(); loop(performance.now());
-  buildLens(); refreshTitle(); syncMixUi(); $('sMute').checked = !!settings.mute; applyMix(); audio.setMute(settings.mute);
+  buildLens(); refreshTitle(); syncMixUi(); $('sMute').checked = !!settings.mute; applyMix(); applyAccess(); audio.setMute(settings.mute);
   const X = { round, terr, build, adm, rivals, goals, onb, items, looks, save, get weather() { return weather; },
     endRound: () => { if (playing && !round.over) round.finish(); }, restartRound: () => startNew(round.len),
     clearTerritory: () => { build.clear(); tiers && tiers.reset(); terr.resetBlooms(); terr.refresh(); renderBTray(true); },

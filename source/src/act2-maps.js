@@ -74,6 +74,8 @@ export const MAPS2 = {
       B.gate('b8', 3.25, 130, 6.5, 0.6, 2.8, { latch: true, label: 'Gate' });
       B.wall(3.25, 130, 6.5, 0.6, 30, { bot: 2.7, hidden: true }).s.off = false;
       B.sprinkler('sk8', 2.6, 125.6, { yaw: Math.PI / 2, r: 3.5, speed: 0.3 });
+      // level-audit P1.1: habit flags just past each kidGate (peek never bonks; these are breathers)
+      [[0, 14.5], [0, 30], [0, 46], [0, 62], [0, 78], [0, 94.3], [-2.5, 121.8]].forEach(([x, z]) => B.checkpoint(x, z));
       B.puzzle('trail', 'Trailhead Trials', ['scout', 'trickster', 'bruiser'], ['b8']);
     },
     steps: K => {
@@ -95,21 +97,15 @@ export const MAPS2 = {
         { n: 4, icons: [E('trickster'), '🌀', '🌬️'], say: 'Turn the wind!', point: 'int', glow: ['vane:v4'], color: 'trickster', trail: [[1, 47], [2.6, 48]], tgt: [3, 1.6, 48.5], done: () => K.wind() > 0 || K.sig('f4') },
         { n: 4, icons: ['👆', E('scout')], say: `Tap the ${E('scout')}!`, point: 'dock:scout', color: 'scout', latch: false, done: () => K.cls() === 'scout' || K.sig('f4') },
         { n: 4, icons: [E('scout'), '🌬️', '🌼'], say: 'Fly with the wind!', point: 'jump', hold: true, glow: ['f4'], color: 'scout', trail: [[0, 48], [0, 54]], tgt: [0, 3.8, 56], done: () => K.sig('f4'), herd: { trickster: [-2, 63.2], bruiser: [1.5, 63] } },
-        { n: 5, icons: ['👆', E('bruiser')], say: `Tap the ${E('bruiser')}!`, point: 'dock:bruiser', color: 'bruiser', latch: false, done: () => K.cls() === 'bruiser' || K.sig('smoke:m5') },
-        { n: 5, icons: [E('bruiser'), '🍄', '💨'], say: 'Stomp the mushroom!', point: 'int', glow: ['smoke:m5'], color: 'bruiser', trail: [[1.5, 63.4], [3.2, 64]], tgt: [3.5, 1.2, 64.8], done: () => K.sig('smoke:m5') || K.carry('scout') || K.sig('ac5:r1') },
-        { n: 5, icons: ['👆', E('scout')], say: `Tap the ${E('scout')}!`, point: 'dock:scout', color: 'scout', latch: false, done: () => K.cls() === 'scout' || K.carry('scout') || K.sig('ac5:r1') },
-        { n: 5, icons: [E('scout'), '🌰'], say: 'Grab the acorn!', point: 'int', glow: ['ac5:r0'], color: 'scout', trail: [[0, 62.8], [-2.4, 64.8]], tgt: [-2.5, 1.2, 65.5], done: () => K.carry('scout') || K.sig('ac5:r1') },
-        { n: 5, icons: [E('scout'), '🌰', '⭕'], say: 'Drop it in the ring!', point: 'int', glow: ['ac5:r1'], color: 'scout', trail: [[-2, 66], [0.3, 68]], tgt: [0.5, 1, 68.5], done: () => K.sig('ac5:r1') },
-        { n: 5, icons: ['👆', E('bruiser')], say: `Tap the ${E('bruiser')}!`, point: 'dock:bruiser', color: 'bruiser', latch: false, done: () => K.cls() === 'bruiser' || K.carry('bruiser') || K.sig('ac5:home') },
-        { n: 5, icons: [E('bruiser'), '🌰'], say: 'Grab the acorn!', point: 'int', glow: ['ac5:r1'], color: 'bruiser', trail: [[2.5, 65.5], [0.8, 68]], tgt: [0.5, 1.2, 68.5], done: () => K.carry('bruiser') || K.sig('ac5:home') },
-        { n: 5, icons: [E('bruiser'), '🌰', '🏠'], say: 'Carry it home!', point: 'int', glow: ['ac5:r2'], color: 'bruiser', trail: [[0.8, 69], [2.4, 71.4]], tgt: [2.5, 1.2, 72], done: () => K.sig('ac5:home'), herd: { scout: [-2, 79.2], trickster: [2, 79.2] } },
+        // level-audit P1.1: stop 5 merged from eight cards to four, stop 6 from seven to four (same mechanics, fewer taps)
+        { n: 5, icons: ['👆', E('bruiser'), '🍄'], say: `Tap ${E('bruiser')}, stomp the mushroom!`, point: ['dock:bruiser', 'int'], glow: ['smoke:m5'], color: 'bruiser', trail: [[1.5, 63.4], [3.2, 64]], tgt: [3.5, 1.2, 64.8], done: () => K.sig('smoke:m5') || K.carry('scout') || K.sig('ac5:r1') },
+        { n: 5, icons: [E('scout'), '🌰', '⭕'], say: `${E('scout')}, drop the acorn in ${E('bruiser')}'s ring!`, point: ['dock:scout', 'int'], glow: ['ac5:r0', 'ac5:r1'], color: 'scout', trail: [[0, 62.8], [-2.4, 64.8], [0.3, 68]], tgt: () => K.carry('scout') ? [0.5, 1, 68.5] : [-2.5, 1.2, 65.5], done: () => K.sig('ac5:r1') },
+        { n: 5, icons: ['👆', E('bruiser')], say: `Tap ${E('bruiser')}.`, point: 'dock:bruiser', color: 'bruiser', latch: false, done: () => K.cls() === 'bruiser' || K.carry('bruiser') || K.sig('ac5:home') },
+        { n: 5, icons: [E('bruiser'), '🌰', '🏠'], say: `${E('bruiser')}, carry it home!`, point: 'int', glow: ['ac5:r1', 'ac5:r2'], color: 'bruiser', trail: [[2.5, 65.5], [0.8, 68], [2.4, 71.4]], tgt: () => K.carry('bruiser') ? [2.5, 1.2, 72] : [0.5, 1.2, 68.5], done: () => K.sig('ac5:home'), herd: { scout: [-2, 79.2], trickster: [2, 79.2] } },
         { n: 6, icons: ['🏮', '🎶', '🎁'], say: 'Pip lends you gear!', latch: true, done: () => K.borrow() },
-        { n: 6, icons: ['👆', E('scout')], say: `Tap the ${E('scout')}!`, point: 'dock:scout', color: 'scout', latch: false, done: () => K.cls() === 'scout' || K.night() },
-        { n: 6, icons: [E('scout'), '🌗', '🔔'], say: 'Ring the night bell!', point: 'jump', hold: true, glow: ['dnBell'], color: 'scout', trail: [[-1, 79.4], [0, 80]], tgt: [0, 2, 80.5], done: () => K.night() || K.sig('hl6') },
-        { n: 6, icons: [E('scout'), '🏮', '🌼'], say: 'Lantern finds glow steps!', point: 'jump', glow: ['f6'], color: 'scout', trail: [[-1, 81], [-3, 82.4]], tgt: [-3, 3.4, 85.6], done: () => K.sig('f6') || K.sig('hl6') },
-        { n: 6, icons: ['👆', E('trickster')], say: `Tap the ${E('trickster')}!`, point: 'dock:trickster', color: 'trickster', latch: false, done: () => K.cls() === 'trickster' || K.sig('hl6') },
-        { n: 6, icons: [E('trickster'), '🎶', '👀'], say: 'Whistle finds secrets!', color: 'trickster', tgt: [3, 1, 85.5], latch: true, done: () => K.pinged() || K.sig('hl6') },
-        { n: 6, icons: [E('trickster'), '🎚️'], say: 'Pull the secret lever!', point: 'int', glow: ['hl6'], color: 'trickster', trail: [[2, 81], [3, 84.6]], tgt: [3, 0.8, 85.5], done: () => K.sig('hl6'), herd: { scout: [-2.5, 95], bruiser: [2.6, 95] } },
+        { n: 6, icons: [E('scout'), '🌗', '🏮'], say: `${E('scout')}, ring the night bell, then light the steps!`, point: ['dock:scout', 'jump'], hold: true, glow: ['dnBell', 'f6'], color: 'scout', trail: [[-1, 79.4], [0, 80], [-3, 82.4]], tgt: () => K.night() ? [-3, 3.4, 85.6] : [0, 2, 80.5], done: () => K.sig('f6') || K.sig('hl6') },
+        { n: 6, icons: ['👆', E('trickster')], say: `Tap ${E('trickster')}.`, point: 'dock:trickster', color: 'trickster', latch: false, done: () => K.cls() === 'trickster' || K.sig('hl6') },
+        { n: 6, icons: [E('trickster'), '🎶', '🎚️'], say: 'Whistle, then pull the secret lever!', point: 'int', glow: ['hl6'], color: 'trickster', trail: [[2, 81], [3, 84.6]], tgt: [3, 0.8, 85.5], done: () => K.sig('hl6'), herd: { scout: [-2.5, 95], bruiser: [2.6, 95] } },
         { n: 7, icons: ['👆', E('scout')], say: `Tap the ${E('scout')}!`, point: 'dock:scout', color: 'scout', latch: false, done: () => K.cls() === 'scout' || K.season() === 'winter' || K.sig('ice7') },
         { n: 7, icons: [E('scout'), '❄️', '🔔'], say: 'Ring the snow bell!', point: 'jump', hold: true, glow: ['bell:winter'], color: 'scout', trail: [[-1.5, 95.4], [0, 96.6]], tgt: [0, 2, 97.5], done: () => K.season() === 'winter' || K.sig('ice7') },
         { n: 7, icons: ['👆', E('bruiser')], say: `Tap the ${E('bruiser')}!`, point: 'dock:bruiser', color: 'bruiser', latch: false, done: () => K.cls() === 'bruiser' || K.sig('ice7') },
@@ -174,6 +170,19 @@ export const MAPS2 = {
       B.badger('bdD', 1, 54, { yaw: -Math.PI / 2, ring: 5, lure: [7, 47], lurePt: [6.5, 47.5] });
       B.door('lit:gD', 58, -8, 8);
       B.checkpoint(0, 59.5);
+      // POLISH · Petals + Starseed (act2-petals.md: 21 ones + 9 blooms = 66 value)
+      B.wall(6.8, 12.2, 1.4, 2, 4.4, { look: 'stone' }); // east lip of the A lever wall
+      [[-4, -3], [-1.33, -3], [1.33, -3], [4, -3]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Home line
+      [[0, 2], [0, 5.5], [0, 9]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Room A path
+      [[-3, 15.5], [0, 15.5], [3, 15.5]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door A
+      [[-6, 19], [-6, 23], [-6, 27]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // West sneak B
+      [[-4, 31], [4, 31]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // C south bank
+      [[-4, 38.5], [4, 38.5]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // C north bank
+      [[-6, 45], [-6, 50]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // D west shutter
+      [[-3, 59.5], [3, 59.5]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Exit
+      [[6.2, 1, 0.9], [5.5, 8.5, 0.9], [4, 12.4, 4.6], [5.5, 27, 0.9], [5, 40, 0.9], [-6.5, 47.5, 0.9], [6.2, 40, 0.9], [-6, 16.8, 0.9], [0, 60.2, 0.9]].forEach(([x, z, h]) => B.pickup('petal', x, z, h, { value: 5 })); // bloom bunches
+      B.pickup('star', 6.8, 12.2, 4.6, { who: ['trickster'], whyNot: 'Only a Trickster can carry this Starseed.', set: 'SunStar' });
+      B.puzzle('SunStar', 'Secret Starseed', ['trickster'], ['SunStar'], { req: false, hint: '🐾 Light the sun step, climb to the lever, then walk east around the wall…' });
       B.puzzle('mirror', 'Sun step', ['scout', 'trickster'], ['lvA'], { hint: '🪽 Turn the mirror so the sunbeam hits the ghost step · 🐾 climb up and pull the lever.', track: [['lit:gA', 'scout', 'turn the sun mirror onto the ghost step', -2, 6, 1.6], ['lvA', 'trickster', 'hop up the sun step and pull the lever', 4, 12.4, 4.4]] });
       B.puzzle('badger', 'Sleepy Badger', ['trickster'], ['lvB'], { hint: '🐾 Sneak behind the badger (or throw an acorn at the far stump to lure him) and pull the gate lever.', track: [['lvB', 'trickster', 'sneak 🐾 past the badger, pull the lever', 5.5, 26.5]] });
       B.puzzle('shadow', 'Shadow bridge', ['bruiser', 'trickster'], ['lvC'], { hint: '🐻 Stand Bear in the sunbeam · 🐾 cross the shadow bridge and pull the lever.', track: [['shade:gC', 'bruiser', 'stand in the sunbeam to cast a shadow bridge', -3, 31.5], ['lvC', 'trickster', 'cross the shadow bridge, pull the lever', 5, 40]] });
@@ -221,6 +230,18 @@ export const MAPS2 = {
       B.turtle('tuC', -4, 48, { yaw: Math.PI, pond: 'pC', nap: 16 });
       B.door(['lvC', 'log:lgC'], 50, -8, 8);
       B.checkpoint(0, 52);
+      // POLISH · Petals + Starseed (act2-petals.md: 21 ones + 9 blooms = 66 value)
+      [[-4, -3], [-1.33, -3], [1.33, -3], [4, -3]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Home line
+      [[-4, 2], [0, 2], [4, 2]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Sluice bank A
+      [[-4, 12], [0, 12], [4, 12]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // North bank A
+      [[-5, 18], [0, 18], [5, 18]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // South of B
+      [[-4, 29], [4, 29]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // North of B
+      [[-4, 33.5], [4, 33.5]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // South of C
+      [[-3, 47.5], [5, 47.5]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // North of C
+      [[-3, 53], [3, 53]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Exit
+      [[6.2, -2, 0.9], [0, 7.2, 0.4], [-6.5, 9.2, 0.4], [5, 19, 0.9], [4, 29.5, 0.9], [4, 41, 0.4], [6, 47.6, 0.9], [-6.5, 33.5, 0.9], [0, 54, 0.9]].forEach(([x, z, h]) => B.pickup('petal', x, z, h, { value: 5 })); // bloom bunches
+      B.pickup('star', -7.2, 41, 0.5, { who: ['trickster'], whyNot: 'Only a Trickster can carry this Starseed.', set: 'MillStar' });
+      B.puzzle('MillStar', 'Secret Starseed', ['trickster'], ['MillStar'], { req: false, hint: '🐾 Drain the pond and look under the west bank…' });
       B.puzzle('drain', 'Dry pond bed', ['trickster'], ['lvA'], { hint: '🐾 Pull the water-down sluice, then walk the dry bed to the lever.', track: [['pA:low', 'trickster', 'pull the sluice to lower the water', -5, 2], ['lvA', 'trickster', 'walk the dry bed, pull the lever', 0, 7.2]] });
       B.puzzle('ford', 'Turtle ford', ['trickster'], ['lvB'], { hint: '🐾 Flick the floating leaf so the turtle looks away (or raise the water so it naps), then cross the ford.', track: [['lvB', 'trickster', 'distract the turtle, cross the ford, pull the lever', 4, 29.5]] });
       B.puzzle('mill', 'Mill run', ['trickster', 'bruiser'], ['lvC', 'log:lgC'], { hint: '🐾 Water down → walk the bed to the mill lever · water up on the far side → 🐻 ride the log while the turtle naps.', track: [['lvC', 'trickster', 'water down (sluice), walk the bed to the mill lever', 4, 41], ['log:lgC', 'bruiser', 'water up (far sluice), hop on the log and float across', -4, 37.4]] });
@@ -276,6 +297,17 @@ export const MAPS2 = {
       B.plate('plD', -5, 56.2, { heavy: true, base: 6.6, label: 'ledge plate' });
       B.door('plD', 60, -8, 8);
       B.checkpoint(0, 62);
+      // POLISH · Petals + Starseed (act2-petals.md: 18 ones + 10 blooms = 68 value)
+      [[-4, -3], [-1.33, -3], [1.33, -3], [4, -3]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Home line
+      [[2, 2], [2, 5], [2, 8]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Room A path
+      [[-3, 15], [0, 15], [3, 15]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door A
+      [[-4, 30.5], [2, 30.5]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door B
+      [[5.5, 33], [5.5, 36]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // East of web C
+      [[5.5, 44], [5.5, 47]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // D east drip
+      [[-3, 62], [3, 62]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Exit
+      [[6.2, -2, 0.9], [4.5, 3.5, 2.5], [-4.5, 10.3, 4.8], [3, 25.6, 6.8], [-5, 18.5, 0.9], [6.5, 33.5, 0.9], [0, 39, 0.9], [5.5, 46, 2.5], [-5, 56.2, 6.8], [0, 63.5, 0.9]].forEach(([x, z, h]) => B.pickup('petal', x, z, h, { value: 5 })); // bloom bunches
+      B.pickup('star', 6.5, 25.6, 6.8, { who: ['scout'], whyNot: 'Only Bee can fly up to this Starseed.', set: 'BramStar' });
+      B.puzzle('BramStar', 'Secret Starseed', ['scout'], ['BramStar'], { req: false, hint: '🪽 Something sparkles on the far east end of the ledge…' });
       B.puzzle('vine', 'Vine ladder', ['trickster', 'scout'], ['lvA'], { hint: '🐾 Plant the seed · 🪽 bring a dewdrop from the drip leaf · 🐾 climb the vine and pull the lever.', track: [['planted:sA', 'trickster', 'plant the seed by the pillar', -4.5, 6.4], ['grown:sA', 'scout', 'fly to the drip leaf, bring a dewdrop to the seed', 4.5, 3.5, 2.4], ['lvA', 'trickster', 'climb the vine, pull the lever', -4.5, 10.3, 4.6]] });
       B.puzzle('pad', 'Mushroom bounce', ['trickster', 'scout', 'bruiser'], ['plB'], { hint: '🐾 Plant · 🪽 water · 🐻 bounce on the mushroom up to the ledge plate.', track: [['planted:sB', 'trickster', 'plant the seed', 2.5, 19], ['grown:sB', 'scout', 'bring a dewdrop to the seed', -5, 18.5, 2.4], ['plB', 'bruiser', 'bounce on the mushroom onto the ledge plate', 2.5, 21]] });
       B.puzzle('web', 'Spider web', ['trickster'], ['wC'], { hint: '🐾 Pluck the far web strand so the spider turns away, then snip the web.', track: [['pluck:spC', 'trickster', 'pluck the strand so the spider looks away', 6.5, 33.5], ['wC', 'trickster', 'snip the web while she looks away!', 0, 37]] });
@@ -326,6 +358,18 @@ export const MAPS2 = {
       B.lever('lvC', -4.5, 49, { base: 5.4, label: 'Ridge lever' });
       B.door(['blC', 'lvC'], 52, -8, 8);
       B.checkpoint(0, 54);
+      // POLISH · Petals + Starseed (act2-petals.md: 20 ones + 10 blooms = 70 value)
+      [[-4, -3], [-1.33, -3], [1.33, -3], [4, -3]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Home line
+      [[2, 2], [2, 5], [2, 8]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Room A path
+      [[-3, 17], [0, 17], [3, 17]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door A
+      [[-4.5, 21], [-4.5, 23]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Under canopy B west
+      [[-3, 34], [3, 34]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door B
+      [[-6, 37], [-6, 42]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // C west edge
+      [[-3, 53], [3, 53]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door C
+      [[-3, 55.5], [3, 55.5]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Exit
+      [[6.2, -2, 0.9], [-3.5, 13.3, 5.2], [4.5, 29, 0.9], [0, 26, 5.2], [-5.5, 36.5, 0.9], [5.5, 41.5, 6.2], [-1.5, 41, 0.9], [-4.5, 49, 5.6], [6.2, 46, 0.9], [0, 56, 0.9]].forEach(([x, z, h]) => B.pickup('petal', x, z, h, { value: 5 })); // bloom bunches
+      B.pickup('star', -3.5, 13, 5.6, { who: ['scout'], whyNot: 'Only Bee can fly up to this Starseed.', set: 'VaneStar' });
+      B.puzzle('VaneStar', 'Secret Starseed', ['scout'], ['VaneStar'], { req: false, hint: '🪽 Check the back of the first hilltop wall…' });
       B.puzzle('raft', 'Dandelion raft', ['trickster', 'bruiser'], ['lvA'], { hint: '🐾 Crank the vane so the wind blows UP · 🐻 hold the raft · 🐾 hop on · 🐻 let go!', track: [['wind:up', 'trickster', 'crank the vane so the wind blows up the hill', 4.5, 2.5], ['raft:rA', 'bruiser', 'hold the raft, Raccoon hops on, then Bear steps off', -3.5, 7.5], ['lvA', 'trickster', 'pull the hilltop lever', -3.5, 13.3, 5]] });
       B.puzzle('crow', 'Crow post', ['scout'], ['blB'], { hint: '🪽 Wait under a leaf canopy until the crow’s back is turned, then fly up and ring the bell.', track: [['blB', 'scout', 'hide under the leaves, then ring the crow-post bell', 0, 26, 5]] });
       B.puzzle('ridge', 'Windy ridge', ['scout', 'trickster', 'bruiser'], ['blC', 'lvC'], { hint: '🐾 Wind up · 🪽 ring the gust bell when the crow looks away · 🐻 + 🐾 raft to the ridge lever.', track: [['wind:up', 'trickster', 'crank the vane: wind up!', -5.5, 36.5], ['blC', 'scout', 'dodge the crow, ring the gust bell', 5.5, 41.5, 6], ['lvC', 'trickster', 'raft up to the ridge lever (Bear holds, then lets go)', -4.5, 43.5]] });
@@ -367,9 +411,21 @@ export const MAPS2 = {
       B.wasps('wC', 0, 46, { r: 5.5 });
       B.wall(-6.5, 46, 3, 3, 3, { look: 'hedge' }); B.wall(6.5, 46, 3, 3, 3, { look: 'hedge' });
       B.puffShroom('mC', 2.5, 39.5, { r: 6, dur: 8 });
-      B.acornChain('acC', [{ x: -3, z: 36, who: 'trickster' }, { x: -5, z: 40.8, h: 4.4, who: 'scout' }, { x: 4.5, z: 52, who: 'bruiser' }, { x: 0, z: 56, who: 'bruiser', home: true }], { timed: true });
+      B.acornChain('acC', [{ x: -3, z: 36, who: 'trickster' }, { x: -5, z: 40.8, h: 4.4, who: 'scout' }, { x: 4.5, z: 52, who: 'bruiser' }, { x: 0, z: 56, who: 'bruiser', home: true }], { timed: true, window: 8 });
       B.door('acC:home', 58, -8, 8);
       B.checkpoint(0, 59.5);
+      // POLISH · Petals + Starseed (act2-petals.md: 19 ones + 11 blooms = 74 value)
+      B.wall(6.5, 4, 1.8, 1.8, 4, { look: 'stone' }); // second high shelf east of the first stone
+      [[-4, -3], [-1.33, -3], [1.33, -3], [4, -3]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Home line
+      [[2, 3], [2, 6.5], [2, 10]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Room A path
+      [[-3, 16], [0, 16], [3, 16]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door A
+      [[-6.5, 24], [-6.5, 28]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // West edge B
+      [[-3, 33], [0, 33], [3, 33]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door B
+      [[4.5, 53], [1, 56]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After far ring
+      [[-3, 59.5], [3, 59.5]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Exit
+      [[6.2, -2, 0.9], [-5, 4, 4.8], [5, 12.5, 0.9], [-3.5, 19.5, 0.9], [3.5, 30.5, 0.9], [-5, 36, 0.9], [-5, 40.8, 4.6], [2.5, 39.5, 0.9], [6.5, 52, 0.9], [0, 56, 0.9], [0, 60.2, 0.9]].forEach(([x, z, h]) => B.pickup('petal', x, z, h, { value: 5 })); // bloom bunches
+      B.pickup('star', 6.5, 4, 4.6, { who: ['scout'], whyNot: 'Only Bee can fly up to this Starseed.', set: 'HiveStar' });
+      B.puzzle('HiveStar', 'Secret Starseed', ['scout'], ['HiveStar'], { req: false, hint: '🪽 Fly east from the first stone instead of down…' });
       B.puzzle('relay', 'Acorn relay', ['scout', 'bruiser'], ['acA:home'], { hint: '🪽 Grab the Golden Acorn off the high shelf, drop it in the hand-off ring · 🐻 carry it home.', track: [['acA:r1', 'scout', 'fetch the acorn from the high shelf, drop it in the ring', -5, 4, 4.6], ['acA:home', 'bruiser', 'pick up the acorn and carry it home', 1.5, 7]] });
       B.puzzle('wasps', 'Buzz zone', ['bruiser', 'trickster'], ['lvB'], { hint: '🐻 Stomp the puff-mushroom · everyone walks through the calm smoke · 🐾 pull the lever.', track: [['smoke:mB', 'bruiser', 'stomp the puff-mushroom for calm smoke', -3.5, 19.5], ['lvB', 'trickster', 'hurry through the smoke, pull the lever', 3.5, 30.5]] });
       B.puzzle('chain', 'Hornet relay', ['trickster', 'scout', 'bruiser'], ['acC:home'], { hint: '🐻 Smoke + walk to the far ring · 🐾 climb the acorn up the vine · 🪽 fly it high over the nest · 🐻 carry it home. Hand-offs must be caught within 5 s!', track: [['acC:r1', 'trickster', 'carry the acorn up the vine to the ledge ring', -3, 36], ['acC:r2', 'scout', 'fly the acorn high over the nest to the far ring', -5, 40.8, 4.4], ['acC:home', 'bruiser', 'catch it and carry it home', 4.5, 52]] });
@@ -419,6 +475,17 @@ export const MAPS2 = {
       B.plate('plC', -6.2, 51, { heavy: true, label: 'Root plate' });
       B.door(['hlC', 'plC'], 57, -8, 8);
       B.checkpoint(0, 59);
+      // POLISH · Petals + Starseed (act2-petals.md: 16 ones + 12 blooms = 76 value)
+      B.hiddenStep(-6.4, 43.6, 2, 2, 1.3); B.hiddenStep(-6.4, 45.8, 2, 2, 2.6); // west hidden ledge, pinged by the Echo Whistle
+      [[-4, -3], [-1.33, -3], [1.33, -3], [4, -3]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Home line
+      [[-3, 17], [0, 17], [3, 17]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door A
+      [[-3.5, 25.5], [-4, 29.5]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Trunk pockets B
+      [[-3, 37], [0, 37], [3, 37]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door B
+      [[5.5, 39], [5.5, 43]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // East quiet side
+      [[-3, 59], [3, 59]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Exit
+      [[6.2, -2, 0.9], [-5, 4, 3.9], [2.5, 13.2, 4.1], [4.5, 19.5, 2.2], [3.5, 27, 0.9], [-6.5, 33.2, 0.9], [5.5, 39.5, 0.9], [2, 46, 0.9], [5.5, 50.4, 4.1], [-6.2, 51, 0.9], [-4, 49.5, 0.9], [0, 60.2, 0.9]].forEach(([x, z, h]) => B.pickup('petal', x, z, h, { value: 5 })); // bloom bunches
+      B.pickup('star', -6.2, 46, 3.9, { who: ['trickster'], whyNot: 'Only a Trickster can carry this Starseed.', set: 'OwlStar' });
+      B.puzzle('OwlStar', 'Secret Starseed', ['trickster'], ['OwlStar'], { req: false, hint: '🐾 Ping the 🎶 whistle near the west wall…' });
       B.puzzle('lantern', 'Glow Lantern', ['scout', 'trickster'], ['lvA'], { hint: '🪽 Fly up to the gift on the stump · stay near the steps with the 🏮 on · 🐾 climb the glow-steps to the lever.', track: [['gift:lantern', 'scout', 'fly up to the shiny gift on the stump', -5, 4, 3.2], ['lvA', 'trickster', 'climb the glow-steps while Bee’s lantern shines, pull the lever', 2.5, 6.5]] });
       B.puzzle('owl', 'Night owl', ['scout', 'trickster'], ['lvB'], { hint: '🪽 Ring the night bell to open the moon gate · 🐾 sneak trunk to trunk while the owl looks away · pull the lever.', track: [['night', 'scout', 'ring the night bell', 4.5, 19.5, 2], ['lvB', 'trickster', 'hide behind the trunks, sneak to the owl-tree lever', -6.5, 33.2]] });
       B.puzzle('echo', 'Echo whistle', ['trickster', 'bruiser'], ['hlC', 'plC'], { hint: '🐾 Grab the gift · the 🎶 whistle pings hidden steps + a secret lever · 🐻 sneak behind the trunk onto the root plate.', track: [['gift:whistle', 'trickster', 'grab the gift on the quiet side', 5.5, 39.5], ['hlC', 'trickster', 'ping, climb the hidden steps, pull the secret lever', 5.5, 45.5], ['plC', 'bruiser', 'sneak behind the trunk onto the root plate', -6.2, 51]] });
@@ -466,6 +533,17 @@ export const MAPS2 = {
       B.wall(5, 54, 0.6, 0.6, 2, { look: 'bark' }); B.bell('blC', 5, 54, 2.6, { label: 'Fox-post bell' });
       B.door(['iceC', 'blC'], 57, -8, 8);
       B.checkpoint(0, 59);
+      // POLISH · Petals + Starseed (act2-petals.md: 18 ones + 12 blooms = 78 value)
+      [[-4, -3], [-1.33, -3], [1.33, -3], [4, -3]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Home line
+      [[-4, 4], [0, 4], [4, 4]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // South of creek A
+      [[-4, 12], [0, 12], [4, 12]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // North of creek A
+      [[-3, 17], [3, 17]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After door A
+      [[-3, 33], [3, 33]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // After chute
+      [[-4, 40], [4, 40]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Ice C south
+      [[-3, 59], [3, 59]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Exit
+      [[6.2, -2, 0.9], [0, 2, 2.2], [3.5, 12.5, 0.9], [3, 19.5, 2.2], [-4.5, 22.7, 2.8], [-4.5, 25.4, 4.1], [3.5, 32.5, 0.9], [-3, 37.5, 2.2], [5, 44, 0.4], [-6.5, 44, 0.4], [5, 54, 2.8], [0, 60.2, 0.9]].forEach(([x, z, h]) => B.pickup('petal', x, z, h, { value: 5 })); // bloom bunches
+      B.pickup('star', -7.4, 44, 0.6, { who: ['trickster'], whyNot: 'Only a Trickster can carry this Starseed.', set: 'FrostStar' });
+      B.puzzle('FrostStar', 'Secret Starseed', ['trickster'], ['FrostStar'], { req: false, hint: '🐾 Freeze the creek with ❄️ and walk the west ice…' });
       B.puzzle('ice', 'Frozen creek', ['scout', 'trickster'], ['lvA'], { hint: '🪽 Fly into the ❄️ winter bell · the creek freezes · 🐾 walk across the ice and pull the lever.', track: [['winter', 'scout', 'fly into the ❄️ winter bell', 0, 2, 2], ['lvA', 'trickster', 'walk across the ice, pull the lever', 3.5, 12.5]] });
       B.puzzle('mud', 'Mud chute', ['scout', 'trickster'], ['lvB'], { hint: '🪽 Winter → 🐾 climb the snow steps to the ledge · 🪽 Spring → 🐾 belly-slide down the mud chute over the hedge · pull the lever.', track: [['mdB', 'trickster', 'winter: climb the snow steps · spring: slide the mud chute', -4.5, 20.6], ['lvB', 'trickster', 'pull the hollow lever', 3.5, 32.5]] });
       B.puzzle('fox', 'Fox hollow', ['scout', 'bruiser'], ['iceC', 'blC'], { hint: '❄️ Winter: 🐻 shove the log — it slides across the ice into the slot · 🪽 sneak past the fox (hollow log, or let the snow hide your scent) and ring the post bell.', track: [['iceC', 'bruiser', 'winter: shove the log across the ice', -5, 44], ['blC', 'scout', 'dodge the fox’s nose, ring the fox-post bell', 5, 54, 2.6]] });
@@ -511,22 +589,23 @@ export const MAPS2 = {
       B.wall(4, 38, 0.6, 0.6, 2.6, { look: 'bark' }); B.bell('blR', 4, 38, 3.2, { label: 'Birdhouse bell' });
       B.door('blR', 50, -8, 8);
       B.checkpoint(0, 53);
+      // POLISH · Petals + Starseed (act2-petals.md: 22 ones + 12 blooms = 82 value)
+      [[-6, -3], [-4, -3], [-2, -3]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Left start
+      [[2, -3], [4, -3], [6, -3]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Right start
+      [[-6, 3], [-4, 4.5], [-2, 6]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Left to first lever
+      [[2, 3], [4, 7], [6, 11]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Right pre-sprinkler
+      [[-6, 14], [-2, 18]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Left pre-mower
+      [[-6, 26], [-2, 30]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Left post-mower
+      [[2, 28], [6, 32]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Right post-fence
+      [[-3, 46], [3, 46]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Reunion
+      [[-3, 53], [3, 53]].forEach(([x, z]) => B.pickup('petal', x, z, 0.9)); // Exit
+      [[-6.5, 0.5, 0.9], [6.5, 0.5, 0.9], [-4, 7, 0.9], [4, 12.5, 0.9], [-4, 9.5, 0.9], [4, 27, 0.9], [-6.5, 18, 0.9], [-4, 31, 0.9], [4, 38, 3.4], [6.5, 34, 0.9], [0, 47, 0.9], [0, 56.5, 0.9]].forEach(([x, z, h]) => B.pickup('petal', x, z, h, { value: 5 })); // bloom bunches
+      B.pickup('star', -6.8, 36, 0.9, { who: ['trickster'], whyNot: 'Only a Trickster can carry this Starseed.', set: 'YardStar' });
+      B.puzzle('YardStar', 'Secret Starseed', ['trickster'], ['YardStar'], { req: false, hint: '🐾 After the shed lever, follow the west fence north…' });
       B.puzzle('gate1', 'Cross-yard gate', ['trickster'], ['lvL1'], { hint: '🐾 Pull the lever on the left — the gate opens on the RIGHT side!', track: [['lvL1', 'trickster', 'pull the lever (it opens the gate in the other room)', -4, 7]] });
       B.puzzle('tap', 'Sprinkler tap', ['trickster', 'bruiser'], ['crR'], { hint: '🐾 Stand on the tap plate (left) to stop the sprinkler · its spray reaches high, so 🐻 AND 🪽 cross while it’s off · 🐻 smash the old fence.', track: [['plL', 'trickster', 'stand on the tap plate to stop the sprinkler', -4, 9.5], ['crR', 'bruiser', 'cross while it’s off (Bee too — the spray reaches flyers), smash the old fence', 4, 26]] });
       B.puzzle('mower', 'Mower dash', ['trickster'], ['lvL3'], { hint: '🐾 Wait for the mower to stop (it flashes ? before it goes), then dash across and pull the shed lever.', track: [['lvL3', 'trickster', 'time the mower, dash across, pull the shed lever', -4, 31]] });
       B.puzzle('home', 'Back together', ['scout'], ['blR'], { hint: '🪽 Cross the sprinkler while Raccoon holds the tap plate (it sprays high!), fly through the open gate, ring the birdhouse bell.', track: [['blR', 'scout', 'ring the birdhouse bell', 4, 38, 3.2]] });
-    },
-  },
-  // dev-only lab (not on any level page): checkpoints, sneak, badger awareness
-  a2_lab: {
-    goal: 'Lab', act2: true, key: 'puzzles', ceil: 9, exit: [0, 30], par: 0,
-    bounds: { x0: -12, x1: 12, z0: -8, z1: 34 },
-    build(B) {
-      B.home(0, 0); B.lane(-12, 12, -8, 34);
-      B.checkpoint(0, 4);
-      B.badger('b1', 0, 14, { yaw: Math.PI / 2, lure: [-9, 18], lurePt: [-7, 16] });
-      B.checkpoint(0, 24);
-      B.puzzle('lab', 'Lab', ['scout'], ['labDone'], { track: [['labDone', 'scout', 'walk past the badger', 0, 24]] });
     },
   },
 };

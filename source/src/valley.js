@@ -4,9 +4,9 @@ import { UNLOCK_ALL_SPECIES } from './crew.js';
 
 export const VALLEY_SAVE_KEY = 'pm-valley-v1';
 export const HEAL_PACKUP = 0.85;
-/** Beta: every Act 1 valley level playable; set false to restore sequential unlock.
- *  Act 2 (Trailhead Trials + levels 9-16) always follows its story gate for players; UNLOCK_ALL_LEVELS only
- *  bypasses that gate in test mode (URL ?unlock=all, or localStorage pm_unlock_all = '1'). */
+/** Replay switch. Only matters when LEVEL_GATES_ENABLED (below) is true: then it makes wild patches replayable and
+ *  lets ?unlock=all / pm_unlock_all = '1' bypass the story gates. While LEVEL_GATES_ENABLED is false (live today)
+ *  every level, Act 2 included, is open to every player and there is no story gate to bypass. */
 export const UNLOCK_ALL_LEVELS = true;
 /** MASTER LEVEL GATE SWITCH. false = every level (Act 1, Training Garden, Trailhead Trials, 9-16 and any level
  *  added later) is open for every player, no URL flag needed, no locked tiles. Set true to bring back the story

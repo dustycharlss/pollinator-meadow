@@ -33,6 +33,21 @@ export const CLASSES = {
     acts: ['shove', 'smash'], carryMul: 1, flyCap: null,
   },
 };
+// POLISH accessibility §3: a second class cue for everyone (shape + Squid's badge), plus an opt-in colour-blind palette.
+// Shapes ship always. With the colour-blind setting off, the badges are tinted to the live glow colours (so they match the world glows);
+// on, every runtime class colour switches to Squid's shipped palette (Bruiser darkened to #bc5134 for grayscale separation).
+const CB = { scout: '#9bb4ff', trickster: '#2aa894', bruiser: '#bc5134' };
+const SHAPE = { scout: 'circle', trickster: 'square', bruiser: 'hex' };
+const BADGE = (c, cb, kind = 'badge', sz = 64) => import.meta.env.BASE_URL + `ui/icons/class-badges/${c}-${kind}-${sz}${cb ? '-cb' : ''}.png`;
+for (const c of Object.keys(CLASSES)) { const C = CLASSES[c]; C.color0 = C.color; C.colorBlind = CB[c]; C.shape = SHAPE[c]; C.badge0 = C.badge; C.badge = BADGE(c, false); C.badge2x = BADGE(c, false, 'badge', '64@2x'); }
+let cbOn = false;
+export const colorBlindOn = () => cbOn;
+/** swap every runtime class colour + badge (new world props, dock, objective, kid card pick it up; open levels refresh on next load) */
+export function setColorBlind(on) {
+  cbOn = !!on;
+  for (const c of Object.keys(CLASSES)) { const C = CLASSES[c]; C.color = cbOn ? C.colorBlind : C.color0; C.badge = BADGE(c, cbOn); C.badge2x = BADGE(c, cbOn, 'badge', '64@2x'); }
+  if (typeof document !== 'undefined') { const R = document.documentElement.style; for (const c of Object.keys(CLASSES)) R.setProperty('--c-' + c, CLASSES[c].color); document.documentElement.classList.toggle('cbOn', cbOn); }
+}
 export const CLASS_ORDER = ['scout', 'trickster', 'bruiser'];
 export const classOf = id => CLASSES[CLASS_OF[id]] || CLASSES.trickster;
 export const sizeOf = id => classOf(id).size; // team-lift sizes follow the class
@@ -68,4 +83,4 @@ export function crewClassCheck(ids) {
   const dup = (ids || []).length !== have.size;
   return { ok: !miss.length && !dup, miss, dup };
 }
-export const badgeImg = (id, cls = 'clsB') => { const c = classOf(id); return `<img class="${cls}" src="${c.badge}" alt="${c.name}" title="${c.name}">`; };
+export const badgeImg = (id, cls = 'clsB') => { const c = classOf(id); return `<img class="${cls}" src="${c.badge}" srcset="${c.badge} 1x, ${c.badge2x} 2x" alt="${c.name}" title="${c.name}" data-shape="${c.shape}">`; };

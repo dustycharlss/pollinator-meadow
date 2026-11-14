@@ -763,6 +763,53 @@ body.skipT.inRound #bSkipT{display:block}
 #tsIcons{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:26px;margin:8px 0 12px}
 #tsIcons span{background:#fff3d8;border:2px solid #3b2614;border-radius:10px;padding:2px 5px}
 #a2Cp{position:fixed;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 58px);transform:translateX(-50%);z-index:7;font:800 12px system-ui;background:#fff3d8;border:2px solid #3b2614;border-radius:10px;padding:2px 8px;display:none;pointer-events:none}
+
+/* ===== POLISH · accessibility P1 (Fern accessibility.md §1 §3 §4 §9) ===== */
+/* §9 touch targets: 44 px minimum, 48 where the spec asks */
+.ib,#bPause,#bJournal{width:48px;height:48px}
+body.adv #pipCard button{min-width:44px!important;min-height:44px!important;padding:10px 12px!important}
+#pause .tabs button,#hubTabs button{min-height:44px;padding:10px 12px}
+.lens button,.pill{min-height:44px;padding:10px 14px}
+@media (max-width:520px),(max-height:560px){.lens button,.pill{min-height:44px;padding:10px 13px}}
+#title.fd .lens button{min-height:44px;padding:10px 12px}
+#goalWrap .goalToggle{min-height:44px!important}
+#bHubMap{min-height:48px;padding:12px 18px}
+#bSkipT{min-height:48px;padding:12px 20px}
+#crewDock button .gearS::before{content:'';position:absolute;left:-12px;bottom:-12px;top:-6px;right:-6px;border-radius:50%}
+#jPrev,#jNext{min-width:44px;min-height:44px}
+/* §1 text size: --text is 0.85 / 1 / 1.15 / 1.3 */
+#toast{font-size:calc(17px * var(--text,1))}
+body.adv #toast{font-size:calc(14px * var(--text,1));max-width:min(86vw,calc(330px * var(--text,1)))}
+body.adv #pipCard>div{font-size:calc(12px * var(--text,1))!important}
+body.adv #pipCard{max-width:min(calc(220px * var(--text,1)),62vw)!important}
+body.adv #pipCard button{font-size:calc(11px * var(--text,1))!important}
+#kidW{font-size:calc(21px * var(--text,1))}
+#kidIc{font-size:calc(40px * var(--text,1))}
+#objT{font-size:calc(14px * var(--text,1))}
+#objT small{font-size:calc(11px * var(--text,1))}
+#hint{font-size:calc(12px * var(--text,1))}
+#goalWrap .goalToggle{font-size:calc(13px * var(--text,1))!important}
+html[data-text=xl] #objT{max-width:calc(100vw - 190px)}
+#kidNudge{font-size:calc(13px * var(--text,1))}
+/* §4 reduce motion */
+html.reduceMotion #kidCard,html.reduceMotion #kidHand,html.reduceMotion #kidFx,html.reduceMotion #kidFx *,html.reduceMotion #toast,html.reduceMotion #bPause,html.reduceMotion #bJournal,html.reduceMotion #objT,html.reduceMotion #shopChip,html.reduceMotion #kidIc span,html.reduceMotion #bFlag{animation:none!important;transition:none!important}
+/* §3 second class cue: shapes on the objective dot; colour-blind palette on the dock */
+#objT[data-shape=square] #objDot{border-radius:2px}
+#objT[data-shape=hex] #objDot{border-radius:0;clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)}
+html.cbOn #crewDock button.cls-scout{border-color:var(--c-scout)}html.cbOn #crewDock button.cls-trickster{border-color:var(--c-trickster)}html.cbOn #crewDock button.cls-bruiser{border-color:var(--c-bruiser)}
+/* kid nudge ("go back one step") + 🚩 back to flag */
+#kidNudge{margin-top:4px;padding:3px 10px;border-radius:10px;background:#ffe9a8;border:2px dashed var(--ink,#3b2614);font-weight:900;text-align:center;max-width:70vw}
+#bFlag{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(max(18px,env(safe-area-inset-bottom)) + 96px);z-index:9;min-height:48px;padding:10px 18px;border-radius:999px;border:3px solid var(--ink,#3b2614);background:#ffe07a;color:var(--ink,#3b2614);font:900 calc(16px * var(--text,1)) system-ui;box-shadow:0 3px 0 var(--ink,#3b2614);pointer-events:auto;cursor:pointer}
+#bFlag.on{display:block}
+body:not(.inRound) #bFlag{display:none!important}
+/* settings: Kids & access block */
+#settings .acc{margin-top:14px;padding-top:10px;border-top:2px dashed rgba(59,38,20,.35);text-align:left}
+#settings .acc h3{margin:0 0 6px;font-size:16px}
+#settings .acc label{display:flex;align-items:center;gap:8px;min-height:44px;font-weight:700}
+#settings .acc input[type=checkbox]{width:24px;height:24px;flex:none}
+#settings .acc .note{font-size:12px;opacity:.75;margin:-6px 0 6px 32px}
+#pAccess{margin-top:8px}
+.a2soon{grid-column:1/-1;padding:10px 12px;border:2px dashed rgba(59,38,20,.4);border-radius:14px;font-weight:800;opacity:.8;text-align:center}
 </style>
 </head>
 <body>
@@ -881,6 +928,7 @@ body.skipT.inRound #bSkipT{display:block}
 <div class="ov" id="pause"><div class="panel">
   <div class="tabs" id="hubTabs"><button data-tab="game" class="on">⏸ Game</button><button data-tab="animals">🐾 Animals</button><button data-tab="inv">🎒 Inventory</button><button data-tab="tech">🧬 Build/Tech</button><button data-tab="journal">📖 Journal</button><button data-tab="settings">⚙ Settings</button></div>
   <div class="tp on" id="tpGame"><h2>⏸ Paused</h2><p id="pauseInfo" style="text-align:center;font-weight:700"></p>
+  <div style="text-align:center"><button class="pill" id="pAccess" type="button">🌱 Easy off · 🔠 Medium</button></div>
   <button class="big" id="pResume">▶ Resume</button>
   <div class="row2"><button class="big sec" id="pRestart">↻ Restart round</button><button class="big sec" id="pValley">🗺️ Back to Valley</button><button class="big sec" id="pQuit">⌂ Quit to title</button></div>
   <div class="row2"><button class="big sec" id="pSkins">🎨 Skins</button><button class="big sec" id="pJournal">📖 Journal</button><button class="big sec" id="pSettings">⚙ Settings</button><button class="big sec" id="bNight">🌙 Day / night</button><button class="big sec" id="bSeason">🌸 Season</button><button class="big sec" id="bInfo">ℹ Credits</button><button class="big sec" id="pTech">🧬 Tech tree</button><button class="big sec" id="pAdmin">🛠 Admin</button></div>
@@ -901,8 +949,14 @@ body.skipT.inRound #bSkipT{display:block}
   <label><input type="checkbox" id="sMute"> Mute all sound</label>
   <div style="font-size:13px;margin-top:10px">Home pointer</div><div class="lens" id="indOpt" style="justify-content:flex-start;margin-top:6px"><button data-v="ring">◯ Ring</button><button data-v="arrow">➤ Arrow</button></div>
   <div style="font-size:13px;margin-top:10px">Round length (next round)</div><div class="lens" id="lens2" style="justify-content:flex-start;margin-top:6px"></div>
+  <div class="acc" id="sAccess"><h3>🧸 Kids &amp; access</h3>
+    <div style="font-size:13px">🔠 Text size</div><div class="lens" id="sText" style="justify-content:flex-start;margin-top:6px;flex-wrap:wrap"><button data-v="s">Small</button><button data-v="m">Medium</button><button data-v="l">Large</button><button data-v="xl">Extra large</button></div>
+    <label><input type="checkbox" id="sReduce"> Reduce motion</label><div class="note" id="sReduceH">Uses your device setting until you change it.</div>
+    <label><input type="checkbox" id="sEasy"> 🌱 Easy mode</label><div class="note">Slower sneak-critters, more time on timers. Stars still count, except the time star.</div>
+    <label><input type="checkbox" id="sCB"> 🎨 Color-blind class colors and shapes</label><div class="note">Class shapes (◯ Bee · ◇ Raccoon · ⬡ Bear) always show; this swaps the glow colors too.</div>
+  </div>
   <button class="big sec danger" id="sWipe" style="margin-top:18px">🗑 Full reset save…</button>
-  <p style="font-size:12px;opacity:.7">Wipes your gear, journal, animal homes, best scores and settings.</p>
+  <p style="font-size:12px;opacity:.7">Wipes your valley progress, rescued friends, gear, outfits, journal, best stars and settings.</p>
   <button class="big" id="sClose">Done</button>
 </div></div>
 <div class="ov" id="confirm"><div class="panel" style="max-width:360px"><h2 id="cfT">Are you sure?</h2><p id="cfP"></p><div class="row2"><button class="big sec" id="cfNo">Cancel</button><button class="big" id="cfYes">Yes</button></div></div></div>

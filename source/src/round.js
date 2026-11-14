@@ -5,13 +5,22 @@ const ROUND_KEY = 'pollinator-meadow-round-v1', BEST_KEY = 'pollinator-meadow-be
 export const CATS = [['gather', '🌼', 'Gathering'], ['building', '🔨', 'Building'], FEATURES.teamFoods ? ['team', '🤝', 'Teamwork foods & journal'] : ['team', '📖', 'Journal pages'], ['upkeep', '💧', 'Upkeep bonuses'], ['explore', '✨', 'Dewdrops'], ['admin', '🛠️', 'Admin bonus']];
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
 
-export function loadSettings() { return Object.assign({ len: 10, vol: 0.7, mute: false }, j(SET_KEY, {})); }
+/** POLISH accessibility: textSize 's'|'m'|'l'|'xl'; reduceMotion null = follow the device until the player touches it */
+export function loadSettings() { return Object.assign({ len: 10, vol: 0.7, mute: false, textSize: 'm', reduceMotion: null, easyMode: false, colorBlind: false }, j(SET_KEY, {})); }
 export function saveSettings(s) { try { localStorage.setItem(SET_KEY, JSON.stringify(s)); } catch (e) {} }
 export const bests = () => j(BEST_KEY, {});
 export function setBest(len, score) { const b = bests(); if (score > (b[len] || 0)) { b[len] = score; try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch (e) {} return true; } return false; }
 export const savedRound = () => { const r = j(ROUND_KEY, null); return r && !r.over && r.left > 3 ? r : null; };
 export const clearRound = () => { try { localStorage.removeItem(ROUND_KEY); } catch (e) {} };
-export function wipeAll() { try { ['pollinator-meadow-v1', ROUND_KEY, BEST_KEY, SET_KEY].forEach(k => localStorage.removeItem(k)); } catch (e) {} }
+/** Full reset: meadow save, round, bests, settings, valley, gear, skins, closet, hub talk, single-play bests/stars —
+ *  plus any later pm-/pm_/pollinator-meadow key. Device perf tuning (pm-perf*) is kept: it is not a save. */
+export const WIPE_KEYS = ['pollinator-meadow-v1', ROUND_KEY, BEST_KEY, SET_KEY, 'pm-valley-v1', 'pm_gear_v1', 'pm_skins_v1', 'pm_closet_v1', 'pm_hub_talk_v1', 'pm-best-sp', 'pm-stars-sp', 'pm-goals-collapsed', 'pm-hubcut', 'pm_unlock_all'];
+export function wipeAll() {
+  try {
+    WIPE_KEYS.forEach(k => localStorage.removeItem(k));
+    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && /^(pm[-_]|pollinator-meadow)/.test(k) && !/^pm-perf/.test(k)) localStorage.removeItem(k); }
+  } catch (e) {}
+}
 
 export function createRound(onChange) {
   const R = {
