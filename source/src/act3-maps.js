@@ -1,4 +1,4 @@
-// Act 3 maps (Fern act3-integration.md). Patch 1: Meadow Hub. Patch 2: S5 escort + S3 lures (Practice Yard sandbox).
+// Act 3 maps (Fern act3-integration.md). Patch 1: Meadow Hub. Patch 2: S5 escort + S3 lures (Practice Yard sandbox). Patch 3: S2 gear yard (stump, pouch, sling, glider).
 // Levels 17-24 are added here one patch at a time; a level tile is playable as soon as its map exists.
 export const MAPS3 = {
   // ===== S1 Meadow Hub: walk to a station to open it. Rescued friends move in and open features. =====
@@ -34,11 +34,11 @@ export const MAPS3 = {
   // ===== S5/S3 Practice Yard (sandbox, not a campaign level): escort + every new enemy lure =====
   act3_lab: {
     goal: 'Call the baby, try every lure, then bring your crew AND the cub to the 🏁 exit',
-    act2: true, loanGear: true, noStars: true, key: 'puzzles', ceil: 10, exit: [0, 24], par: 0,
-    bounds: { x0: -20, x1: 20, z0: -10, z1: 30 },
-    intro: ['📣 Tap Call (or C) so the badger cub follows you!', 'Try new lures: 🎶 whistle the fox, 🏮 bait the owl, 🌊 float the turtle, 🌬️ blow the wasps, ✨ pebble the crow, 🫧 bubble the web, 🏮 roll the badger, 💦 fill the cup.', '🏁 The exit needs all three friends AND the cub. Nobody gets hurt — a bonk just poofs you back to the 🚩 flag.'],
+    act2: true, loanGear: 'all', noStars: true, key: 'puzzles', ceil: 10, exit: [0, 24], par: 0,
+    bounds: { x0: -20, x1: 36, z0: -10, z1: 30 },
+    intro: ['📣 Tap Call (or C) so the badger cub follows you!', 'Try new lures: 🎶 whistle the fox, 🏮 bait the owl, 🌊 float the turtle, 🌬️ blow the wasps, ✨ pebble the crow, 🫧 bubble the web, 🏮 roll the badger, 💦 fill the cup.', '🧰 East gear yard: swap gear at the stump · 🫧 fill the pouch at the pond, douse embers · 🪨 Bear slings the far crystal · 🍃 glide the ravine.', '🏁 The exit needs all three friends AND the cub. Nobody gets hurt — a bonk just poofs you back to the 🚩 flag.'],
     build(B) {
-      B.home(0, 0); B.lane(-20, 20, -10, 30);
+      B.home(0, 0); B.lane(-20, 36, -10, 30);
       B.glade(0, 8); B.checkpoint(0, 4);
       B.escort('cub', 2.5, 1.5);
       // Fox + whistle lure onto a light plate (opens a little practice gate)
@@ -73,6 +73,16 @@ export const MAPS3 = {
       // Sprinkler fills a cup-switch
       B.sprinkler('spk', -3, 16, { yaw: 1.57, r: 7, beam: 0.28, sweep: 0.15, speed: 0.5 });
       B.cup('cup1', 3, 16, { fill: 1.4 });
+      // ===== S2 gear yard (Act 3 P3): every gear piece is on loan here =====
+      B.glade(27, 6, 0xd9c58a);
+      B.gearStump(24, 4);
+      B.pond('gyPond', 22, -8, 34, -4.5, { level: 'mid' });            // 🫧 fill the Bubble Pouch here
+      B.ember('gyE1', 28, 2, 1.6); B.ember('gyE2', 31.5, 2, 1.6);        // 🫧 douse from afar
+      B.cup('gyCup', 33, 9, { fill: 1.4 });                              // 🫧 a bubble fills it in one shot
+      B.seed('gySeed', 26, 10, { grow: 'pad' });                         // Trickster plants · 🫧 bubble waters from afar
+      B.slingTarget('gyGong', 30, 14.5, 5, { label: 'Far crystal' });   // 🪨 only a sling pebble reaches it
+      B.glideGap(21, 18, 35.5, 23);                                      // 🍃 about 4 tiles: glide it
+      for (let i = 0; i < 3; i++) B.pickup('petal', 25 + i * 3, 26, 0.9);
     },
   },
 };

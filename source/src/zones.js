@@ -885,18 +885,51 @@ export function createZones(scene, ctx) {
   let gear = gearLoad(); // { lantern, whistle (found) , eqL, eqW (equipped) }
   const gearSave = () => { try { localStorage.setItem(GEAR_KEY, JSON.stringify(gear)); } catch (e) {} };
   let sneak = false, a2 = null;
-  const a2New = () => ({ en: [], cps: [], cp: null, hides: [], ghosts: [], mirrors: [], srcs: [], beamPool: [], shades: [], ponds: [], logs: [], seeds: [], drips: [], pads: [], winds: [], puffs: [], acorn: null, rings: [], smokes: [], glowSteps: [], hidden: [], gifts: [], season: 'summer', seasonal: [], creeks: [], slides: [], bonks: 0, burst: null, pingT: -99, pingNext: 0, pingAt: null, wind: -1, windFlipT: -99, night: false, lastCur: null, stuck: null, dew: null, borrow: null, movers: [], gravel: [], swoosh: 0, safeT: 0, cpEl: null, terr: null, light: null, outlines: [], escorts: [], shots: [], cups: [], tools: [], heldTool: null });
+  const a2New = () => ({ en: [], cps: [], cp: null, hides: [], ghosts: [], mirrors: [], srcs: [], beamPool: [], shades: [], ponds: [], logs: [], seeds: [], drips: [], pads: [], winds: [], puffs: [], acorn: null, rings: [], smokes: [], glowSteps: [], hidden: [], gifts: [], season: 'summer', seasonal: [], creeks: [], slides: [], bonks: 0, burst: null, pingT: -99, pingNext: 0, pingAt: null, wind: -1, windFlipT: -99, night: false, lastCur: null, stuck: null, dew: null, borrow: null, movers: [], gravel: [], swoosh: 0, safeT: 0, cpEl: null, terr: null, light: null, outlines: [], escorts: [], shots: [], cups: [], tools: [], heldTool: null, stumps: [], embers: [], targets: [], pouch: { full: false }, slingT: -9, glide: 0, gviz: null });
   const AA = () => a2 || (a2 = a2New());
   const gearHas = k => !!(gear[k] || (a2 && a2.borrow && a2.borrow[k]));
-  const eqK = k => k === 'lantern' ? 'eqL' : 'eqW';
-  const borrowed = k => !gear[k] && !!(a2 && a2.borrow && a2.borrow[k]); // Trailhead loan: equip flags live on the loan, never saved
-  const gearOn = k => gearHas(k) && !!(borrowed(k) ? a2.borrow[eqK(k)] : gear[eqK(k)]);
-  const GEAR_OF = { scout: 'lantern', trickster: 'whistle' };
-  const GEAR_INFO = { lantern: { em: '🏮', name: 'Glow Lantern' }, whistle: { em: '🎶', name: 'Echo Whistle' } };
-  function setGear(k, on) {
-    if (!gearHas(k)) { tst(`🔒 Find the ${GEAR_INFO[k].name} in Owl Wood first`, 2000); return false; }
+  // ---- S2 gear (Act 3 P3): one gear slot per animal; swap at 🧰 gear stumps; G toggles the slotted piece on/off ----
+  // save pm_gear_v1: { lantern, whistle, pouch, glider, sling (found) · eqL/eqW/eqP/eqG/eqS (on) · slot: { scout, trickster, bruiser } }
+  const EQK = { lantern: 'eqL', whistle: 'eqW', pouch: 'eqP', glider: 'eqG', sling: 'eqS' };
+  const eqK = k => EQK[k];
+  const borrowed = k => !gear[k] && !!(a2 && a2.borrow && a2.borrow[k]); // loans (Trailhead, Practice Yard): equip flags live on the loan, never saved
+  const GEAR_INFO = {
+    lantern: { em: '🏮', name: 'Glow Lantern', cls: 'scout', where: 'Owl Wood' },
+    whistle: { em: '🎶', name: 'Echo Whistle', cls: 'trickster', where: 'Owl Wood' },
+    pouch: { em: '🫧', name: 'Bubble Pouch', cls: 'scout', where: 'Ember Ridge (level 17)', icon: 'ui/icons/act3/gear-bubble-pouch.png', glb: 'act3/gear/bubble-pouch', size: 0.62 },
+    glider: { em: '🍃', name: 'Leaf Glider', cls: 'trickster', where: 'Storm Orchard (level 21)', icon: 'ui/icons/act3/gear-leaf-glider.png', glb: 'act3/gear/leaf-glider', size: 2.6 },
+    sling: { em: '🪨', name: 'Pebble Sling', cls: 'bruiser', where: 'Mirror Caves (level 20)', icon: 'ui/icons/act3/gear-pebble-sling.png', glb: 'act3/gear/pebble-sling', size: 0.85 },
+  };
+  const ICON_TX = new Map();
+  function gearSprite(k, s) { // Squid's gear badge (falls back to the emoji)
+    const I = GEAR_INFO[k]; if (!I.icon) return emojiSprite(I.em, s);
+    let tx = ICON_TX.get(k); if (!tx) { tx = new THREE.TextureLoader().load(import.meta.env.BASE_URL + I.icon); tx.colorSpace = THREE.SRGBColorSpace; ICON_TX.set(k, tx); }
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, transparent: true, depthWrite: false })); sp.scale.set(s, s, 1); sp.renderOrder = 9; return sp;
+  }
+  /** Beans' CC0 gear model, scaled so its longest side = size; hides the blocky fallback once loaded */
+  function gearModel(k, holder, fallback, onLoad) {
+    const I = GEAR_INFO[k]; if (!I.glb) return;
+    loadGLB(I.glb).then(g => {
+      if (!g || !holder.parent) return;
+      const o = g.scene.clone(true); o.traverse(m => { if (m.isMesh) { const tr = m.material && m.material.transparent; m.material = lambertFrom(m.material); if (tr) { m.material.transparent = true; m.material.opacity = 0.7; m.material.depthWrite = false; } m.castShadow = false; } });
+      const sz = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3()), L = Math.max(sz.x, sz.y, sz.z); if (L < 1e-4) return;
+      o.scale.setScalar(I.size / L); holder.add(o); if (fallback) fallback.visible = false; holder.userData.model = o; onLoad?.(o);
+    });
+  }
+  const GEAR_BY_CLS = { scout: ['lantern', 'pouch'], trickster: ['whistle', 'glider'], bruiser: ['sling'] };
+  function slotOf(c) {
+    const L = GEAR_BY_CLS[c]; if (!L) return null;
+    const bo = a2 && a2.borrow;
+    if (bo) { const k = bo.slot && bo.slot[c]; if (k && gearHas(k)) return k; const b = L.find(q => bo[q]); if (b) return b; } // Trailhead loan: the loaned piece wins
+    const k = gear.slot && gear.slot[c]; if (k && gearHas(k)) return k;
+    return L.find(q => gearHas(q)) || L[0];
+  }
+  const gearOn = k => gearHas(k) && slotOf(GEAR_INFO[k].cls) === k && !!(borrowed(k) ? a2.borrow[eqK(k)] : gear[eqK(k)]);
+  function setSlot(c, k) { const bo = a2 && a2.borrow; if (bo) (bo.slot ||= {})[c] = k; if (gear[k]) { (gear.slot ||= {})[c] = k; gearSave(); } }
+  function setGear(k, on, quiet) {
+    if (!gearHas(k)) { tst(`🔒 Find the ${GEAR_INFO[k].name} in ${GEAR_INFO[k].where} first`, 2000); return false; }
     if (borrowed(k)) a2.borrow[eqK(k)] = !!on; else { gear[eqK(k)] = !!on; gearSave(); }
-    tst(`${GEAR_INFO[k].em} ${GEAR_INFO[k].name} ${on ? 'on' : 'off'}`, 1400); ctx.audio?.sample?.('ui2/gear-equip-clink', 0.4);
+    if (!quiet) { tst(`${GEAR_INFO[k].em} ${GEAR_INFO[k].name} ${on ? 'on' : 'off'}`, 1400); ctx.audio?.sample?.('ui2/gear-equip-clink', 0.4); }
     if (k === 'whistle' && on && a2) a2.pingNext = t; // ping right away
     ctx.onGear?.(); return true;
   }
@@ -1040,6 +1073,7 @@ export function createZones(scene, ctx) {
     resetEscorts(cp);
     if ((S.acorns || []).some(a => a.by === ctx.cur())) acornBack();
     fx(p.x, p.y + 0.6, p.z); ctx.audio?.sample?.('ui/error-bonk', 0.5);
+    if (src === 'ember') { tst('💨 Puff! Soot on your nose — poof, back to the 🚩 flag. Douse embers with a 🫧 bubble, or ring 🌱 spring to dim them', 2600); return; }
     tst(src === 'escort' ? `💫 Bonk! The ${e.name} reached the little one — poof, back to the 🚩 flag` : `💫 Bonk! The ${e.name} spotted you — poof, back to the 🚩 flag`, 2400);
   }
   function updEnemies(dt, cam, p, cur) {
@@ -1221,6 +1255,48 @@ export function createZones(scene, ctx) {
       S.tools.push({ kind, x: w.x, y: w.y, z: w.z, G, got: false, cls: kind === 'bubble' ? 'scout' : 'bruiser' });
     },
 
+    // ---- S2 gear (Act 3 P3) ----
+    /** 🧰 gear stump: any animal swaps its one gear slot between the pieces it has found */
+    gearStump(x, z, o = {}) {
+      const S = AA(), w = L2W(x, z), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.0, 0.9, 10), mat(0x8b6a45)); trunk.position.y = 0.45; G.add(trunk);
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(0.86, 0.86, 0.06, 10), mat(0xe2c08a)); top.position.y = 0.92; G.add(top);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.04, 4, 18), mat(0xa8824f)); ring.rotation.x = Math.PI / 2; ring.position.y = 0.96; G.add(ring);
+      for (const a of [0.4, 2.5, 4.4]) G.add(bx(0.35, 0.25, 0.55, 0x6b4a30, Math.cos(a) * 0.95, 0.12, Math.sin(a) * 0.95));
+      const box = new THREE.Group(); box.position.y = 1.0; G.add(box); box.add(bx(0.7, 0.32, 0.45, 0xd8463a, 0, 0.16, 0, 0.15), bx(0.74, 0.06, 0.49, 0xffd23f, 0, 0.33, 0, 0.3), bx(0.3, 0.1, 0.06, 0x3a3a40, 0, 0.42, 0));
+      const icons = new THREE.Group(); icons.position.y = 2.2; G.add(icons);
+      const ic = emojiSprite('🧰', 1.0); ic.position.y = 0.5; G.add(ic); ic.position.set(0, 2.0, 0);
+      const st = { x: w.x, y: w.y, z: w.z, G, icons, ic, ph: Math.random() * 6, auto: !!o.auto, shown: '' };
+      const pr = { kind: 'stump', act: 'gear', cls: null, sig: 'stump:' + S.stumps.length, x: w.x, y: w.y, z: w.z, r: 2.4, re: true, label: o.label || 'Gear stump', G, stump: st, r: 2.1 };
+      st.pr = pr; props.push(pr); S.stumps.push(st); return st;
+    },
+    /** smoldering grass patch (Ember Ridge): touch = soot-puff bonk; 🫧 bubble douses it; spring dims it (safe) */
+    ember(id, x, z, r = 1.6, o = {}) {
+      const S = AA(), w = L2W(x, z), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(r, 18).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x6a3a1a, emissive: 0xff5a1a, emissiveIntensity: 0.55, transparent: true, opacity: 0.92, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); disc.position.y = 0.07; G.add(disc);
+      const sparks = []; for (let i = 0; i < 7; i++) { const a = i / 7 * 6.28 + 0.3, d = r * (0.25 + 0.55 * ((i * 37) % 10) / 10), m = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), new THREE.MeshBasicMaterial({ color: i % 2 ? 0xffb43a : 0xff6a2a, transparent: true, opacity: 0.95 })); m.position.set(Math.cos(a) * d, 0.2, Math.sin(a) * d); G.add(m); sparks.push(m); }
+      const em = { id, x: w.x, y: w.y, z: w.z, r, G, disc, sparks, st: 'hot', dimSpring: o.dimSpring !== false };
+      S.embers.push(em); setSig('ember:' + id + ':hot'); return em;
+    },
+    /** far switch only a 🪨 Pebble Sling shot can ring (crystal / gong up high) */
+    slingTarget(s, x, z, h = 4, o = {}) {
+      const S = AA(), w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
+      G.add(bx(0.2, h, 0.2, 0x6a6a70, 0, -h / 2, 0));
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.75), mat(o.col || 0x9fe8ff, 0.45)); G.add(gem);
+      const tg = emojiSprite('🎯', 0.9); tg.position.y = 1.4; G.add(tg);
+      const q = { sig: s, x: w.x, y: w.y, z: w.z, G, gem, tg, done: false, label: o.label || 'Far crystal', onHit: o.onHit };
+      S.targets.push(q); return q;
+    },
+    /** ravine too wide to hop: a Trickster gliding with the 🍃 Leaf Glider crosses (about 4 tiles); Scouts fly it */
+    glideGap(x0, z0, x1, z1, o = {}) {
+      const w = L2W((x0 + x1) / 2, (z0 + z1) / 2), W2 = x1 - x0, D2 = z1 - z0;
+      const pit = new THREE.Mesh(new THREE.BoxGeometry(W2, 0.12, D2), new THREE.MeshLambertMaterial({ color: 0x1d2b3a, emissive: 0x0d1a2a, emissiveIntensity: 0.4 })); pit.position.set(w.x, w.y + 0.06, w.z); group.add(pit);
+      const mist = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xcfe6ff, transparent: true, opacity: 0.28, depthWrite: false })); mist.position.set(w.x, w.y + 0.5, w.z); group.add(mist);
+      const along = W2 > D2;
+      for (let i = 0; i < 8; i++) { const k = (i + 0.5) / 8; for (const side of [-1, 1]) { const rx = along ? x0 + k * W2 : (side < 0 ? x0 : x1), rz = along ? (side < 0 ? z0 : z1) : z0 + k * D2, rw = L2W(rx, rz); group.add(bx(0.7, 0.35 + (i % 3) * 0.12, 0.7, i % 2 ? 0x9a968c : 0x8a8578, rw.x, rw.y + 0.15, rw.z)); } }
+      const rect = { x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1, off: false, glide: true, mist };
+      deep.push(rect); return rect;
+    },
     sprinkler(id, x, z, o = {}) { const e = enemy('sprinkler', id, x, z, { r: o.r || 7, beam: o.beam || 0.22, ...o }); e.cone = coneMesh(e.o.r, e.o.beam, 0x7fd8ff); e.F.add(e.cone); e.F.rotation.y = e.baseYaw; e.grace = o.grace ?? 0.45; if (o.high) { const H = Math.min(o.high, 8), cg = new THREE.PlaneGeometry(e.o.r, H).rotateY(Math.PI / 2); cg.translate(0, H / 2, e.o.r / 2); const cur = new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ color: 0x9fe4ff, transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide })); e.cone.add(cur); for (let i = 0; i < 9; i++) { const k = (i + 1) / 10, d = bx(0.34, 0.34, 0.34, 0xbfeeff, 0, 0.6 + H * 0.9 * Math.sin(Math.PI * k * 0.85), e.o.r * k); d.material = new THREE.MeshBasicMaterial({ color: 0xbfeeff, transparent: true, opacity: 0.8 }); e.cone.add(d); } } return e; },
     mower(id, x0, x1, z, o = {}) { const e = enemy('mower', id, x0, z, { x0, x1, period: o.period || 9, dur: o.dur || 3.2, yaw: Math.PI / 2, ...o }); e.grace = 0.05; const L = Math.abs(x1 - x0), m = new THREE.Mesh(new THREE.PlaneGeometry(L + 2, 2.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff6a3a, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); const w = L2W((x0 + x1) / 2, z); m.position.set(w.x, w.y + 0.1, w.z); group.add(m); e.lane = m; return e; },
     gravel(x0, z0, x1, z1) { const S = AA(); S.gravel.push({ x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1 }); const w = L2W((x0 + x1) / 2, (z0 + z1) / 2); const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.08, z1 - z0), mat(0xb8b0a0)); m.position.set(w.x, w.y + 0.05, w.z); group.add(m); for (let i = 0; i < 14; i++) { const s = bx(0.3, 0.15, 0.3, 0x8a8478, w.x + (Math.sin(i * 7.1) * 0.5) * (x1 - x0), w.y + 0.1, w.z + (Math.cos(i * 3.3) * 0.5) * (z1 - z0)); group.add(s); } },
@@ -1300,7 +1376,7 @@ export function createZones(scene, ctx) {
     glowStep(x, z, w, d, top, o = {}) { const r = this.wall(x, z, w, d, top, { bot: top - 0.5, c: 0x9fe8ff }); r.m.material = new THREE.MeshLambertMaterial({ color: 0x9fe8ff, emissive: 0x3aa0e8, emissiveIntensity: 0.9, transparent: true, opacity: 0.0, depthWrite: false }); r.s.off = true; AA().glowSteps.push({ r, x: A.x + x, z: A.z + z, on: false }); },
     hiddenStep(x, z, w, d, top) { const r = this.wall(x, z, w, d, top, { bot: top - 0.4, c: 0xc9b6ff }); r.m.material = new THREE.MeshBasicMaterial({ color: 0xd9c6ff, transparent: true, opacity: 0, depthWrite: false, wireframe: false }); AA().hidden.push({ r, x: A.x + x, z: A.z + z, kind: 'step' }); },
     hiddenLever(s, x, z, o = {}) { this.lever(s, x, z, o); const pr = props[props.length - 1]; pr.secret = true; pr.found = false; pr.G.visible = false; pr.icon.visible = false; const sv = pr.act; pr.act = null; pr._act = sv; AA().hidden.push({ pr, x: pr.x, z: pr.z, kind: 'switch' }); },
-    gift(kind, x, z, h = 0.6) { const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.1, 0.8, 1.1, 0x5fae4a, 0, 0, 0, 0.3), bx(1.15, 0.18, 0.2, 0xff6bd6, 0, 0.1, 0, 0.4), bx(0.2, 0.18, 1.15, 0xff6bd6, 0, 0.1, 0, 0.4)); const sp = emojiSprite(GEAR_INFO[kind].em, 1.1); sp.position.y = 1.2; G.add(sp);
+    gift(kind, x, z, h = 0.6) { const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.1, 0.8, 1.1, 0x5fae4a, 0, 0, 0, 0.3), bx(1.15, 0.18, 0.2, 0xff6bd6, 0, 0.1, 0, 0.4), bx(0.2, 0.18, 1.15, 0xff6bd6, 0, 0.1, 0, 0.4)); const sp = gearSprite(kind, 1.3); sp.position.y = 1.3; G.add(sp);
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloMap(), color: new THREE.Color(0xffe680), transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false })); halo.scale.set(3, 3, 1); G.add(halo);
       AA().gifts.push({ kind, x: w.x, y: w.y, z: w.z, G, got: false }); },
     // ---- M7 Seasons ----
@@ -1368,16 +1444,145 @@ export function createZones(scene, ctx) {
   function beamSeg(i, a, b) { const S = AA(); let m = S.beamPool[i]; if (!m) { m = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff27a, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })); m.renderOrder = 6; group.add(m); S.beamPool[i] = m; }
     const d = new THREE.Vector3(b.x - a.x, b.y - a.y, b.z - a.z), L = d.length(); m.visible = L > 0.05; m.scale.set(1, L, 1); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
 
-  function throwTool(kind, tx, tz, from) {
+  // ===== S2 gear (Act 3 P3) runtime =====
+  function autoStump() { // replays of older levels: a stump by the start whenever a class has 2+ pieces to choose from
+    const S = AA(); if (S.stumps.length || recipe.kid || recipe.hub) return;
+    if (!Object.keys(GEAR_BY_CLS).some(c => GEAR_BY_CLS[c].filter(k => gearHas(k)).length > 1)) return;
+    const h = homeAt ? { x: homeAt.x - A.x, z: homeAt.z - A.z } : { x: 0, z: 0 };
+    B.gearStump(h.x + 3.2, h.z - 2.2, { auto: true });
+  }
+  function stumpSwap(pr) {
+    const c = clsOfCur(), C = CLASSES[c], L = GEAR_BY_CLS[c].filter(k => gearHas(k));
+    if (!L.length) { const k = GEAR_BY_CLS[c][0]; say(`🧰 Your ${C.name} has no gear yet — the ${GEAR_INFO[k].em} ${GEAR_INFO[k].name} is found in ${GEAR_INFO[k].where}`, 2600); return true; }
+    const cur = slotOf(c), on = gearOn(cur);
+    const next = L.length > 1 ? L[(L.indexOf(cur) + 1) % L.length] : cur;
+    if (next === cur && on) { say(`🧰 ${GEAR_INFO[cur].em} ${GEAR_INFO[cur].name} is already in your ${C.name}'s gear slot`, 2000); return true; }
+    setSlot(c, next); setGear(next, true, true);
+    pr.stump.swapT = t; fx(pr.x, pr.y + 1.4, pr.z); ctx.audio?.sample?.('ui2/gear-equip-clink', 0.5);
+    tst(`🧰 ${C.name} gear slot: ${GEAR_INFO[next].em} ${GEAR_INFO[next].name}${L.length > 1 ? ` (tap again for ${GEAR_INFO[L[(L.indexOf(next) + 1) % L.length]].em})` : ''}`, 2200);
+    return true;
+  }
+  /** Interact with nothing in reach: use the slotted gear (🫧 bubble shot, 🪨 sling pebble) */
+  function useGear(p) {
+    const S = a2, c = clsOfCur(); if (!S || tw) return false;
+    if (c === 'scout' && gearOn('pouch')) {
+      if (!S.pouch.full) { say('🫧 The Bubble Pouch is empty — fly low over a creek or pond to fill it', 2200); return true; }
+      const tg = gearTarget(p, 'pouch'); S.pouch.full = false; ctx.onGear?.();
+      const yaw = p.yaw || 0, to = tg || { x: p.x + Math.sin(yaw) * 9, z: p.z + Math.cos(yaw) * 9 };
+      return throwTool('bubble', to.x, to.z, p, { src: 'pouch', ty: tg && tg.ty, msg: tg ? `🫧 Bubble shot at the ${tg.label}!` : '🫧 Bubble shot!' });
+    }
+    if (c === 'bruiser' && gearOn('sling')) {
+      if (t - S.slingT < 0.9) return true; S.slingT = t;
+      const tg = gearTarget(p, 'sling'), yaw = p.yaw || 0, to = tg || { x: p.x + Math.sin(yaw) * 11, z: p.z + Math.cos(yaw) * 11 };
+      return throwTool('pebble', to.x, to.z, p, { src: 'sling', ty: tg && tg.ty, msg: tg ? `🪨 Sling! A shiny pebble flies at the ${tg.label}` : '🪨 Sling! A shiny pebble flies' });
+    }
+    return false;
+  }
+  function gearTarget(p, kind) {
+    const S = a2, yaw = p.yaw || 0, fx0 = Math.sin(yaw), fz0 = Math.cos(yaw), out = [];
+    const add = (q, label, ty, R = 18) => { const d = flatD(q, p); if (d < 0.5 || d > R) return; const dot = ((q.x - p.x) * fx0 + (q.z - p.z) * fz0) / d; out.push({ x: q.x, z: q.z, ty, label, sc: dot > 0.5 ? d : d * 4 + 20 }); }; // what you face wins
+    if (kind === 'pouch') {
+      for (const e of S.embers) if (e.st !== 'out') add(e, 'ember patch', undefined, 16);
+      for (const w of props) if (w.kind === 'web' && !w.done) add(w, 'spider web', undefined, 16);
+      for (const q of S.cups) if (!q.on) add(q, 'cup-switch', undefined, 16);
+      for (const sd of S.seeds) if (sd.planted && !sd.grown) add(sd, 'planted seed', undefined, 16);
+    } else {
+      for (const q of S.targets) if (!q.done) add(q, q.label.toLowerCase(), q.y, 20);
+      for (const e of S.en) if (['crow', 'fox', 'spider', 'owl', 'turtle'].includes(e.kind)) add(e, e.name || e.kind, undefined, 16);
+    }
+    out.sort((a, b) => a.sc - b.sc); return out[0] || null;
+  }
+  function growSeed(sd) {
+    if (sd.grown) return; sd.grown = true; setSig('grown:' + sd.id); fx(sd.x, sd.y + 1, sd.z); ctx.audio?.chime?.();
+    if (sd.vine) { sd.vine.leaves.forEach(l => { l.visible = true; }); tst('🌿 A vine ladder grew! Tricksters can climb it', 2200); } if (sd.pad) { sd.pad.P.visible = true; sd.pad.s.off = false; tst('🍄 A bouncy mushroom grew! Bear bounces highest', 2200); }
+  }
+  function emberOut(em) { em.st = 'out'; em.G.visible = false; setSig('ember:' + em.id + ':hot', false); setSig('ember:' + em.id + ':out'); fx(em.x, em.y + 0.6, em.z); tst('🫧 Fsssh! The ember patch is out', 1800); ctx.audio?.sample?.('ui2/lantern-click', 0.4); }
+  /** a landed pouch bubble / sling pebble: returns true when it was used up */
+  function shotLand(sh) {
+    const S = a2; if (!S) return false;
+    if (sh.kind === 'bubble' && sh.src === 'pouch') {
+      const em = S.embers.find(e => e.st !== 'out' && Math.hypot(e.x - sh.x, e.z - sh.z) < e.r + 1.2); if (em) { emberOut(em); return true; }
+      const cup = S.cups.find(q => !q.on && Math.hypot(q.x - sh.x, q.z - sh.z) < 1.8); if (cup) { cup.amt = cup.fill; tst('🫧 Splash! The bubble fills the cup', 1600); return true; }
+      const sd = S.seeds.find(q => q.planted && !q.grown && Math.hypot(q.x - sh.x, q.z - sh.z) < 2); if (sd) { tst('🫧 The bubble waters the seed from afar!', 1600); growSeed(sd); return true; }
+      return true; // the bubble pops on the grass
+    }
+    if (sh.kind === 'shiny' && sh.src === 'sling') {
+      const q = S.targets.find(g => !g.done && Math.hypot(g.x - sh.x, g.z - sh.z) < 1.8 && Math.abs(g.y - sh.y) < 2.5);
+      if (q) { q.done = true; q.gem.material = mat(0xffd23f, 0.9); q.tg.visible = false; setSig(q.sig); q.onHit?.(); fx(q.x, q.y, q.z); ctx.audio?.sample?.('contest/win-jingle', 0.4); tst(`🎯 Ding! The pebble rang the ${q.label.toLowerCase()}`, 1800); return true; }
+      for (const e of S.en) { const d = flatD(e, sh); if (d > 9) continue;
+        if (e.kind === 'fox' && !e.pingLure) { e.pingLure = { x: sh.x, z: sh.z, phase: 'go' }; tst('🦊 The fox trots off to sniff the pebble…', 1600); }
+        else if ((e.kind === 'spider' || e.kind === 'turtle') && !e.look) { e.look = { x: sh.x, z: sh.z, until: t + 6 }; tst(`👀 The ${e.name || e.kind} turns to look at the pebble`, 1600); } }
+      return false; // stays a few seconds as a shiny lure (crows swoop at it)
+    }
+    return false;
+  }
+  function gearViz() {
+    const S = a2; if (S.gviz) return S.gviz; const V = {};
+    V.pouch = new THREE.Group(); V.pouch.add(bx(0.34, 0.36, 0.22, 0x5ab8ff, 0, 0, 0, 0.2), bx(0.36, 0.08, 0.24, 0x2f6aa8, 0, 0.18, 0)); V.bub = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), new THREE.MeshLambertMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.75, emissive: 0x3aa0e8, emissiveIntensity: 0.5 })); V.bub.position.y = 0.38; V.pouch.add(V.bub);
+    V.glider = new THREE.Group(); const lf = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.06, 1.3), mat(0x6fbf4a, 0.15)); V.glider.add(lf, bx(0.08, 0.08, 1.4, 0x3f8a35, 0, 0.04, 0), bx(0.06, 0.9, 0.06, 0x8b6a45, 0, -0.45, 0)); for (const sx of [-1, 1]) V.glider.add(bx(0.7, 0.05, 0.9, 0x5fae4a, sx * 1.25, 0.08, -0.1));
+    V.sling = new THREE.Group(); V.sling.add(bx(0.1, 0.5, 0.1, 0x8b5a2b, 0, 0, 0), bx(0.08, 0.36, 0.08, 0x8b5a2b, -0.12, 0.38, 0), bx(0.08, 0.36, 0.08, 0x8b5a2b, 0.12, 0.38, 0), bx(0.34, 0.04, 0.04, 0xe5485a, 0, 0.52, 0), bx(0.14, 0.14, 0.14, 0xffe680, 0, 0.52, -0.08, 0.6));
+    for (const k of ['pouch', 'glider', 'sling']) {
+      V[k].visible = false; group.add(V[k]);
+      const H = new THREE.Group(); V[k].add(H); const fb = V[k].children.filter(c => c !== H);
+      const box = { visible: true }; Object.defineProperty(box, 'visible', { set(v) { fb.forEach(c => { if (c !== V.bub) c.visible = v; }); } });
+      gearModel(k, H, box, o => { if (k === 'pouch') { V.bubM = []; o.traverse(n => { if (/^bubble/.test(n.name)) V.bubM.push(n); }); V.bub.visible = false; V.bubOff = true; }
+        if (k === 'glider') H.rotation.y = Math.PI; if (k === 'sling') H.position.y = -0.1; });
+    }
+    return (S.gviz = V);
+  }
+  function updGear(dt, p, cur, c) {
+    const S = a2; if (!S) return; const V = gearViz();
+    // stumps: bob the toolbox, show the current class's choices
+    for (const st of S.stumps) {
+      st.pr.cls = c; st.ic.position.y = 2.0 + Math.sin(t * 2 + st.ph) * 0.12; 
+      const L = GEAR_BY_CLS[c].filter(k => gearHas(k)), key = c + L.join() + slotOf(c);
+      if (key !== st.shown) { st.shown = key; while (st.icons.children.length) st.icons.children.pop(); L.forEach((k, i) => { const sp = gearSprite(k, k === slotOf(c) ? 1.05 : 0.75); sp.position.set((i - (L.length - 1) / 2) * 1.0, 0.6, 0); if (k !== slotOf(c)) sp.material.opacity = 0.55; st.icons.add(sp); }); }
+      st.ic.material.opacity = flatD(st, p) < 6 ? 1 : 0.8;
+    }
+    // 🫧 Bubble Pouch: fills by flying low over water
+    const sid = idOfCls('scout'), sq = sid && posOfId(sid), pouchOn = gearOn('pouch') && sq;
+    if (pouchOn && !S.pouch.full) {
+      const gyq = ctx.heightAt(sq.x, sq.z), low = sq.y - gyq < 3.2;
+      const wet = low && (WATER_RECTS.some(r => Math.abs(sq.x - r.x) < r.hw + 0.4 && Math.abs(sq.z - r.z) < r.hd + 0.4) || S.cups.some(q => q.on && flatD(q, sq) < 1.6));
+      if (wet) { S.pouch.full = true; ctx.onGear?.(); ctx.audio?.sample?.('ui/select-pop', 0.4); if (sid === cur) tst('🫧 Glug! The Bubble Pouch is full — tap Interact to shoot the bubble', 2200); setSig('pouch:full'); }
+    }
+    if (!pouchOn || !S.pouch.full) setSig('pouch:full', false);
+    V.pouch.visible = !!pouchOn; if (pouchOn) { const yw = sq.yaw || 0; V.pouch.position.set(sq.x - Math.cos(yw) * 0.35, sq.y + 0.55, sq.z + Math.sin(yw) * 0.35); V.pouch.rotation.y = yw; if (V.bubOff) { for (const n of V.bubM) n.visible = S.pouch.full; } else V.bub.visible = S.pouch.full; V.bub.scale.setScalar(1 + Math.sin(t * 5) * 0.08); }
+    // 🍃 Leaf Glider: slow fall + rides the wind (current Trickster only)
+    const tid = idOfCls('trickster'), tq = tid && posOfId(tid), gOn = gearOn('glider') && tq;
+    let gliding = false;
+    if (gOn && tid === cur && !p.grounded && !tw) {
+      const air = p.y - ctx.heightAt(p.x, p.z);
+      if (p.vy < 0 && air > 0.4 && S.glide < 1.6) { gliding = true; S.glide += dt; p.vy = Math.max(p.vy, -1.5); }
+      for (const w of S.winds) if (p.x > w.x0 && p.x < w.x1 && p.z > w.z0 && p.z < w.z1 && S.wind) { gliding = true; p.x += w.dx * S.wind * w.push * 0.6 * dt; p.z += w.dz * S.wind * w.push * 0.6 * dt; if (S.wind > 0) { p.vy = Math.max(p.vy, Math.min(p.vy + 6 * dt, 2.2)); S.glide = Math.max(0, S.glide - dt * 2); } }
+    }
+    if (p.grounded) S.glide = 0;
+    if (gliding && !S.wasGlide) setSig('glided'); S.wasGlide = gliding;
+    V.glider.visible = !!gOn; if (gOn) { const yw = tq.yaw || 0, up = gliding ? 1.9 : 1.25; V.glider.position.set(tq.x, tq.y + up, tq.z); V.glider.rotation.set(gliding ? -0.12 : 0.25, yw, gliding ? Math.sin(t * 3) * 0.08 : 0); V.glider.scale.setScalar(gliding ? 1 : 0.55); }
+    // 🪨 Pebble Sling on Bear's side
+    const bid = idOfCls('bruiser'), bq = bid && posOfId(bid), sOn = gearOn('sling') && bq;
+    V.sling.visible = !!sOn; if (sOn) { const yw = bq.yaw || 0, sw = t - S.slingT < 0.3 ? -1.2 : 0; V.sling.position.set(bq.x + Math.cos(yw) * 0.95, bq.y + 1.3, bq.z - Math.sin(yw) * 0.95); V.sling.rotation.set(sw, yw, 0.2); }
+    // embers: spring dims them (safe to cross), touching a hot patch = gentle soot-puff bonk
+    for (const em of S.embers) {
+      if (em.st === 'out') continue;
+      const dim = em.dimSpring && S.season === 'spring'; const want = dim ? 'dim' : 'hot';
+      if (want !== em.st) { em.st = want; setSig('ember:' + em.id + ':hot', want === 'hot'); setSig('ember:' + em.id + ':dim', want === 'dim'); em.disc.material.emissiveIntensity = want === 'dim' ? 0.12 : 0.55; }
+      em.sparks.forEach((m, i) => { m.position.y = 0.2 + ((t * (em.st === 'hot' ? 0.9 : 0.25) + i * 0.37) % 1) * (em.st === 'hot' ? 1.1 : 0.3); m.material.opacity = em.st === 'hot' ? 0.95 : 0.35; });
+      if (em.st === 'hot' && t > S.safeT && flatD(em, p) < em.r - 0.15 && p.y - em.y < 1.2) { bonk({ name: 'ember' }, 'ember'); break; }
+    }
+    for (const q of S.targets) if (!q.done) q.gem.rotation.y += dt * 1.2;
+  }
+  function throwTool(kind, tx, tz, from, o = {}) {
     const S = AA(), p = from || ctx.getP(); if (!p) return false;
     const k = kind === 'bubble' ? 'bubble' : 'shiny';
-    const bx2 = tx, bz = tz, by = (ctx.heightAt(tx, tz) || p.y) + 0.4;
+    const bx2 = tx, bz = tz; let by = (ctx.heightAt(tx, tz) || p.y) + 0.4;
     const m = k === 'bubble'
       ? new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), new THREE.MeshLambertMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.7, emissive: 0x3aa0e8, emissiveIntensity: 0.4 }))
       : new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.28), mat(0xffe680, 0.7));
     m.position.set(p.x, p.y + 1.1, p.z); group.add(m);
-    S.shots.push({ kind: k, m, ax: p.x, ay: p.y + 1.1, az: p.z, bx: bx2, by, bz, x: p.x, y: p.y + 1.1, z: p.z, t: 0, t0: t, landed: false, dead: false });
-    S.heldTool = null; tst(k === 'bubble' ? '🫧 Bubble shot!' : '✨ Shiny pebble thrown!', 1200); ctx.audio?.blip?.(3);
+    if (o.ty != null) by = o.ty;
+    S.shots.push({ kind: k, m, ax: p.x, ay: p.y + 1.1, az: p.z, bx: bx2, by, bz, x: p.x, y: p.y + 1.1, z: p.z, t: 0, t0: t, landed: false, dead: false, src: o.src || 'tool' });
+    if (!o.src) S.heldTool = null; tst(o.msg || (k === 'bubble' ? '🫧 Bubble shot!' : '✨ Shiny pebble thrown!'), 1200); ctx.audio?.blip?.(3);
     return true;
   }
   function cutWebAt(x, z) {
@@ -1396,7 +1601,7 @@ export function createZones(scene, ctx) {
         sh.y = sh.ay + (sh.by - sh.ay) * k + Math.sin(k * Math.PI) * 1.8;
         sh.m.position.set(sh.x, sh.y, sh.z);
         if (sh.kind === 'bubble' && cutWebAt(sh.x, sh.z)) { sh.dead = true; continue; }
-        if (k >= 1) { sh.landed = true; sh.t = 0; sh.y = sh.by; sh.m.position.y = sh.y; if (sh.kind === 'bubble') cutWebAt(sh.x, sh.z); }
+        if (k >= 1) { sh.landed = true; sh.t = 0; sh.y = sh.by; sh.m.position.y = sh.y; if (sh.kind === 'bubble') cutWebAt(sh.x, sh.z); if (shotLand(sh)) { sh.dead = true; continue; } }
       } else if (sh.t > 7) sh.dead = true;
     }
     for (let i = S.shots.length - 1; i >= 0; i--) if (S.shots[i].dead) { S.shots[i].m.removeFromParent(); S.shots.splice(i, 1); }
@@ -1434,6 +1639,7 @@ export function createZones(scene, ctx) {
     return true;
   }
   function babyCanStep(b, nx, nz) {
+    if (a2 && a2.embers.some(em => em.st === 'hot' && Math.hypot(nx - em.x, nz - em.z) < em.r + 0.4)) return false; // the cub only crosses dimmed or doused embers
     const y0 = ctx.heightAt(b.x, b.z), y1 = ctx.heightAt(nx, nz);
     if (y1 - y0 > 0.85) return false;
     if (y0 - y1 > 1.4) return false;
@@ -1528,8 +1734,7 @@ export function createZones(scene, ctx) {
     for (const d of S.drips) { d.d.position.y = -0.4 - ((t * 0.6) % 1) * 0.3; if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
     if (S.dew) { const q = posOfId(S.dew.who); if (q) S.dew.m.position.set(q.x, q.y + 1.4 + Math.sin(t * 4) * 0.1, q.z); }
     for (const sd of S.seeds) {
-      if (sd.planted && !sd.grown && S.dew && S.dew.who === cur && flatD(sd, p) < 2.0 && Math.abs(p.y - sd.y) < 3) { sd.grown = true; S.dew.m.removeFromParent(); S.dew = null; setSig('grown:' + sd.id); fx(sd.x, sd.y + 1, sd.z); ctx.audio?.chime?.();
-        if (sd.vine) { sd.vine.leaves.forEach(l => { l.visible = true; }); tst('🌿 A vine ladder grew! Tricksters can climb it', 2200); } if (sd.pad) { sd.pad.P.visible = true; sd.pad.s.off = false; tst('🍄 A bouncy mushroom grew! Bear bounces highest', 2200); } }
+      if (sd.planted && !sd.grown && S.dew && S.dew.who === cur && flatD(sd, p) < 2.0 && Math.abs(p.y - sd.y) < 3) { S.dew.m.removeFromParent(); S.dew = null; growSeed(sd); }
       if (sd.vine && sd.grown) sd.vine.leaves.forEach((l, i) => { l.scale.setScalar(Math.min(1, (l.userData.g = (l.userData.g || 0) + dt * 2) - i * 0.12) || 0.001); });
     }
     for (const sd of S.pads) { if (!sd.grown) continue; const pd = sd.pad; if (flatD(pd, p) < 1.3 && Math.abs(p.y - pd.y) < 0.6 && p.vy <= 0.1 && !tw) { if (c === 'bruiser' && pd.to) { tween(p, { x: pd.to.x, y: pd.to.y + 0.4, z: pd.to.z }, 1.0, 3.2); tst('🍄 BOING! Bear bounces sky-high!', 1600); } p.vy = pd.v[c] || 14; p.grounded = false; p.y = pd.y + 0.1; p._gY = -1e9; fx(pd.x, pd.y, pd.z); ctx.audio?.blip?.(5); pd.P.scale.y = 0.6; if (c === 'bruiser') setSig('bounce:' + sd.id); } pd.P.scale.y += (1 - pd.P.scale.y) * Math.min(1, dt * 6); }
@@ -1574,9 +1779,10 @@ export function createZones(scene, ctx) {
       tst(found ? '🎶 Echo-ping! A hidden switch appeared' : '🎶 Echo-ping! Hidden paths glow for 5 s', 1600); setSig('ping'); }
     for (const h of S.hidden) if (h.kind === 'step') { const on = t - (h.showT ?? -99) < 5; h.r.m.material.opacity = on ? 0.55 + 0.25 * Math.sin(t * 6) : 0; }
     for (let i = S.outlines.length - 1; i >= 0; i--) { const o = S.outlines[i], k = (t - o.t0) / 1.2; o.m.scale.set(1 + k * 14, 1, 1 + k * 14); o.m.userData.mats[0].opacity = Math.max(0, 0.8 * (1 - k)); if (k >= 1) { o.m.removeFromParent(); S.outlines.splice(i, 1); } }
-    for (const gf of S.gifts) { if (gf.got) continue; gf.G.rotation.y += dt; gf.G.position.y = gf.y + Math.sin(t * 2) * 0.15; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; gear[gf.kind] = true; gear[gf.kind === 'lantern' ? 'eqL' : 'eqW'] = true; gearSave(); if (gf.kind === 'whistle') S.pingNext = t; setSig('gift:' + gf.kind); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GEAR_INFO[gf.kind].em} You found the ${GEAR_INFO[gf.kind].name}! Tap ${GEAR_INFO[gf.kind].em} on the ${gf.kind === 'lantern' ? 'Scout' : 'Trickster'}'s picture (or G) to switch it on/off`, 4200); } }
+    for (const gf of S.gifts) { if (gf.got) continue; gf.G.rotation.y += dt; gf.G.position.y = gf.y + Math.sin(t * 2) * 0.15; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; const GI = GEAR_INFO[gf.kind], gc = GI.cls; gear[gf.kind] = true; gear[eqK(gf.kind)] = true; (gear.slot ||= {})[gc] = gf.kind; if (S.borrow && S.borrow.slot) S.borrow.slot[gc] = gf.kind; gearSave(); if (gf.kind === 'whistle') S.pingNext = t; setSig('gift:' + gf.kind); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GI.em} You found the ${GI.name}! Tap ${GI.em} on the ${CLASSES[gc].name}'s picture (or G) to switch it on/off${GEAR_BY_CLS[gc].length > 1 ? ' · swap gear at a 🧰 gear stump' : ''}`, 4200); } }
     // ---- webs: Scouts get stuck for 3 s and the spider turns to look ----
     for (const pr of props) if (pr.kind === 'web' && !pr.done && c === 'scout' && !S.stuck && t > S.safeT && Math.abs(p.x - pr.x) < pr.ww / 2 + 0.6 && Math.abs(p.z - pr.z) < 1.3 && p.y - pr.y < pr.wh) { S.stuck = { who: cur, x: p.x, y: p.y, z: p.z, until: t + 3 }; if (pr.spider) pr.spider.look = { x: pr.x, z: pr.z, until: t + 3.5 }; tst('🕸️ Stuck in the web for 3 seconds!', 1800); }
+    updGear(dt, p, cur, c);
     updEnemies(dt, cam, p, cur);
     updShots(dt);
     updCups(dt);
@@ -1683,7 +1889,8 @@ export function createZones(scene, ctx) {
     setSig('day', true); setSig('night', false); setSig('wind:down', S.wind < 0); setSig('wind:up', S.wind > 0);
     for (const it of S.seasonal) { const on = S.season === it.when; it.pr.s.off = !on; it.pr.m.visible = on; }
     if (recipe.night) setNightA2(true);
-    if (recipe.loanGear && !S.borrow) { S.borrow = { lantern: true, whistle: true, eqL: true, eqW: false }; ctx.onGear?.(); }
+    if (recipe.loanGear && !S.borrow) { S.borrow = recipe.loanGear === 'all' ? { lantern: true, whistle: true, pouch: true, glider: true, sling: true, eqL: true, eqW: false, eqP: true, eqG: true, eqS: true, slot: { scout: 'lantern', trickster: 'whistle', bruiser: 'sling' } } : { lantern: true, whistle: true, eqL: true, eqW: false }; ctx.onGear?.(); }
+    autoStump();
     S.cp = null;
   }
   function crewAt(x, z, r) {
@@ -1766,6 +1973,7 @@ export function createZones(scene, ctx) {
   function tween(p, to, dur, arc, done) { tw = { p, a: { x: p.x, y: p.y, z: p.z }, b: to, t: 0, d: dur, arc, done }; }
   function fx(x, y, z) { ctx.fx?.(x, y, z); }
   function doAct(pr, p) {
+    if (pr.act === 'gear') return stumpSwap(pr);
     const c = clsOfCur(), C = CLASSES[pr.cls];
     if (pr.cls !== c) { say(`${C.em} Only a ${C.name} can ${ACTS[pr.act].verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
     if (pr.need && !isOn(pr.need)) { say('🔒 ' + (pr.needWhy || 'Not yet — something else has to happen first'), 2600); return true; }
@@ -1837,6 +2045,7 @@ export function createZones(scene, ctx) {
         const yaw = p.yaw || 0; return throwTool('pebble', p.x + Math.sin(yaw) * 10, p.z + Math.cos(yaw) * 10, p);
       }
     }
+    if (!pr && a2 && useGear(p)) return true;
     if (!pr) {
       const m = props.find(q => q.kind === 'plate' && dFlat(p, q) < 2.2);
       if (m) { say(`${m.plate.heavy ? '🐻 Heavy plate — only Bear is heavy enough' : '🟩 Stand here and it stays held'} · then swap to another friend`, 2400); return true; }
@@ -1853,6 +2062,7 @@ export function createZones(scene, ctx) {
       const A2 = ACTS[pr.act], ok = pr.cls === c;
       out.push({ icon: img(CLASSES[pr.cls].abIcon), ik: 'class-act', label: `${A2.verb}`, dis: !ok, why: `Only a ${CLASSES[pr.cls].name} can do this — swap!`, on: () => doAct(pr, ctx.getP()) });
     }
+    if (!pr && a2) { const gk = slotOf(c); if ((gk === 'pouch' || gk === 'sling') && gearOn(gk)) out.push({ icon: img(import.meta.env.BASE_URL + GEAR_INFO[gk].icon), ik: 'gear-act', label: gk === 'pouch' ? (a2.pouch.full ? 'Shoot Bubble' : 'Pouch empty') : 'Sling Pebble', dis: gk === 'pouch' && !a2.pouch.full, why: '🫧 Fly low over a creek or pond to fill the pouch', on: () => useGear(ctx.getP()) }); }
     for (const k of C.acts) {
       if (pr && pr.act === k) continue;
       if (out.length >= 3) break;
@@ -1864,12 +2074,16 @@ export function createZones(scene, ctx) {
   function inRect(x, z, r) { return x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1; }
   function deepBlock(q, idd, isCur) {
     if (!deep.length || CLASS_OF[idd] === 'scout') return;
-    const inD = deep.some(r => !r.off && inRect(q.x, q.z, r));
+    const gliding = CLASS_OF[idd] === 'trickster' && isCur && gearOn('glider') && !q.grounded;
+    const inD = deep.some(r => !r.off && inRect(q.x, q.z, r) && !(gliding && r.glide));
+    const gapR = !inD && gliding && deep.find(r => !r.off && r.glide && inRect(q.x, q.z, r));
+    if (gapR) return; // mid-glide over the gap: keep the last safe spot on the take-off edge
     const cr = crossings.find(c => c.on && inRect(q.x, q.z, c));
     const thinBlock = cr && cr.thin && CLASS_OF[idd] === 'bruiser';
     if (inD && (!cr || thinBlock)) {
       if (q._safe) { q.x = q._safe.x; q.z = q._safe.z; q.vx = (q.vx || 0) * -0.3; q.vz = (q.vz || 0) * -0.3; }
-      if (isCur) say(thinBlock ? '🐻 Too thin for Bear — he needs the ford or a sturdy crossing' : '💧 Too deep to swim! Only Scouts fly over — build a crossing', 2000);
+      const gr = deep.find(r => !r.off && r.glide && inRect(q.x, q.z, r));
+      if (isCur) say(gr ? (CLASS_OF[idd] === 'trickster' ? (gearHas('glider') ? '🍃 Too wide to hop — switch on the Leaf Glider, then jump and glide across' : '🍃 Too wide to hop — a Trickster with the Leaf Glider could glide it') : '🐻 Too wide for Bear — find another way round') : thinBlock ? '🐻 Too thin for Bear — he needs the ford or a sturdy crossing' : '💧 Too deep to swim! Only Scouts fly over — build a crossing', 2000);
     } else q._safe = { x: q.x, z: q.z };
   }
   function hubInit() {
@@ -2358,8 +2572,12 @@ export function createZones(scene, ctx) {
     placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
     escort: () => a2 ? a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), y: +b.y.toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })) : [], heldTool: () => a2 ? a2.heldTool : null,
     moody() { return !!(a2 && recipe && recipe.moody) ? !!AA().night : null; },
-    gearInfo(c) { const k = GEAR_OF[c]; if (!k || !a2) return null; return { k, em: GEAR_INFO[k].em, name: GEAR_INFO[k].name, has: gearHas(k), on: gearOn(k), borrowed: !gear[k] && gearHas(k) }; },
-    toggleGear(c) { const k = GEAR_OF[c || CLASS_OF[ctx.cur()]]; if (!k || !a2) return false; return setGear(k, !gearOn(k)); },
-    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, dew: !!a2.dew, heldTool: a2.heldTool, cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0 })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })) } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
+    gearInfo(c) { const k = slotOf(c); if (!k || !a2) return null; const own = GEAR_BY_CLS[c].filter(q => gearHas(q)); return { k, em: GEAR_INFO[k].em, icon: GEAR_INFO[k].icon ? import.meta.env.BASE_URL + GEAR_INFO[k].icon : null, name: GEAR_INFO[k].name, has: gearHas(k), on: gearOn(k), borrowed: !gear[k] && gearHas(k), own, full: k === 'pouch' ? !!a2.pouch.full : undefined }; },
+    toggleGear(c) { const k = slotOf(c || CLASS_OF[ctx.cur()]); if (!k || !a2) return false; return setGear(k, !gearOn(k)); },
+    swapGear(c, k) { if (!a2 || !GEAR_BY_CLS[c] || !GEAR_BY_CLS[c].includes(k) || !gearHas(k)) return false; setSlot(c, k); setGear(k, true, true); return true; },
+    useGear: () => { const p = ctx.getP(); return !!(a2 && p && useGear(p)); },
+    gearViz: () => { const V = a2 && a2.gviz; if (!V) return null; const o = {}; for (const k of ['pouch', 'glider', 'sling']) { const m = V[k].children.find(c => c.userData && c.userData.model); const sz = m && m.visible !== false && V[k].visible ? new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3()) : null; o[k] = { shown: V[k].visible, model: !!m, size: sz ? [+sz.x.toFixed(2), +sz.y.toFixed(2), +sz.z.toFixed(2)] : null }; } return o; },
+    gearList: () => Object.keys(GEAR_INFO).map(k => ({ k, ...GEAR_INFO[k], has: !!gear[k] })),
+    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0 })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })) } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }

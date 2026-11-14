@@ -1178,7 +1178,7 @@ function renderCrewDock() {
     };
     b.onpointerleave = () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; } };
     { const gi = zones && zones.gearInfo ? zones.gearInfo(cl.id) : null;
-      if (gi && gi.has) { const gs = document.createElement('span'); gs.className = 'gearS' + (gi.on ? ' on' : '') + (gi.borrowed ? ' bor' : ''); gs.dataset.g = cl.id; gs.textContent = gi.em; gs.title = `${gi.name} · tap to switch ${gi.on ? 'off' : 'on'} (G)`;
+      if (gi && gi.has) { const gs = document.createElement('span'); gs.className = 'gearS' + (gi.on ? ' on' : '') + (gi.borrowed ? ' bor' : ''); gs.dataset.g = cl.id; if (gi.icon) gs.innerHTML = `<img src="${gi.icon}" alt="${gi.em}" draggable="false" style="width:100%;height:100%;object-fit:contain">`; else gs.textContent = gi.em; gs.title = `${gi.name} · tap to switch ${gi.on ? 'off' : 'on'} (G)`;
         gs.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); }; gs.onpointerup = e => { e.preventDefault(); e.stopPropagation(); zones.toggleGear(cl.id); renderCrewDock(); }; b.appendChild(gs); } }
     dock.appendChild(b);
   });
@@ -1227,7 +1227,7 @@ function onHubStation(k) {
   if (k === 'map') { vActPage = vActPage || 1; openValleyMap(); }
   else if (k === 'crew') openSkinPick(() => {});
   else if (k === 'dock') { toast('🐥 Pond Dock · replay any level, stars shown on every tile', 2400); openValleyMap(); }
-  else if (k === 'bench') toast('🔧 Badger Bramble: The Gear Bench is still being built — new gear arrives soon!', 3200);
+  else if (k === 'bench') { const L = zones && zones.gearList ? zones.gearList() : [], got = L.filter(g => g.has); toast(`🔧 Badger Bramble: ${got.length ? 'Your gear: ' + got.map(g => g.em + ' ' + g.name).join(' · ') + '.' : 'No gear yet!'} ${L.filter(g => !g.has).map(g => g.em + ' ' + g.name + ' is in ' + g.where).join(' · ')}${L.some(g => !g.has) ? '.' : ''} One gear slot each — swap at 🧰 gear stumps. Try them all in the 🧪 Practice Yard!`, 6000); }
   else if (k === 'closet') { toast('👗 Costume Closet · looks are just for fun', 2200); openSkinPick(() => {}); }
   else if (k === 'stars') { vActPage = 3; openValleyMap(); }
   else if (k === 'lab') startValleyPatch('act3_lab');

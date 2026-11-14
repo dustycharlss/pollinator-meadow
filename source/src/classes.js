@@ -58,6 +58,7 @@ export const ACTS = {
   slide: { cls: 'trickster', verb: 'Belly-slide', icon: '🛷' },
   stomp: { cls: 'bruiser', verb: 'Stomp Puff', icon: '🍄' },
   pick: { cls: null, verb: 'Pick Up', icon: '🌰' },
+  gear: { cls: null, verb: 'Swap Gear', icon: '🧰' }, // Act 3 S2 gear stump (any class)
   drop: { cls: null, verb: 'Hand Off', icon: '⭕' },
 };
 /** valley crews need one of each class */
