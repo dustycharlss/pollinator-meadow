@@ -104,7 +104,13 @@ export function createAudio() {
     sample(name, vol = 0.5, rate = 1) {
       if (!ctx || muted) return;
       let e = samples.get(name);
-      if (!e) { e = { buf: null }; samples.set(name, e); fetch(import.meta.env.BASE_URL + 'audio/sfx/' + name + '.' + EXT_SFX).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && ctx.decodeAudioData(a)).then(b => { e.buf = b; if (b && e.want && ctx.currentTime - e.want < 0.25) api.sample(name, vol, rate); }).catch(() => {}); }
+      if (!e) {
+        e = { buf: null }; samples.set(name, e);
+        // Act 3 cues are Opus .ogg + AAC .m4a (Beans re-encode); older one-shots are Vorbis .ogg + .m4a. An .ogg that will not decode retries the .m4a once.
+        const ext0 = /^act3\//.test(name) ? EXT : EXT_SFX, url = x => import.meta.env.BASE_URL + 'audio/sfx/' + name + '.' + x;
+        const load = x => fetch(url(x)).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && ctx.decodeAudioData(a));
+        load(ext0).catch(() => ext0 === 'ogg' ? load('m4a') : null).then(b => { e.buf = b || null; if (b && e.want && ctx.currentTime - e.want < 0.25) api.sample(name, vol, rate); }).catch(() => {});
+      }
       if (!e.buf) { e.want = ctx.currentTime; return; }
       const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = e.buf; s.playbackRate.value = rate; g.gain.value = vol; s.connect(g); g.connect(/^ui2?\//.test(name) && bus.ui ? bus.ui : sfxOut()); s.start();
     },
