@@ -818,6 +818,21 @@ body:not(.inRound) #bFlag{display:none!important}
 #load .lsFill{left:4px;top:4px;height:18px;width:18px;min-width:18px;box-sizing:border-box;border:0 solid transparent;border-width:0 9px;border-image:url(./splash/components/progress-fill@3x.png) 0 27 fill / 0 9px stretch;transition:width .2s linear}
 #load .lsFrame{inset:0;background:url(./splash/components/progress-frame@2x.png);background-image:-webkit-image-set(url(./splash/components/progress-frame.png) 1x,url(./splash/components/progress-frame@2x.png) 2x,url(./splash/components/progress-frame@3x.png) 3x);background-image:image-set(url(./splash/components/progress-frame.png) 1x,url(./splash/components/progress-frame@2x.png) 2x,url(./splash/components/progress-frame@3x.png) 3x);background-size:100% 100%}
 
+
+#load.fail{pointer-events:auto}
+#load.fail .lsBar,#load.fail .lsTxt{visibility:hidden}
+#loadFail{display:none;position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);z-index:2;width:min(420px,calc(100% - 32px));box-sizing:border-box;padding:18px 16px 14px;background:#fff3d8;color:#3b2614;border:3px solid #3b2614;border-radius:18px;box-shadow:0 4px 0 #3b2614,0 12px 28px rgba(59,38,20,.35);text-align:center;pointer-events:auto}
+#load.fail #loadFail{display:block}
+#loadFail p{margin:0 0 14px;font-size:18px;font-weight:800;line-height:1.25}
+#loadRetry{pointer-events:auto;cursor:pointer;border:2px solid #3b2614;border-radius:12px;background:#ffd23f;color:#3b2614;font:800 16px ui-rounded,system-ui,sans-serif;padding:10px 22px;box-shadow:0 2px 0 #3b2614}
+#loadRetry:active{transform:translateY(1px);box-shadow:0 1px 0 #3b2614}
+#loadFail details{margin-top:12px;text-align:left;font-size:13px;font-weight:700;color:#3b2614}
+#loadFail details summary{cursor:pointer;list-style:none;display:inline-block;padding:4px 0}
+#loadFail details summary::-webkit-details-marker{display:none}
+#loadFail details summary::after{content:' ▾';opacity:.7}
+#loadFail details[open] summary::after{content:' ▴'}
+#loadFail pre{margin:8px 0 0;max-height:30vh;overflow:auto;white-space:pre-wrap;word-break:break-word;background:rgba(59,38,20,.08);border-radius:10px;padding:8px 10px;font:12px/1.35 ui-monospace,Menlo,monospace;font-weight:500}
+
 /* polish2: Squid settings kit (assets-incoming/ui-settings) — Settings hub, Accessibility, Credits, parent gate, For parents */
 .ov.ks{background:rgba(59,38,20,.45);backdrop-filter:blur(3px);padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));z-index:11;color:#3b2614;font-size:calc(15px * var(--text,1))}
 #parentGate.ks,#confirm{z-index:12}
@@ -881,7 +896,7 @@ body:not(.inRound) #bFlag{display:none!important}
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="load" class="ls"><picture><source media="(orientation:landscape)" srcset="./splash/splash-landscape-844x390.webp 1x, ./splash/splash-landscape-844x390@2x.webp 2x, ./splash/splash-landscape-844x390@3x.webp 3x"><img class="lsBg" src="./splash/splash-portrait-390x844@2x.webp" srcset="./splash/splash-portrait-390x844.webp 1x, ./splash/splash-portrait-390x844@2x.webp 2x, ./splash/splash-portrait-390x844@3x.webp 3x" alt=""></picture><div class="lsTitle">Pollinator Meadow</div><div id="loadTxt" class="lsTxt">Planting flowers…</div><div class="lsBar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="lsTrack"></i><i id="loadBar" class="lsFill"></i><i class="lsFrame"></i></div></div>
+<div id="load" class="ls"><picture><source media="(orientation:landscape)" srcset="./splash/splash-landscape-844x390.webp 1x, ./splash/splash-landscape-844x390@2x.webp 2x, ./splash/splash-landscape-844x390@3x.webp 3x"><img class="lsBg" src="./splash/splash-portrait-390x844@2x.webp" srcset="./splash/splash-portrait-390x844.webp 1x, ./splash/splash-portrait-390x844@2x.webp 2x, ./splash/splash-portrait-390x844@3x.webp 3x" alt=""></picture><div class="lsTitle">Pollinator Meadow</div><div id="loadTxt" class="lsTxt">Planting flowers…</div><div class="lsBar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="lsTrack"></i><i id="loadBar" class="lsFill"></i><i class="lsFrame"></i></div><div id="loadFail" hidden><p>Something went wrong loading the meadow</p><button type="button" id="loadRetry">Retry</button><details id="loadFailDetails"><summary>details</summary><pre id="loadFailText"></pre></details></div></div>
 
 <div class="hud" id="tl">
   <div class="chip" id="spChip"><span class="em" id="spEm">🐝</span><span><span id="spName">Honeybee</span><span class="dd"> ▾</span><br><span style="font-weight:400;font-size:11px;opacity:.9" id="carryTxt">0 / 8 pollen</span></span></div>
@@ -1073,6 +1088,76 @@ body:not(.inRound) #bFlag{display:none!important}
   <div class="ksHead"><button class="ksIco ksBack" id="crClose" type="button" aria-label="Back"></button><h2>Credits</h2></div>
   <div class="ksPanel"><div class="ksScroll" id="crBody"><p>Thanks to everyone whose work is in this game.</p></div></div>
 </div></div>
-<script type="module" src="/src/main.js"></script>
+<script>
+(function () {
+  var LIMIT = 20000;
+  var done = false, shown = false, errors = [];
+  function textOf(x) {
+    if (!x) return '';
+    if (typeof x === 'string') return x;
+    if (x.stack) return String(x.stack);
+    if (x.message) return String(x.message);
+    return String(x);
+  }
+  function fmt(ev, typ) {
+    if (ev && ev.reason) return typ + ': ' + textOf(ev.reason);
+    if (ev && ev.error) return typ + ': ' + textOf(ev.error);
+    if (ev && ev.message) return typ + ': ' + ev.message + (ev.filename ? ' (' + ev.filename + ':' + ev.lineno + ')' : '');
+    return typ + ': ' + textOf(ev);
+  }
+  function details() {
+    return errors.length ? errors.join('\n\n') : 'The meadow took too long to load.';
+  }
+  function showFail(reason) {
+    if (done) return;
+    window.__bootFailed = true;
+    if (reason) {
+      var line = textOf(reason);
+      if (line && errors.indexOf(line) < 0) errors.push(line);
+    }
+    var L = document.getElementById('load');
+    var box = document.getElementById('loadFail');
+    var pre = document.getElementById('loadFailText');
+    if (pre) pre.textContent = details();
+    if (L) { L.classList.add('fail'); L.style.opacity = '1'; L.style.pointerEvents = 'auto'; }
+    if (box) box.hidden = false;
+    shown = true;
+  }
+  window.__bootOk = function () {
+    if (window.__bootFailed) return;
+    done = true;
+    window.__bootReady = true;
+    if (timer) clearTimeout(timer);
+  };
+  window.__bootFail = showFail;
+  window.addEventListener('error', function (ev) { if (!done) showFail(fmt(ev, 'Error')); });
+  window.addEventListener('unhandledrejection', function (ev) { if (!done) showFail(fmt(ev, 'Unhandled promise rejection')); });
+  var timer = setTimeout(function () {
+    if (done || window.__bootFailed) return;
+    var title = document.getElementById('title');
+    var load = document.getElementById('load');
+    var titleOn = title && title.classList.contains('on');
+    var loadGone = !load || !load.isConnected || load.style.opacity === '0';
+    var playable = document.body.classList.contains('inRound') || document.body.classList.contains('inValley');
+    if ((titleOn || playable) && loadGone) { window.__bootOk(); return; }
+    showFail('Timed out after 20 seconds waiting for the title.');
+  }, LIMIT);
+  try {
+    if (new URLSearchParams(location.search).has('failtest')) {
+      setTimeout(function () { showFail('failtest: forced boot error'); }, 0);
+    }
+  } catch (e) {}
+  document.addEventListener('click', function (ev) {
+    var t = ev.target;
+    if (!t || t.id !== 'loadRetry') return;
+    ev.preventDefault();
+    var u = new URL(location.href);
+    u.searchParams.delete('failtest');
+    u.searchParams.set('_', String(Date.now()));
+    location.replace(u.toString());
+  });
+})();
+</script>
+<script type="module" src="/src/main.js" onerror="window.__bootFail&&window.__bootFail('Failed to load the game script')"></script>
 </body>
 </html>

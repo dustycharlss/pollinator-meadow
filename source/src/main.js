@@ -71,7 +71,35 @@ const $ = id => document.getElementById(id);
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && innerWidth < 1100);
 const QUALITY = isMobile ? 0.55 : 1;
 const canvas = $('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
+if (new URLSearchParams(location.search).has('failtest')) {
+  const err = new Error('failtest: forced boot error');
+  window.__bootFail?.(err);
+  throw err;
+}
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
+  if (!renderer.getContext()) throw new Error('WebGL context was not created');
+} catch (e) {
+  window.__bootFail?.(e);
+  throw e;
+}
+// During boot, surface shader compile/link failures in the loader fail UI.
+renderer.debug.checkShaderErrors = true;
+renderer.debug.onShaderError = (gl, program, vs, fs) => {
+  const msg = [
+    'Shader compile or link failed',
+    (gl.getProgramInfoLog(program) || '').trim(),
+    'vertex: ' + (gl.getShaderInfoLog(vs) || '').trim(),
+    'fragment: ' + (gl.getShaderInfoLog(fs) || '').trim(),
+  ].filter(Boolean).join('\n');
+  console.error(msg);
+  window.__bootFail?.(msg);
+};
+canvas.addEventListener('webglcontextlost', ev => {
+  ev.preventDefault();
+  if (!window.__bootReady) window.__bootFail?.(new Error('WebGL context lost during load'));
+});
 // art pass: pixel ratio + tone mapping now come from look.js / perf.js tiers (phones capped at 1.5, Neutral tone mapping)
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isMobile ? 1.25 : 2)); renderer.outputColorSpace = THREE.SRGBColorSpace;
 const scene = new THREE.Scene();
@@ -2238,7 +2266,11 @@ async function boot() {
   weather = buildWeather(scene);
   if (SPECIES[cur].nocturnal !== (nightOf(clock.t) > 0.5)) setNight(SPECIES[cur].nocturnal, true);
   curNight = nightOf(clock.t) > 0.5; $('bNight').textContent = curNight ? '☀️ Switch to day' : '🌙 Switch to night'; $('bSeason').textContent = SEASON_INFO[clock.season].emoji + ' Season: ' + SEASON_INFO[clock.season].name; night = nightOf(clock.t); updateNight(0.01);
-  state.musicLive = true; look.start(); setLoad(1, 'Ready'); $('load').style.opacity = 0; setTimeout(() => $('load').remove(), 700);
+  state.musicLive = true; look.start(); setLoad(1, 'Ready');
+  try { look.render(); } catch (e) { window.__bootFail?.(e); throw e; }
+  if (window.__bootFailed) return;
+  window.__bootOk?.();
+  const loadEl = $('load'); if (loadEl) { loadEl.style.opacity = 0; setTimeout(() => { if (!window.__bootFailed) $('load')?.remove(); }, 700); }
   buildCards(); loop(performance.now());
   buildLens(); refreshTitle(); syncMixUi(); $('sMute').checked = !!settings.mute; applyMix(); applyAccess(); audio.setMute(settings.mute);
   const X = { round, terr, build, adm, rivals, goals, onb, items, looks, save, get weather() { return weather; },
@@ -2554,4 +2586,4 @@ function loop(now) {
   const covered = !playing && $('title').classList.contains('on');
   state.covT = (state.covT || 0) - rdt; if (!covered || state.covT <= 0) { state.covT = 2; look.render(); }
 }
-boot().catch(e => { console.error('boot failed', e); $('loadTxt').textContent = 'Failed to load: ' + e.message; });
+boot().catch(e => { console.error('boot failed', e); window.__bootFail?.(e); });
