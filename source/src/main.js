@@ -1337,7 +1337,7 @@ function refreshTitle() {
   const L = settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', ls = spStars()[L + ':' + settings.len] || 0;
   $('bestTxt').textContent = ls ? `${SPECIES[L].emoji} Best (${settings.len} min): ${starStr(ls)}` : `No ${settings.len}-minute stars yet as ${SPECIES[L].name}. Earn up to ⭐⭐⭐!`;
 }
-function saveRound() { if (noSave || !round || !playing || !round.running || round.over || round.free) return; round.save({ tiers: tiers && tiers.serialize(), build: build.serialize(), helpers: helpers && helpers.serialize(), tech: tech && tech.serialize(), lead, roundDone, savedAt: Date.now() }); }
+function saveRound() { if (noSave || (net && net.isClient) || !round || !playing || !round.running || round.over || round.free) return; round.save({ tiers: tiers && tiers.serialize(), build: build.serialize(), helpers: helpers && helpers.serialize(), tech: tech && tech.serialize(), lead, roundDone, savedAt: Date.now() }); }
 addEventListener('pagehide', saveRound);
 
 function beginRound() {
@@ -1372,7 +1372,9 @@ function startNew(len) {
     toast('🌼 Meadow still waking — starting in a moment…', 2000);
     return;
   }
-  if (dirty || savedRound()) { try { sessionStorage.setItem('pm-auto', JSON.stringify({ len, lead: settings.lead, mode: settings.mode, patch: valleySession ? valleySession.patchId : null })); } catch (e) {} clearRound(); noSave = true; location.reload(); return; }
+  // NEWFLAG means this tab just reloaded to start a patch. Don't reload again if
+  // another tab (N1 client) wrote a shared localStorage save in the meantime.
+  if (!NEWFLAG && (dirty || savedRound())) { try { sessionStorage.setItem('pm-auto', JSON.stringify({ len, lead: settings.lead, mode: settings.mode, patch: valleySession ? valleySession.patchId : null })); } catch (e) {} clearRound(); noSave = true; location.reload(); return; }
   round.reset(len); round.mode = settings.mode === 'relaxed' ? 'relaxed' : 'challenge'; setLead(settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', true); selectSpecies(lead, true); if (!valleySession) unifyHomes(null, null, lead); if (hazards) hazards.resetRound(); if (rivals) rivals.resetRound(lead); tech.reset(); if (tiers) tiers.reset(); for (const k in convAcc) delete convAcc[k]; if (crew) crew.arcade = !valleySession; if (valleySession) { updateHealUi(); } else { document.body.classList.remove('packReady'); } beginRound();
 }
 function toTitle() { persist(); saveRound(); noSave = true; try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }
