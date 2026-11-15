@@ -503,7 +503,23 @@ const MAPS = {
 };
 
 Object.assign(MAPS, MAPS2, MAPS3);
-export function createZones(scene, ctx) {
+export function createZones(scene, host) {
+  let focusId = null;
+  const ctx = Object.assign(Object.create(host), {
+    getP() {
+      const id = focusId != null ? focusId : host.cur();
+      if (id == null) return host.getP();
+      return id === host.cur() ? host.getP() : (host.parked(id) || host.getP());
+    },
+    cur() { return focusId != null ? focusId : host.cur(); },
+    driven() {
+      const list = typeof host.driven === 'function' ? host.driven() : null;
+      if (Array.isArray(list) && list.length) return list.filter(Boolean);
+      const c = host.cur();
+      return c ? [c] : [];
+    },
+  });
+  const withFocus = (id, fn) => { const prev = focusId; focusId = id; try { return fn(); } finally { focusId = prev; } };
   const group = new THREE.Group(); scene.add(group);
   let solids = [], picks = [], nodes = [], hoops = [], nightDews = [], star = null;
   let petalV = 0, homeAt = null, A = { x: 0, z: 0 }, baseY = 0, recipe = null, id = null, picked = 0, keyDone = false, msgT = 0, t = 0;
@@ -1091,7 +1107,7 @@ export function createZones(scene, ctx) {
   }
   const inCone = (e, q, r, half, yaw = e.yaw) => { const dx = q.x - e.x, dz = q.z - e.z, d = Math.hypot(dx, dz); if (d > r) return false; if (d < 0.6) return true; return (dx * Math.sin(yaw) + dz * Math.cos(yaw)) / d >= Math.cos(half); };
   const flatD = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
-  function bearAt(q, r) { const bid = idOfCls('bruiser'); if (!bid || bid === ctx.cur()) return false; const b = ctx.parked(bid); return !!b && flatD(b, q) < r && Math.abs(b.y - q.y) < 2.8; }
+  function bearAt(q, r) { const bid = idOfCls('bruiser'); if (!bid || ctx.driven().includes(bid)) return false; const b = ctx.parked(bid); return !!b && flatD(b, q) < r && Math.abs(b.y - q.y) < 2.8; }
   function hidden(q, kind) { const S = AA(); return S.hides.some(h => (!kind || h.kind === kind || (kind === 'canopy' && h.kind === 'canopy')) && flatD(h, q) < h.r && (h.kind !== 'canopy' || q.y < h.y)); }
   function losBlocked(e, q) { // trunks between the owl and the animal block its gaze
     for (const h of AA().hides) { if (h.kind !== 'trunk') continue; const ax = q.x - e.x, az = q.z - e.z, L = Math.hypot(ax, az); if (L < 0.1) continue; const u = ((h.x - e.x) * ax + (h.z - e.z) * az) / (L * L); if (u <= 0.05 || u >= 1) continue; const px = e.x + ax * u, pz = e.z + az * u; if (Math.hypot(h.x - px, h.z - pz) < h.r) return true; }
@@ -1103,7 +1119,7 @@ export function createZones(scene, ctx) {
     const spd = Math.hypot(p.vx || 0, p.vz || 0); if (spd < 0.6) return 0;
     if (c === 'bruiser' && S.night && recipe.quietBear) return 0; // the bear sleep-walks quietly at night
     if (onGravel) return 6;
-    return sneak ? 1 : c === 'bruiser' ? 7 : 5.5;
+    return (p.sneak || sneak) ? 1 : c === 'bruiser' ? 7 : 5.5;
   }
   // detection per kind → true when the active animal is noticed right now
   function sees(e, p, id) {
@@ -1126,7 +1142,7 @@ export function createZones(scene, ctx) {
         const tiny = c === 'scout', hide = tiny && (hidden(q, 'log') || bearAt(q, 1.8));
         if (hide) return false;
         if (inCone(e, q, e.o.cone[0], e.o.cone[1])) return true;
-        if (!tiny || sneak || S.season === 'winter') return false; // sneaking + winter snow hide scent
+        if (!tiny || p.sneak || sneak || S.season === 'winter') return false; // sneaking + winter snow hide scent
         return flatD(e, q) < e.o.ring;
       }
       case 'sprinkler': if (e.paused) return false; return q.y - e.gy < (e.o.high || 3) && inCone(e, q, e.o.r, e.o.beam, e.sweepYaw);
@@ -1254,13 +1270,22 @@ export function createZones(scene, ctx) {
       if (e.cone && e.kind !== 'sprinkler') e.cone.rotation.y = e.yaw;
       // awareness: ? (grace) then ! (react)
       const asleep = (e.kind === 'owl' && !S.night) || (e.kind === 'turtle' && t < (e.napT || -1)) || e.calm || e.paused;
-      let see = !asleep && t > S.safeT && !tw && sees(e, p, cur);
-      const grace0 = e.kind === 'owl' && gearOn('lantern') && c === 'scout' ? 0.35 : e.grace, grace = ctx.easy?.() ? (e.kind === 'mower' ? Math.max(0.35, grace0 * EASY.grace) : grace0 * EASY.grace) : grace0;
+      let see = false, seeId = null;
+      if (!asleep && t > S.safeT && !tw) {
+        const ids = ctx.driven();
+        const check = ids.length ? ids : (cur ? [cur] : []);
+        for (const idd of check) {
+          const q = posOfId(idd);
+          if (q && sees(e, q, idd)) { see = true; seeId = idd; break; }
+        }
+      }
+      const seeCls = seeId ? CLASS_OF[seeId] : c;
+      const grace0 = e.kind === 'owl' && gearOn('lantern') && seeCls === 'scout' ? 0.35 : e.grace, grace = ctx.easy?.() ? (e.kind === 'mower' ? Math.max(0.35, grace0 * EASY.grace) : grace0 * EASY.grace) : grace0;
       if (see) e.sus += dt; else e.sus = Math.max(0, e.sus - dt * 0.8);
       if (e.peek) e.sus = Math.min(e.sus, grace * 0.9); // Trailhead peeks never catch anyone
       let st = asleep ? 'sleep' : e.sus > 0.02 ? 'sus' : 'idle';
       if (t - e.alertT < 1.3) st = 'alert';
-      else if (e.sus >= grace) { bonk(e); st = 'alert'; }
+      else if (e.sus >= grace) { withFocus(seeId || cur, () => bonk(e)); st = 'alert'; }
       if (e.kind === 'mower' && e.warn) st = 'sus';
       if (e.kind === 'mower' && e.live) st = 'alert';
       e.st = st;
@@ -1868,18 +1893,33 @@ export function createZones(scene, ctx) {
     const g = recipe && recipe.escortGoal;
     if (g && S.escorts.every(b => g.z == null || (b.z - A.z) >= g.z)) setSig(g.sig || 'escort:goal');
   }
+  function a2UpdateBody(dt, cam, p, cur) {
+    const S = a2; if (!S) return; const c = CLASS_OF[cur];
+    for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; if (flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3 && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; if (!cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
+    if (cur === host.cur()) flagBackUpd(S, p, cur);
+    if (S.stuck) { if (t > S.stuck.until || !ctx.driven().includes(S.stuck.who)) S.stuck = null; else if (S.stuck.who === cur) { p.x = S.stuck.x; p.z = S.stuck.z; p.y = S.stuck.y; p.vx = p.vz = p.vy = 0; } }
+    for (const d of S.drips) { if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
+    for (const sd of S.seeds) {
+      if (sd.planted && !sd.grown && S.dew && S.dew.who === cur && flatD(sd, p) < 2.0 && Math.abs(p.y - sd.y) < 3) { S.dew.m.removeFromParent(); S.dew = null; growSeed(sd); }
+    }
+    for (const sd of S.pads) { if (!sd.grown) continue; const pd = sd.pad; if (flatD(pd, p) < 1.3 && Math.abs(p.y - pd.y) < 0.6 && p.vy <= 0.1 && !tw) { if (c === 'bruiser' && pd.to) { tween(p, { x: pd.to.x, y: pd.to.y + 0.4, z: pd.to.z }, 1.0, 3.2); tst('🍄 BOING! Bear bounces sky-high!', 1600); } p.vy = pd.v[c] || 14; p.grounded = false; p.y = pd.y + 0.1; p._gY = -1e9; fx(pd.x, pd.y, pd.z); ctx.audio?.blip?.(5); pd.P.scale.y = 0.6; if (c === 'bruiser') setSig('bounce:' + sd.id); } }
+    for (const w of S.winds) {
+      const inZ = p.x > w.x0 && p.x < w.x1 && p.z > w.z0 && p.z < w.z1;
+      const wv = windVec(w);
+      if (inZ && !p.grounded && c !== 'bruiser') { p.x += wv.dx * w.push * dt; p.z += wv.dz * w.push * dt; if (S.wind > 0 && w.lift) p.vy = Math.max(p.vy, Math.min(p.vy + w.lift * dt, 4)); }
+    }
+    for (const gf of S.gifts) { if (gf.got) continue; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; const GI = GEAR_INFO[gf.kind], gc = GI.cls; gear[gf.kind] = true; gear[eqK(gf.kind)] = true; (gear.slot ||= {})[gc] = gf.kind; if (S.borrow && S.borrow.slot) S.borrow.slot[gc] = gf.kind; gearSave(); if (gf.kind === 'whistle') S.pingNext = t; setSig('gift:' + gf.kind); if (ALIAS_OF[gf.kind]) setSig('gift:' + ALIAS_OF[gf.kind]); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GI.em} You found the ${GI.name}! Tap ${GI.em} on the ${CLASSES[gc].name}'s picture (or G) to switch it on/off${GEAR_BY_CLS[gc].length > 1 ? ' · swap gear at a 🧰 gear stump' : ''}`, 4200); } }
+    for (const pr of props) if (pr.kind === 'web' && !pr.done && c === 'scout' && !S.stuck && t > S.safeT && Math.abs(p.x - pr.x) < pr.ww / 2 + 0.6 && Math.abs(p.z - pr.z) < 1.3 && p.y - pr.y < pr.wh) { S.stuck = { who: cur, x: p.x, y: p.y, z: p.z, until: t + 3 }; if (pr.spider) pr.spider.look = { x: pr.x, z: pr.z, until: t + 3.5 }; tst('🕸️ Stuck in the web for 3 seconds!', 1800); }
+  }
   function a2Update(dt, cam, p, cur) {
+
     const S = a2; if (!S) return; const c = CLASS_OF[cur], ids = ctx.crewIds();
     // split start: place the crew in their own areas
     if (recipe.splitAt && !S.splitDone && t > 0.05) { S.splitDone = true; for (const k of ['scout', 'trickster', 'bruiser']) { const id = idOfCls(k), q = id && posOfId(id), at = recipe.splitAt[k]; if (!q || !at) continue; q.x = A.x + at[0]; q.z = A.z + at[1]; q.y = gy(at[0], at[1]) + (at[2] || 0) + 0.6; q.vx = q.vy = q.vz = 0; q._safe = { x: q.x, z: q.z }; q.goto = null; } }
     if (S.lastCur !== cur) { if (S.lastCur && recipe.splitAt) { ctx.swoop?.(); tst('💨 Swoosh!', 700); ctx.audio?.sample?.('ui/select-pop', 0.3); } S.lastCur = cur; }
     // movers (parked-body tweens: raft launches)
     for (let i = S.movers.length - 1; i >= 0; i--) { const mv = S.movers[i]; mv.t += dt; const k = Math.min(1, mv.t / mv.d), e = k * k * (3 - 2 * k); const q = mv.q; q.x = mv.a.x + (mv.b.x - mv.a.x) * e; q.z = mv.a.z + (mv.b.z - mv.a.z) * e; q.y = mv.a.y + (mv.b.y - mv.a.y) * e + Math.sin(k * Math.PI) * mv.arc; q.vx = q.vz = q.vy = 0; q._safe = { x: q.x, z: q.z }; if (k >= 1) { S.movers.splice(i, 1); mv.done?.(); } }
-    // checkpoints
-    for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; if (flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3 && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; if (!cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
-    flagBackUpd(S, p, cur);
-    // stuck in a web
-    if (S.stuck) { if (t > S.stuck.until || S.stuck.who !== cur) S.stuck = null; else { p.x = S.stuck.x; p.z = S.stuck.z; p.y = S.stuck.y; p.vx = p.vz = p.vy = 0; } }
+    // checkpoints / stuck / body-local interactions run in a2UpdateBody
     // ---- light & shadow ----
     if (S.srcs.length) {
       let n = 0; const lit = new Set(), shade = new Set();
@@ -1911,18 +1951,15 @@ export function createZones(scene, ctx) {
     // ---- waterwheels ----
     for (const wh of S.wheels || []) { if (sig[wh.spin]) wh.G.rotation.z += dt * 0.7; }
     // ---- seeds: dew carry + growing + mushroom bounce ----
-    for (const d of S.drips) { d.d.position.y = -0.4 - ((t * 0.6) % 1) * 0.3; if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
+    for (const d of S.drips) { d.d.position.y = -0.4 - ((t * 0.6) % 1) * 0.3; }
     if (S.dew) { const q = posOfId(S.dew.who); if (q) S.dew.m.position.set(q.x, q.y + 1.4 + Math.sin(t * 4) * 0.1, q.z); }
     for (const sd of S.seeds) {
-      if (sd.planted && !sd.grown && S.dew && S.dew.who === cur && flatD(sd, p) < 2.0 && Math.abs(p.y - sd.y) < 3) { S.dew.m.removeFromParent(); S.dew = null; growSeed(sd); }
       if (sd.vine && sd.grown) sd.vine.leaves.forEach((l, i) => { l.scale.setScalar(Math.min(1, (l.userData.g = (l.userData.g || 0) + dt * 2) - i * 0.12) || 0.001); });
     }
-    for (const sd of S.pads) { if (!sd.grown) continue; const pd = sd.pad; if (flatD(pd, p) < 1.3 && Math.abs(p.y - pd.y) < 0.6 && p.vy <= 0.1 && !tw) { if (c === 'bruiser' && pd.to) { tween(p, { x: pd.to.x, y: pd.to.y + 0.4, z: pd.to.z }, 1.0, 3.2); tst('🍄 BOING! Bear bounces sky-high!', 1600); } p.vy = pd.v[c] || 14; p.grounded = false; p.y = pd.y + 0.1; p._gY = -1e9; fx(pd.x, pd.y, pd.z); ctx.audio?.blip?.(5); pd.P.scale.y = 0.6; if (c === 'bruiser') setSig('bounce:' + sd.id); } pd.P.scale.y += (1 - pd.P.scale.y) * Math.min(1, dt * 6); }
+    for (const sd of S.pads) { if (!sd.grown) continue; const pd = sd.pad; pd.P.scale.y += (1 - pd.P.scale.y) * Math.min(1, dt * 6); }
     // ---- wind ----
     for (const w of S.winds) {
-      const inZ = p.x > w.x0 && p.x < w.x1 && p.z > w.z0 && p.z < w.z1;
       const wv = windVec(w);
-      if (inZ && !p.grounded && c !== 'bruiser') { p.x += wv.dx * w.push * dt; p.z += wv.dz * w.push * dt; if (S.wind > 0 && w.lift) p.vy = Math.max(p.vy, Math.min(p.vy + w.lift * dt, 4)); }
       const pos = w.pts.geometry.attributes.position;
       if (w.alt) { w.seeds.forEach((s, i) => { s.u = (s.u + dt * 0.3 * wv.dx + 1) % 1; s.v = (s.v + dt * 0.3 * wv.dz * (w.x1 - w.x0) / Math.max(1, w.z1 - w.z0) + 1) % 1; pos.setXYZ(i, w.x0 + s.u * (w.x1 - w.x0), w.gy + s.h, w.z0 + s.v * (w.z1 - w.z0)); }); pos.needsUpdate = true; continue; }
       w.seeds.forEach((s, i) => { s.u = (s.u + dt * 0.3 * S.wind + 1) % 1; const along = w.dz !== 0, fz = along ? s.u : s.v, fxx = along ? s.v : s.u; pos.setXYZ(i, w.x0 + fxx * (w.x1 - w.x0), w.gy + s.h, w.z0 + fz * (w.z1 - w.z0)); }); pos.needsUpdate = true;
@@ -1958,14 +1995,13 @@ export function createZones(scene, ctx) {
     if (lantern) { if (!S.light) { S.light = new THREE.PointLight(0xffd27a, 3, 12); group.add(S.light); } S.light.visible = true; S.light.position.set(sq.x, sq.y + 1.6, sq.z); } else if (S.light) S.light.visible = false;
     for (const gs of S.glowSteps) { const want = !!lantern && flatD(gs, sq) < 6.5; if (want !== gs.on) { gs.on = want; gs.r.s.off = !want; } gs.r.m.material.opacity += ((gs.on ? 0.85 : 0) - gs.r.m.material.opacity) * Math.min(1, dt * 6); }
     const tid = idOfCls('trickster'), tq = tid && posOfId(tid);
-    if (gearOn('whistle') && tq && tid === cur && t >= S.pingNext) { S.pingNext = t + 8; S.pingT = t; S.pingAt = { x: tq.x, z: tq.z, t }; a2Burst(tq.x, tq.z, 7); ctx.audio?.sample?.('ui2/item-produced', 0.4); const ring = ringMesh(1, 0xc9b6ff); ring.position.set(tq.x, tq.y + 0.2, tq.z); group.add(ring); S.outlines.push({ m: ring, t0: t });
+    if (gearOn('whistle') && tq && ctx.driven().includes(tid) && t >= S.pingNext) { S.pingNext = t + 8; S.pingT = t; S.pingAt = { x: tq.x, z: tq.z, t }; a2Burst(tq.x, tq.z, 7); ctx.audio?.sample?.('ui2/item-produced', 0.4); const ring = ringMesh(1, 0xc9b6ff); ring.position.set(tq.x, tq.y + 0.2, tq.z); group.add(ring); S.outlines.push({ m: ring, t0: t });
       let found = 0; for (const h of S.hidden) { if (Math.hypot(h.x - tq.x, h.z - tq.z) > 16) continue; h.showT = t; if (h.kind === 'switch' && !h.pr.found) { h.pr.found = true; h.pr.act = h.pr._act; h.pr.G.visible = true; h.pr.icon.visible = true; found++; } }
       tst(found ? '🎶 Echo-ping! A hidden switch appeared' : '🎶 Echo-ping! Hidden paths glow for 5 s', 1600); setSig('ping'); }
     for (const h of S.hidden) if (h.kind === 'step') { const on = t - (h.showT ?? -99) < 5; h.r.m.material.opacity = on ? 0.55 + 0.25 * Math.sin(t * 6) : 0; }
     for (let i = S.outlines.length - 1; i >= 0; i--) { const o = S.outlines[i], k = (t - o.t0) / 1.2; o.m.scale.set(1 + k * 14, 1, 1 + k * 14); o.m.userData.mats[0].opacity = Math.max(0, 0.8 * (1 - k)); if (k >= 1) { o.m.removeFromParent(); S.outlines.splice(i, 1); } }
-    for (const gf of S.gifts) { if (gf.got) continue; if (!still()) { gf.G.rotation.y += dt; gf.G.position.y = gf.y + Math.sin(t * 2) * 0.15; } if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; const GI = GEAR_INFO[gf.kind], gc = GI.cls; gear[gf.kind] = true; gear[eqK(gf.kind)] = true; (gear.slot ||= {})[gc] = gf.kind; if (S.borrow && S.borrow.slot) S.borrow.slot[gc] = gf.kind; gearSave(); if (gf.kind === 'whistle') S.pingNext = t; setSig('gift:' + gf.kind); if (ALIAS_OF[gf.kind]) setSig('gift:' + ALIAS_OF[gf.kind]); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GI.em} You found the ${GI.name}! Tap ${GI.em} on the ${CLASSES[gc].name}'s picture (or G) to switch it on/off${GEAR_BY_CLS[gc].length > 1 ? ' · swap gear at a 🧰 gear stump' : ''}`, 4200); } }
-    // ---- webs: Scouts get stuck for 3 s and the spider turns to look ----
-    for (const pr of props) if (pr.kind === 'web' && !pr.done && c === 'scout' && !S.stuck && t > S.safeT && Math.abs(p.x - pr.x) < pr.ww / 2 + 0.6 && Math.abs(p.z - pr.z) < 1.3 && p.y - pr.y < pr.wh) { S.stuck = { who: cur, x: p.x, y: p.y, z: p.z, until: t + 3 }; if (pr.spider) pr.spider.look = { x: pr.x, z: pr.z, until: t + 3.5 }; tst('🕸️ Stuck in the web for 3 seconds!', 1800); }
+    for (const gf of S.gifts) { if (gf.got) continue; if (!still()) { gf.G.rotation.y += dt; gf.G.position.y = gf.y + Math.sin(t * 2) * 0.15; } }
+    // webs: body stick is in a2UpdateBody
     updGear(dt, p, cur, c);
     updEnemies(dt, cam, p, cur);
     updShots(dt);
@@ -2350,50 +2386,86 @@ export function createZones(scene, ctx) {
       if (d < 3 && !f.near && (f.say.length || HUB_BANTER[f.id])) { f.near = true; if (t - hubTalkT > 3.5) { hubTalkT = t; const ln = hubLine(f); if (ln) tst(ln, 3000); } } else if (d > 4.5) f.near = false;
     }
   }
-  function update(dt, cam) {
+  function updateBody(id, frame, cam, dt) {
+    if (!recipe || recipe.hub || !id) return;
+    withFocus(id, () => {
+      const p = ctx.getP(), cur = ctx.cur(), c = clsOfCur();
+      if (!p) return;
+      if (frame && frame.sneakOn != null) p.sneak = !!frame.sneakOn;
+      if (tw) {
+        if (tw.p !== p) { tw.p.x = tw.b.x; tw.p.y = tw.b.y; tw.p.z = tw.b.z; tw = null; }
+        else {
+          tw.t += dt; const k = Math.min(1, tw.t / tw.d), e = k * k * (3 - 2 * k);
+          p.x = tw.a.x + (tw.b.x - tw.a.x) * e; p.z = tw.a.z + (tw.b.z - tw.a.z) * e; p.y = tw.a.y + (tw.b.y - tw.a.y) * e + Math.sin(k * Math.PI) * tw.arc;
+          p.vx = p.vz = 0; p.vy = 0; p._safe = { x: p.x, z: p.z };
+          if (k >= 1) { tw = null; p.grounded = false; p.vy = 0.5; }
+        }
+      }
+      if (!tw) {
+        if (p.grounded) p._gY = p.y;
+        const capBase = Math.max(p.floorY ?? -1e9, p._gY ?? -1e9);
+        if (c === 'trickster' && !p.grounded && p.floorY != null && p.y > capBase + CLASSES.trickster.flyCap) { p.y = capBase + CLASSES.trickster.flyCap; if (p.vy > 0) p.vy = 0; if (p.stam != null) p.stam = Math.min(p.stam, 0.35); }
+        if (recipe.ceil && p.y > baseY + recipe.ceil) { p.y = baseY + recipe.ceil; if (p.vy > 0) p.vy = 0; say('🌬️ Too windy up there — stay lower', 1400); }
+        deepBlock(p, cur, true);
+      }
+      const Wd = recipe.wind;
+      if (Wd) {
+        const every = Wd.every * EZ('gust'), gust = (windT % every) < Wd.dur;
+        if (gust && !p.grounded && p.x > A.x + Wd.x0 && p.x < A.x + Wd.x1 && p.z > A.z + Wd.z0 - 6 && p.z < A.z + Wd.z1) { p.z += Wd.push * dt; p.x -= Wd.push * 0.4 * dt; }
+      }
+      if (a2) a2UpdateBody(dt, cam, p, cur);
+      for (const pr of props) {
+        if (pr.kind === 'tbell') {
+          const inside = c === 'scout' && dFlat(p, pr) < 1.4 && p.y > pr.y - 1.3 && p.y < pr.y + 1.6; if (inside && !pr.inside && t - (pr.ringT ?? -99) > 1.5) ringBell(pr); pr.inside = inside;
+        }
+        if (pr.kind === 'bell') {
+          if (!pr.done && c === 'scout' && dFlat(p, pr) < 2.4 && p.y > pr.y - 1.2 && p.y < pr.y + 6.5) ringBell(pr);
+        }
+      }
+      { const pr = nearest(p); if (pr && pr.cls !== c && !pr.done && t - (pr._hintT ?? -99) > 10) { pr._hintT = t; say(`${CLASSES[pr.cls].em} Needs a ${CLASSES[pr.cls].name}`, 1600); } if (id === host.cur()) nearOwn = pr && pr.cls === c && !(pr.done && !pr.two) ? pr : nearOwn; }
+      for (const h of hoops) if (!h.got && Math.hypot(p.x - h.m.position.x, p.z - h.m.position.z) < 1.8 && Math.abs(p.y + 0.5 - h.m.position.y) < 1.8) {
+        if (h.prev && !sig[h.prev]) { say('💫 Start with the first hoop!', 1200); continue; }
+        h.got = true; h.m.material = mat(0x8be07a, 0.6); setSig(h.sig); tst('💫 Hoop!', 900);
+      }
+      for (const k of picks) {
+        if (k.got) continue;
+        if (k.nightOnly && !k.alive) continue;
+        if (k.show && !isOn(k.show)) continue;
+        if (Math.hypot(p.x - k.m.position.x, p.z - k.m.position.z) < 1.5 && Math.abs(p.y + 0.6 - k.m.position.y) < 1.8) {
+          if (k.who && !k.who.includes(c)) { say('🙅 ' + (k.whyNot || 'Another class has to grab this'), 2000); continue; }
+          k.got = true; k.m.visible = false; k.alive = false; addHeal(TIER[k.tier].heal); ctx.audio?.sample?.('ui2/item-produced', 0.4); picked++; if (k.tier === 'petal' && !k.nightOnly) petalV += k.value || 1;
+          if (k.bloom) say(`🌸 Bloom bunch! +${k.value} Petals`, 1200);
+          if (k.tier === 'dew') keyDew++;
+          if (k.set) setSig(k.set);
+          if (k.tier === 'star') { starGot = true; tst('⭐ Secret Starseed found!', 1800); ctx.onStar?.(); } else ctx.onPick?.();
+          lastProg = t;
+        }
+      }
+    });
+  }
+  function updateWorld(dt, cam) {
     for (const mx of babyMixers) mx.update(dt);
     if (!recipe) return; t += dt;
     if (recipe.hub) { if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; tst(introQ.shift(), 3000); } updateHub(dt, cam); return; }
-    const p = ctx.getP(), cur = ctx.cur(), c = clsOfCur(), size = SIZE[cur] || 'medium', ids = ctx.crewIds();
+    const view = host.cur(), p = host.getP(), cur = view, c = clsOfCur(), size = SIZE[cur] || 'medium', ids = ctx.crewIds();
     if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; tst(introQ.shift(), 3000); }
-    // guided tutorial (Sunny Hollow): one Pip line per step, repeated every 25 s until that step is done
     else if (recipe.tutor && !keyDone) {
       while (tutorI < recipe.tutor.length && sig[recipe.tutor[tutorI].until]) { tutorI++; tutorT = -99; }
       const st = recipe.tutor[tutorI];
       if (st && !(st.optional && exitOpen && t - tutorT < 60) && t - tutorT > 25 && t - msgT > 3.2) { tutorT = t; msgT = t; lastProg = t; tst(st.say, 4200); }
     }
-    // player tween (slip / climb / dig)
-    if (tw) {
-      if (tw.p !== p) { tw.p.x = tw.b.x; tw.p.y = tw.b.y; tw.p.z = tw.b.z; tw = null; }
-      else {
-        tw.t += dt; const k = Math.min(1, tw.t / tw.d), e = k * k * (3 - 2 * k);
-        p.x = tw.a.x + (tw.b.x - tw.a.x) * e; p.z = tw.a.z + (tw.b.z - tw.a.z) * e; p.y = tw.a.y + (tw.b.y - tw.a.y) * e + Math.sin(k * Math.PI) * tw.arc;
-        p.vx = p.vz = 0; p.vy = 0; p._safe = { x: p.x, z: p.z };
-        if (k >= 1) { tw = null; p.grounded = false; p.vy = 0.5; }
-      }
-    }
-    // class movement rules: Trickster flight is short hops only; everyone stays under the level's sky ceiling
-    if (!tw) {
-      if (p.grounded) p._gY = p.y; // take-off height: the hop cap is measured from here, not from a gap below
-      const capBase = Math.max(p.floorY ?? -1e9, p._gY ?? -1e9);
-      if (c === 'trickster' && !p.grounded && p.floorY != null && p.y > capBase + CLASSES.trickster.flyCap) { p.y = capBase + CLASSES.trickster.flyCap; if (p.vy > 0) p.vy = 0; if (p.stam != null) p.stam = Math.min(p.stam, 0.35); }
-      if (recipe.ceil && p.y > baseY + recipe.ceil) { p.y = baseY + recipe.ceil; if (p.vy > 0) p.vy = 0; say('🌬️ Too windy up there — stay lower', 1400); }
-      deepBlock(p, cur, true);
-    }
-    for (const cid of ids) { if (cid === cur) continue; const q = ctx.parked(cid); if (q) deepBlock(q, cid, false); }
-    // Bear's back is a step for friends while he's parked
+    // undriven deep-block + bear pad (driven bodies are blocked in updateBody)
+    const driven = new Set(ctx.driven());
+    for (const cid of ids) { if (driven.has(cid)) continue; const q = ctx.parked(cid); if (q) deepBlock(q, cid, false); }
     if (bearPad) {
-      const bid = ids.find(i => CLASS_OF[i] === 'bruiser' && i !== cur), q = bid && ctx.parked(bid);
+      const bid = ids.find(i => CLASS_OF[i] === 'bruiser' && !driven.has(i)), q = bid && ctx.parked(bid);
       if (q) { bearPad.off = false; bearPad.x = q.x; bearPad.z = q.z; bearPad.top = q.y + 1.85; bearPad.y0 = q.y + 0.35; bearPad.owner = q; } else bearPad.off = true;
     }
-    // wind gusts (Windy Rise)
     const Wd = recipe.wind;
     if (Wd) {
       windT += dt; const every = Wd.every * EZ('gust'), gust = (windT % every) < Wd.dur;
-      if (gust && !p.grounded && p.x > A.x + Wd.x0 && p.x < A.x + Wd.x1 && p.z > A.z + Wd.z0 - 6 && p.z < A.z + Wd.z1) { p.z += Wd.push * dt; p.x -= Wd.push * 0.4 * dt; }
       if (gust && (windT % every) < dt * 1.5) say('💨 Gust!', 700);
     }
-    // night cycle + night dew
     if (recipe.nightCycle) {
       const phase = t % recipe.nightCycle, wantNight = phase > recipe.nightCycle - 50;
       if (wantNight !== nightOn) {
@@ -2404,11 +2476,10 @@ export function createZones(scene, ctx) {
       if (nightOn && dewPulseT >= 0 && t - dewPulseT > (recipe.dewWindow || 8)) pulseNightDews(false);
     }
     if (a2) a2Update(dt, cam, p, cur);
-    // plates: held by anyone standing on them (active or parked); heavy needs the Bruiser
     for (const pl of plates) {
       let holder = null;
       const chk = (q, idd, heavyOk) => { if (!q || holder) return; const qy = q.y ?? q.gy ?? pl.y; if (Math.hypot(q.x - pl.x, q.z - pl.z) < pl.r && Math.abs(qy - pl.y) < 1.4 && (!pl.heavy || heavyOk || CLASS_OF[idd] === 'bruiser')) holder = idd; };
-      chk(p, cur); for (const cid of ids) if (cid !== cur) chk(ctx.parked(cid), cid);
+      if (p) chk(p, cur); for (const cid of ids) if (cid !== cur) chk(ctx.parked(cid), cid);
       if (a2) for (const e of a2.en) {
         if (e.kind === 'fox') chk(e, 'fox:' + e.id, false);
         if (e.kind === 'badger' && e.o.friendly) chk(e, 'badger:' + e.id, true);
@@ -2423,7 +2494,6 @@ export function createZones(scene, ctx) {
       pl.m.position.y = pl.y + (holder ? 0.02 : 0.12);
       if (pl.icon) pl.icon.visible = !holder;
     }
-    // gates follow their signals (latching gates stay open)
     for (const g of gates) {
       if (g.latch === 'auto') g.latch = !g.need.some(k => plates.some(pl => pl.sig === k));
       const want = g.open && g.latch ? true : isOn(g.need);
@@ -2437,7 +2507,6 @@ export function createZones(scene, ctx) {
       if (st.fn) st.fn(on);
       if (st.deco) { const ty = on ? st.down : st.up; st.deco.position.y += (ty - st.deco.position.y) * Math.min(1, dt * 2); }
     }
-    // shove anims + acorn projectiles + bell scouting by touch
     for (const pr of props) {
       if (pr.anim) {
         pr.anim.t += dt; const k = Math.min(1, pr.anim.t / 0.9), e = k * k * k * (k * (6 * k - 15) + 10), a = pr.anim.a, b = pr.anim.b;
@@ -2452,47 +2521,33 @@ export function createZones(scene, ctx) {
           if (pr.lureOf) { const e = pr.lureOf; e.lure = { x: e.lureAt.x, z: e.lureAt.z, phase: 'go' }; e.awakeT = 0; pr.G.rotation.z = 0; tst(`🌰 Thunk! The ${e.name} waddles off to check the noise…`, 2200); }
           else tst(`🎯 Bonk! ${pr.label} hit`, 1800); ctx.audio?.chime?.(); }
       }
-      if (pr.kind === 'tbell') { if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0; 
-        { const inside = c === 'scout' && dFlat(p, pr) < 1.4 && p.y > pr.y - 1.3 && p.y < pr.y + 1.6; if (inside && !pr.inside && t - (pr.ringT ?? -99) > 1.5) ringBell(pr); pr.inside = inside; } } // toggle bells: fly into one to ring it once
-      if (pr.kind === 'bell') {
-        if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0;
-        if (!pr.done && c === 'scout' && dFlat(p, pr) < 2.4 && p.y > pr.y - 1.2 && p.y < pr.y + 6.5) ringBell(pr);
-      }
+      if (pr.kind === 'tbell') { if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0; }
+      if (pr.kind === 'bell') { if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0; }
       if (pr.icon && !pr.done) pr.icon.position.y += Math.sin(t * 3 + pr.x) * 0.004;
     }
-    // proximity hint for the wrong class
-    { const pr = nearest(p); if (pr && pr.cls !== c && !pr.done && t - (pr._hintT ?? -99) > 10) { pr._hintT = t; say(`${CLASSES[pr.cls].em} Needs a ${CLASSES[pr.cls].name}`, 1600); } nearOwn = pr && pr.cls === c && !(pr.done && !pr.two) ? pr : null; }
-    // hoops (sequence)
-    for (const h of hoops) if (!h.got && Math.hypot(p.x - h.m.position.x, p.z - h.m.position.z) < 1.8 && Math.abs(p.y + 0.5 - h.m.position.y) < 1.8) {
-      if (h.prev && !sig[h.prev]) { say('💫 Start with the first hoop!', 1200); continue; }
-      h.got = true; h.m.material = mat(0x8be07a, 0.6); setSig(h.sig); tst('💫 Hoop!', 900);
-    }
-    // pickups
     for (const k of picks) {
       if (k.got) continue;
       if (k.nightOnly && !k.alive) continue;
       if (k.show && !isOn(k.show)) { k.m.visible = false; continue; } else if (k.show) k.m.visible = true;
       if (!still()) { k.m.rotation.y += dt * 2; k.m.position.y = k.y + Math.sin(t * 2 + k.y) * 0.15; }
-      if (Math.hypot(p.x - k.m.position.x, p.z - k.m.position.z) < 1.5 && Math.abs(p.y + 0.6 - k.m.position.y) < 1.8) {
-        if (k.who && !k.who.includes(c)) { say('🙅 ' + (k.whyNot || 'Another class has to grab this'), 2000); continue; }
-        k.got = true; k.m.visible = false; k.alive = false; addHeal(TIER[k.tier].heal); ctx.audio?.sample?.('ui2/item-produced', 0.4); picked++; if (k.tier === 'petal' && !k.nightOnly) petalV += k.value || 1;
-        if (k.bloom) say(`🌸 Bloom bunch! +${k.value} Petals`, 1200);
-        if (k.tier === 'dew') keyDew++;
-        if (k.set) setSig(k.set);
-        if (k.tier === 'star') { starGot = true; tst('⭐ Secret Starseed found!', 1800); ctx.onStar?.(); } else ctx.onPick?.();
-        lastProg = t;
-      }
     }
-    // team lifts
     for (const n of nodes) {
       if (n.need && !isOn(n.need)) { n.label.style.display = 'none'; continue; } else if (n.need && !n.done && !n.m.visible) { n.m.visible = true; tst(`✨ ${NODE[n.kind].name} appeared!`, 1800); }
       if (n.done) { n.label.style.display = 'none'; continue; }
       n.body.rotation.y += dt * 0.4;
-      const need = NEED[n.kind][size], have = crewAt(n.m.position.x, n.m.position.z, 4.2), pd = Math.hypot(p.x - n.m.position.x, p.z - n.m.position.z);
+      const need = NEED[n.kind][size], have = crewAt(n.m.position.x, n.m.position.z, 4.2), pd = p ? Math.hypot(p.x - n.m.position.x, p.z - n.m.position.z) : 99;
       const v = n.m.position.clone(); v.y += 3; v.project(cam);
       const on = v.z < 1 && pd < 30; n.label.style.display = on ? 'block' : 'none';
       if (on) { n.label.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; n.label.style.top = ((1 - v.y) / 2 * innerHeight) + 'px'; n.label.textContent = `${NODE[n.kind].name} ${'🐾'.repeat(Math.min(have, need))}${'◯'.repeat(Math.max(0, need - have))}`; }
-      if (pd < 3.2 && Math.abs(p.y - n.m.position.y) < 3) {
+      // any driven body close enough can start a team lift
+      let liftP = (p && pd < 3.2 && Math.abs(p.y - n.m.position.y) < 3) ? p : null;
+      if (!liftP) {
+        for (const idd of driven) {
+          const q = posOfId(idd);
+          if (q && Math.hypot(q.x - n.m.position.x, q.z - n.m.position.z) < 3.2 && Math.abs(q.y - n.m.position.y) < 3) { liftP = q; break; }
+        }
+      }
+      if (liftP) {
         if (have >= need) {
           n.done = true; nodesDone++; const N = NODE[n.kind]; addHeal(TIER[N.tier].heal * N.amt); setSig(n.sig);
           tst(n.kind === 'heaviest' ? '💪 You lifted the Starheart together!' : `💪 Lifted the ${N.name}!`, 2400); ctx.audio?.chime?.();
@@ -2503,28 +2558,40 @@ export function createZones(scene, ctx) {
       if (n.wob > 0) { n.wob -= dt; n.body.rotation.z = Math.sin(t * 40) * 0.12 * n.wob; } else n.body.rotation.z = 0;
     }
     if (star && star.carry) {
-      const s = star; s.mesh.position.set(p.x, p.y + 2.4, p.z); s.mesh.rotation.y += dt * 2;
-      const vy = (p.y - s.lastY) / Math.max(dt, 1e-3); s.lastY = p.y;
+      const s = star; const cp = p || host.getP();
+      s.mesh.position.set(cp.x, cp.y + 2.4, cp.z); s.mesh.rotation.y += dt * 2;
+      const vy = (cp.y - s.lastY) / Math.max(dt, 1e-3); s.lastY = cp.y;
       if (vy < -14 && t - s.dropped > 1.5) {
-        s.dropped = t; s.carry = false; const low = s.caps.filter(cc => cc.y < p.y).sort((a, b) => b.y - a.y)[0] || s.caps[0];
+        s.dropped = t; s.carry = false; const low = s.caps.filter(cc => cc.y < cp.y).sort((a, b) => b.y - a.y)[0] || s.caps[0];
         const nn = star.node; nn.done = false; nn.m.position.set(low.x, low.y, low.z); nn.m.add(s.mesh); s.mesh.position.set(0, 1, 0); nn.m.visible = true;
         tst('💫 Whoops! The Starheart bounced onto a lower cap. Go get it!', 2800);
-      } else if (Math.hypot(p.x - s.safe.x, p.z - s.safe.z) < 4.5 && p.y < gy(0, 2) + 2.5) {
+      } else if (Math.hypot(cp.x - s.safe.x, cp.z - s.safe.z) < 4.5 && cp.y < gy(0, 2) + 2.5) {
         s.carry = false; s.mesh.visible = false; star = null; setSig('starHome'); tst('⭐ The Starheart is home!', 2600);
       }
     }
-    // puzzles
     for (const pz of puzzles) {
       if (pz.done || !pz.sigs.every(k => sig[k])) continue;
       pz.done = true; setSig(pz.id); addHeal(pz.req ? 0.1 : 0.04);
       const left = reqLeft().length;
       tst(`🧩 ${pz.label} solved! ${pz.cls.map(k => CLASSES[k].em).join('')}${left ? ` · ${left} to go` : ''}`, 2600); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.();
     }
-    // Pip hint after 45 s without progress
     if (t - lastProg > 45 && t - hintT > 45) { const nx = reqLeft()[0] || puzzles.find(q => !q.done); const pl = nx && pipStuck(nx.id); if (pl) { hintT = t; pipSay(pl); } else if (nx && nx.hint) { hintT = t; tst(`🐦 ${nx.hint}`, 4200); } }
-    pipUpdate(p);
-    if (recipe.kid) updateKid(dt);
-    checkKey(); updateExit(cam); updateHighlights(dt); updateTracker(cam);
+  }
+  function update(dt, cam) {
+    updateWorld(dt, cam);
+    if (!recipe || recipe.hub) return;
+    const ids = [...new Set((ctx.driven() || []).filter(Boolean))];
+    const view = host.cur();
+    if (!ids.length && view) ids.push(view);
+    for (const id of ids) updateBody(id, null, cam, dt);
+    const p = host.getP();
+    if (p) {
+      withFocus(view, () => {
+        pipUpdate(ctx.getP());
+        if (recipe.kid) updateKid(dt);
+        checkKey(); updateExit(cam); updateHighlights(dt); updateTracker(cam);
+      });
+    }
   }
   // ---- objective highlights (t158u): every live puzzle prop glows in the colour of the class that solves it ----
   let haloTex = null;
@@ -2829,13 +2896,13 @@ export function createZones(scene, ctx) {
   /** kid-tutorial cursor (Fern regression §0.6): i = forward-only card index, max = high-water mark, n = station, slip = slipped hold step or -1 */
   function kidState() { if (!kid || !kid.steps) return null; const st = kid.steps[Math.max(0, kid.i)]; return { i: kid.i, max: kid.max, n: st ? st.n : 0, slip: kid.slip, latch: !!(st && st.latch !== false), safe: kid.safe ? { x: +(kid.safe.x - A.x).toFixed(2), z: +(kid.safe.z - A.z).toFixed(2) } : null, say: st ? st.say : '', slipSay: kid.slip >= 0 ? kid.steps[kid.slip].say : null }; }
   return {
-    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
+    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
     act, wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status, kidState,
     /** test hook: finish the level as if the exit was reached (used by the POLISH result tests) */
     debugComplete(why = 'Test finish') { if (!recipe || keyDone) return null; complete(why); return result; },
     skipKid() { if (!recipe || !recipe.kid || !recipe.act2 || keyDone) return false; complete('Trail skipped'); return true; },
-    toggleSneak(v) { if (!a2 || !recipe?.act2) return false; sneak = v == null ? !sneak : !!v; ctx.onSneak?.(sneak); tst(sneak ? '🐾 Sneaking: slow, quiet paws' : '🏃 Walking normally', 1200); return sneak; }, sneakOn: () => !!(a2 && sneak), isAct2: () => !!(a2 && recipe && recipe.act2),
+    toggleSneak(v) { if (!a2 || !recipe?.act2) return false; sneak = v == null ? !sneak : !!v; const bp = ctx.getP(); if (bp) bp.sneak = sneak; ctx.onSneak?.(sneak); tst(sneak ? '🐾 Sneaking: slow, quiet paws' : '🏃 Walking normally', 1200); return sneak; }, sneakOn: () => { const bp = ctx.getP(); return !!(a2 && (bp && bp.sneak || sneak)); }, isAct2: () => !!(a2 && recipe && recipe.act2),
     setAct2Night: v => { if (a2) setNightA2(!!v); },
     flagBack, callEscort, throwToolAt: (kind, lx, lz) => throwTool(kind, A.x + lx, A.z + lz),
     placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },

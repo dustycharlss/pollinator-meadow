@@ -7,7 +7,8 @@ import { buildRiders, buildAmbient, updateFlaps, buildSkinRider } from './creatu
 import { SKINS, SKIN_BASE, SKIN_INFO, skinOfCls, skinOf, skinName, skinEm, setSkin, skinText } from './skins.js';
 import { buildGroundAmbient, animateGround, animateBirdWings, isBird } from './animals.js';
 import { buildNests } from './nests.js';
-import { createInput } from './input.js';
+import { createInput, composeSources } from './input.js';
+import { createSlots } from './slots.js';
 import { onAssets, iconUrl, ico } from './assets.js';
 import { createWheels } from './wheels.js';
 import { createHomeInd } from './homeind.js';
@@ -204,7 +205,7 @@ function initPlayer(id) {
   const n = SPECIES[id].nest, a = Math.atan2(n.z, n.x) + 0.5;
   const x = n.x + Math.cos(a) * 15, z = n.z + Math.sin(a) * 15;
   P[id] = { x, z, y: heightAt(x, z), yaw: Math.atan2(n.x - x, n.z - z), vx: 0, vz: 0, vy: 0, grounded: true, coyote: 0, buf: 0, jumpsLeft: 0, airT: 0, flapArmed: true, flapping: false, jumpUp: false, stam: 1,
-    carried: 0, boostT: 0, boostCd: 0, digT: 0, digCd: 0, t: 0, speed: 0, fl: null };
+    carried: 0, boostT: 0, boostCd: 0, digT: 0, digCd: 0, t: 0, speed: 0, fl: null, sneak: false };
   const q = save.pos && save.pos[id]; // animals stay where you parked them, even across reloads
   if (q && isFinite(q[0] + q[1] + q[2]) && Math.hypot(q[0], q[2]) < WORLD_R - 4) { const P0 = P[id]; P0.x = q[0]; P0.z = q[2]; P0.y = Math.max(q[1], heightAt(q[0], q[2])) + 0.6; P0.yaw = q[3] || 0; P0.grounded = false; }
 }
@@ -220,6 +221,23 @@ const price = total => {
   return priceFor(lead, total);
 };
 let cur = 'bee', night = 0, curNight = false, cam = { yaw: 0, pitch: 0.35, fx: 0, fy: 0, fz: 0, fov: 62, hold: 0, zoom: 1, zoomT: 1, offX: 0, offY: 0, offXT: 0, offYT: 0 };
+input.getCamYaw = () => cam.yaw;
+input.getSneak = () => !!(zones && zones.sneakOn && zones.sneakOn());
+const slots = createSlots({ getCur: () => cur });
+(function bootSlots() {
+  const n = +new URLSearchParams(location.search).get('slots') || 1;
+  if (n >= 2) {
+    if (input.keyboard && input.keyboard.hub) input.keyboard.hub.useAllHooks = false;
+    const yaw = () => cam.yaw;
+    const active = () => input.active;
+    const left = composeSources([input.keyboard.left, input.touch, input.gamepad], { id: 'p1', isActive: active, getCamYaw: yaw });
+    const right = composeSources([input.keyboard.right], { id: 'p2', isActive: active, getCamYaw: yaw });
+    slots.setupDebug2({ left, right });
+  } else {
+    slots.setupSolo(cur, input);
+  }
+})();
+
 
 // species voice on switch (integration-map species.*.voice); fallback blip
 const VOICE = { bee: 'bee-buzz-short', bumblebee: 'bee-buzz-short', hummingbird: 'hummingbird-hum', bat: 'bat-squeak', raccoon: 'raccoon-chitter', robin: 'robin-chirp', opossum: 'possum-chitter', bear: 'bear-happy-grunt', butterfly: 'butterfly-flutter', moth: 'moth-flutter' };
@@ -228,7 +246,7 @@ function voice(id, vol = 0.35, gap = 5) { const t = performance.now() / 1000; if
 function selectSpecies(id, first) {
   if (shopOpen) return;
   if (rts.possessed && !first && id !== rts.possessed.sp) releaseHelper();
-  const prev = cur; cur = id; save.species = id; persist(); input.jump = false;
+  const prev = cur; cur = id; save.species = id; persist(); input.jump = false; if (slots) slots.onSwap(id);
   if (!first && prev !== id) { cam.swoop = 1.3; voice(id, 0.4, 0.6) || VOICE[id] || audio.blip(6); fx.burst(P[id].x, P[id].y + 2.2, P[id].z, 16, 4); }
   const sp = SPECIES[id], p = P[id];
   $('spEm').textContent = skinEm(id); $('spName').textContent = skinName(id); $('actTxt').textContent = sp.actName; $('actEm').textContent = sp.actEmoji; /* stamChip hidden — stamina is a world ring */
@@ -512,32 +530,37 @@ function wingAmp(R, p, dt, k) {
   if (R.userData.birdWings) return;
   for (const m of R.userData.flapMats || []) m.userData.uAmp.value += (k * m.userData.baseAmp - m.userData.uAmp.value) * Math.min(1, dt * 10);
 }
-function stepPlayer(dt, t) {
-  const sp = SPECIES[cur], AB = abOf(cur), mv = adm.speed === 1 ? AB.mv : speedMv(AB.mv), p = P[cur], c = input.poll(), phys = world.phys, fly = mv.fly, col = sp.coll || { h: 1.4, r: 0.8 };
+function stepPlayer(dt, t, id, frame) {
+  if (id == null) id = cur;
+  if (!P[id]) return;
+  if (!frame) frame = input.pollFrame ? input.pollFrame() : { sx: 0, sy: 0, jump: false, jumpPressed: !!input.jumpPressed, actPressed: !!input.actPressed, cy: cam.yaw };
+  const sp = SPECIES[id], AB = abOf(id), mv = adm.speed === 1 ? AB.mv : speedMv(AB.mv), p = P[id], c = { sx: frame.sx || 0, sy: frame.sy || 0, jump: !!frame.jump }, phys = world.phys, fly = mv.fly, col = sp.coll || { h: 1.4, r: 0.8 };
+  const isView = id === cur;
+  if (frame.sneakOn != null) p.sneak = !!frame.sneakOn;
   p.t += dt;
-  if (build && build.active) { state.bmStick = { sx: c.sx, sy: c.sy }; c.sx = c.sy = 0; c.jump = false; input.jumpPressed = false; }
-  if (playing) { if (adm.stam) p.stam = 1; if (adm.fly && input.jump) { p.vy = Math.max(p.vy, 9); p.grounded = false; p.coyote = 0; } }
+  if (isView && build && build.active) { state.bmStick = { sx: c.sx, sy: c.sy }; c.sx = c.sy = 0; c.jump = false; }
+  if (playing) { if (adm.stam) p.stam = 1; if (adm.fly && c.jump) { p.vy = Math.max(p.vy, 9); p.grounded = false; p.coyote = 0; } }
   // --- intent (camera relative)
-  const mag = Math.min(1, Math.hypot(c.sx, c.sy)), fyw = cam.yaw;
+  const mag = Math.min(1, Math.hypot(c.sx, c.sy)), fyw = (frame.cy != null ? frame.cy : cam.yaw);
   const wx = (Math.sin(fyw) * c.sy - Math.cos(fyw) * c.sx), wz = (Math.cos(fyw) * c.sy + Math.sin(fyw) * c.sx), wl = Math.hypot(wx, wz) || 1;
   // --- action button (puzzle interaction first, then the species' own ability)
   let pressed = false;
-  if (input.actPressed && build && build.active) { input.actPressed = false; if (build.placeGhost()) setBuild(false); }
-  else if (input.actPressed) {
-    input.actPressed = false; pressed = true;
+  if (frame.actPressed && isView && build && build.active) { frame.actPressed = false; if (build.placeGhost()) setBuild(false); }
+  else if (frame.actPressed) {
+    frame.actPressed = false; pressed = true;
     // Rival tidy-up taps only while a dismantle is already underway (start it from Interact wheel)
     if (playing && valleySession && zones && zones.act()) { }
     else if (playing && tiers && tiers.act(t)) { }
     else if (playing && rivals && rivals.dismantle) { rivals.tapDismantle(); }
-    else if (playing && coop.onAction(p, sp, cur, t)) { if (sp.ground) { p.digT = 0.45; p.digCd = 0.35 * AB.fx.digCd; } }
+    else if (playing && coop.onAction(p, sp, id, t)) { if (sp.ground) { p.digT = 0.45; p.digCd = 0.35 * AB.fx.digCd; } }
     else if (sp.ground) { if (p.digCd <= 0) { p.digT = 0.45; p.digCd = 0.35 * AB.fx.digCd; gather(p, sp, t, AB.dig, true); } }
     else if (p.boostCd <= 0) { p.boostT = 0.6; p.boostCd = 3.1 * AB.fx.boostCd; audio.blip(3); fx.burst(p.x, p.y + 0.8, p.z, 8, 3); if (AB.fx.buzz) { fx.burst(p.x, p.y + 0.5, p.z, 26, 7); gather(p, sp, t, AB.reach * 2.6, false); } }
   }
   p.boostCd = Math.max(0, p.boostCd - dt); p.digCd = Math.max(0, p.digCd - dt); p.digT = Math.max(0, p.digT - dt); p.boostT = Math.max(0, p.boostT - dt);
-  $('bAct').classList.toggle('cd', (sp.ground ? p.digCd : p.boostCd) > 0);
+  if (isView) $('bAct').classList.toggle('cd', (sp.ground ? p.digCd : p.boostCd) > 0);
   // --- jumping
   if (p.grounded) { p.coyote = 0.12; p.jumpsLeft = mv.jumps - 1; p.airT = 0; } else { p.coyote -= dt; p.airT += dt; }
-  if (input.jumpPressed) { input.jumpPressed = false; p.buf = 0.14; }
+  if (frame.jumpPressed) { frame.jumpPressed = false; p.buf = 0.14; }
   p.buf -= dt;
   if (p.buf > 0) {
     if (p.coyote > 0) { p.vy = mv.jump; p.coyote = 0; p.buf = 0; p.grounded = false; p.jumpsLeft = mv.jumps - 1; p.flapArmed = false; p.jumpUp = true; audio.blip(2); }
@@ -563,7 +586,7 @@ function stepPlayer(dt, t) {
     const acc = (p.grounded ? mv.accel : mv.accel * mv.air) * (p.boostT > 0 ? 1.5 : 1);
     const dx = tx - p.vx, dz = tz - p.vz, l = Math.hypot(dx, dz), st = acc * dt; if (l <= st || l < 1e-6) { p.vx = tx; p.vz = tz; } else { p.vx += dx / l * st; p.vz += dz / l * st; }
   }
-  if (zones && zones.sneakOn && zones.sneakOn()) { const cap = mv.run * 0.5, sp0 = Math.hypot(p.vx, p.vz); if (sp0 > cap) { p.vx *= cap / sp0; p.vz *= cap / sp0; } }
+  if (p.sneak || (zones && zones.sneakOn && zones.sneakOn() && isView)) { const cap = mv.run * 0.5, sp0 = Math.hypot(p.vx, p.vz); if (sp0 > cap) { p.vx *= cap / sp0; p.vz *= cap / sp0; } }
   p.speed = Math.hypot(p.vx, p.vz);
   const wOx = p.x, wOz = p.z;
   p.x += p.vx * dt; p.z += p.vz * dt; if (onb && p.speed > 1) onb.flags.moved = 1;
@@ -591,7 +614,7 @@ function stepPlayer(dt, t) {
   } else p.grounded = false;
   if (p.y < -2.5) p.y = fl.y;
   // --- rig
-  const R = riders[cur], bodyG = R.userData;
+  const R = riders[id], bodyG = R.userData;
   R.position.set(p.x, p.y, p.z); R.rotation.y = p.yaw;
   if (sp.ground) {
     animateGround(R, dt, t, Math.min(1, p.speed / mv.run), !p.grounded, flapping, p.digT > 0 ? Math.sin((1 - p.digT / 0.45) * Math.PI) : 0);
@@ -606,9 +629,9 @@ function stepPlayer(dt, t) {
     if (bodyG.birdWings) animateBirdWings(R, t, { air: !p.grounded, flapping, grounded: !!p.grounded });
     wingAmp(R, p, dt, p.grounded ? 0.16 : flapping ? 1 : (sp.id === 'bat' ? 0.1 : 0.3));
   }
-  placeShadow(cur, p, sp); updateRing(p, sp, t, dt); updateStamRing(p, sp, t, dt);
+  placeShadow(id, p, sp); updateRing(p, sp, t, dt); updateStamRing(p, sp, t, dt);
   if (playing) { gather(p, sp, t, AB.reach, false); nestCheck(p, sp, t); dewCheck(p, sp, t); }
-  $('stam').style.width = (p.stam * 100) + '%';
+  if (isView) $('stam').style.width = (p.stam * 100) + '%';
 }
 // Animals you are not controlling stay exactly where you left them: they settle onto the ground and idle.
 function stepParked(id, dt, t) {
@@ -1682,7 +1705,27 @@ function updateBuildUi(dt, t) {
 
 // ---- game flow helpers
 function worldTick(dt, st) {
-  if (rts.on) { for (const id of SPECIES_ORDER) stepParked(id, dt, st); } else { stepPlayer(dt, st); for (const id of SPECIES_ORDER) if (id !== cur) stepParked(id, dt, st); } coop.update(dt, st, cur);
+  if (rts.on) { for (const id of SPECIES_ORDER) stepParked(id, dt, st); }
+  else {
+    const driven = new Set();
+    const list = slots && slots.all ? slots.all() : [];
+    if (list.length) {
+      for (const slot of list) {
+        if (!slot.body || !P[slot.body]) continue;
+        const src = slot.src || input;
+        const frame = src.pollFrame ? src.pollFrame() : { sx: 0, sy: 0, jump: false, cy: cam.yaw };
+        if (frame.dYaw) input.dYaw += frame.dYaw;
+        if (frame.dPitch) input.dPitch += frame.dPitch;
+        stepPlayer(dt, st, slot.body, frame);
+        driven.add(slot.body);
+      }
+    } else {
+      stepPlayer(dt, st);
+      driven.add(cur);
+    }
+    for (const id of SPECIES_ORDER) if (!driven.has(id)) stepParked(id, dt, st);
+  }
+  coop.update(dt, st, cur);
   if (helpers) helpers.update(playing && !paused ? dt : 0, st, playing && !paused && round.running && !round.over);
   if (tiers) tiers.update(playing && !paused ? dt : 0, st, playing && !paused && round.running && !round.over);
   if (hazards) hazards.update(playing && !paused ? dt : 0, st, { playing, paused, p: P[cur], sp: SPECIES[cur], elapsed: round.len * 60 - (round.left || 0), len: round.len });
@@ -1943,7 +1986,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), swoop: () => { cam.swoop = 0.9; } });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => slots.driven(), crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), swoop: () => { cam.swoop = 0.9; } });
   critters = createCritters(scene, { heightAt, tier: () => look.tier });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
@@ -2125,7 +2168,7 @@ async function boot() {
     startNew(p.len);
   } else if (NEWFLAG && NEWFLAG.patch && valley) { const pid = NEWFLAG.patch; if (valley.get(pid)?.state === 'wilted') valley.setState(pid, 'in_progress'); startValleyPatch(pid); } else if (NEWFLAG) startNew(NEWFLAG.len || settings.len);
   else if (/[?&]lab=act3\b/.test(location.search) && valley) startValleyPatch('act3_lab');
-  window.__game = { look, DCL, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
+  window.__game = { look, DCL, slots, stepPlayer, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
     tp: (x, z, up = 0) => { const p = P[cur]; p.x = x; p.z = z; p.y = world.phys.floor(x, z, 99, 99).y + up; p.vx = p.vz = p.vy = 0; },
     teleportNearFlower: () => { const B = world.blooms; const arr = B.byPol[polOf(cur)]; const i = arr[0]; const p = P[cur]; p.x = B.x[i] - 1; p.z = B.z[i]; p.y = Math.max(heightAt(p.x, p.z), B.y[i] - 0.5); p.vy = 0; } };
 }
