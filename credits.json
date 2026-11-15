@@ -4,13 +4,13 @@
       "credit": "Read-aloud voice: Alba (Piper en_GB-alba-medium), from the Alba speech corpus by Cassia Valentini-Botinhao and Junichi Yamagishi, University of Edinburgh, CC BY 4.0 (https://datashare.ed.ac.uk/handle/10283/3270), fine-tuned from the Hi-Fi Multi-Speaker English TTS dataset (NVIDIA Corporation, reader 92, Cori Samuel), CC BY 4.0 (https://www.openslr.org/109/).",
       "license": "CC BY 4.0",
       "url": "https://datashare.ed.ac.uk/handle/10283/3270",
-      "note": "Read-aloud voice (Alba). Piper engine and ONNX model are not shipped. Swap the audio/voice/<name>/ folder and the VOICE_BASE constant to change voices."
+      "note": "THE SHIPPING read-aloud voice (Alba, entry #70). Piper engine and ONNX model are not shipped. Swap the audio/voice/<name>/ folder and the VOICE_BASE constant to change voices."
     },
     {
       "credit": "Read-aloud voice rendered with Piper (MIT License, Copyright (c) 2022 Michael Hansen), using the en_GB-cori-high voice trained from scratch by Bryce Beattie on public-domain LibriVox recordings. The Piper model itself is not shipped in the game.",
       "license": "MIT (Piper); voice dataset public domain",
       "url": "https://github.com/rhasspy/piper/blob/2023.11.14-2/LICENSE.md",
-      "note": "Included alternate read-aloud voice pack (Cori, public domain). Not the active VOICE_BASE."
+      "note": "Unused alternate read-aloud voice pack (Cori, public domain). Not shipped as the active VOICE_BASE."
     },
     {
       "credit": "\"Cocoon (Antonio.Luis)\" by Antonio.Luis (CC-BY 4.0)",

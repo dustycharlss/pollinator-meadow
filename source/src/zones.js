@@ -1667,7 +1667,7 @@ export function createZones(scene, host) {
   }
   function ringMaster(pr) {
     const S = AA(); if (!S.master) return true;
-    if (t < (S.master.coolUntil || 0)) { say('🔔 Wait for the bell to settle.', 1600); return true; }
+    if (t < (S.master.coolUntil || 0)) { if (t - msgT > 1.6) ctx.audio?.speak?.('master_bell.pip.settle'); say('🔔 Wait for the bell to settle.', 1600); return true; }
     const to = S.master.next;
     applyMaster(to);
     S.master.coolUntil = t + 2;

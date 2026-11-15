@@ -494,14 +494,14 @@
     "group": "tips",
     "text": "🐦 Swap to 🦝 Raccoon (2) · pull the green-glow lever.",
     "fileStem": "tips/sunny_hollow.tutor.patch",
-    "durationSec": 3.046
+    "durationSec": 2.912
   },
   {
     "id": "sunny_hollow.tutor.glade",
     "group": "tips",
     "text": "🐦 Swap to 🐻 Bear (3) · shove the orange-glow log.",
     "fileStem": "tips/sunny_hollow.tutor.glade",
-    "durationSec": 2.716
+    "durationSec": 2.851
   },
   {
     "id": "sunny_hollow.tutor.boostStar",
@@ -2125,7 +2125,7 @@
     "group": "menu",
     "text": "Touch: drag on the left to move · Jump (tap twice for a double jump, hold to flutter) · action button · drag on the right to turn the camera.",
     "fileStem": "menu/ui.how.touch",
-    "durationSec": 7.974
+    "durationSec": 7.012
   },
   {
     "id": "ui.how.keys",
@@ -3323,5 +3323,509 @@
     "text": "If the game can't reach Cloudflare's relay, it shows an error. It never switches to a direct connection on its own.",
     "fileStem": "lobby/lobby.grownup.failureFold",
     "durationSec": 6.789
+  },
+  {
+    "id": "ending.kicker",
+    "group": "ending",
+    "text": "Act 3 complete",
+    "fileStem": "ending/ending.kicker",
+    "durationSec": 1.384
+  },
+  {
+    "id": "ending.title",
+    "group": "ending",
+    "text": "You finished the Meadow!",
+    "fileStem": "ending/ending.title",
+    "durationSec": 1.281
+  },
+  {
+    "id": "ending.pip_line",
+    "group": "ending",
+    "text": "I knew my friends could do it. Welcome home.",
+    "fileStem": "ending/ending.pip_line",
+    "durationSec": 3.03
+  },
+  {
+    "id": "ending.end_bear_line",
+    "group": "ending",
+    "text": "Best crew in the meadow. I'm bear-y, bear-y proud.",
+    "fileStem": "ending/ending.end_bear_line",
+    "durationSec": 3.357
+  },
+  {
+    "id": "ending.btn_skip",
+    "group": "ending",
+    "text": "Skip",
+    "fileStem": "ending/ending.btn_skip",
+    "durationSec": 0.627
+  },
+  {
+    "id": "ending.end_title",
+    "group": "ending",
+    "text": "Thanks for playing!",
+    "fileStem": "ending/ending.end_title",
+    "durationSec": 1.103
+  },
+  {
+    "id": "ending.credits_intro",
+    "group": "ending",
+    "text": "Thanks to everyone whose work is in this game.",
+    "fileStem": "ending/ending.credits_intro",
+    "durationSec": 2.49
+  },
+  {
+    "id": "ending.sec_ccby",
+    "group": "ending",
+    "text": "Required credits (CC-BY)",
+    "fileStem": "ending/ending.sec_ccby",
+    "durationSec": 1.752
+  },
+  {
+    "id": "ending.sec_cc0",
+    "group": "ending",
+    "text": "More thanks (CC0)",
+    "fileStem": "ending/ending.sec_cc0",
+    "durationSec": 1.607
+  },
+  {
+    "id": "mirror_caves.start.01",
+    "group": "banter",
+    "text": "🐻 Bear: A pebble sling? I can ping those crystals!",
+    "fileStem": "banter/mirror_caves.start.01",
+    "durationSec": 3.781
+  },
+  {
+    "id": "mirror_caves.start.02",
+    "group": "banter",
+    "text": "🐝 Bee: I'll aim the shiny mirrors. Watch this beam!",
+    "fileStem": "banter/mirror_caves.start.02",
+    "durationSec": 3.597
+  },
+  {
+    "id": "mirror_caves.start.03",
+    "group": "banter",
+    "text": "🦝 Raccoon: Whistle will find the hidden paths. And snacks.",
+    "fileStem": "banter/mirror_caves.start.03",
+    "durationSec": 4.456
+  },
+  {
+    "id": "mirror_caves.start.04",
+    "group": "banter",
+    "text": "🐻 Bear: The bat pup likes the dark. Lantern off near it.",
+    "fileStem": "banter/mirror_caves.start.04",
+    "durationSec": 4.366
+  },
+  {
+    "id": "mirror_caves.end.01",
+    "group": "banter",
+    "text": "🐻 Bear: Pebble Sling, meet crystal. What a shot!",
+    "fileStem": "banter/mirror_caves.end.01",
+    "durationSec": 3.981
+  },
+  {
+    "id": "mirror_caves.end.02",
+    "group": "banter",
+    "text": "🐝 Bee: And the bat pup stayed in the dark, safe and snug.",
+    "fileStem": "banter/mirror_caves.end.02",
+    "durationSec": 4.044
+  },
+  {
+    "id": "mirror_caves.end.03",
+    "group": "banter",
+    "text": "🦝 Raccoon: Webs snipped. Shiny cave, happy pup.",
+    "fileStem": "banter/mirror_caves.end.03",
+    "durationSec": 4.003
+  },
+  {
+    "id": "mirror_caves.end.04",
+    "group": "banter",
+    "text": "🐝 Bee: I was born to bounce light underground!",
+    "fileStem": "banter/mirror_caves.end.04",
+    "durationSec": 3.1
+  },
+  {
+    "id": "storm_orchard.start.01",
+    "group": "banter",
+    "text": "🦝 Raccoon: A Leaf Glider! I was made for this wind!",
+    "fileStem": "banter/storm_orchard.start.01",
+    "durationSec": 3.906
+  },
+  {
+    "id": "storm_orchard.start.02",
+    "group": "banter",
+    "text": "🐝 Bee: I'll lure the crows. You glide the gaps!",
+    "fileStem": "banter/storm_orchard.start.02",
+    "durationSec": 3.62
+  },
+  {
+    "id": "storm_orchard.start.03",
+    "group": "banter",
+    "text": "🐻 Bear: I'll stand in the gust so the chick doesn't blow.",
+    "fileStem": "banter/storm_orchard.start.03",
+    "durationSec": 2.895
+  },
+  {
+    "id": "storm_orchard.start.04",
+    "group": "banter",
+    "text": "🐝 Bee: Stormy apples! Watch this loop through the gusts!",
+    "fileStem": "banter/storm_orchard.start.04",
+    "durationSec": 4.299
+  },
+  {
+    "id": "storm_orchard.end.01",
+    "group": "banter",
+    "text": "🦝 Raccoon: That glide was the shiniest trick yet.",
+    "fileStem": "banter/storm_orchard.end.01",
+    "durationSec": 3.207
+  },
+  {
+    "id": "storm_orchard.end.02",
+    "group": "banter",
+    "text": "🐝 Bee: The chick made it, gust and all!",
+    "fileStem": "banter/storm_orchard.end.02",
+    "durationSec": 2.73
+  },
+  {
+    "id": "storm_orchard.end.03",
+    "group": "banter",
+    "text": "🐻 Bear: I was a very good windbreak. Windbreaks nap.",
+    "fileStem": "banter/storm_orchard.end.03",
+    "durationSec": 3.958
+  },
+  {
+    "id": "storm_orchard.end.04",
+    "group": "banter",
+    "text": "🦝 Raccoon: One apple for the stash. Just one. Maybe two.",
+    "fileStem": "banter/storm_orchard.end.04",
+    "durationSec": 5.04
+  },
+  {
+    "id": "thaw_valley.start.01",
+    "group": "banter",
+    "text": "🐝 Bee: One big Master Bell! Season, time, and wind!",
+    "fileStem": "banter/thaw_valley.start.01",
+    "durationSec": 4.372
+  },
+  {
+    "id": "thaw_valley.start.02",
+    "group": "banter",
+    "text": "🦝 Raccoon: I'll whistle if a fox looks our way.",
+    "fileStem": "banter/thaw_valley.start.02",
+    "durationSec": 2.839
+  },
+  {
+    "id": "thaw_valley.start.03",
+    "group": "banter",
+    "text": "🐻 Bear: We're here for the fawn. Soft steps, team.",
+    "fileStem": "banter/thaw_valley.start.03",
+    "durationSec": 3.875
+  },
+  {
+    "id": "thaw_valley.start.04",
+    "group": "banter",
+    "text": "🐝 Bee: And a fox kit in the den, if we want to help!",
+    "fileStem": "banter/thaw_valley.start.04",
+    "durationSec": 3.475
+  },
+  {
+    "id": "thaw_valley.end.01",
+    "group": "banter",
+    "text": "🦌 Fawn: You thawed the valley. I'll come to the Hub.",
+    "fileStem": "banter/thaw_valley.end.01",
+    "durationSec": 3.411
+  },
+  {
+    "id": "thaw_valley.end.02",
+    "group": "banter",
+    "text": "🐝 Bee: The Closet will be so pretty with you there!",
+    "fileStem": "banter/thaw_valley.end.02",
+    "durationSec": 2.694
+  },
+  {
+    "id": "thaw_valley.end.03",
+    "group": "banter",
+    "text": "🦝 Raccoon: Master Bell, I still want to ring it again.",
+    "fileStem": "banter/thaw_valley.end.03",
+    "durationSec": 3.673
+  },
+  {
+    "id": "thaw_valley.end.04",
+    "group": "banter",
+    "text": "🐻 Bear: I am bear-y proud. And a little soggy.",
+    "fileStem": "banter/thaw_valley.end.04",
+    "durationSec": 3.097
+  },
+  {
+    "id": "thaw_valley.end.05",
+    "group": "banter",
+    "text": "🦊 Fox kit: I dug a tunnel! Tag — you're it, later!",
+    "fileStem": "banter/thaw_valley.end.05",
+    "durationSec": 4.346
+  },
+  {
+    "id": "grand_garden.start.01",
+    "group": "banter",
+    "text": "🦝 Raccoon: Every bit of gear we found. I'll swap as we go.",
+    "fileStem": "banter/grand_garden.start.01",
+    "durationSec": 4.638
+  },
+  {
+    "id": "grand_garden.start.02",
+    "group": "banter",
+    "text": "🐝 Bee: Sprinklers, wasps, a gnome to climb! Watch this!",
+    "fileStem": "banter/grand_garden.start.02",
+    "durationSec": 4.692
+  },
+  {
+    "id": "grand_garden.start.03",
+    "group": "banter",
+    "text": "🐻 Bear: The snail is slow. We leave it till the path is safe.",
+    "fileStem": "banter/grand_garden.start.03",
+    "durationSec": 4.506
+  },
+  {
+    "id": "grand_garden.start.04",
+    "group": "banter",
+    "text": "🦝 Raccoon: Lucky I packed a patience snack.",
+    "fileStem": "banter/grand_garden.start.04",
+    "durationSec": 3.237
+  },
+  {
+    "id": "grand_garden.end.01",
+    "group": "banter",
+    "text": "🐻 Bear: The snail made it. Slow and steady wins the bed.",
+    "fileStem": "banter/grand_garden.end.01",
+    "durationSec": 4.311
+  },
+  {
+    "id": "grand_garden.end.02",
+    "group": "banter",
+    "text": "🦝 Raccoon: Greenhouse, gnome, and not one damp whisker.",
+    "fileStem": "banter/grand_garden.end.02",
+    "durationSec": 3.945
+  },
+  {
+    "id": "grand_garden.end.03",
+    "group": "banter",
+    "text": "🐝 Bee: All our gear, all our tricks, all our friends!",
+    "fileStem": "banter/grand_garden.end.03",
+    "durationSec": 4.642
+  },
+  {
+    "id": "grand_garden.end.04",
+    "group": "banter",
+    "text": "🐻 Bear: After that, I want a garden nap in the shade.",
+    "fileStem": "banter/grand_garden.end.04",
+    "durationSec": 3.282
+  },
+  {
+    "id": "starheart_summit.start.01",
+    "group": "banter",
+    "text": "🐝 Bee: The summit! Four rings, then the Starheart!",
+    "fileStem": "banter/starheart_summit.start.01",
+    "durationSec": 3.832
+  },
+  {
+    "id": "starheart_summit.start.02",
+    "group": "banter",
+    "text": "🦝 Raccoon: Every trick we ever learned, in a spiral.",
+    "fileStem": "banter/starheart_summit.start.02",
+    "durationSec": 3.731
+  },
+  {
+    "id": "starheart_summit.start.03",
+    "group": "banter",
+    "text": "🐻 Bear: Friends from the Hub are here to help, too.",
+    "fileStem": "banter/starheart_summit.start.03",
+    "durationSec": 3.0
+  },
+  {
+    "id": "starheart_summit.start.04",
+    "group": "banter",
+    "text": "🐝 Bee: I was born for this climb. Watch this first ring!",
+    "fileStem": "banter/starheart_summit.start.04",
+    "durationSec": 3.801
+  },
+  {
+    "id": "starheart_summit.start.05",
+    "group": "banter",
+    "text": "🦝 Raccoon: I packed our very last victory snacks.",
+    "fileStem": "banter/starheart_summit.start.05",
+    "durationSec": 3.347
+  },
+  {
+    "id": "starheart_summit.end.01",
+    "group": "banter",
+    "text": "🐝 Bee: We carried the Starheart all the way home!",
+    "fileStem": "banter/starheart_summit.end.01",
+    "durationSec": 2.772
+  },
+  {
+    "id": "starheart_summit.end.02",
+    "group": "banter",
+    "text": "🦝 Raccoon: Shiniest thing I never kept. I'm proud of that.",
+    "fileStem": "banter/starheart_summit.end.02",
+    "durationSec": 4.401
+  },
+  {
+    "id": "starheart_summit.end.03",
+    "group": "banter",
+    "text": "🐻 Bear: Best crew in the meadow. I'm bear-y, bear-y proud.",
+    "fileStem": "banter/starheart_summit.end.03",
+    "durationSec": 3.989
+  },
+  {
+    "id": "starheart_summit.end.04",
+    "group": "banter",
+    "text": "Pip: I knew my friends could do it. Welcome home.",
+    "fileStem": "banter/starheart_summit.end.04",
+    "durationSec": 3.669
+  },
+  {
+    "id": "starheart_summit.end.05",
+    "group": "banter",
+    "text": "🐻 Bear: Now I nap. Someone save me a snack.",
+    "fileStem": "banter/starheart_summit.end.05",
+    "durationSec": 3.805
+  },
+  {
+    "id": "master_bell.pip.settle",
+    "group": "tips",
+    "text": "Wait for the bell to settle.",
+    "fileStem": "tips/master_bell.pip.settle",
+    "durationSec": 1.607
+  },
+  {
+    "id": "lobby.catchingUp",
+    "group": "lobby",
+    "text": "Catching up…",
+    "fileStem": "lobby/lobby.catchingUp",
+    "durationSec": 0.995
+  },
+  {
+    "id": "lobby.device.title",
+    "group": "lobby",
+    "text": "Who's on this device?",
+    "fileStem": "lobby/lobby.device.title",
+    "durationSec": 1.423
+  },
+  {
+    "id": "lobby.device.justMe",
+    "group": "lobby",
+    "text": "Just me",
+    "fileStem": "lobby/lobby.device.justMe",
+    "durationSec": 0.703
+  },
+  {
+    "id": "lobby.device.twoOfUs",
+    "group": "lobby",
+    "text": "Two of us",
+    "fileStem": "lobby/lobby.device.twoOfUs",
+    "durationSec": 0.786
+  },
+  {
+    "id": "lobby.assign.title",
+    "group": "lobby",
+    "text": "Who uses what?",
+    "fileStem": "lobby/lobby.assign.title",
+    "durationSec": 1.049
+  },
+  {
+    "id": "lobby.assign.wasd",
+    "group": "lobby",
+    "text": "WASD",
+    "fileStem": "lobby/lobby.assign.wasd",
+    "durationSec": 1.417
+  },
+  {
+    "id": "lobby.assign.arrows",
+    "group": "lobby",
+    "text": "Arrows",
+    "fileStem": "lobby/lobby.assign.arrows",
+    "durationSec": 0.745
+  },
+  {
+    "id": "lobby.assign.controller",
+    "group": "lobby",
+    "text": "Controller",
+    "fileStem": "lobby/lobby.assign.controller",
+    "durationSec": 0.813
+  },
+  {
+    "id": "lobby.share.onThisDevice",
+    "group": "lobby",
+    "text": "On this device",
+    "fileStem": "lobby/lobby.share.onThisDevice",
+    "durationSec": 1.065
+  },
+  {
+    "id": "lobby.camera.sharedView",
+    "group": "lobby",
+    "text": "Shared view",
+    "fileStem": "lobby/lobby.camera.sharedView",
+    "durationSec": 0.875
+  },
+  {
+    "id": "lobby.assign.footer",
+    "group": "lobby",
+    "text": "Press a face button on a second gamepad, or turn on Split keyboard.",
+    "fileStem": "lobby/lobby.assign.footer",
+    "durationSec": 4.309
+  },
+  {
+    "id": "lobby.p2.join",
+    "group": "lobby",
+    "text": "Player 2: Join",
+    "fileStem": "lobby/lobby.p2.join",
+    "durationSec": 1.483
+  },
+  {
+    "id": "lobby.p2.leave",
+    "group": "lobby",
+    "text": "Player 2: Leave.",
+    "fileStem": "lobby/lobby.p2.leave",
+    "durationSec": 1.666
+  },
+  {
+    "id": "lobby.p2.left",
+    "group": "lobby",
+    "text": "Player 2 left",
+    "fileStem": "lobby/lobby.p2.left",
+    "durationSec": 1.435
+  },
+  {
+    "id": "lobby.p2.resumeSolo",
+    "group": "lobby",
+    "text": "Resume solo",
+    "fileStem": "lobby/lobby.p2.resumeSolo",
+    "durationSec": 1.038
+  },
+  {
+    "id": "lobby.hostLeft.title",
+    "group": "lobby",
+    "text": "The host's game ended.",
+    "fileStem": "lobby/lobby.hostLeft.title",
+    "durationSec": 1.59
+  },
+  {
+    "id": "lobby.hostLeft.back",
+    "group": "lobby",
+    "text": "Back to your Meadow",
+    "fileStem": "lobby/lobby.hostLeft.back",
+    "durationSec": 1.035
+  },
+  {
+    "id": "settings.privacy",
+    "group": "menu",
+    "text": "Privacy",
+    "fileStem": "menu/settings.privacy",
+    "durationSec": 0.699
+  },
+  {
+    "id": "settings.online.allow",
+    "group": "menu",
+    "text": "Allow playing with friends (online)",
+    "fileStem": "menu/settings.online.allow",
+    "durationSec": 2.151
   }
 ]
