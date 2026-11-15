@@ -478,7 +478,7 @@ export const MAPS3 = {
     goal: 'Thaw Valley', act2: true, key: 'puzzles', ceil: 14, exit: [0, 86], par: 660,
     bounds: { x0: -18, x1: 16, z0: -10, z1: 92 },
     terraces: [[28, 36, 4], [58, 66, 4]], // floor 0 → melt shelf 4 → bell hill 8
-    crew: 'Bee · Raccoon · Bear', friend: 'fawn', loanGear: 'all', masterStart: 'A',
+    crew: 'Bee · Raccoon · Bear', friend: 'fawn', loanGear: 'all', masterStart: 'A', windWalk: true,
     escortGoal: { z: 85, sig: 'fawn' }, bellLearnZ: 4,
     windYaw: { down: Math.PI, up: 0 },
     windText: { up: '🌬️ The wind turns — it blows NORTH, up the valley', down: '🌬️ The wind turns — it blows SOUTH, down the valley' },
@@ -507,7 +507,7 @@ export const MAPS3 = {
       // A · fox valley: first creek (ice in A, mid otherwise — not a melt flood). Banks stay open for the crew.
       B.creek('cA', -6.5, 4, 0.2, 10);
       B.creek('cA2', 3.6, 4, 6.5, 10); // dirt ford at x 0.2..3.6 so the crew and fawn walk the middle, not the ice
-      B.fox('fxA', 7, 16.2, { yaw: Math.PI, ring: 5, path: [[6, 16], [9.2, 16]], speed: 1.8 }); // stands next to the plate so a short whistle ping can latch it
+      B.fox('fxA', 8, 17.5, { yaw: Math.PI, ring: 5, path: [[8, 17.5], [10, 17.5]], speed: 2.5 }); // just off the plate (r=1.3) so it does not auto-hold; a short whistle from (8,14) still lures it on
       B.plate('foxPl', 8, 16, { label: 'Fox plate' });
       B.gearStump(-4, 12, { label: 'Echo Whistle stump' });
       B.hide('log', -3, 14, 1.4, 1.4);
@@ -516,21 +516,21 @@ export const MAPS3 = {
       B.dig('digKit', 14, 21, 14, 24, { friend: 'foxkit', label: 'Soft dirt' });
       B.door('foxPl', 28, -6.5, 6.5, { label: 'Door A' });
       B.checkpoint(0, 26);
-      B.ramp(0, 28, 0, 36, 4, { w: 13, look: 'stone' });
-      B.windZone(-6.5, 2, 6.5, 26, { push: 6, h: 3, lift: 0, alt: { down: [0, -1], up: [0, 1] } });
+      // first rise is the terrace [28,36,4] — no extra B.ramp solids (they blocked the path as knee-high steps)
+      B.windZone(-6.5, -1, 6.5, 26, { push: 6, h: 3, lift: 0, alt: { down: [0, -1], up: [0, 1] } });
       // B · melt shelf
-      B.checkpoint(0, 36, 4);
+      B.checkpoint(0, 36); // gy is already 4 on the melt shelf; a base of 4 was putting the flag at y 8 and the arm height check failed
       B.creek('cMelt', -6.5, 44, 6.5, 52, { melt: true });
       B.seed('sV', -12, 46, { need: 'spring', needWhy: 'The seed only takes in spring — ring the Master Bell to B', grow: 'vine', vine: [-12, 48, 0.3, -8, 56, 4], vineLabel: 'Spring vine', label: 'Vine seed' });
       B.drip(-14, 42, 2.4);
       B.lever('lvV', -8, 56, { base: 4, label: 'Ledge lever' }); // gy is 4 on the shelf; base 4 puts the lever at y = 8
       B.hide('reed', -10, 48, 1.4, 1.6);
       B.door('lvV', 58, -6.5, 6.5, { label: 'Door B' });
-      B.ramp(0, 58, 4, 66, 8, { w: 13, look: 'stone' });
+      // second rise is the terrace [58,66,4] (shelf 4 → hill 8)
       B.windZone(-6.5, 36, 6.5, 56, { push: 6, h: 3, lift: 0, alt: { down: [0, -1], up: [0, 1] } });
       // C · bell hill
-      B.checkpoint(0, 66, 8);
-      B.ramp(0, 66, 8, 70, 8, { w: 6, look: 'wood' });
+      B.checkpoint(0, 66); // gy is already 8 on the bell hill
+      // hill is already at y 8 after the second terrace; no extra landing solids
       B.masterBell(0, 72, 2, { start: 'A' });
       B.gearStump(4, 68, { label: 'Gear stump' });
       B.hide('rock', 4, 70, 1.4, 1.2);
@@ -538,7 +538,7 @@ export const MAPS3 = {
       B.hopStone('master:C', 0, 80, { r: 1.6, top: 0.2 });
       B.hopStone('master:C', 0, 82, { r: 1.6, top: 0.2 });
       B.hopStone('master:C', 0, 84, { r: 1.6, top: 0.2 });
-      B.checkpoint(0, 85, 8);
+      B.checkpoint(0, 85);
       B.windZone(-6.5, 66, 6.5, 76, { push: 6, h: 3, lift: 0, alt: { down: [0, -1], up: [0, 1] } });
       // secret Starseed: east ice cave. 4 m wall seals the mouth except in winter, when a 2 m snow lip is a step
       const mouth = B.wall(14, 53.2, 3.4, 1.4, 8, { bot: 4, c: 0x9a968c });
@@ -554,7 +554,7 @@ export const MAPS3 = {
       for (let i = 0; i < 4; i++) P(-5 + i * 10 / 3, 2, 0.9);
       for (let i = 0; i < 3; i++) P(-4 + i * 5, 16, 0.9);
       P(12, 20, 0.9); P(14, 24, 0.9);
-      P(-2, 30, 0.9); P(-2, 34, 0.9);
+      P(-2, 37, 0.9); P(-2, 40, 0.9); // on the melt shelf, not on the slope where a collect TP clipped
       P(-14, 42, 0.9); P(-13, 45, 0.9); P(-12, 48, 0.9);
       P(-4, 42, 0.9); P(0, 48, 0.9); P(4, 54, 0.9);
       P(-4, 70, 0.9); P(0, 73, 0.9); P(4, 76, 0.9);
