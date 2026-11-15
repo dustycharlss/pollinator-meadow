@@ -23,10 +23,12 @@ export const TRACKS = {
   act1: [{ f: 'act/act1-meadow', g: 1, loop: true }], act2: [{ f: 'act/act2-trails', g: 1, loop: true }], act3: [{ f: 'act/act3-adventure', g: 1, loop: true }],
   act3map: [{ f: 'act/act3-map-theme', g: 1, loop: true }],
   hub: [{ f: 'act/meadow-hub-theme', g: 1, loop: true }], cave: [{ f: 'act/night-cave', g: 1, loop: true }], finale: [{ f: 'act/finale-celebration', g: 1, loop: true }],
+  lobby: [{ f: 'online/lobby-loop', g: 1, loop: true }],
 };
 // normalized (-18 LUFS) jingles from Beans' game_use column; gains kept conservative (not yet listened to)
 export const JINGLES = { clear: { f: 'jingles/norm/mintodog_cozy-puzzle-clear-n18', g: 0.75, len: 5.7 }, stage: { f: 'jingles/norm/kenney_pizzi03-n18', g: 0.75, len: 1.2 },
-  win: { f: 'rounds/win-theme', g: 0.85, len: 7.5 }, goal: { f: 'jingles/norm/kenney_pizzi07-n18', g: 0.7, len: 1.4 }, unlock: { f: 'jingles/norm/kenney_nes00-n18', g: 0.7, len: 1.8 }, stinger: { f: 'act/level-complete-stinger', g: 0.75, len: 3 } };
+  win: { f: 'rounds/win-theme', g: 0.85, len: 7.5 }, goal: { f: 'jingles/norm/kenney_pizzi07-n18', g: 0.7, len: 1.4 }, unlock: { f: 'jingles/norm/kenney_nes00-n18', g: 0.7, len: 1.8 }, stinger: { f: 'act/level-complete-stinger', g: 0.75, len: 3 },
+  joined: { f: 'online/friends-joined-sting', g: 1, len: 4.6 }, coop: { f: 'online/coop-complete-jingle', g: 1, len: 5.9 } };
 
 let LEVEL = 0.4;
 

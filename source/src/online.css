@@ -1,0 +1,56 @@
+/* N2 lobby, PIN, emotes, online settings, debug overlay. Hidden unless ?online=dev. */
+.olRoot { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: rgba(40, 24, 16, .45); font-family: inherit; color: #3b2614; }
+.olRoot[hidden], .olBar[hidden], .olDebug[hidden], .olBubble[hidden] { display: none !important; }
+.olCard { width: min(420px, calc(100vw - 24px)); max-height: min(844px, calc(100dvh - 16px)); background: #fff3d8; border: 3px solid #3b2614; border-radius: 18px; box-shadow: 0 8px 0 #3b2614, 0 16px 32px rgba(0,0,0,.25); overflow: hidden; display: flex; flex-direction: column; }
+.olHead { display: flex; align-items: center; gap: 8px; padding: 10px 12px 8px; }
+.olHead h2 { flex: 1; margin: 0; font-size: 1.15rem; }
+.olIco { width: 44px; height: 44px; border: 0; background: none; padding: 0; cursor: pointer; background-size: contain; background-repeat: no-repeat; background-position: center; }
+.olBody { padding: 8px 12px 14px; overflow: auto; }
+.olRow { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.olChoice { flex: 1; min-width: 140px; min-height: 96px; border: 3px solid #3b2614; border-radius: 14px; background: #ffe7b0; font-weight: 700; font-size: 1.05rem; cursor: pointer; }
+.olChoice:focus, .olTile:focus, .olTab:focus, .olBtn:focus { outline: 3px solid #ffd23f; outline-offset: 2px; }
+.olSlots { display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px; }
+.olSlot { width: 64px; height: 64px; border: 3px solid #3b2614; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; position: relative; }
+.olSlot img { width: 52px; height: 52px; image-rendering: auto; }
+.olSlot .olBadge { position: absolute; right: -4px; bottom: -4px; font-size: 14px; }
+.olTabs { display: flex; gap: 6px; margin: 0 0 8px; }
+.olTab { flex: 1; min-height: 48px; border: 2px solid #3b2614; border-radius: 10px; background: #ffe7b0; font-weight: 700; cursor: pointer; font-size: .85rem; }
+.olTab.on { background: #ffd23f; }
+.olGrid { display: grid; grid-template-columns: repeat(4, minmax(72px, 1fr)); gap: 8px; width: 312px; max-width: 100%; margin: 0 auto; }
+.olTile { min-width: 72px; min-height: 72px; border: 3px solid #3b2614; border-radius: 12px; background: #fff; cursor: pointer; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: none; }
+.olTile img { width: 56px; height: 56px; }
+.olTile.on { box-shadow: 0 0 0 3px #3b2614, 0 4px 0 #3b2614; transform: translateY(-2px); background: #ffe7b0; }
+.olBtn { min-height: 48px; padding: 8px 16px; border: 3px solid #3b2614; border-radius: 12px; background: #ffd23f; font-weight: 700; cursor: pointer; }
+.olBtn[disabled] { opacity: .45; cursor: default; }
+.olBtn.sec { background: #fff3d8; }
+.olType { width: 100%; margin-top: 8px; min-height: 40px; border: 2px solid #3b2614; border-radius: 8px; padding: 6px 8px; font: inherit; }
+.olHint { text-align: center; margin: 8px 0; }
+.olCards { display: flex; gap: 8px; justify-content: center; }
+.olClass { flex: 1; min-height: 88px; border: 3px solid #3b2614; border-radius: 12px; background: #fff; cursor: pointer; font-weight: 700; }
+.olClass.taken { opacity: .5; cursor: default; filter: grayscale(.3); }
+.olClass.p1 { box-shadow: inset 0 0 0 4px #ffd23f; }
+.olClass.p2 { box-shadow: inset 0 0 0 4px #6db4d6; }
+.olClass.p3 { box-shadow: inset 0 0 0 4px #d45890; }
+.olApprove { background: #fff; border: 3px solid #3b2614; border-radius: 14px; padding: 12px; text-align: center; margin: 8px 0; }
+.olShake { animation: olShake .4s ease; }
+@keyframes olShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+.olBar { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 70; display: flex; gap: 6px; background: rgba(255,243,216,.92); border: 3px solid #3b2614; border-radius: 16px; padding: 6px; }
+.olEm { width: 48px; height: 48px; border: 2px solid #3b2614; border-radius: 10px; background: #fff; font-size: 22px; cursor: pointer; }
+.olBubble { position: absolute; transform: translate(-50%, -120%); z-index: 60; background: #fff3d8; border: 3px solid #3b2614; border-radius: 14px; padding: 4px 8px; font-size: 22px; pointer-events: none; white-space: nowrap; }
+.olPlate { position: absolute; transform: translate(-50%, 12px); z-index: 59; pointer-events: none; display: flex; align-items: center; gap: 4px; }
+.olPlate img { width: 28px; height: 28px; }
+.olDebug { position: fixed; top: 8px; left: 8px; z-index: 90; background: rgba(20,16,12,.82); color: #fff3d8; font: 12px/1.35 ui-monospace, monospace; padding: 8px 10px; border-radius: 8px; max-width: 240px; }
+.olGate { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 48px; min-width: 220px; border: 3px solid #3b2614; border-radius: 999px; background: #fff3d8; cursor: pointer; overflow: hidden; user-select: none; }
+.olGateRing { position: absolute; inset: 0; background: conic-gradient(#a99cf0 var(--ol-p, 0%), transparent 0); opacity: .55; }
+.olGate span { position: relative; font-weight: 700; padding: 0 12px; }
+#sOnline[hidden], #sOnlineLocked[hidden] { display: none !important; }
+.ksOnline { margin-top: 12px; }
+.ksOnline .ksNote { max-width: 36em; }
+@media (orientation: landscape) and (max-height: 420px) {
+  .olCard { flex-direction: row; width: min(844px, calc(100vw - 16px)); max-height: calc(100dvh - 12px); }
+  .olHead { flex-direction: column; width: 200px; }
+  .olBody { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .olGrid { width: 280px; grid-template-columns: repeat(4, minmax(64px, 1fr)); }
+  .olTile { min-width: 64px; min-height: 64px; }
+  .olTile img { width: 48px; height: 48px; }
+}

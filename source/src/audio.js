@@ -109,7 +109,7 @@ export function createAudio() {
       if (!e) {
         e = { buf: null }; samples.set(name, e);
         // Act 3 cues are Opus .ogg + AAC .m4a (Beans re-encode); older one-shots are Vorbis .ogg + .m4a. An .ogg that will not decode retries the .m4a once.
-        const ext0 = /^act3\//.test(name) ? EXT : EXT_SFX, url = x => import.meta.env.BASE_URL + 'audio/sfx/' + name + '.' + x;
+        const ext0 = /^(act3|online)\//.test(name) ? EXT : EXT_SFX, url = x => import.meta.env.BASE_URL + 'audio/sfx/' + name + '.' + x;
         const load = x => fetch(url(x)).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && ctx.decodeAudioData(a));
         load(ext0).catch(() => ext0 === 'ogg' ? load('m4a') : null).then(b => { e.buf = b || null; if (b && e.want && ctx.currentTime - e.want < 0.25) api.sample(name, vol, rate); }).catch(() => {});
       }

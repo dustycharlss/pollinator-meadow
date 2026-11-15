@@ -9,6 +9,7 @@ import { CLASSES, CLASS_OF, ACTS, classOf } from './classes.js';
 import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
 import { lodify } from './lod.js';
+import { canShowFriendsStation } from './net/flags.js';
 import { waterSurface, FOAM_MAT } from './water.js';
 import { MAPS2 } from './act2-maps.js';
 import { MAPS3 } from './act3-maps.js';
@@ -525,7 +526,7 @@ export function createZones(scene, host) {
   let solids = [], picks = [], nodes = [], hoops = [], nightDews = [], star = null;
   let petalV = 0, homeAt = null, A = { x: 0, z: 0 }, baseY = 0, recipe = null, id = null, picked = 0, keyDone = false, msgT = 0, t = 0;
   let tutorI = 0, tutorT = -99, endLines = [], result = null;
-  let hubPads = [], hubFr = [];
+  let hubPads = [], hubFr = [], friendsSpec = null;
   let exitAt = null, exitOpen = false, exitMesh = null, exitLabel = null, starGot = false;
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
   let sampleH = null, waterMeshes = [], terrMesh = null;
@@ -672,14 +673,37 @@ export function createZones(scene, host) {
     reed(x, z, h) { const g = gy(x, z), m = new THREE.Mesh(new THREE.BoxGeometry(0.3, h, 0.3), mat(0x5a9a3a)); m.position.set(A.x + x, g + h / 2, A.z + z); group.add(m); },
     /** S1 Meadow Hub station: step on the ring to open a feature. o.need = friend id that unlocks it */
     hubPad(key, x, z, o = {}) {
+      if (o.gated) {
+        friendsSpec = { key, x, z, o: { ...o } };
+        if (!canShowFriendsStation(ctx.settings?.() || {})) return;
+      }
       const g = gy(x, z), col = o.col || 0xffc93c;
+      const wx = A.x + x, wz = A.z + z;
       const ring = new THREE.Mesh(new THREE.RingGeometry(1.25, 1.65, 28).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
-      ring.position.set(A.x + x, g + 0.09, A.z + z); group.add(ring);
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.2, 0.22), mat(0x8b5e3c)); post.position.set(A.x + x + 1.9, g + 1.1, A.z + z); group.add(post);
-      const sign = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.9, 0.12), mat(0xd8b07a)); sign.position.set(A.x + x + 1.9, g + 2.2, A.z + z); group.add(sign);
-      const em = emojiSprite(o.emoji || '⭐', 1.5); em.position.set(A.x + x, g + 2.6, A.z + z); group.add(em);
+      ring.position.set(wx, g + 0.09, wz); group.add(ring);
+      let em, model = null;
+      if (!o.noSign) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.2, 0.22), mat(0x8b5e3c)); post.position.set(wx + 1.9, g + 1.1, wz); group.add(post);
+        const sign = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.9, 0.12), mat(0xd8b07a)); sign.position.set(wx + 1.9, g + 2.2, wz); group.add(sign);
+        em = emojiSprite(o.emoji || '⭐', 1.5); em.position.set(wx, g + 2.6, wz); group.add(em);
+      } else {
+        em = emojiSprite(o.emoji || '🧺', 1.5); em.position.set(wx, g + 2.6, wz); group.add(em);
+        const holder = new THREE.Group(); holder.position.set(wx, g, wz); holder.rotation.y = o.yaw ?? Math.PI / 2; group.add(holder);
+        model = holder;
+        loadGLB('act3/online/play-with-friends-station').then(gltf => {
+          if (!gltf || !holder.parent) return;
+          const o3 = gltf.scene.clone(true);
+          o3.traverse(m => {
+            if (m.isMesh) { m.material = lambertFrom(m.material); m.castShadow = false; }
+            const n = (m.name || '').toLowerCase();
+            if (n === 'highlight' || n === 'on') m.visible = false;
+          });
+          holder.add(o3);
+          em.visible = false;
+        });
+      }
       const el = document.createElement('div'); el.className = 'zoneNode hubLbl'; el.style.display = 'none'; document.body.appendChild(el);
-      hubPads.push({ key, x: A.x + x, z: A.z + z, y: g, r: 1.6, label: o.label || key, need: o.need || null, lockTx: o.lockTx || '', ring, em, el, inside: false, col });
+      hubPads.push({ key, x: wx, z: wz, y: g, r: 1.6, label: o.label || key, need: o.need || null, lockTx: o.lockTx || '', ring, em, el, inside: false, col, model });
     },
     /** S1 rescued friend living in the hub (decor + banter); hidden until rescued unless o.always */
     friend(kind, x, z, o = {}) {
@@ -2573,14 +2597,15 @@ export function createZones(scene, host) {
       if (fresh.length && known.size) { T.news ||= {}; for (const k of known) if (fr.has(k)) T.news[k] = 1; }
       if (fresh.length || !T.known) { T.known = [...new Set([...known, ...fr])]; hubTalkSave(T); } }
     for (const f of hubFr) f.G.visible = f.id === 'always' || fr.has(f.id);
-    for (const h of hubPads) { h.open = !h.need || fr.has(h.need); h.ring.material.color.set(h.open ? h.col : 0x9a8f7a); h.ring.material.opacity = h.open ? 0.85 : 0.4; h.em.material.opacity = h.open ? 1 : 0.45; }
+    for (const h of hubPads) { h.open = !h.need || fr.has(h.need); if (h.ring?.material) { h.ring.material.color.set(h.open ? h.col : 0x9a8f7a); h.ring.material.opacity = h.open ? 0.85 : 0.4; } if (h.em?.material) h.em.material.opacity = h.open ? 1 : 0.45; }
   }
   function updateHub(dt, cam) {
     const p = ctx.getP(); if (!p) return;
     const cover = !!document.querySelector('.ov.on');
     for (const h of hubPads) {
       const d = Math.hypot(p.x - h.x, p.z - h.z);
-      h.ring.rotation.y += dt * 0.4; h.em.position.y = h.y + 2.6 + Math.sin(t * 2 + h.x) * 0.12;
+      if (h.ring) h.ring.rotation.y += dt * 0.4; if (h.em) h.em.position.y = h.y + 2.6 + Math.sin(t * 2 + h.x) * 0.12;
+      if (h.model) h.model.traverse(m => { const n = (m.name || '').toLowerCase(); if (n === 'highlight' || n === 'on') m.visible = !!h.inside; });
       const v = new THREE.Vector3(h.x, h.y + 3.6, h.z); v.project(cam); const show = !cover && v.z < 1 && d < 30;
       h.el.style.display = show ? 'block' : 'none';
       if (show) { h.el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; h.el.style.top = ((1 - v.y) / 2 * innerHeight) + 'px'; h.el.textContent = (h.open ? '' : '🔒 ') + h.label; }
@@ -3297,8 +3322,26 @@ export function createZones(scene, host) {
   function status() { return { id, t, exit: exitAt ? { x: exitAt.x - A.x, z: exitAt.z - A.z, open: exitOpen, n: crewAtExit() } : null, starGot, sig: { ...sig }, puzzles: puzzles.map(p => ({ id: p.id, done: p.done, req: p.req })), keyDone, picked, keyDew, props: props.filter(p => p.act).map(p => ({ act: p.act, cls: p.cls, sig: p.sig, label: p.label, x: p.x, y: p.y, z: p.z, done: !!p.done, b: p.b || null, from: p.from || null })), plates: plates.map(p => ({ sig: p.sig, x: p.x, y: p.y, z: p.z, heavy: p.heavy, holder: p.holder })), nodes: nodes.map(n => ({ kind: n.kind, x: n.m.position.x, y: n.m.position.y, z: n.m.position.z, done: n.done, sig: n.sig })), picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, show: k.show || null, who: k.who || null, night: k.nightOnly, value: k.value || 1, bloom: !!k.bloom })), hoops: hoops.map(h => ({ x: h.m.position.x, y: h.m.position.y, z: h.m.position.z, got: h.got })), A: { ...A }, baseY, petalValue: petalV, kid: kidState(), cps: a2 ? a2.cps.map(c => ({ x: +(c.x - A.x).toFixed(2), h: +(c.y - baseY).toFixed(2), z: +(c.z - A.z).toFixed(2), show: c.show, vis: c.G.visible, on: c.on })) : [], chains: (a2?.acorns || []).map(c => ({ id: c.id, timed: c.timed, win: c.win, ezWin: c.win * EZ('acorn') })), easy: !!ctx.easy?.() }; }
   /** kid-tutorial cursor (Fern regression §0.6): i = forward-only card index, max = high-water mark, n = station, slip = slipped hold step or -1 */
   function kidState() { if (!kid || !kid.steps) return null; const st = kid.steps[Math.max(0, kid.i)]; return { i: kid.i, max: kid.max, n: st ? st.n : 0, slip: kid.slip, latch: !!(st && st.latch !== false), safe: kid.safe ? { x: +(kid.safe.x - A.x).toFixed(2), z: +(kid.safe.z - A.z).toFixed(2) } : null, say: st ? st.say : '', slipSay: kid.slip >= 0 ? kid.steps[kid.slip].say : null }; }
+  function removeFriendsStation() {
+    hubPads = hubPads.filter(h => {
+      if (h.key !== 'friends') return true;
+      try { h.el?.remove(); } catch (e) {}
+      for (const obj of [h.ring, h.em, h.model]) { if (obj && obj.parent) obj.parent.remove(obj); }
+      return false;
+    });
+  }
+  function refreshFriendsStation(show) {
+    const on = show != null ? !!show : canShowFriendsStation(ctx.settings?.() || {});
+    const has = hubPads.some(h => h.key === 'friends');
+    if (!on && has) removeFriendsStation();
+    else if (on && !has && friendsSpec && recipe && recipe.hub) {
+      const { key, x, z, o } = friendsSpec;
+      B.hubPad(key, x, z, { ...o, gated: false });
+      if (recipe.hub) hubInit();
+    }
+  }
   return {
-    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
+    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
     act, wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status, kidState,
     /** test hook: finish the level as if the exit was reached (used by the POLISH result tests) */

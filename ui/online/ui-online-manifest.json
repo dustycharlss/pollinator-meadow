@@ -1,0 +1,5043 @@
+{
+  "name": "Pollinator Meadow \u2014 online play UI kit",
+  "direction": "B, Golden Hour Pastel",
+  "destination": "assets-incoming/online/ui/",
+  "format": "SVG authored at 2x, rasterised with sharp density 72 then LANCZOS-halved to 1x. Textless files to ship, plus -en previews. Runtime font: system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif.",
+  "strokes": {
+    "controls_css": 2,
+    "frames_css": 3,
+    "floor_css": 1,
+    "note": "Same thinner language as the ui-map revision. Authored even @2x (4 / 6) so LANCZOS 1x stays crisp."
+  },
+  "colours": {
+    "ink": "#3b2614",
+    "cream": "#fff3d8",
+    "honey": "#ffd23f",
+    "players": {
+      "P1": {
+        "fill": "#ffd23f",
+        "shape": "circle + star",
+        "token": "game gold, unchanged"
+      },
+      "P2": {
+        "fill": "#6db4d6",
+        "shape": "rounded square + chevron",
+        "token": "UI sky #7fc6e8 darkened, same a* b*, L* 76.5\u219270.0"
+      },
+      "P3": {
+        "fill": "#d45890",
+        "shape": "hex + three dots",
+        "token": "species pink #ff7eb6 darkened, same hue family"
+      }
+    }
+  },
+  "tap_min_css": 48,
+  "pin_tile_min_css": 64,
+  "words": {
+    "count": 64,
+    "canonical_css": 64,
+    "list": [
+      "owl",
+      "fox",
+      "frog",
+      "snail",
+      "turtle",
+      "rabbit",
+      "koala",
+      "panda",
+      "sloth",
+      "giraffe",
+      "penguin",
+      "dolphin",
+      "octopus",
+      "ladybug",
+      "puppy",
+      "hamster",
+      "acorn",
+      "leaf",
+      "tulip",
+      "cactus",
+      "clover",
+      "tree",
+      "apple",
+      "lemon",
+      "orange",
+      "carrot",
+      "kiwi",
+      "pretzel",
+      "honey",
+      "pizza",
+      "cupcake",
+      "donut",
+      "moon",
+      "sparkle",
+      "cloud",
+      "snow",
+      "feather",
+      "rocket",
+      "planet",
+      "rainbow",
+      "sunrise",
+      "ice",
+      "bubble",
+      "ocean",
+      "nest",
+      "sprout",
+      "globe",
+      "kite",
+      "lantern",
+      "drum",
+      "violin",
+      "crayon",
+      "robot",
+      "magnet",
+      "train",
+      "boat",
+      "trumpet",
+      "castle",
+      "crown",
+      "gift",
+      "puzzle",
+      "balloon",
+      "anchor",
+      "piano"
+    ],
+    "pin_subset": [
+      "owl",
+      "fox",
+      "penguin",
+      "turtle",
+      "puppy",
+      "apple",
+      "carrot",
+      "cactus",
+      "tree",
+      "moon",
+      "rainbow",
+      "rocket",
+      "boat",
+      "crown",
+      "robot",
+      "drum"
+    ],
+    "pin_length": 4,
+    "grid": "Four category tabs \u00d7 16 words, each a 4\u00d74 of 72 CSS px tiles (4\u00d772 + 3\u00d78 = 312 px square) with ~56 CSS px icons and 8 px gaps, per online-coop.md \u00a73.1.1. Tabs are 72 CSS px (paw, fork, sun, teddy) with on/off states; a runtime label may be shown and can be hidden on small screens. Portrait: 4 code slots on top (with tab badges), then tabs, then the grid, then the typing button. Landscape: slots and tabs in a left column, grid on the right, no scrolling in a 390 px-tall viewport. Focus ring is a thick ink overlay plus a lift. After 3 typed letters, clover and cloud are offered as two chips (the only shared 3-letter start).",
+    "tile_css": {
+      "portrait": 72,
+      "landscape": 72,
+      "minimum": 72,
+      "icon_css": 56,
+      "gap_css": 8
+    },
+    "tab_css": 72,
+    "categories": [
+      {
+        "id": "animals",
+        "label": "Animals",
+        "tab_glyph": "paw print (not a list word)",
+        "emoji": "\ud83d\udc3e",
+        "words": [
+          "owl",
+          "fox",
+          "turtle",
+          "rabbit",
+          "koala",
+          "panda",
+          "sloth",
+          "giraffe",
+          "penguin",
+          "dolphin",
+          "octopus",
+          "ladybug",
+          "puppy",
+          "snail",
+          "feather",
+          "nest"
+        ]
+      },
+      {
+        "id": "food-plants",
+        "label": "Food & plants",
+        "tab_glyph": "fork and plate (not a list word)",
+        "emoji": "\ud83c\udf74",
+        "words": [
+          "orange",
+          "lemon",
+          "carrot",
+          "kiwi",
+          "pretzel",
+          "honey",
+          "pizza",
+          "cupcake",
+          "ice",
+          "acorn",
+          "leaf",
+          "tulip",
+          "cactus",
+          "clover",
+          "tree",
+          "sprout"
+        ]
+      },
+      {
+        "id": "outside",
+        "label": "Outside",
+        "tab_glyph": "sun with rays (not a list word)",
+        "emoji": "\u2600\ufe0f",
+        "words": [
+          "frog",
+          "apple",
+          "moon",
+          "cloud",
+          "snow",
+          "rocket",
+          "planet",
+          "rainbow",
+          "sunrise",
+          "ocean",
+          "boat",
+          "anchor",
+          "castle",
+          "crown",
+          "train",
+          "kite"
+        ]
+      },
+      {
+        "id": "home-toys",
+        "label": "Home & toys",
+        "tab_glyph": "teddy bear (not a list word; teddy is not in the word list)",
+        "emoji": "\ud83e\uddf8",
+        "words": [
+          "lantern",
+          "drum",
+          "violin",
+          "crayon",
+          "robot",
+          "magnet",
+          "trumpet",
+          "gift",
+          "puzzle",
+          "balloon",
+          "piano",
+          "hamster",
+          "bubble",
+          "globe",
+          "sparkle",
+          "donut"
+        ]
+      }
+    ],
+    "word_to_category": {
+      "owl": "animals",
+      "fox": "animals",
+      "turtle": "animals",
+      "rabbit": "animals",
+      "koala": "animals",
+      "panda": "animals",
+      "sloth": "animals",
+      "giraffe": "animals",
+      "penguin": "animals",
+      "dolphin": "animals",
+      "octopus": "animals",
+      "ladybug": "animals",
+      "puppy": "animals",
+      "snail": "animals",
+      "feather": "animals",
+      "nest": "animals",
+      "orange": "food-plants",
+      "lemon": "food-plants",
+      "carrot": "food-plants",
+      "kiwi": "food-plants",
+      "pretzel": "food-plants",
+      "honey": "food-plants",
+      "pizza": "food-plants",
+      "cupcake": "food-plants",
+      "ice": "food-plants",
+      "acorn": "food-plants",
+      "leaf": "food-plants",
+      "tulip": "food-plants",
+      "cactus": "food-plants",
+      "clover": "food-plants",
+      "tree": "food-plants",
+      "sprout": "food-plants",
+      "frog": "outside",
+      "apple": "outside",
+      "moon": "outside",
+      "cloud": "outside",
+      "snow": "outside",
+      "rocket": "outside",
+      "planet": "outside",
+      "rainbow": "outside",
+      "sunrise": "outside",
+      "ocean": "outside",
+      "boat": "outside",
+      "anchor": "outside",
+      "castle": "outside",
+      "crown": "outside",
+      "train": "outside",
+      "kite": "outside",
+      "lantern": "home-toys",
+      "drum": "home-toys",
+      "violin": "home-toys",
+      "crayon": "home-toys",
+      "robot": "home-toys",
+      "magnet": "home-toys",
+      "trumpet": "home-toys",
+      "gift": "home-toys",
+      "puzzle": "home-toys",
+      "balloon": "home-toys",
+      "piano": "home-toys",
+      "hamster": "home-toys",
+      "bubble": "home-toys",
+      "globe": "home-toys",
+      "sparkle": "home-toys",
+      "donut": "home-toys"
+    },
+    "category_order": [
+      "animals",
+      "food-plants",
+      "outside",
+      "home-toys"
+    ],
+    "moved_words": [
+      {
+        "word": "feather",
+        "from": "Sky & outdoors",
+        "to": "animals"
+      },
+      {
+        "word": "nest",
+        "from": "Sky & outdoors",
+        "to": "animals"
+      },
+      {
+        "word": "ice",
+        "from": "Sky & outdoors",
+        "to": "food-plants"
+      },
+      {
+        "word": "sprout",
+        "from": "Sky & outdoors",
+        "to": "food-plants"
+      },
+      {
+        "word": "frog",
+        "from": "Animals",
+        "to": "outside"
+      },
+      {
+        "word": "apple",
+        "from": "Plants & food",
+        "to": "outside"
+      },
+      {
+        "word": "boat",
+        "from": "Toys & things",
+        "to": "outside"
+      },
+      {
+        "word": "anchor",
+        "from": "Toys & things",
+        "to": "outside"
+      },
+      {
+        "word": "castle",
+        "from": "Toys & things",
+        "to": "outside"
+      },
+      {
+        "word": "crown",
+        "from": "Toys & things",
+        "to": "outside"
+      },
+      {
+        "word": "train",
+        "from": "Toys & things",
+        "to": "outside"
+      },
+      {
+        "word": "hamster",
+        "from": "Animals",
+        "to": "home-toys"
+      },
+      {
+        "word": "bubble",
+        "from": "Sky & outdoors",
+        "to": "home-toys"
+      },
+      {
+        "word": "globe",
+        "from": "Sky & outdoors",
+        "to": "home-toys"
+      },
+      {
+        "word": "sparkle",
+        "from": "Sky & outdoors",
+        "to": "home-toys"
+      },
+      {
+        "word": "donut",
+        "from": "Plants & food",
+        "to": "home-toys"
+      }
+    ],
+    "grouping_note": "Tab placement follows the final lists in room-code-words.md and \u00a73.1.1. The 64 words are unchanged; 16 words moved between the original themes so no tab holds a confusable pair (fox/frog, apple/orange, clover/cloud, puppy/hamster, crown/crayon, and the rest of the tab-rule list)."
+  },
+  "emotes": [
+    "Hi!",
+    "OK!",
+    "Help?",
+    "Over here!",
+    "Wait for me!",
+    "Follow me!",
+    "Yay!",
+    "Thanks!"
+  ],
+  "settings": {
+    "object": "settings.online = {allow: true, direct: false} in pollinator-meadow-settings-v1",
+    "gate_text": "For grown-ups: press and hold for 3 seconds.",
+    "allow_label": "Allow playing with friends (online)",
+    "allow_default": "ON",
+    "direct_label": "Direct mode: connect straight to friends' devices. This shares your internet address (IP) with their devices.",
+    "direct_hint": "Off (recommended): everything goes through the safe relay, and no one in the game sees your internet address.",
+    "direct_confirm": "Direct mode shares this device's internet address with friends' devices in the game. Turn on?",
+    "direct_default": "OFF",
+    "direct_visible": "only past the gate (\u00a74.1). Hidden in the pre-gate settings mockups.",
+    "gate_unlock_seconds": 60
+  },
+  "colour_vision": {
+    "method": "Machado, Vieira & Oliveira 2009, severity 1.0, matrices applied in linear sRGB; CIE76 \u0394E; grayscale from relative luminance (sRGB Rec. 709). Cream #fff3d8, ink #3b2614. Same pipeline as act3/ui class badges.",
+    "threshold": "Grayscale \u0394E < 10 is a fail (same threshold used for the class badges).",
+    "pass": true,
+    "shipped": {
+      "P1 gold": "#ffd23f",
+      "P2 sky": "#6db4d6",
+      "P3 pink": "#d45890"
+    },
+    "shipped_pairs": {
+      "normal": {
+        "P1 gold vs P2 sky": 100.3,
+        "P1 gold vs P3 pink": 100.5,
+        "P2 sky vs P3 pink": 71.4
+      },
+      "deuteranopia": {
+        "P1 gold vs P2 sky": 100.8,
+        "P1 gold vs P3 pink": 78.5,
+        "P2 sky vs P3 pink": 27.9
+      },
+      "protanopia": {
+        "P1 gold vs P2 sky": 100.5,
+        "P1 gold vs P3 pink": 101.3,
+        "P2 sky vs P3 pink": 23.4
+      },
+      "tritanopia": {
+        "P1 gold vs P2 sky": 62.3,
+        "P1 gold vs P3 pink": 47.1,
+        "P2 sky vs P3 pink": 98.2
+      },
+      "gray": {
+        "P1 gold vs P2 sky": 15.9,
+        "P1 gold vs P3 pink": 30.8,
+        "P2 sky vs P3 pink": 14.9
+      }
+    },
+    "shipped_rows": {
+      "P1 gold": {
+        "hex": "#ffd23f",
+        "L": 85.86431816803201,
+        "a": 1.8689877613459749,
+        "b": 73.87527152202364,
+        "contrast_cream": 1.3109110274107385,
+        "contrast_ink": 9.8705861739786
+      },
+      "P2 sky": {
+        "hex": "#6db4d6",
+        "L": 69.99760971230172,
+        "a": -13.114321184820144,
+        "b": -24.044399614017188,
+        "contrast_cream": 2.083532748996326,
+        "contrast_ink": 6.210346474616098
+      },
+      "P3 pink": {
+        "hex": "#d45890",
+        "L": 55.06589759518374,
+        "a": 54.35933770843676,
+        "b": -6.062517525223576,
+        "contrast_cream": 3.405454440690159,
+        "contrast_ink": 3.799628063693658
+      }
+    },
+    "tightest_shipped_gray": {
+      "pair": "P2 sky vs P3 pink",
+      "dE": 14.9
+    },
+    "literal_pass": false,
+    "adjustment": "The literal trio gold #ffd23f + UI sky token #7fc6e8 + species pink #ff7eb6 fails grayscale (P2 sky vs P3 pink \u0394E 7.4, below the fail line of 10). Hues were kept. P2 was darkened to #6db4d6 (same a* b* as #7fc6e8, L* 76.5\u219270.0) and P3 was darkened to #d45890 (same pink hue family as #ff7eb6, lower L*), the same lightness move used for Bruiser on the class badges. P1 gold stays the game token #ffd23f. Second cues ship regardless: P1 circle + star, P2 rounded square + chevron, P3 hex + three dots. Name tags use the same fills, shapes, and marks; the left circle is an animal-glyph slot (no typed names).",
+    "sim_sheet": "players/sim-sheet.png",
+    "sim_report": "players/sim-report.json"
+  },
+  "spec_conflicts": [
+    {
+      "topic": "Room-code autocomplete",
+      "brief": "Older online-coop.md text said typing autocompletes after 2 letters.",
+      "spec": "Both room-code-words.md and \u00a73.1.1 now say after 3 letters. Clover/cloud is the only pair that still shares a 3-letter start; both are offered and the 4th letter decides.",
+      "kit": "Follows the 3-letter rule. Join-type mockups show a \u201cclo\u201d field and clover/cloud choice chips. Typing is always on desktop and behind a keyboard button on touch."
+    },
+    {
+      "topic": "Example room code",
+      "brief": "An older \u00a73.1 example used OWL \u00b7 ACORN \u00b7 ROCKET \u00b7 KITE.",
+      "spec": "Both files now use OWL \u00b7 CACTUS \u00b7 ROCKET \u00b7 PIANO.",
+      "kit": "Mockups use OWL \u00b7 CACTUS \u00b7 ROCKET \u00b7 PIANO."
+    },
+    {
+      "topic": "PIN pad description",
+      "brief": "The job brief said \u201ca 4-icon picture PIN pad.\u201d",
+      "spec": "\u00a73.6 is a 4\u00d74 pad of 16 icons; the PIN itself is 4 pictures long. Tiles must be at least 64 CSS px.",
+      "kit": "Follows the spec: 16-icon 4\u00d74 pad, 80 CSS px tiles, PIN length 4."
+    },
+    {
+      "topic": "Join grid and tab placement",
+      "brief": "Earlier kit drafts used an 8\u00d78, then the original four theme lists with plant / sun-cloud / blocks glyphs. Fern later finalised tab placement and the picker UI.",
+      "spec": "\u00a73.1.1 and room-code-words.md: 4 tabs \u00d7 16 (Animals, Food & plants, Outside, Home & toys) with paw / fork / sun / teddy glyphs, 72 CSS px tiles, ~56 px icons, a focus ring, tab badges on code tiles, a typing button, and a clover/cloud choice after 3 letters. 16 words moved so no tab holds a confusable pair. PIN subset: frog \u2192 penguin, balloon \u2192 robot. Direct mode is only visible past the grown-up gate.",
+      "kit": "This revision follows that spec. Nameplates keep the adopted colour-plus-shape cues (\u00a73.2). Autocomplete is 3 letters. The example code is unchanged. Connection-failed and keep-screen-on use the exact \u00a73.7 wording. The kit never falls back to direct. Landscape 64 px header fallback and Safari-toolbar 312 px fit (N2) are not verified in these full-390 mockups."
+    }
+  ],
+  "rebuild": "cd assets-incoming/online/ui && node src/build-words.mjs && node src/build-chrome.mjs && python3 src/sim-players.py && python3 src/make-docs.py && python3 src/write-manifest.py",
+  "assets": [
+    {
+      "id": "connection-failed",
+      "file": "banners/connection-failed.png",
+      "group": "banners",
+      "kind": "panel",
+      "size_1x": [
+        310,
+        200
+      ],
+      "bytes_1x": 6433,
+      "file_2x": "banners/connection-failed@2x.png",
+      "size_2x": [
+        620,
+        400
+      ],
+      "bytes_2x": 8409,
+      "use": "Friendly failure screen when /ice is blocked. Never falls back to direct on its own. Exact copy from \u00a73.7.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      },
+      "runtime_text": "Couldn't connect"
+    },
+    {
+      "id": "connection-lost",
+      "file": "banners/connection-lost.png",
+      "group": "banners",
+      "kind": "banner",
+      "size_1x": [
+        358,
+        64
+      ],
+      "bytes_1x": 5268,
+      "file_2x": "banners/connection-lost@2x.png",
+      "size_2x": [
+        716,
+        128
+      ],
+      "bytes_2x": 6554,
+      "use": "Connection-lost banner. Icon on the left; runtime text to the right.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "right": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "top": {
+          "px_1x": 18,
+          "px_2x": 36
+        },
+        "bottom": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "note": "Capsule banner. Icon lives in the left cap; runtime text goes to its right."
+      },
+      "runtime_text": "Connection lost"
+    },
+    {
+      "id": "keep-screen-on",
+      "file": "banners/keep-screen-on.png",
+      "group": "banners",
+      "kind": "panel",
+      "size_1x": [
+        310,
+        200
+      ],
+      "bytes_1x": 4583,
+      "file_2x": "banners/keep-screen-on@2x.png",
+      "size_2x": [
+        620,
+        400
+      ],
+      "bytes_2x": 5842,
+      "use": "Host warning for iPad and phone. Exact copy from \u00a73.7.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      },
+      "runtime_text": "Keep your screen on so your friends stay in the game."
+    },
+    {
+      "id": "pin-guessing",
+      "file": "banners/pin-guessing.png",
+      "group": "banners",
+      "kind": "panel",
+      "size_1x": [
+        310,
+        200
+      ],
+      "bytes_1x": 6851,
+      "file_2x": "banners/pin-guessing@2x.png",
+      "size_2x": [
+        620,
+        400
+      ],
+      "bytes_2x": 9004,
+      "use": "Host prompt after 10 wrong PIN tries across the room.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      },
+      "runtime_text": "Someone keeps guessing your PIN. Make a new code?"
+    },
+    {
+      "id": "pin-lockout",
+      "file": "banners/pin-lockout.png",
+      "group": "banners",
+      "kind": "banner",
+      "size_1x": [
+        358,
+        80
+      ],
+      "bytes_1x": 3730,
+      "file_2x": "banners/pin-lockout@2x.png",
+      "size_2x": [
+        716,
+        160
+      ],
+      "bytes_2x": 4526,
+      "use": "PIN lockout banner after 3 wrong tries. Runtime text: \u201cTake a little break \u23f3 0:30\u201d.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "right": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "top": {
+          "px_1x": 18,
+          "px_2x": 36
+        },
+        "bottom": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "note": "Capsule banner. Icon lives in the left cap; runtime text goes to its right."
+      },
+      "runtime_text": "Take a little break  0:30"
+    },
+    {
+      "id": "reconnecting",
+      "file": "banners/reconnecting.png",
+      "group": "banners",
+      "kind": "banner",
+      "size_1x": [
+        358,
+        64
+      ],
+      "bytes_1x": 4766,
+      "file_2x": "banners/reconnecting@2x.png",
+      "size_2x": [
+        716,
+        128
+      ],
+      "bytes_2x": 6024,
+      "use": "Reconnecting banner.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "right": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "top": {
+          "px_1x": 18,
+          "px_2x": 36
+        },
+        "bottom": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "note": "Capsule banner. Icon lives in the left cap; runtime text goes to its right."
+      },
+      "runtime_text": "Reconnecting\u2026"
+    },
+    {
+      "id": "safe-path",
+      "file": "banners/safe-path.png",
+      "group": "banners",
+      "kind": "banner",
+      "size_1x": [
+        358,
+        64
+      ],
+      "bytes_1x": 4397,
+      "file_2x": "banners/safe-path@2x.png",
+      "size_2x": [
+        716,
+        128
+      ],
+      "bytes_2x": 5375,
+      "use": "Relay / ICE diagnostics banner.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "right": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "top": {
+          "px_1x": 18,
+          "px_2x": 36
+        },
+        "bottom": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "note": "Capsule banner. Icon lives in the left cap; runtime text goes to its right."
+      },
+      "runtime_text": "Taking the safe path\u2026"
+    },
+    {
+      "id": "starting",
+      "file": "banners/starting.png",
+      "group": "banners",
+      "kind": "panel",
+      "size_1x": [
+        310,
+        200
+      ],
+      "bytes_1x": 7537,
+      "file_2x": "banners/starting@2x.png",
+      "size_2x": [
+        620,
+        400
+      ],
+      "bytes_2x": 9486,
+      "use": "Level-start countdown chrome. Runtime: \u201cStarting Ember Ridge in 3\u2026\u201d.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      },
+      "runtime_text": "Starting Ember Ridge in 3\u2026"
+    },
+    {
+      "id": "toast",
+      "file": "banners/toast.png",
+      "group": "banners",
+      "kind": "banner",
+      "size_1x": [
+        358,
+        64
+      ],
+      "bytes_1x": 1858,
+      "file_2x": "banners/toast@2x.png",
+      "size_2x": [
+        716,
+        128
+      ],
+      "bytes_2x": 2357,
+      "use": "Generic toast chrome for status lines such as \u201cAsking the host\u2026\u201d, \u201cRoom is full\u201d, \u201cThe host said not now\u201d, \u201cCouldn't load, try again\u201d.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "waiting-friends",
+      "file": "banners/waiting-friends.png",
+      "group": "banners",
+      "kind": "panel",
+      "size_1x": [
+        350,
+        180
+      ],
+      "bytes_1x": 3576,
+      "file_2x": "banners/waiting-friends@2x.png",
+      "size_2x": [
+        700,
+        360
+      ],
+      "bytes_2x": 4810,
+      "use": "Level-start hold screen, up to 15 s. Runtime: \u201cWaiting for friends\u201d. Composite player tags (colour + shape).",
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      },
+      "runtime_text": "Waiting for friends"
+    },
+    {
+      "id": "btn-coral",
+      "file": "chrome/btn-coral.png",
+      "group": "chrome",
+      "kind": "button",
+      "size_1x": [
+        140,
+        56
+      ],
+      "bytes_1x": 3611,
+      "file_2x": "chrome/btn-coral@2x.png",
+      "size_2x": [
+        280,
+        112
+      ],
+      "bytes_2x": 4710,
+      "use": "Deny / No.",
+      "tap_css": [
+        140,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Pill. Stretch the middle; keep the end caps and the 6 px lip."
+      },
+      "runtime_text": "No"
+    },
+    {
+      "id": "btn-mint",
+      "file": "chrome/btn-mint.png",
+      "group": "chrome",
+      "kind": "button",
+      "size_1x": [
+        140,
+        56
+      ],
+      "bytes_1x": 3671,
+      "file_2x": "chrome/btn-mint@2x.png",
+      "size_2x": [
+        280,
+        112
+      ],
+      "bytes_2x": 4741,
+      "use": "Confirm / Let in.",
+      "tap_css": [
+        140,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Pill. Stretch the middle; keep the end caps and the 6 px lip."
+      },
+      "runtime_text": "Let in"
+    },
+    {
+      "id": "btn-primary",
+      "file": "chrome/btn-primary.png",
+      "group": "chrome",
+      "kind": "button",
+      "size_1x": [
+        300,
+        56
+      ],
+      "bytes_1x": 3783,
+      "file_2x": "chrome/btn-primary@2x.png",
+      "size_2x": [
+        600,
+        112
+      ],
+      "bytes_2x": 5190,
+      "use": "Primary honey action. Draw runtime label in the centre.",
+      "tap_css": [
+        300,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Pill. Stretch the middle; keep the end caps and the 6 px lip."
+      }
+    },
+    {
+      "id": "btn-secondary",
+      "file": "chrome/btn-secondary.png",
+      "group": "chrome",
+      "kind": "button",
+      "size_1x": [
+        140,
+        56
+      ],
+      "bytes_1x": 3639,
+      "file_2x": "chrome/btn-secondary@2x.png",
+      "size_2x": [
+        280,
+        112
+      ],
+      "bytes_2x": 4845,
+      "use": "Secondary cream action (Cancel, Copy link as a wide button).",
+      "tap_css": [
+        140,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Pill. Stretch the middle; keep the end caps and the 6 px lip."
+      }
+    },
+    {
+      "id": "btn-wide",
+      "file": "chrome/btn-wide.png",
+      "group": "chrome",
+      "kind": "button",
+      "size_1x": [
+        340,
+        56
+      ],
+      "bytes_1x": 3787,
+      "file_2x": "chrome/btn-wide@2x.png",
+      "size_2x": [
+        680,
+        112
+      ],
+      "bytes_2x": 5264,
+      "use": "Full-width primary for narrow portrait sheets.",
+      "tap_css": [
+        340,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Pill. Stretch the middle; keep the end caps and the 6 px lip."
+      }
+    },
+    {
+      "id": "card",
+      "file": "chrome/card.png",
+      "group": "chrome",
+      "kind": "panel",
+      "size_1x": [
+        310,
+        220
+      ],
+      "bytes_1x": 3662,
+      "file_2x": "chrome/card@2x.png",
+      "size_2x": [
+        620,
+        440
+      ],
+      "bytes_2x": 5000,
+      "use": "Generic card frame for mid-size dialogs.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      }
+    },
+    {
+      "id": "panel",
+      "file": "chrome/panel.png",
+      "group": "chrome",
+      "kind": "panel",
+      "size_1x": [
+        350,
+        560
+      ],
+      "bytes_1x": 5656,
+      "file_2x": "chrome/panel@2x.png",
+      "size_2x": [
+        700,
+        1120
+      ],
+      "bytes_2x": 9445,
+      "use": "Generic tall overlay frame for lobby and settings sheets.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "right": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "top": {
+          "px_1x": 32,
+          "px_2x": 64
+        },
+        "bottom": {
+          "px_1x": 40,
+          "px_2x": 80
+        },
+        "note": "Corner radius 24 CSS px plus the 3 CSS px frame stroke and drop lip."
+      }
+    },
+    {
+      "id": "well",
+      "file": "chrome/well.png",
+      "group": "chrome",
+      "kind": "panel",
+      "size_1x": [
+        330,
+        260
+      ],
+      "bytes_1x": 3489,
+      "file_2x": "chrome/well@2x.png",
+      "size_2x": [
+        660,
+        520
+      ],
+      "bytes_2x": 5128,
+      "use": "Inset well for grids or groups of slots.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 22,
+          "px_2x": 44
+        }
+      }
+    },
+    {
+      "id": "follow-en",
+      "file": "emotes/follow-en.png",
+      "group": "emotes",
+      "kind": "preview",
+      "size_1x": [
+        72,
+        90
+      ],
+      "bytes_1x": 4494,
+      "use": "English preview of the Follow me! emote, caption under the bubble."
+    },
+    {
+      "id": "follow",
+      "file": "emotes/follow.png",
+      "group": "emotes",
+      "kind": "bubble",
+      "size_1x": [
+        72,
+        68
+      ],
+      "bytes_1x": 3397,
+      "file_2x": "emotes/follow@2x.png",
+      "size_2x": [
+        144,
+        136
+      ],
+      "bytes_2x": 3477,
+      "use": "Textless emote bubble, Follow me! glyph. Runtime text is not drawn on the bubble.",
+      "tap_css": [
+        72,
+        68
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "help-en",
+      "file": "emotes/help-en.png",
+      "group": "emotes",
+      "kind": "preview",
+      "size_1x": [
+        72,
+        90
+      ],
+      "bytes_1x": 5019,
+      "use": "English preview of the Help? emote, caption under the bubble."
+    },
+    {
+      "id": "help",
+      "file": "emotes/help.png",
+      "group": "emotes",
+      "kind": "bubble",
+      "size_1x": [
+        72,
+        68
+      ],
+      "bytes_1x": 3912,
+      "file_2x": "emotes/help@2x.png",
+      "size_2x": [
+        144,
+        136
+      ],
+      "bytes_2x": 4254,
+      "use": "Textless emote bubble, Help? glyph. Runtime text is not drawn on the bubble.",
+      "tap_css": [
+        72,
+        68
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "hi-en",
+      "file": "emotes/hi-en.png",
+      "group": "emotes",
+      "kind": "preview",
+      "size_1x": [
+        72,
+        90
+      ],
+      "bytes_1x": 4608,
+      "use": "English preview of the Hi! emote, caption under the bubble."
+    },
+    {
+      "id": "hi",
+      "file": "emotes/hi.png",
+      "group": "emotes",
+      "kind": "bubble",
+      "size_1x": [
+        72,
+        68
+      ],
+      "bytes_1x": 3992,
+      "file_2x": "emotes/hi@2x.png",
+      "size_2x": [
+        144,
+        136
+      ],
+      "bytes_2x": 4495,
+      "use": "Textless emote bubble, Hi! glyph. Runtime text is not drawn on the bubble.",
+      "tap_css": [
+        72,
+        68
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "ok-en",
+      "file": "emotes/ok-en.png",
+      "group": "emotes",
+      "kind": "preview",
+      "size_1x": [
+        72,
+        90
+      ],
+      "bytes_1x": 4197,
+      "use": "English preview of the OK! emote, caption under the bubble."
+    },
+    {
+      "id": "ok",
+      "file": "emotes/ok.png",
+      "group": "emotes",
+      "kind": "bubble",
+      "size_1x": [
+        72,
+        68
+      ],
+      "bytes_1x": 3404,
+      "file_2x": "emotes/ok@2x.png",
+      "size_2x": [
+        144,
+        136
+      ],
+      "bytes_2x": 3309,
+      "use": "Textless emote bubble, OK! glyph. Runtime text is not drawn on the bubble.",
+      "tap_css": [
+        72,
+        68
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "overhere-en",
+      "file": "emotes/overhere-en.png",
+      "group": "emotes",
+      "kind": "preview",
+      "size_1x": [
+        72,
+        90
+      ],
+      "bytes_1x": 5474,
+      "use": "English preview of the Over here! emote, caption under the bubble."
+    },
+    {
+      "id": "overhere",
+      "file": "emotes/overhere.png",
+      "group": "emotes",
+      "kind": "bubble",
+      "size_1x": [
+        72,
+        68
+      ],
+      "bytes_1x": 3923,
+      "file_2x": "emotes/overhere@2x.png",
+      "size_2x": [
+        144,
+        136
+      ],
+      "bytes_2x": 4838,
+      "use": "Textless emote bubble, Over here! glyph. Runtime text is not drawn on the bubble.",
+      "tap_css": [
+        72,
+        68
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      },
+      "notes": "Over here! also plays a 4 s ping ring in-game (not part of this still)."
+    },
+    {
+      "id": "thanks-en",
+      "file": "emotes/thanks-en.png",
+      "group": "emotes",
+      "kind": "preview",
+      "size_1x": [
+        72,
+        90
+      ],
+      "bytes_1x": 4817,
+      "use": "English preview of the Thanks! emote, caption under the bubble."
+    },
+    {
+      "id": "thanks",
+      "file": "emotes/thanks.png",
+      "group": "emotes",
+      "kind": "bubble",
+      "size_1x": [
+        72,
+        68
+      ],
+      "bytes_1x": 3794,
+      "file_2x": "emotes/thanks@2x.png",
+      "size_2x": [
+        144,
+        136
+      ],
+      "bytes_2x": 4270,
+      "use": "Textless emote bubble, Thanks! glyph. Runtime text is not drawn on the bubble.",
+      "tap_css": [
+        72,
+        68
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "wait-en",
+      "file": "emotes/wait-en.png",
+      "group": "emotes",
+      "kind": "preview",
+      "size_1x": [
+        72,
+        90
+      ],
+      "bytes_1x": 4506,
+      "use": "English preview of the Wait for me! emote, caption under the bubble."
+    },
+    {
+      "id": "wait",
+      "file": "emotes/wait.png",
+      "group": "emotes",
+      "kind": "bubble",
+      "size_1x": [
+        72,
+        68
+      ],
+      "bytes_1x": 3188,
+      "file_2x": "emotes/wait@2x.png",
+      "size_2x": [
+        144,
+        136
+      ],
+      "bytes_2x": 3208,
+      "use": "Textless emote bubble, Wait for me! glyph. Runtime text is not drawn on the bubble.",
+      "tap_css": [
+        72,
+        68
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "yay-en",
+      "file": "emotes/yay-en.png",
+      "group": "emotes",
+      "kind": "preview",
+      "size_1x": [
+        72,
+        90
+      ],
+      "bytes_1x": 4554,
+      "use": "English preview of the Yay! emote, caption under the bubble."
+    },
+    {
+      "id": "yay",
+      "file": "emotes/yay.png",
+      "group": "emotes",
+      "kind": "bubble",
+      "size_1x": [
+        72,
+        68
+      ],
+      "bytes_1x": 3625,
+      "file_2x": "emotes/yay@2x.png",
+      "size_2x": [
+        144,
+        136
+      ],
+      "bytes_2x": 3850,
+      "use": "Textless emote bubble, Yay! glyph. Runtime text is not drawn on the bubble.",
+      "tap_css": [
+        72,
+        68
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "confirm-card",
+      "file": "gate/confirm-card.png",
+      "group": "gate",
+      "kind": "panel",
+      "size_1x": [
+        310,
+        200
+      ],
+      "bytes_1x": 3593,
+      "file_2x": "gate/confirm-card@2x.png",
+      "size_2x": [
+        620,
+        400
+      ],
+      "bytes_2x": 4828,
+      "use": "Direct mode confirm dialog chrome.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      },
+      "runtime_text": "Direct mode shares this device's internet address with friends' devices in the game. Turn on?  \u00b7  Turn on / Cancel"
+    },
+    {
+      "id": "hold-btn-en",
+      "file": "gate/hold-btn-en.png",
+      "group": "gate",
+      "kind": "preview",
+      "size_1x": [
+        300,
+        64
+      ],
+      "bytes_1x": 8341,
+      "use": "English preview of the hold button with the exact gate sentence."
+    },
+    {
+      "id": "hold-btn",
+      "file": "gate/hold-btn.png",
+      "group": "gate",
+      "kind": "button",
+      "size_1x": [
+        300,
+        64
+      ],
+      "bytes_1x": 4386,
+      "file_2x": "gate/hold-btn@2x.png",
+      "size_2x": [
+        600,
+        128
+      ],
+      "bytes_2x": 5951,
+      "use": "Grown-up press-and-hold target. No icon hint. One pointer or focused Enter only. Release early resets.",
+      "tap_css": [
+        300,
+        64
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Pill. Stretch the middle; keep the end caps and the 6 px lip."
+      },
+      "runtime_text": "For grown-ups: press and hold for 3 seconds."
+    },
+    {
+      "id": "ring-0",
+      "file": "gate/ring-0.png",
+      "group": "gate",
+      "kind": "progress",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 3281,
+      "file_2x": "gate/ring-0@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 3797,
+      "use": "Hold progress ring at 0%. Ring fills while held; 100% shows a check. Pair with hold-btn."
+    },
+    {
+      "id": "ring-100",
+      "file": "gate/ring-100.png",
+      "group": "gate",
+      "kind": "progress",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 5545,
+      "file_2x": "gate/ring-100@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 7233,
+      "use": "Hold progress ring at 100%. Ring fills while held; 100% shows a check. Pair with hold-btn."
+    },
+    {
+      "id": "ring-33",
+      "file": "gate/ring-33.png",
+      "group": "gate",
+      "kind": "progress",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 5076,
+      "file_2x": "gate/ring-33@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 5772,
+      "use": "Hold progress ring at 33%. Ring fills while held; 100% shows a check. Pair with hold-btn."
+    },
+    {
+      "id": "ring-66",
+      "file": "gate/ring-66.png",
+      "group": "gate",
+      "kind": "progress",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 5934,
+      "file_2x": "gate/ring-66@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 6798,
+      "use": "Hold progress ring at 66%. Ring fills while held; 100% shows a check. Pair with hold-btn."
+    },
+    {
+      "id": "switch-allow-off",
+      "file": "gate/switch-allow-off.png",
+      "group": "gate",
+      "kind": "switch",
+      "size_1x": [
+        120,
+        56
+      ],
+      "bytes_1x": 4331,
+      "file_2x": "gate/switch-allow-off@2x.png",
+      "size_2x": [
+        240,
+        112
+      ],
+      "bytes_2x": 5511,
+      "use": "Allow switch, off. Textless; draw the label beside it. Turning a switch to its less-safe setting (Allow ON, Direct ON) requires the grown-up gate. Turning either OFF never needs the gate.",
+      "tap_css": [
+        120,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Track stretches horizontally; knob sits in the left (off) or right (on) cap."
+      },
+      "runtime_text": "Allow playing with friends (online)"
+    },
+    {
+      "id": "switch-allow-on",
+      "file": "gate/switch-allow-on.png",
+      "group": "gate",
+      "kind": "switch",
+      "size_1x": [
+        120,
+        56
+      ],
+      "bytes_1x": 4608,
+      "file_2x": "gate/switch-allow-on@2x.png",
+      "size_2x": [
+        240,
+        112
+      ],
+      "bytes_2x": 5935,
+      "use": "Allow switch, on. Textless; draw the label beside it. Turning a switch to its less-safe setting (Allow ON, Direct ON) requires the grown-up gate. Turning either OFF never needs the gate.",
+      "tap_css": [
+        120,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Track stretches horizontally; knob sits in the left (off) or right (on) cap."
+      },
+      "runtime_text": "Allow playing with friends (online)"
+    },
+    {
+      "id": "switch-direct-off",
+      "file": "gate/switch-direct-off.png",
+      "group": "gate",
+      "kind": "switch",
+      "size_1x": [
+        120,
+        56
+      ],
+      "bytes_1x": 4331,
+      "file_2x": "gate/switch-direct-off@2x.png",
+      "size_2x": [
+        240,
+        112
+      ],
+      "bytes_2x": 5511,
+      "use": "Direct switch, off. Textless; draw the label beside it. Turning a switch to its less-safe setting (Allow ON, Direct ON) requires the grown-up gate. Turning either OFF never needs the gate.",
+      "tap_css": [
+        120,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Track stretches horizontally; knob sits in the left (off) or right (on) cap."
+      },
+      "runtime_text": "Direct mode: connect straight to friends' devices. This shares your internet address (IP) with their devices."
+    },
+    {
+      "id": "switch-direct-on",
+      "file": "gate/switch-direct-on.png",
+      "group": "gate",
+      "kind": "switch",
+      "size_1x": [
+        120,
+        56
+      ],
+      "bytes_1x": 4608,
+      "file_2x": "gate/switch-direct-on@2x.png",
+      "size_2x": [
+        240,
+        112
+      ],
+      "bytes_2x": 5935,
+      "use": "Direct switch, on. Textless; draw the label beside it. Turning a switch to its less-safe setting (Allow ON, Direct ON) requires the grown-up gate. Turning either OFF never needs the gate.",
+      "tap_css": [
+        120,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Track stretches horizontally; knob sits in the left (off) or right (on) cap."
+      },
+      "runtime_text": "Direct mode: connect straight to friends' devices. This shares your internet address (IP) with their devices."
+    },
+    {
+      "id": "approve-card",
+      "file": "lobby/approve-card.png",
+      "group": "lobby",
+      "kind": "card",
+      "size_1x": [
+        310,
+        240
+      ],
+      "bytes_1x": 8189,
+      "file_2x": "lobby/approve-card@2x.png",
+      "size_2x": [
+        620,
+        480
+      ],
+      "bytes_2x": 10670,
+      "use": "Host approval card. Composite the joiner animal in the face circle, a colour tag, then Let in / No.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      },
+      "runtime_text": "A friend wants to join!"
+    },
+    {
+      "id": "badge-direct",
+      "file": "lobby/badge-direct.png",
+      "group": "lobby",
+      "kind": "badge",
+      "size_1x": [
+        40,
+        40
+      ],
+      "bytes_1x": 1802,
+      "file_2x": "lobby/badge-direct@2x.png",
+      "size_2x": [
+        80,
+        80
+      ],
+      "bytes_2x": 2173,
+      "use": "Small Direct-mode lobby badge. Show only when Direct is on. No copy that invites kids to switch it."
+    },
+    {
+      "id": "badge-tab-animals",
+      "file": "lobby/badge-tab-animals.png",
+      "group": "lobby",
+      "kind": "badge",
+      "size_1x": [
+        24,
+        24
+      ],
+      "bytes_1x": 1214,
+      "file_2x": "lobby/badge-tab-animals@2x.png",
+      "size_2x": [
+        48,
+        48
+      ],
+      "bytes_2x": 1786,
+      "use": "Small Animals tab badge for host and joiner code tiles, so a friend knows which tab to open."
+    },
+    {
+      "id": "badge-tab-food-plants",
+      "file": "lobby/badge-tab-food-plants.png",
+      "group": "lobby",
+      "kind": "badge",
+      "size_1x": [
+        24,
+        24
+      ],
+      "bytes_1x": 1310,
+      "file_2x": "lobby/badge-tab-food-plants@2x.png",
+      "size_2x": [
+        48,
+        48
+      ],
+      "bytes_2x": 1772,
+      "use": "Small Food & plants tab badge for host and joiner code tiles, so a friend knows which tab to open."
+    },
+    {
+      "id": "badge-tab-home-toys",
+      "file": "lobby/badge-tab-home-toys.png",
+      "group": "lobby",
+      "kind": "badge",
+      "size_1x": [
+        24,
+        24
+      ],
+      "bytes_1x": 1250,
+      "file_2x": "lobby/badge-tab-home-toys@2x.png",
+      "size_2x": [
+        48,
+        48
+      ],
+      "bytes_2x": 1924,
+      "use": "Small Home & toys tab badge for host and joiner code tiles, so a friend knows which tab to open."
+    },
+    {
+      "id": "badge-tab-outside",
+      "file": "lobby/badge-tab-outside.png",
+      "group": "lobby",
+      "kind": "badge",
+      "size_1x": [
+        24,
+        24
+      ],
+      "bytes_1x": 1050,
+      "file_2x": "lobby/badge-tab-outside@2x.png",
+      "size_2x": [
+        48,
+        48
+      ],
+      "bytes_2x": 1566,
+      "use": "Small Outside tab badge for host and joiner code tiles, so a friend knows which tab to open."
+    },
+    {
+      "id": "btn-back",
+      "file": "lobby/btn-back.png",
+      "group": "lobby",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 3817,
+      "file_2x": "lobby/btn-back@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4471,
+      "use": "Back.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-close",
+      "file": "lobby/btn-close.png",
+      "group": "lobby",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 3911,
+      "file_2x": "lobby/btn-close@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4510,
+      "use": "Close.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-copy-link",
+      "file": "lobby/btn-copy-link.png",
+      "group": "lobby",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 4086,
+      "file_2x": "lobby/btn-copy-link@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4622,
+      "use": "Copy link.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-join",
+      "file": "lobby/btn-join.png",
+      "group": "lobby",
+      "kind": "button",
+      "size_1x": [
+        220,
+        56
+      ],
+      "bytes_1x": 3693,
+      "file_2x": "lobby/btn-join@2x.png",
+      "size_2x": [
+        440,
+        112
+      ],
+      "bytes_2x": 5007,
+      "use": "Join CTA. Becomes active after the 4th code pick.",
+      "tap_css": [
+        220,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Pill. Stretch the middle; keep the end caps and the 6 px lip."
+      },
+      "runtime_text": "Join"
+    },
+    {
+      "id": "btn-lock-off",
+      "file": "lobby/btn-lock-off.png",
+      "group": "lobby",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 4153,
+      "file_2x": "lobby/btn-lock-off@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4757,
+      "use": "Lock room, off.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-lock-on",
+      "file": "lobby/btn-lock-on.png",
+      "group": "lobby",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 4117,
+      "file_2x": "lobby/btn-lock-on@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4643,
+      "use": "Lock room, on. Host can lock once play starts.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-pin-off",
+      "file": "lobby/btn-pin-off.png",
+      "group": "lobby",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 3983,
+      "file_2x": "lobby/btn-pin-off@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4441,
+      "use": "Secret PIN toggle, off.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-pin-on",
+      "file": "lobby/btn-pin-on.png",
+      "group": "lobby",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 4086,
+      "file_2x": "lobby/btn-pin-on@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4382,
+      "use": "Secret PIN toggle, on. Host panel control.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-play-friends",
+      "file": "lobby/btn-play-friends.png",
+      "group": "lobby",
+      "kind": "button",
+      "size_1x": [
+        300,
+        60
+      ],
+      "bytes_1x": 5182,
+      "file_2x": "lobby/btn-play-friends@2x.png",
+      "size_2x": [
+        600,
+        120
+      ],
+      "bytes_2x": 6650,
+      "use": "Title or Hub menu entry. Glyph on the left; runtime label in the remaining field.",
+      "tap_css": [
+        300,
+        60
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Pill. Stretch the middle; keep the end caps and the 6 px lip."
+      },
+      "runtime_text": "Play with friends"
+    },
+    {
+      "id": "btn-type",
+      "file": "lobby/btn-type.png",
+      "group": "lobby",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 4140,
+      "file_2x": "lobby/btn-type@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4659,
+      "use": "Typing-field button for touch devices. On desktop the field is always shown. Opens the keyboard fallback so it does not cover the grid.",
+      "tap_css": [
+        56,
+        56
+      ],
+      "runtime_text": "Type a word"
+    },
+    {
+      "id": "choice-chip",
+      "file": "lobby/choice-chip.png",
+      "group": "lobby",
+      "kind": "chip",
+      "size_1x": [
+        120,
+        56
+      ],
+      "bytes_1x": 1437,
+      "file_2x": "lobby/choice-chip@2x.png",
+      "size_2x": [
+        240,
+        112
+      ],
+      "bytes_2x": 1889,
+      "use": "Choice chip chrome for the clover/cloud 3-letter tie (and any similar pair). Composite a 56 px icon; runtime label is the word.",
+      "tap_css": [
+        120,
+        56
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "bottom": {
+          "px_1x": 16,
+          "px_2x": 32
+        }
+      }
+    },
+    {
+      "id": "choice-host-en",
+      "file": "lobby/choice-host-en.png",
+      "group": "lobby",
+      "kind": "art",
+      "size_1x": [
+        148,
+        160
+      ],
+      "bytes_1x": 5651
+    },
+    {
+      "id": "choice-host",
+      "file": "lobby/choice-host.png",
+      "group": "lobby",
+      "kind": "card",
+      "size_1x": [
+        148,
+        160
+      ],
+      "bytes_1x": 3640,
+      "file_2x": "lobby/choice-host@2x.png",
+      "size_2x": [
+        296,
+        320
+      ],
+      "bytes_2x": 3907,
+      "use": "Host a game choice tile. Runtime label in the bottom band.",
+      "tap_css": [
+        148,
+        160
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      },
+      "runtime_text": "Host a game"
+    },
+    {
+      "id": "choice-join-en",
+      "file": "lobby/choice-join-en.png",
+      "group": "lobby",
+      "kind": "art",
+      "size_1x": [
+        148,
+        160
+      ],
+      "bytes_1x": 5672
+    },
+    {
+      "id": "choice-join",
+      "file": "lobby/choice-join.png",
+      "group": "lobby",
+      "kind": "card",
+      "size_1x": [
+        148,
+        160
+      ],
+      "bytes_1x": 3429,
+      "file_2x": "lobby/choice-join@2x.png",
+      "size_2x": [
+        296,
+        320
+      ],
+      "bytes_2x": 4112,
+      "use": "Join a game choice tile. Runtime label in the bottom band.",
+      "tap_css": [
+        148,
+        160
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      },
+      "runtime_text": "Join a game"
+    },
+    {
+      "id": "class-bruiser-taken",
+      "file": "lobby/class-bruiser-taken.png",
+      "group": "lobby",
+      "kind": "card",
+      "size_1x": [
+        100,
+        100
+      ],
+      "bytes_1x": 2845,
+      "file_2x": "lobby/class-bruiser-taken@2x.png",
+      "size_2x": [
+        200,
+        200
+      ],
+      "bytes_2x": 3406,
+      "use": "Bruiser class card, taken.",
+      "tap_css": [
+        100,
+        100
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "class-bruiser",
+      "file": "lobby/class-bruiser.png",
+      "group": "lobby",
+      "kind": "card",
+      "size_1x": [
+        100,
+        100
+      ],
+      "bytes_1x": 2614,
+      "file_2x": "lobby/class-bruiser@2x.png",
+      "size_2x": [
+        200,
+        200
+      ],
+      "bytes_2x": 3142,
+      "use": "Bruiser class card, available.",
+      "tap_css": [
+        100,
+        100
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "class-scout-taken",
+      "file": "lobby/class-scout-taken.png",
+      "group": "lobby",
+      "kind": "card",
+      "size_1x": [
+        100,
+        100
+      ],
+      "bytes_1x": 2968,
+      "file_2x": "lobby/class-scout-taken@2x.png",
+      "size_2x": [
+        200,
+        200
+      ],
+      "bytes_2x": 3535,
+      "use": "Scout class card, taken.",
+      "tap_css": [
+        100,
+        100
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "class-scout",
+      "file": "lobby/class-scout.png",
+      "group": "lobby",
+      "kind": "card",
+      "size_1x": [
+        100,
+        100
+      ],
+      "bytes_1x": 2637,
+      "file_2x": "lobby/class-scout@2x.png",
+      "size_2x": [
+        200,
+        200
+      ],
+      "bytes_2x": 2994,
+      "use": "Scout class card, available.",
+      "tap_css": [
+        100,
+        100
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "class-trickster-taken",
+      "file": "lobby/class-trickster-taken.png",
+      "group": "lobby",
+      "kind": "card",
+      "size_1x": [
+        100,
+        100
+      ],
+      "bytes_1x": 3091,
+      "file_2x": "lobby/class-trickster-taken@2x.png",
+      "size_2x": [
+        200,
+        200
+      ],
+      "bytes_2x": 4031,
+      "use": "Trickster class card, taken.",
+      "tap_css": [
+        100,
+        100
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "class-trickster",
+      "file": "lobby/class-trickster.png",
+      "group": "lobby",
+      "kind": "card",
+      "size_1x": [
+        100,
+        100
+      ],
+      "bytes_1x": 3042,
+      "file_2x": "lobby/class-trickster@2x.png",
+      "size_2x": [
+        200,
+        200
+      ],
+      "bytes_2x": 3809,
+      "use": "Trickster class card, available.",
+      "tap_css": [
+        100,
+        100
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "code-well",
+      "file": "lobby/code-well.png",
+      "group": "lobby",
+      "kind": "well",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 1426,
+      "file_2x": "lobby/code-well@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 1927,
+      "use": "Waiting-room code tile well. Drop a 64 CSS px word icon in the centre.",
+      "tap_css": [
+        80,
+        80
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "right": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "top": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "bottom": {
+          "px_1x": 16,
+          "px_2x": 32
+        }
+      }
+    },
+    {
+      "id": "slot-empty",
+      "file": "lobby/slot-empty.png",
+      "group": "lobby",
+      "kind": "slot",
+      "size_1x": [
+        96,
+        112
+      ],
+      "bytes_1x": 3522,
+      "file_2x": "lobby/slot-empty@2x.png",
+      "size_2x": [
+        192,
+        224
+      ],
+      "bytes_2x": 4151,
+      "use": "Empty player slot (plus, dashed well).",
+      "tap_css": [
+        96,
+        112
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "slot-occupied",
+      "file": "lobby/slot-occupied.png",
+      "group": "lobby",
+      "kind": "slot",
+      "size_1x": [
+        96,
+        112
+      ],
+      "bytes_1x": 3975,
+      "file_2x": "lobby/slot-occupied@2x.png",
+      "size_2x": [
+        192,
+        224
+      ],
+      "bytes_2x": 5053,
+      "use": "Occupied slot stand-in. Prefer compositing a player ring into a plain well.",
+      "tap_css": [
+        96,
+        112
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "slot-reserved",
+      "file": "lobby/slot-reserved.png",
+      "group": "lobby",
+      "kind": "slot",
+      "size_1x": [
+        96,
+        112
+      ],
+      "bytes_1x": 3609,
+      "file_2x": "lobby/slot-reserved@2x.png",
+      "size_2x": [
+        192,
+        224
+      ],
+      "bytes_2x": 3534,
+      "use": "Reserved / \ud83d\udca4 waiting-for-friend slot (dropped player in grace).",
+      "tap_css": [
+        96,
+        112
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "right": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        }
+      }
+    },
+    {
+      "id": "tab-animals-off",
+      "file": "lobby/tab-animals-off.png",
+      "group": "lobby",
+      "kind": "tab",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 5853,
+      "file_2x": "lobby/tab-animals-off@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 7237,
+      "use": "Animals category tab, unselected.",
+      "tap_css": [
+        72,
+        72
+      ]
+    },
+    {
+      "id": "tab-animals-on",
+      "file": "lobby/tab-animals-on.png",
+      "group": "lobby",
+      "kind": "tab",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 5818,
+      "file_2x": "lobby/tab-animals-on@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 7092,
+      "use": "Animals category tab, selected. Glyph only; a runtime label can be shown, and hidden on small screens (\u00a73.1.1).",
+      "tap_css": [
+        72,
+        72
+      ]
+    },
+    {
+      "id": "tab-food-plants-off",
+      "file": "lobby/tab-food-plants-off.png",
+      "group": "lobby",
+      "kind": "tab",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 6221,
+      "file_2x": "lobby/tab-food-plants-off@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 7208,
+      "use": "Food & plants category tab, unselected.",
+      "tap_css": [
+        72,
+        72
+      ]
+    },
+    {
+      "id": "tab-food-plants-on",
+      "file": "lobby/tab-food-plants-on.png",
+      "group": "lobby",
+      "kind": "tab",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 6231,
+      "file_2x": "lobby/tab-food-plants-on@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 7090,
+      "use": "Food & plants category tab, selected. Glyph only; a runtime label can be shown, and hidden on small screens (\u00a73.1.1).",
+      "tap_css": [
+        72,
+        72
+      ]
+    },
+    {
+      "id": "tab-home-toys-off",
+      "file": "lobby/tab-home-toys-off.png",
+      "group": "lobby",
+      "kind": "tab",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 6469,
+      "file_2x": "lobby/tab-home-toys-off@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 8101,
+      "use": "Home & toys category tab, unselected.",
+      "tap_css": [
+        72,
+        72
+      ]
+    },
+    {
+      "id": "tab-home-toys-on",
+      "file": "lobby/tab-home-toys-on.png",
+      "group": "lobby",
+      "kind": "tab",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 6422,
+      "file_2x": "lobby/tab-home-toys-on@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 7968,
+      "use": "Home & toys category tab, selected. Glyph only; a runtime label can be shown, and hidden on small screens (\u00a73.1.1).",
+      "tap_css": [
+        72,
+        72
+      ]
+    },
+    {
+      "id": "tab-outside-off",
+      "file": "lobby/tab-outside-off.png",
+      "group": "lobby",
+      "kind": "tab",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 5874,
+      "file_2x": "lobby/tab-outside-off@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 6969,
+      "use": "Outside category tab, unselected.",
+      "tap_css": [
+        72,
+        72
+      ]
+    },
+    {
+      "id": "tab-outside-on",
+      "file": "lobby/tab-outside-on.png",
+      "group": "lobby",
+      "kind": "tab",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 5829,
+      "file_2x": "lobby/tab-outside-on@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 6830,
+      "use": "Outside category tab, selected. Glyph only; a runtime label can be shown, and hidden on small screens (\u00a73.1.1).",
+      "tap_css": [
+        72,
+        72
+      ]
+    },
+    {
+      "id": "word-tile-focus",
+      "file": "lobby/word-tile-focus.png",
+      "group": "lobby",
+      "kind": "overlay",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 1213,
+      "file_2x": "lobby/word-tile-focus@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 1822,
+      "use": "Focus ring overlay (80 CSS px) for keyboard/gamepad. Thick ink ring plus a lift; does not rely on colour alone (\u00a73.1.1).",
+      "tap_css": [
+        72,
+        72
+      ]
+    },
+    {
+      "id": "word-tile-selected",
+      "file": "lobby/word-tile-selected.png",
+      "group": "lobby",
+      "kind": "tile",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 1357,
+      "file_2x": "lobby/word-tile-selected@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 1826,
+      "use": "Join-grid word tile, selected (honey fill). Colour is not the only cue: used with the focus ring or a slot fill.",
+      "tap_css": [
+        72,
+        72
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "right": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "top": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "bottom": {
+          "px_1x": 16,
+          "px_2x": 32
+        }
+      }
+    },
+    {
+      "id": "word-tile",
+      "file": "lobby/word-tile.png",
+      "group": "lobby",
+      "kind": "tile",
+      "size_1x": [
+        72,
+        72
+      ],
+      "bytes_1x": 1412,
+      "file_2x": "lobby/word-tile@2x.png",
+      "size_2x": [
+        144,
+        144
+      ],
+      "bytes_2x": 1872,
+      "use": "Join-grid word tile, default. 72 CSS px; composite a ~56 CSS px word icon.",
+      "tap_css": [
+        72,
+        72
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "right": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "top": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "bottom": {
+          "px_1x": 16,
+          "px_2x": 32
+        }
+      }
+    },
+    {
+      "id": "btn-pick-own",
+      "file": "pin/btn-pick-own.png",
+      "group": "pin",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 4043,
+      "file_2x": "pin/btn-pick-own@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4696,
+      "use": "Host only: pick your own 4-picture PIN from the 16-icon pad.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-reroll",
+      "file": "pin/btn-reroll.png",
+      "group": "pin",
+      "kind": "icon-button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 4314,
+      "file_2x": "pin/btn-reroll@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 5172,
+      "use": "Host only: generate a new random 4-picture PIN.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "pad-frame",
+      "file": "pin/pad-frame.png",
+      "group": "pin",
+      "kind": "panel",
+      "size_1x": [
+        340,
+        340
+      ],
+      "bytes_1x": 4054,
+      "file_2x": "pin/pad-frame@2x.png",
+      "size_2x": [
+        680,
+        680
+      ],
+      "bytes_2x": 6226,
+      "use": "4\u00d74 PIN pad frame.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        }
+      }
+    },
+    {
+      "id": "slot-empty",
+      "file": "pin/slot-empty.png",
+      "group": "pin",
+      "kind": "slot",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1602,
+      "file_2x": "pin/slot-empty@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1625,
+      "use": "Empty PIN / code slot.",
+      "tap_css": [
+        64,
+        64
+      ]
+    },
+    {
+      "id": "slot-filled",
+      "file": "pin/slot-filled.png",
+      "group": "pin",
+      "kind": "slot",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1410,
+      "file_2x": "pin/slot-filled@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2070,
+      "use": "Filled PIN / code slot well (drop the chosen icon on top).",
+      "tap_css": [
+        64,
+        64
+      ]
+    },
+    {
+      "id": "slot-wrong",
+      "file": "pin/slot-wrong.png",
+      "group": "pin",
+      "kind": "slot",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1344,
+      "file_2x": "pin/slot-wrong@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1689,
+      "use": "Wrong-PIN flash well. Pair with runtime text: \u201cNot quite! Ask your friend for the PIN\u201d.",
+      "tap_css": [
+        64,
+        64
+      ]
+    },
+    {
+      "id": "tile",
+      "file": "pin/tile.png",
+      "group": "pin",
+      "kind": "tile",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 1446,
+      "file_2x": "pin/tile@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 1934,
+      "use": "PIN tile chrome. Composite a 64 CSS px word icon. Tap target is the tile, at least 64 CSS px (shipped 80).",
+      "tap_css": [
+        80,
+        80
+      ],
+      "nine_slice": {
+        "left": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "right": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "top": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "bottom": {
+          "px_1x": 16,
+          "px_2x": 32
+        }
+      }
+    },
+    {
+      "id": "ring-p1-32",
+      "file": "players/ring-p1-32.png",
+      "group": "players",
+      "kind": "ring",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1492,
+      "file_2x": "players/ring-p1-32@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 2015,
+      "use": "P1 gold player ring at 32 CSS px. Second cue: circle + star. 32 is a display size; taps use 48+."
+    },
+    {
+      "id": "ring-p1-48",
+      "file": "players/ring-p1-48.png",
+      "group": "players",
+      "kind": "ring",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 2609,
+      "file_2x": "players/ring-p1-48@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 3042,
+      "use": "P1 gold player ring at 48 CSS px. Second cue: circle + star. 32 is a display size; taps use 48+.",
+      "tap_css": [
+        48,
+        48
+      ]
+    },
+    {
+      "id": "ring-p1-64",
+      "file": "players/ring-p1-64.png",
+      "group": "players",
+      "kind": "ring",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3822,
+      "file_2x": "players/ring-p1-64@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 4450,
+      "use": "P1 gold player ring at 64 CSS px. Second cue: circle + star. 32 is a display size; taps use 48+.",
+      "tap_css": [
+        64,
+        64
+      ]
+    },
+    {
+      "id": "ring-p2-32",
+      "file": "players/ring-p2-32.png",
+      "group": "players",
+      "kind": "ring",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1306,
+      "file_2x": "players/ring-p2-32@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1494,
+      "use": "P2 sky player ring at 32 CSS px. Second cue: rounded square + chevron. 32 is a display size; taps use 48+."
+    },
+    {
+      "id": "ring-p2-48",
+      "file": "players/ring-p2-48.png",
+      "group": "players",
+      "kind": "ring",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 2084,
+      "file_2x": "players/ring-p2-48@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 2159,
+      "use": "P2 sky player ring at 48 CSS px. Second cue: rounded square + chevron. 32 is a display size; taps use 48+.",
+      "tap_css": [
+        48,
+        48
+      ]
+    },
+    {
+      "id": "ring-p2-64",
+      "file": "players/ring-p2-64.png",
+      "group": "players",
+      "kind": "ring",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2604,
+      "file_2x": "players/ring-p2-64@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2770,
+      "use": "P2 sky player ring at 64 CSS px. Second cue: rounded square + chevron. 32 is a display size; taps use 48+.",
+      "tap_css": [
+        64,
+        64
+      ]
+    },
+    {
+      "id": "ring-p3-32",
+      "file": "players/ring-p3-32.png",
+      "group": "players",
+      "kind": "ring",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1112,
+      "file_2x": "players/ring-p3-32@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1446,
+      "use": "P3 pink player ring at 32 CSS px. Second cue: hex + three dots. 32 is a display size; taps use 48+."
+    },
+    {
+      "id": "ring-p3-48",
+      "file": "players/ring-p3-48.png",
+      "group": "players",
+      "kind": "ring",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 1844,
+      "file_2x": "players/ring-p3-48@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 2189,
+      "use": "P3 pink player ring at 48 CSS px. Second cue: hex + three dots. 32 is a display size; taps use 48+.",
+      "tap_css": [
+        48,
+        48
+      ]
+    },
+    {
+      "id": "ring-p3-64",
+      "file": "players/ring-p3-64.png",
+      "group": "players",
+      "kind": "ring",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2188,
+      "file_2x": "players/ring-p3-64@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2674,
+      "use": "P3 pink player ring at 64 CSS px. Second cue: hex + three dots. 32 is a display size; taps use 48+.",
+      "tap_css": [
+        64,
+        64
+      ]
+    },
+    {
+      "id": "tag-p1",
+      "file": "players/tag-p1.png",
+      "group": "players",
+      "kind": "tag",
+      "size_1x": [
+        140,
+        44
+      ],
+      "bytes_1x": 3621,
+      "file_2x": "players/tag-p1@2x.png",
+      "size_2x": [
+        280,
+        88
+      ],
+      "bytes_2x": 4676,
+      "use": "P1 gold name tag. Left circle is an animal-glyph slot (no typed names). Second cue: circle + star.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "note": "Stretch the middle of the colour band. Keep the face slot in the left cap and the shape mark in the right cap."
+      }
+    },
+    {
+      "id": "tag-p2",
+      "file": "players/tag-p2.png",
+      "group": "players",
+      "kind": "tag",
+      "size_1x": [
+        140,
+        44
+      ],
+      "bytes_1x": 2587,
+      "file_2x": "players/tag-p2@2x.png",
+      "size_2x": [
+        280,
+        88
+      ],
+      "bytes_2x": 2999,
+      "use": "P2 sky name tag. Left circle is an animal-glyph slot (no typed names). Second cue: rounded square + chevron.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "note": "Stretch the middle of the colour band. Keep the face slot in the left cap and the shape mark in the right cap."
+      }
+    },
+    {
+      "id": "tag-p3",
+      "file": "players/tag-p3.png",
+      "group": "players",
+      "kind": "tag",
+      "size_1x": [
+        140,
+        44
+      ],
+      "bytes_1x": 2832,
+      "file_2x": "players/tag-p3@2x.png",
+      "size_2x": [
+        280,
+        88
+      ],
+      "bytes_2x": 3229,
+      "use": "P3 pink name tag. Left circle is an animal-glyph slot (no typed names). Second cue: hex + three dots.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "bottom": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "note": "Stretch the middle of the colour band. Keep the face slot in the left cap and the shape mark in the right cap."
+      }
+    },
+    {
+      "id": "acorn",
+      "file": "words/acorn.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1885,
+      "file_2x": "words/acorn@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2346,
+      "use": "Room-code picture for \u201cacorn\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "anchor",
+      "file": "words/anchor.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1526,
+      "file_2x": "words/anchor@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1816,
+      "use": "Room-code picture for \u201canchor\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "apple",
+      "file": "words/apple.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1965,
+      "file_2x": "words/apple@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2331,
+      "use": "Room-code picture for \u201capple\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "balloon",
+      "file": "words/balloon.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1999,
+      "file_2x": "words/balloon@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2584,
+      "use": "Room-code picture for \u201cballoon\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "boat",
+      "file": "words/boat.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1927,
+      "file_2x": "words/boat@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1353,
+      "use": "Room-code picture for \u201cboat\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "bubble",
+      "file": "words/bubble.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2534,
+      "file_2x": "words/bubble@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3093,
+      "use": "Room-code picture for \u201cbubble\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "cactus",
+      "file": "words/cactus.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1768,
+      "file_2x": "words/cactus@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1607,
+      "use": "Room-code picture for \u201ccactus\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "carrot",
+      "file": "words/carrot.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2037,
+      "file_2x": "words/carrot@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2019,
+      "use": "Room-code picture for \u201ccarrot\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "castle",
+      "file": "words/castle.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1986,
+      "file_2x": "words/castle@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1253,
+      "use": "Room-code picture for \u201ccastle\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "cloud",
+      "file": "words/cloud.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2316,
+      "file_2x": "words/cloud@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2841,
+      "use": "Room-code picture for \u201ccloud\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "clover",
+      "file": "words/clover.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1409,
+      "file_2x": "words/clover@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1489,
+      "use": "Room-code picture for \u201cclover\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "crayon",
+      "file": "words/crayon.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1214,
+      "file_2x": "words/crayon@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 756,
+      "use": "Room-code picture for \u201ccrayon\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "crown",
+      "file": "words/crown.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1756,
+      "file_2x": "words/crown@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1552,
+      "use": "Room-code picture for \u201ccrown\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "cupcake",
+      "file": "words/cupcake.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2435,
+      "file_2x": "words/cupcake@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2452,
+      "use": "Room-code picture for \u201ccupcake\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "dolphin",
+      "file": "words/dolphin.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2604,
+      "file_2x": "words/dolphin@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2725,
+      "use": "Room-code picture for \u201cdolphin\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "donut",
+      "file": "words/donut.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2721,
+      "file_2x": "words/donut@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3321,
+      "use": "Room-code picture for \u201cdonut\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "drum",
+      "file": "words/drum.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2891,
+      "file_2x": "words/drum@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2821,
+      "use": "Room-code picture for \u201cdrum\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "feather",
+      "file": "words/feather.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2565,
+      "file_2x": "words/feather@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2687,
+      "use": "Room-code picture for \u201cfeather\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "fox",
+      "file": "words/fox.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3047,
+      "file_2x": "words/fox@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3413,
+      "use": "Room-code picture for \u201cfox\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "frog",
+      "file": "words/frog.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2834,
+      "file_2x": "words/frog@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3296,
+      "use": "Room-code picture for \u201cfrog\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "gift",
+      "file": "words/gift.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1718,
+      "file_2x": "words/gift@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1574,
+      "use": "Room-code picture for \u201cgift\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "giraffe",
+      "file": "words/giraffe.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2503,
+      "file_2x": "words/giraffe@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2796,
+      "use": "Room-code picture for \u201cgiraffe\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "globe",
+      "file": "words/globe.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3424,
+      "file_2x": "words/globe@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3682,
+      "use": "Room-code picture for \u201cglobe\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "hamster",
+      "file": "words/hamster.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2793,
+      "file_2x": "words/hamster@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3131,
+      "use": "Room-code picture for \u201chamster\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "honey",
+      "file": "words/honey.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1597,
+      "file_2x": "words/honey@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1594,
+      "use": "Room-code picture for \u201choney\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "ice",
+      "file": "words/ice.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1235,
+      "file_2x": "words/ice@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1209,
+      "use": "Room-code picture for \u201cice\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "kite",
+      "file": "words/kite.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1761,
+      "file_2x": "words/kite@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1447,
+      "use": "Room-code picture for \u201ckite\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "kiwi",
+      "file": "words/kiwi.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2781,
+      "file_2x": "words/kiwi@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3513,
+      "use": "Room-code picture for \u201ckiwi\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "koala",
+      "file": "words/koala.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3105,
+      "file_2x": "words/koala@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3692,
+      "use": "Room-code picture for \u201ckoala\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "ladybug",
+      "file": "words/ladybug.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2214,
+      "file_2x": "words/ladybug@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2446,
+      "use": "Room-code picture for \u201cladybug\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "lantern",
+      "file": "words/lantern.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1391,
+      "file_2x": "words/lantern@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1030,
+      "use": "Room-code picture for \u201clantern\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "leaf",
+      "file": "words/leaf.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2843,
+      "file_2x": "words/leaf@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3289,
+      "use": "Room-code picture for \u201cleaf\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "lemon",
+      "file": "words/lemon.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1906,
+      "file_2x": "words/lemon@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2374,
+      "use": "Room-code picture for \u201clemon\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "magnet",
+      "file": "words/magnet.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1664,
+      "file_2x": "words/magnet@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1783,
+      "use": "Room-code picture for \u201cmagnet\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "moon",
+      "file": "words/moon.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1968,
+      "file_2x": "words/moon@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2330,
+      "use": "Room-code picture for \u201cmoon\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "nest",
+      "file": "words/nest.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2488,
+      "file_2x": "words/nest@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3122,
+      "use": "Room-code picture for \u201cnest\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "ocean",
+      "file": "words/ocean.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2692,
+      "file_2x": "words/ocean@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2769,
+      "use": "Room-code picture for \u201cocean\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "octopus",
+      "file": "words/octopus.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3094,
+      "file_2x": "words/octopus@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3758,
+      "use": "Room-code picture for \u201coctopus\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "orange",
+      "file": "words/orange.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1893,
+      "file_2x": "words/orange@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2405,
+      "use": "Room-code picture for \u201corange\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "owl",
+      "file": "words/owl.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3210,
+      "file_2x": "words/owl@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3796,
+      "use": "Room-code picture for \u201cowl\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "panda",
+      "file": "words/panda.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2758,
+      "file_2x": "words/panda@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2793,
+      "use": "Room-code picture for \u201cpanda\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "penguin",
+      "file": "words/penguin.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2304,
+      "file_2x": "words/penguin@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2398,
+      "use": "Room-code picture for \u201cpenguin\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "piano",
+      "file": "words/piano.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 732,
+      "file_2x": "words/piano@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 534,
+      "use": "Room-code picture for \u201cpiano\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "pizza",
+      "file": "words/pizza.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2748,
+      "file_2x": "words/pizza@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2592,
+      "use": "Room-code picture for \u201cpizza\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "planet",
+      "file": "words/planet.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3164,
+      "file_2x": "words/planet@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 4442,
+      "use": "Room-code picture for \u201cplanet\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "pretzel",
+      "file": "words/pretzel.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3420,
+      "file_2x": "words/pretzel@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 4171,
+      "use": "Room-code picture for \u201cpretzel\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "puppy",
+      "file": "words/puppy.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2999,
+      "file_2x": "words/puppy@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3686,
+      "use": "Room-code picture for \u201cpuppy\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "puzzle",
+      "file": "words/puzzle.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1132,
+      "file_2x": "words/puzzle@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1438,
+      "use": "Room-code picture for \u201cpuzzle\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "rabbit",
+      "file": "words/rabbit.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3561,
+      "file_2x": "words/rabbit@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 4533,
+      "use": "Room-code picture for \u201crabbit\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "rainbow",
+      "file": "words/rainbow.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2798,
+      "file_2x": "words/rainbow@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3602,
+      "use": "Room-code picture for \u201crainbow\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "robot",
+      "file": "words/robot.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2129,
+      "file_2x": "words/robot@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1860,
+      "use": "Room-code picture for \u201crobot\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "rocket",
+      "file": "words/rocket.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2335,
+      "file_2x": "words/rocket@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2133,
+      "use": "Room-code picture for \u201crocket\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "sloth",
+      "file": "words/sloth.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2777,
+      "file_2x": "words/sloth@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3242,
+      "use": "Room-code picture for \u201csloth\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "snail",
+      "file": "words/snail.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 3405,
+      "file_2x": "words/snail@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3682,
+      "use": "Room-code picture for \u201csnail\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "snow",
+      "file": "words/snow.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1235,
+      "file_2x": "words/snow@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1438,
+      "use": "Room-code picture for \u201csnow\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "sparkle",
+      "file": "words/sparkle.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1941,
+      "file_2x": "words/sparkle@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2277,
+      "use": "Room-code picture for \u201csparkle\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "sprout",
+      "file": "words/sprout.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1306,
+      "file_2x": "words/sprout@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1534,
+      "use": "Room-code picture for \u201csprout\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "sunrise",
+      "file": "words/sunrise.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2130,
+      "file_2x": "words/sunrise@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1954,
+      "use": "Room-code picture for \u201csunrise\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "train",
+      "file": "words/train.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2299,
+      "file_2x": "words/train@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1911,
+      "use": "Room-code picture for \u201ctrain\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "tree",
+      "file": "words/tree.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2900,
+      "file_2x": "words/tree@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3319,
+      "use": "Room-code picture for \u201ctree\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "trumpet",
+      "file": "words/trumpet.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 1308,
+      "file_2x": "words/trumpet@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 1121,
+      "use": "Room-code picture for \u201ctrumpet\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "tulip",
+      "file": "words/tulip.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2016,
+      "file_2x": "words/tulip@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 2527,
+      "use": "Room-code picture for \u201ctulip\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    },
+    {
+      "id": "turtle",
+      "file": "words/turtle.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2989,
+      "file_2x": "words/turtle@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3071,
+      "use": "Room-code picture for \u201cturtle\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles.",
+      "notes": "PIN subset"
+    },
+    {
+      "id": "violin",
+      "file": "words/violin.png",
+      "group": "words",
+      "kind": "icon",
+      "size_1x": [
+        64,
+        64
+      ],
+      "bytes_1x": 2637,
+      "file_2x": "words/violin@2x.png",
+      "size_2x": [
+        128,
+        128
+      ],
+      "bytes_2x": 3181,
+      "use": "Room-code picture for \u201cviolin\u201d. Canonical size 64 CSS px; scale to about 56 CSS px in the 72 CSS px tabbed 4\u00d74 join-grid tiles, or into 80 CSS px PIN tiles."
+    }
+  ],
+  "mockups": [
+    {
+      "file": "mockups/approve-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/approve-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/choice-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/choice-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/connection-failed-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/connection-failed-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/emotes-reconnect-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/emotes-reconnect-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/entry-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/entry-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/join-code-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/join-code-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/join-type-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/join-type-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/keep-screen-on-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/keep-screen-on-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/pin-guessing-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/pin-guessing-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/pin-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/pin-lockout-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/pin-lockout-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/pin-pick-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/pin-pick-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/pin-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/settings-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/settings-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/starting-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/starting-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/waiting-friends-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/waiting-friends-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    },
+    {
+      "file": "mockups/waiting-host-landscape.png",
+      "size": [
+        844,
+        390
+      ]
+    },
+    {
+      "file": "mockups/waiting-host-portrait.png",
+      "size": [
+        390,
+        844
+      ]
+    }
+  ],
+  "sheet": "sheet.png",
+  "readme": "README.md"
+}

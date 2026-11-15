@@ -1,0 +1,1335 @@
+{
+  "name": "online-coop-hud",
+  "direction": "B \u2014 Golden Hour Pastel",
+  "destination": "/workspace/assets-incoming/online/hud/",
+  "format": "1x CSS px + @2x authoring px. Textless art to ship; -en previews for review. Phone-light: sparse cream/honey chrome, 48 CSS px minimum taps, no heavy frames in the playfield.",
+  "strokes": "2 CSS px (4 @2x) on controls; 3 CSS px (6 @2x) on frames. Floor 1 CSS px.",
+  "font": "Runtime: system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif. Mockups: DejaVu Sans / DejaVu Sans Bold (no emoji; \ud83c\udf3c and \ud83d\udca4 are omitted in rasters).",
+  "colours": {
+    "ink": "#3b2614",
+    "cream": "#fff3d8",
+    "honey": "#ffd23f",
+    "mint": "#79cf8c",
+    "coral": "#f47a68",
+    "players": {
+      "P1": {
+        "fill": "#ffd23f",
+        "shape": "circle + star",
+        "lip": "#d49a18"
+      },
+      "P2": {
+        "fill": "#6db4d6",
+        "shape": "rounded square + chevron",
+        "lip": "#3d7a9a"
+      },
+      "P3": {
+        "fill": "#d45890",
+        "shape": "hexagon + three dots",
+        "lip": "#9a3d68"
+      }
+    }
+  },
+  "tap_min_css": 48,
+  "world_tag": {
+    "size_css": 56,
+    "glyph_css": 32,
+    "recipe": "Paste glyphs/{species}.png into the cream well of tags/world-p{1,2,3}.png. Well centre \u2248 (28, 24) in 1x CSS px; glyph top-left \u2248 (12, 8). No player names.",
+    "why_new": "online/ui rings fill the centre with the shape mark, so a glyph would fight them. Wide nameplates (tag-pN.png) only have a ~20 CSS px face well. New hollow 56 CSS px tags keep colour+shape and leave a 32 px well. Official rings and wide nameplates stay referenced, not copied."
+  },
+  "wheel": {
+    "order": [
+      "Hi!",
+      "OK!",
+      "Help?",
+      "Over here!",
+      "Wait for me!",
+      "Follow me!",
+      "Yay!",
+      "Thanks!"
+    ],
+    "start_angle": "90\u00b0 (up), then clockwise",
+    "bubble_css": 56,
+    "portrait": {
+      "open_center": [
+        216,
+        648
+      ],
+      "radius": 128,
+      "closed_center": [
+        318,
+        760
+      ],
+      "note": "Closed button sits in the lower-right thumb rest, clear of a jump/act cluster in the extreme corner. Open centre is inset so a full 8-bubble ring (radius 128 + 28 bubble radius = 156) stays inside 390\u00d7844."
+    },
+    "landscape": {
+      "open_center": [
+        680,
+        226
+      ],
+      "radius": 120,
+      "closed_center": [
+        772,
+        326
+      ],
+      "note": "Closed button in the right-thumb rest. Open centre is inset so a full ring (radius 120 + 28 = 148) stays inside 844\u00d7390."
+    }
+  },
+  "edge_clamp": {
+    "show_when": "A friend\u2019s world position is outside the visible viewport, or within 16 CSS px of an edge.",
+    "rule": "Project the vector from the local player\u2019s screen position (fallback: viewport centre) to the friend. Place the arrow at the intersection of that ray with an inset rectangle: 12 CSS px from the edges, plus extra inset so the 56\u00d756 arrow never overlaps the pause+signal cluster (top-left), the jump/act cluster (bottom-right), or the emote button (closed-state anchor). Clamp the sprite fully on-screen. Assets are authored pointing UP; rotate so the tip points toward the friend. If two arrows would overlap, spread them by at least 8 CSS px along the edge.",
+    "online_vs_couch": "For online play, show whenever the friend is off-screen. The couch S8 12 m / 16 m / 20 m soft-warn in act3-shop-coop.md \u00a72.5 is a separate kit and does not apply here."
+  },
+  "timing": {
+    "emote_visible_s": 2.5,
+    "emote_fade_s": 0.4,
+    "emote_rate_limit_s": 1.5,
+    "emote_fade_preview_frames": [
+      1.0,
+      0.6,
+      0.3
+    ],
+    "over_here_ping_s": 4,
+    "drop_slot_reserved_s": 60
+  },
+  "copy": {
+    "host_left_spec": "The host's game ended. Back to your Meadow \ud83c\udf3c",
+    "host_left_title": "The host's game ended.",
+    "host_left_button": "Back to your Meadow",
+    "waiting_for_friend_spec": "\ud83d\udca4 waiting for friend",
+    "waiting_for_friend_raster": "waiting for friend",
+    "source": "online-coop.md \u00a73.3 and \u00a73.7. The \ud83c\udf3c and \ud83d\udca4 are omitted in rasters because DejaVu has no emoji; runtime should use the full spec strings."
+  },
+  "signal": {
+    "placement": "8 CSS px to the right of the pause button, 12 CSS px from the top-left.",
+    "states": {
+      "good": "mint disc, 3 solid bars",
+      "weak": "honey disc, 2 solid bars (right bar empty)",
+      "lost": "coral disc, empty bars + X"
+    },
+    "non_colour_cue": "Bar count, and an X on lost. Colour alone is not sufficient: mint vs honey grayscale \u0394E is 9.4 (under the kit threshold of 10)."
+  },
+  "ghost": {
+    "treatment": "Idle animal is desaturated (near 0 saturation) and slightly lifted, under a dashed foam veil, with the honey reconnect glyph and the waiting-for-friend pill. The animal stays in place so it still holds plates. Slot reserved 60 s."
+  },
+  "backdrops": {
+    "source": "/workspace/assets-incoming/art-direction/frame-B.png (1280\u00d7720, preset B, already a real in-game-style frame). Portrait and landscape are crops, not a fresh Playwright re-render, because 390\u00d7844 and 844\u00d7390 do not match 16:9.",
+    "files": [
+      "backdrops/level-portrait.png",
+      "backdrops/level-landscape.png",
+      "backdrops/level-portrait-offscreen.png",
+      "backdrops/level-landscape-offscreen.png"
+    ],
+    "note": "Mockup backgrounds only \u2014 not gameplay art to ship. The portrait play crop cannot fully contain raccoon through bear (span ~430 px vs a 333 px-wide slice); the accepted compromise shows the raccoon, the bee, and the bear\u2019s head."
+  },
+  "reuse": {
+    "from": "../ui (online play UI kit). Referenced, not copied, and not edited.",
+    "items": [
+      "emotes/ (all 8 textless bubbles + their 9-slice)",
+      "players/ring-p{1,2,3}-{32,48,64}.png",
+      "players/tag-p{1,2,3}.png (referenced only)",
+      "chrome/card.png and chrome/btn-primary.png for the host-left end card"
+    ],
+    "not_reused": [
+      "act3/ui/coop/badge-p{1,2,plain}.png \u2014 labelled P1/P2 text chips, old styling, not the adopted colour+shape system.",
+      "act3/ui/coop/prompt-join \u2014 couch join prompt, out of scope.",
+      "act3/ui/hud \u2014 master-bell assets only.",
+      "online/ui/banners/reconnecting.png \u2014 a toast with a refresh glyph; a clean 48 CSS px reconnect glyph was drawn instead of cropping the banner.",
+      "online/ui/lobby/class-*.png \u2014 class diamonds, not animal faces."
+    ]
+  },
+  "colour_vision": {
+    "method": "Machado, Vieira & Oliveira 2009, severity 1.0, linear sRGB, CIE76, grayscale from relative luminance. Fail if grayscale \u0394E < 10 for colour-only pairs.",
+    "report": "sim/sim-report.json",
+    "sheets": [
+      "sim/cvd-sheet.png",
+      "sim/cvd-tags.png",
+      "sim/cvd-signal.png"
+    ],
+    "player_fills": "Tightest grayscale pair P2 vs P3, \u0394E 14.9 (P1 vs P2 15.9, P1 vs P3 30.8). Matches ../ui/players/sim-report.json. Shapes travel with colour on every HUD mark.",
+    "signal": "Mint vs honey grayscale \u0394E 9.4 \u2014 under 10, which is why the icons also use 3 / 2 / 0 bars and an X. Mint vs coral gray 11.3; honey vs coral 20.8. Deutan mint vs coral 15.3 (tightest CVD colour pair); bars still separate them.",
+    "pass": true
+  },
+  "spec_conflicts": [
+    {
+      "topic": "Host-left copy",
+      "job": "The host left the game / Back to meadow",
+      "spec": "The host's game ended. Back to your Meadow \ud83c\udf3c  (online-coop.md \u00a73.3 and \u00a73.7)",
+      "decision": "Follow the spec. Button label is \u201cBack to your Meadow\u201d. The \ud83c\udf3c is omitted in rasters (DejaVu has no emoji) and should be present at runtime."
+    },
+    {
+      "topic": "Waiting badge",
+      "spec": "\ud83d\udca4 waiting for friend",
+      "decision": "Same emoji limitation. Rasters use \u201cwaiting for friend\u201d; runtime should include \ud83d\udca4."
+    },
+    {
+      "topic": "Off-screen distance vs couch S8",
+      "note": "act3-shop-coop.md \u00a72.5 uses 12 m soft-warn / 16 m pull / 20 m cap for couch co-op. This HUD is for online play and shows an arrow whenever a friend is off-screen (or within 16 CSS px of an edge)."
+    }
+  ],
+  "rebuild": [
+    "node src/build-hud.mjs",
+    "python3 src/make-docs.py",
+    "python3 src/sim-states.py",
+    "python3 src/write-manifest.py"
+  ],
+  "assets": [
+    {
+      "id": "world-p1",
+      "file": "tags/world-p1.png",
+      "group": "tags",
+      "kind": "world-tag",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 4365,
+      "file_2x": "tags/world-p1@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4838,
+      "use": "Hollow in-world P1 tag: gold circle frame, cream 32 CSS px well for a species glyph, star pip. Composite the glyph at about (12, 8) in 1x CSS px (well centre \u2248 (28, 24)). No name.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "world-p2",
+      "file": "tags/world-p2.png",
+      "group": "tags",
+      "kind": "world-tag",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 2669,
+      "file_2x": "tags/world-p2@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 2752,
+      "use": "Hollow in-world P2 tag: sky rounded-square frame, cream well, chevron pip. Same glyph recipe. No name.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "world-p3",
+      "file": "tags/world-p3.png",
+      "group": "tags",
+      "kind": "world-tag",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 3395,
+      "file_2x": "tags/world-p3@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 3318,
+      "use": "Hollow in-world P3 tag: pink hex frame, cream well, three-dot pip. Same glyph recipe. No name.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "arrow-p1",
+      "file": "arrows/arrow-p1.png",
+      "group": "arrows",
+      "kind": "offscreen",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 2577,
+      "file_2x": "arrows/arrow-p1@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 2273,
+      "use": "Off-screen friend arrow, P1 gold + star. Authored pointing UP; runtime rotates so the tip aims at the friend. Clamp fully on-screen (see edge_clamp).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "arrow-p2",
+      "file": "arrows/arrow-p2.png",
+      "group": "arrows",
+      "kind": "offscreen",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 2526,
+      "file_2x": "arrows/arrow-p2@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 2118,
+      "use": "Off-screen friend arrow, P2 sky + chevron. Authored pointing UP.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "arrow-p3",
+      "file": "arrows/arrow-p3.png",
+      "group": "arrows",
+      "kind": "offscreen",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 2625,
+      "file_2x": "arrows/arrow-p3@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 2474,
+      "use": "Off-screen friend arrow, P3 pink + dots. Authored pointing UP.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-emote",
+      "file": "emote/btn-emote.png",
+      "group": "emote",
+      "kind": "button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 4059,
+      "file_2x": "emote/btn-emote@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4289,
+      "use": "Closed emote button (cream speech bubble). 56 CSS px tap. Sits at the closed-state anchor; the open wheel uses a more inset centre so the full ring stays on-screen.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "btn-emote-on",
+      "file": "emote/btn-emote-on.png",
+      "group": "emote",
+      "kind": "button",
+      "size_1x": [
+        56,
+        56
+      ],
+      "bytes_1x": 3994,
+      "file_2x": "emote/btn-emote-on@2x.png",
+      "size_2x": [
+        112,
+        112
+      ],
+      "bytes_2x": 4220,
+      "use": "Emote button while the wheel is open (honey fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice.",
+      "tap_css": [
+        56,
+        56
+      ]
+    },
+    {
+      "id": "wheel-disc",
+      "file": "emote/wheel-disc.png",
+      "group": "emote",
+      "kind": "disc",
+      "size_1x": [
+        200,
+        200
+      ],
+      "bytes_1x": 10649,
+      "file_2x": "emote/wheel-disc@2x.png",
+      "size_2x": [
+        400,
+        400
+      ],
+      "bytes_2x": 13867,
+      "use": "Soft cream disc behind the 8-bubble wheel. Scale uniformly to (2 \u00d7 radius + bubble + 12) CSS px. Circular \u2014 do not 9-slice.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "mark-p1",
+      "file": "ping/mark-p1.png",
+      "group": "ping",
+      "kind": "mark",
+      "size_1x": [
+        40,
+        40
+      ],
+      "bytes_1x": 1980,
+      "file_2x": "ping/mark-p1@2x.png",
+      "size_2x": [
+        80,
+        80
+      ],
+      "bytes_2x": 2355,
+      "use": "\u201cTap here\u201d / Over-here ping centre mark, P1 gold + star. Friends can see it.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "mark-p2",
+      "file": "ping/mark-p2.png",
+      "group": "ping",
+      "kind": "mark",
+      "size_1x": [
+        40,
+        40
+      ],
+      "bytes_1x": 1403,
+      "file_2x": "ping/mark-p2@2x.png",
+      "size_2x": [
+        80,
+        80
+      ],
+      "bytes_2x": 1559,
+      "use": "Ping centre mark, P2 sky + chevron.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "mark-p3",
+      "file": "ping/mark-p3.png",
+      "group": "ping",
+      "kind": "mark",
+      "size_1x": [
+        40,
+        40
+      ],
+      "bytes_1x": 1961,
+      "file_2x": "ping/mark-p3@2x.png",
+      "size_2x": [
+        80,
+        80
+      ],
+      "bytes_2x": 2167,
+      "use": "Ping centre mark, P3 pink + dots.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "ring-p1-0",
+      "file": "ping/ring-p1-0.png",
+      "group": "ping",
+      "kind": "ring",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 2237,
+      "file_2x": "ping/ring-p1-0@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 3500,
+      "use": "Expanding ping ring frame 0 for P1 gold, 48 CSS px. Play the three frames over 4 s (Over here! also drops a ring at the sender).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "ring-p1-1",
+      "file": "ping/ring-p1-1.png",
+      "group": "ping",
+      "kind": "ring",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 3466,
+      "file_2x": "ping/ring-p1-1@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 5976,
+      "use": "Expanding ping ring frame 1 for P1 gold, 80 CSS px. Play the three frames over 4 s (Over here! also drops a ring at the sender).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "ring-p1-2",
+      "file": "ping/ring-p1-2.png",
+      "group": "ping",
+      "kind": "ring",
+      "size_1x": [
+        112,
+        112
+      ],
+      "bytes_1x": 4659,
+      "file_2x": "ping/ring-p1-2@2x.png",
+      "size_2x": [
+        224,
+        224
+      ],
+      "bytes_2x": 8617,
+      "use": "Expanding ping ring frame 2 for P1 gold, 112 CSS px. Play the three frames over 4 s (Over here! also drops a ring at the sender).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "ring-p2-0",
+      "file": "ping/ring-p2-0.png",
+      "group": "ping",
+      "kind": "ring",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 2383,
+      "file_2x": "ping/ring-p2-0@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 3637,
+      "use": "Expanding ping ring frame 0 for P2 sky, 48 CSS px. Play the three frames over 4 s (Over here! also drops a ring at the sender).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "ring-p2-1",
+      "file": "ping/ring-p2-1.png",
+      "group": "ping",
+      "kind": "ring",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 3730,
+      "file_2x": "ping/ring-p2-1@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 6312,
+      "use": "Expanding ping ring frame 1 for P2 sky, 80 CSS px. Play the three frames over 4 s (Over here! also drops a ring at the sender).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "ring-p2-2",
+      "file": "ping/ring-p2-2.png",
+      "group": "ping",
+      "kind": "ring",
+      "size_1x": [
+        112,
+        112
+      ],
+      "bytes_1x": 4896,
+      "file_2x": "ping/ring-p2-2@2x.png",
+      "size_2x": [
+        224,
+        224
+      ],
+      "bytes_2x": 8916,
+      "use": "Expanding ping ring frame 2 for P2 sky, 112 CSS px. Play the three frames over 4 s (Over here! also drops a ring at the sender).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "ring-p3-0",
+      "file": "ping/ring-p3-0.png",
+      "group": "ping",
+      "kind": "ring",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 2286,
+      "file_2x": "ping/ring-p3-0@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 3589,
+      "use": "Expanding ping ring frame 0 for P3 pink, 48 CSS px. Play the three frames over 4 s (Over here! also drops a ring at the sender).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "ring-p3-1",
+      "file": "ping/ring-p3-1.png",
+      "group": "ping",
+      "kind": "ring",
+      "size_1x": [
+        80,
+        80
+      ],
+      "bytes_1x": 3625,
+      "file_2x": "ping/ring-p3-1@2x.png",
+      "size_2x": [
+        160,
+        160
+      ],
+      "bytes_2x": 6148,
+      "use": "Expanding ping ring frame 1 for P3 pink, 80 CSS px. Play the three frames over 4 s (Over here! also drops a ring at the sender).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "ring-p3-2",
+      "file": "ping/ring-p3-2.png",
+      "group": "ping",
+      "kind": "ring",
+      "size_1x": [
+        112,
+        112
+      ],
+      "bytes_1x": 4854,
+      "file_2x": "ping/ring-p3-2@2x.png",
+      "size_2x": [
+        224,
+        224
+      ],
+      "bytes_2x": 8716,
+      "use": "Expanding ping ring frame 2 for P3 pink, 112 CSS px. Play the three frames over 4 s (Over here! also drops a ring at the sender).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "signal-good",
+      "file": "signal/signal-good.png",
+      "group": "signal",
+      "kind": "icon",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 2683,
+      "file_2x": "signal/signal-good@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 2969,
+      "use": "Connection quality: good. Mint disc, three solid bars. Sits 8 CSS px to the right of the pause button. Colour is not the only cue.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice.",
+      "tap_css": [
+        48,
+        48
+      ]
+    },
+    {
+      "id": "signal-weak",
+      "file": "signal/signal-weak.png",
+      "group": "signal",
+      "kind": "icon",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 2733,
+      "file_2x": "signal/signal-weak@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 3055,
+      "use": "Connection quality: weak. Honey disc, two solid bars (the right bar is empty).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice.",
+      "tap_css": [
+        48,
+        48
+      ]
+    },
+    {
+      "id": "signal-lost",
+      "file": "signal/signal-lost.png",
+      "group": "signal",
+      "kind": "icon",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 3658,
+      "file_2x": "signal/signal-lost@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 3480,
+      "use": "Connection quality: lost. Coral disc, empty bars plus an X.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice.",
+      "tap_css": [
+        48,
+        48
+      ]
+    },
+    {
+      "id": "btn-pause",
+      "file": "chrome/btn-pause.png",
+      "group": "chrome",
+      "kind": "button",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 2557,
+      "file_2x": "chrome/btn-pause@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 2955,
+      "use": "Placement-only pause control so mockups can show the signal dot next to it. The game\u2019s existing pause art is not replaced by this kit.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice.",
+      "tap_css": [
+        48,
+        48
+      ]
+    },
+    {
+      "id": "veil",
+      "file": "ghost/veil.png",
+      "group": "ghost",
+      "kind": "overlay",
+      "size_1x": [
+        96,
+        96
+      ],
+      "bytes_1x": 4567,
+      "file_2x": "ghost/veil@2x.png",
+      "size_2x": [
+        192,
+        192
+      ],
+      "bytes_2x": 5831,
+      "use": "Dashed foam ellipse (~55% opacity) over a friend who is reconnecting. Scale to the animal. Do not 9-slice; it is an ellipse.",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "reconnect",
+      "file": "ghost/reconnect.png",
+      "group": "ghost",
+      "kind": "glyph",
+      "size_1x": [
+        48,
+        48
+      ],
+      "bytes_1x": 2847,
+      "file_2x": "ghost/reconnect@2x.png",
+      "size_2x": [
+        96,
+        96
+      ],
+      "bytes_2x": 3202,
+      "use": "Honey refresh glyph, parked on the idle animal with the veil. Drawn for this kit (the online/ui reconnecting banner was not cropped).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "badge-waiting",
+      "file": "ghost/badge-waiting.png",
+      "group": "ghost",
+      "kind": "badge",
+      "size_1x": [
+        100,
+        32
+      ],
+      "bytes_1x": 1432,
+      "file_2x": "ghost/badge-waiting@2x.png",
+      "size_2x": [
+        200,
+        64
+      ],
+      "bytes_2x": 1875,
+      "use": "Cream pill for the drop/rejoin badge. Runtime draws \u201cwaiting for friend\u201d (the spec\u2019s \ud83d\udca4 is omitted in rasters; DejaVu has no emoji).",
+      "nine_slice": {
+        "left": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "right": {
+          "px_1x": 16,
+          "px_2x": 32
+        },
+        "top": {
+          "px_1x": 10,
+          "px_2x": 20
+        },
+        "bottom": {
+          "px_1x": 14,
+          "px_2x": 28
+        },
+        "note": "Pill. Stretch horizontally; keep the end caps and the lip."
+      },
+      "runtime_text": "waiting for friend",
+      "spec_copy": "\ud83d\udca4 waiting for friend"
+    },
+    {
+      "id": "bee",
+      "file": "glyphs/bee.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1115,
+      "file_2x": "glyphs/bee@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1068,
+      "use": "32 CSS px blocky ink face for the bee, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "raccoon",
+      "file": "glyphs/raccoon.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1234,
+      "file_2x": "glyphs/raccoon@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1467,
+      "use": "32 CSS px blocky ink face for the raccoon, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "bear",
+      "file": "glyphs/bear.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1206,
+      "file_2x": "glyphs/bear@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1369,
+      "use": "32 CSS px blocky ink face for the bear, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "bumblebee",
+      "file": "glyphs/bumblebee.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1264,
+      "file_2x": "glyphs/bumblebee@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1428,
+      "use": "32 CSS px blocky ink face for the bumblebee, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "butterfly",
+      "file": "glyphs/butterfly.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1258,
+      "file_2x": "glyphs/butterfly@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1525,
+      "use": "32 CSS px blocky ink face for the butterfly, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "moth",
+      "file": "glyphs/moth.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1306,
+      "file_2x": "glyphs/moth@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1638,
+      "use": "32 CSS px blocky ink face for the moth, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "hummingbird",
+      "file": "glyphs/hummingbird.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1104,
+      "file_2x": "glyphs/hummingbird@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1238,
+      "use": "32 CSS px blocky ink face for the hummingbird, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "bat",
+      "file": "glyphs/bat.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 971,
+      "file_2x": "glyphs/bat@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1308,
+      "use": "32 CSS px blocky ink face for the bat, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "robin",
+      "file": "glyphs/robin.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1171,
+      "file_2x": "glyphs/robin@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1459,
+      "use": "32 CSS px blocky ink face for the robin, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    },
+    {
+      "id": "opossum",
+      "file": "glyphs/opossum.png",
+      "group": "glyphs",
+      "kind": "face",
+      "size_1x": [
+        32,
+        32
+      ],
+      "bytes_1x": 1396,
+      "file_2x": "glyphs/opossum@2x.png",
+      "size_2x": [
+        64,
+        64
+      ],
+      "bytes_2x": 1633,
+      "use": "32 CSS px blocky ink face for the opossum, composited into a world tag well. Species colours follow the style guide (opossum snout uses token pink #ff7eb6 as glyph paint only, never as a player fill).",
+      "nine_slice": null,
+      "nine_slice_note": "Fixed-size icon. Do not 9-slice."
+    }
+  ],
+  "reused_assets": [
+    {
+      "id": "emote-hi",
+      "file": "../ui/emotes/hi.png",
+      "use": "Reused 8-emote bubble (Hi!). 72\u00d768 textless; scaled to 56 CSS px on the wheel. Do not copy into hud/.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "emote-ok",
+      "file": "../ui/emotes/ok.png",
+      "use": "Reused 8-emote bubble (OK!). 72\u00d768 textless; scaled to 56 CSS px on the wheel. Do not copy into hud/.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "emote-help",
+      "file": "../ui/emotes/help.png",
+      "use": "Reused 8-emote bubble (Help?). 72\u00d768 textless; scaled to 56 CSS px on the wheel. Do not copy into hud/.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "emote-overhere",
+      "file": "../ui/emotes/overhere.png",
+      "use": "Reused 8-emote bubble (Over here!). 72\u00d768 textless; scaled to 56 CSS px on the wheel. Do not copy into hud/.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "emote-wait",
+      "file": "../ui/emotes/wait.png",
+      "use": "Reused 8-emote bubble (Wait for me!). 72\u00d768 textless; scaled to 56 CSS px on the wheel. Do not copy into hud/.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "emote-follow",
+      "file": "../ui/emotes/follow.png",
+      "use": "Reused 8-emote bubble (Follow me!). 72\u00d768 textless; scaled to 56 CSS px on the wheel. Do not copy into hud/.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "emote-yay",
+      "file": "../ui/emotes/yay.png",
+      "use": "Reused 8-emote bubble (Yay!). 72\u00d768 textless; scaled to 56 CSS px on the wheel. Do not copy into hud/.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "emote-thanks",
+      "file": "../ui/emotes/thanks.png",
+      "use": "Reused 8-emote bubble (Thanks!). 72\u00d768 textless; scaled to 56 CSS px on the wheel. Do not copy into hud/.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "right": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "top": {
+          "px_1x": 22,
+          "px_2x": 44
+        },
+        "bottom": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "note": "Keep the tail in the bottom-left slice. Stretch the centre of the bubble, not the tail."
+      }
+    },
+    {
+      "id": "ring-p1-32",
+      "file": "../ui/players/ring-p1-32.png",
+      "use": "Referenced in-world ring (P1, 32 CSS px). Shape mark fills the centre, so it is not the floating tag; the HUD kit adds a hollow world tag for the glyph. Do not copy into hud/."
+    },
+    {
+      "id": "ring-p1-48",
+      "file": "../ui/players/ring-p1-48.png",
+      "use": "Referenced in-world ring (P1, 48 CSS px). Shape mark fills the centre, so it is not the floating tag; the HUD kit adds a hollow world tag for the glyph. Do not copy into hud/."
+    },
+    {
+      "id": "ring-p1-64",
+      "file": "../ui/players/ring-p1-64.png",
+      "use": "Referenced in-world ring (P1, 64 CSS px). Shape mark fills the centre, so it is not the floating tag; the HUD kit adds a hollow world tag for the glyph. Do not copy into hud/."
+    },
+    {
+      "id": "ring-p2-32",
+      "file": "../ui/players/ring-p2-32.png",
+      "use": "Referenced in-world ring (P2, 32 CSS px). Shape mark fills the centre, so it is not the floating tag; the HUD kit adds a hollow world tag for the glyph. Do not copy into hud/."
+    },
+    {
+      "id": "ring-p2-48",
+      "file": "../ui/players/ring-p2-48.png",
+      "use": "Referenced in-world ring (P2, 48 CSS px). Shape mark fills the centre, so it is not the floating tag; the HUD kit adds a hollow world tag for the glyph. Do not copy into hud/."
+    },
+    {
+      "id": "ring-p2-64",
+      "file": "../ui/players/ring-p2-64.png",
+      "use": "Referenced in-world ring (P2, 64 CSS px). Shape mark fills the centre, so it is not the floating tag; the HUD kit adds a hollow world tag for the glyph. Do not copy into hud/."
+    },
+    {
+      "id": "ring-p3-32",
+      "file": "../ui/players/ring-p3-32.png",
+      "use": "Referenced in-world ring (P3, 32 CSS px). Shape mark fills the centre, so it is not the floating tag; the HUD kit adds a hollow world tag for the glyph. Do not copy into hud/."
+    },
+    {
+      "id": "ring-p3-48",
+      "file": "../ui/players/ring-p3-48.png",
+      "use": "Referenced in-world ring (P3, 48 CSS px). Shape mark fills the centre, so it is not the floating tag; the HUD kit adds a hollow world tag for the glyph. Do not copy into hud/."
+    },
+    {
+      "id": "ring-p3-64",
+      "file": "../ui/players/ring-p3-64.png",
+      "use": "Referenced in-world ring (P3, 64 CSS px). Shape mark fills the centre, so it is not the floating tag; the HUD kit adds a hollow world tag for the glyph. Do not copy into hud/."
+    },
+    {
+      "id": "tag-p1",
+      "file": "../ui/players/tag-p1.png",
+      "use": "Referenced wide nameplate (140\u00d744). Face well is only ~20 CSS px, too tight for a 32 px animal glyph, so in-level tags use tags/world-pN.png instead. Do not copy into hud/."
+    },
+    {
+      "id": "tag-p2",
+      "file": "../ui/players/tag-p2.png",
+      "use": "Referenced wide nameplate (140\u00d744). Face well is only ~20 CSS px, too tight for a 32 px animal glyph, so in-level tags use tags/world-pN.png instead. Do not copy into hud/."
+    },
+    {
+      "id": "tag-p3",
+      "file": "../ui/players/tag-p3.png",
+      "use": "Referenced wide nameplate (140\u00d744). Face well is only ~20 CSS px, too tight for a 32 px animal glyph, so in-level tags use tags/world-pN.png instead. Do not copy into hud/."
+    },
+    {
+      "id": "card",
+      "file": "../ui/chrome/card.png",
+      "use": "Host-left end card frame. 9-slice 24 CSS px on each side.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "right": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "top": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        }
+      }
+    },
+    {
+      "id": "btn-primary",
+      "file": "../ui/chrome/btn-primary.png",
+      "use": "Host-left \u201cBack to your Meadow\u201d button. Pill; stretch the middle, keep the 28 CSS px caps and 6 px lip.",
+      "nine_slice": {
+        "left": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "right": {
+          "px_1x": 28,
+          "px_2x": 56
+        },
+        "top": {
+          "px_1x": 20,
+          "px_2x": 40
+        },
+        "bottom": {
+          "px_1x": 24,
+          "px_2x": 48
+        },
+        "note": "Pill. Stretch the middle; keep the end caps and the 6 px lip."
+      },
+      "tap_css": [
+        220,
+        56
+      ]
+    }
+  ],
+  "previews": [
+    "previews/arrow-p1-en.png",
+    "previews/arrow-p2-en.png",
+    "previews/arrow-p3-en.png",
+    "previews/badge-waiting-en.png",
+    "previews/btn-back-to-meadow-en.png",
+    "previews/btn-emote-en.png",
+    "previews/btn-pause-en.png",
+    "previews/bubble-hi-100-en.png",
+    "previews/bubble-hi-30-en.png",
+    "previews/bubble-hi-60-en.png",
+    "previews/ping-p1-en.png",
+    "previews/ping-p2-en.png",
+    "previews/ping-p3-en.png",
+    "previews/reconnect-en.png",
+    "previews/signal-good-en.png",
+    "previews/signal-lost-en.png",
+    "previews/signal-weak-en.png",
+    "previews/tag-p1-bee-en.png",
+    "previews/tag-p2-raccoon-en.png",
+    "previews/tag-p3-bear-en.png"
+  ],
+  "mockups": [
+    "mockups/play-portrait.png",
+    "mockups/play-landscape.png",
+    "mockups/wheel-portrait.png",
+    "mockups/wheel-landscape.png",
+    "mockups/offscreen-portrait.png",
+    "mockups/offscreen-landscape.png",
+    "mockups/ghost-portrait.png",
+    "mockups/ghost-landscape.png",
+    "mockups/fade-portrait.png",
+    "mockups/fade-landscape.png",
+    "mockups/host-left-portrait.png",
+    "mockups/host-left-landscape.png"
+  ],
+  "sheet": "sheet.png",
+  "readme": "README.md"
+}

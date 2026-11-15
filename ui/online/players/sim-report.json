@@ -1,0 +1,132 @@
+{
+  "method": "Machado, Vieira & Oliveira 2009, severity 1.0, matrices applied in linear sRGB; CIE76 \u0394E; grayscale from relative luminance (sRGB Rec. 709). Cream #fff3d8, ink #3b2614. Same pipeline as act3/ui class badges.",
+  "threshold": "Grayscale \u0394E < 10 is a fail (same threshold used for the class badges).",
+  "spec_colours": "online-coop.md \u00a73.2 names P1 gold, P2 sky blue, P3 pink. Gold is the UI token #ffd23f. Sky blue is the UI token #7fc6e8. The style-guide species pink is #ff7eb6.",
+  "shipped": {
+    "P1 gold": "#ffd23f",
+    "P2 sky": "#6db4d6",
+    "P3 pink": "#d45890"
+  },
+  "literal_pink_candidate": {
+    "P1 gold": "#ffd23f",
+    "P2 sky": "#7fc6e8",
+    "P3 pink": "#ff7eb6"
+  },
+  "shipped_rows": {
+    "P1 gold": {
+      "hex": "#ffd23f",
+      "L": 85.86431816803201,
+      "a": 1.8689877613459749,
+      "b": 73.87527152202364,
+      "contrast_cream": 1.3109110274107385,
+      "contrast_ink": 9.8705861739786
+    },
+    "P2 sky": {
+      "hex": "#6db4d6",
+      "L": 69.99760971230172,
+      "a": -13.114321184820144,
+      "b": -24.044399614017188,
+      "contrast_cream": 2.083532748996326,
+      "contrast_ink": 6.210346474616098
+    },
+    "P3 pink": {
+      "hex": "#d45890",
+      "L": 55.06589759518374,
+      "a": 54.35933770843676,
+      "b": -6.062517525223576,
+      "contrast_cream": 3.405454440690159,
+      "contrast_ink": 3.799628063693658
+    }
+  },
+  "shipped_pairs": {
+    "normal": {
+      "P1 gold vs P2 sky": 100.3,
+      "P1 gold vs P3 pink": 100.5,
+      "P2 sky vs P3 pink": 71.4
+    },
+    "deuteranopia": {
+      "P1 gold vs P2 sky": 100.8,
+      "P1 gold vs P3 pink": 78.5,
+      "P2 sky vs P3 pink": 27.9
+    },
+    "protanopia": {
+      "P1 gold vs P2 sky": 100.5,
+      "P1 gold vs P3 pink": 101.3,
+      "P2 sky vs P3 pink": 23.4
+    },
+    "tritanopia": {
+      "P1 gold vs P2 sky": 62.3,
+      "P1 gold vs P3 pink": 47.1,
+      "P2 sky vs P3 pink": 98.2
+    },
+    "gray": {
+      "P1 gold vs P2 sky": 15.9,
+      "P1 gold vs P3 pink": 30.8,
+      "P2 sky vs P3 pink": 14.9
+    }
+  },
+  "literal_rows": {
+    "P1 gold": {
+      "hex": "#ffd23f",
+      "L": 85.86431816803201,
+      "a": 1.8689877613459749,
+      "b": 73.87527152202364,
+      "contrast_cream": 1.3109110274107385,
+      "contrast_ink": 9.8705861739786
+    },
+    "P2 sky": {
+      "hex": "#7fc6e8",
+      "L": 76.51104574957174,
+      "a": -13.415636720892799,
+      "b": -23.80136114573741,
+      "contrast_cream": 1.7104832266077807,
+      "contrast_ink": 7.564798099855075
+    },
+    "P3 pink": {
+      "hex": "#ff7eb6",
+      "L": 69.15802218881922,
+      "a": 54.947466878433104,
+      "b": -6.308845136101748,
+      "contrast_cream": 2.1391597918239285,
+      "contrast_ink": 6.048851662195766
+    }
+  },
+  "literal_pairs": {
+    "normal": {
+      "P1 gold vs P2 sky": 99.3,
+      "P1 gold vs P3 pink": 97.6,
+      "P2 sky vs P3 pink": 70.9
+    },
+    "deuteranopia": {
+      "P1 gold vs P2 sky": 99.5,
+      "P1 gold vs P3 pink": 74.7,
+      "P2 sky vs P3 pink": 25.7
+    },
+    "protanopia": {
+      "P1 gold vs P2 sky": 99.8,
+      "P1 gold vs P3 pink": 97.5,
+      "P2 sky vs P3 pink": 15.8
+    },
+    "tritanopia": {
+      "P1 gold vs P2 sky": 61.1,
+      "P1 gold vs P3 pink": 37.1,
+      "P2 sky vs P3 pink": 91.5
+    },
+    "gray": {
+      "P1 gold vs P2 sky": 9.3,
+      "P1 gold vs P3 pink": 16.7,
+      "P2 sky vs P3 pink": 7.4
+    }
+  },
+  "adjustment": "The literal trio gold #ffd23f + UI sky token #7fc6e8 + species pink #ff7eb6 fails grayscale (P2 sky vs P3 pink \u0394E 7.4, below the fail line of 10). Hues were kept. P2 was darkened to #6db4d6 (same a* b* as #7fc6e8, L* 76.5\u219270.0) and P3 was darkened to #d45890 (same pink hue family as #ff7eb6, lower L*), the same lightness move used for Bruiser on the class badges. P1 gold stays the game token #ffd23f. Second cues ship regardless: P1 circle + star, P2 rounded square + chevron, P3 hex + three dots. Name tags use the same fills, shapes, and marks; the left circle is an animal-glyph slot (no typed names).",
+  "pass": true,
+  "literal_pass": false,
+  "tightest_shipped_gray": {
+    "pair": "P2 sky vs P3 pink",
+    "dE": 14.9
+  },
+  "tightest_literal_gray": {
+    "pair": "P2 sky vs P3 pink",
+    "dE": 7.4
+  }
+}

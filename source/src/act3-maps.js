@@ -22,6 +22,7 @@ export const MAPS3 = {
       B.hubPad('stars', -9, 11, { emoji: '⭐', label: 'Star Board', need: 'owlet', col: 0xffe07a, lockTx: '🔒 Star Board · help the Owlet in level 19 (Night Market) to open it' });
       B.hubPad('lab', 0, 16, { emoji: '🧪', label: 'Practice Yard · try new tricks', col: 0x7ad0c8 });
       B.hubPad('bell', 5.5, 16, { emoji: '🔔', label: 'Bell Yard · try the Master Bell', col: 0xe8c44a });
+      B.hubPad('friends', -14, -2.5, { emoji: '🧺', label: 'Play with friends', col: 0xa99cf0, noSign: true, yaw: Math.PI / 2, gated: true });
       // rescued friends who move in (hidden until rescued)
       B.friend('badger', 12.5, -6.5, { id: 'badger', s: 0.8, yaw: -1.2, say: ['🦡 Badger Bramble: I only LOOK grumpy. Want to see some gear?', '🦡 Badger Bramble: Zzz… oh! Hello, friends.'] });
       for (let i = 0; i < 3; i++) B.friend('duckling', 9.6 + i * 0.9, 12.2 + i * 0.4, { id: 'ducklings', s: 1, yaw: 2.6, say: ['🐥 Ducklings: Peep! Peep peep! (Want to replay a level?)'] });

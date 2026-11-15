@@ -10,6 +10,10 @@ import { buildNests } from './nests.js';
 import { createInput, composeSources } from './input.js';
 import { createSlots } from './slots.js';
 import { createNet } from './net/session.js';
+import { isOnlineDev, canShowFriendsStation } from './net/flags.js';
+import { createLobby } from './net/lobby.js';
+import { emoteOf, EMOTE_SHOW } from './net/emotes.js';
+import './online.css';
 import { onAssets, iconUrl, ico } from './assets.js';
 import { createWheels } from './wheels.js';
 import { createHomeInd } from './homeind.js';
@@ -328,13 +332,14 @@ async function showCredits() {
     const req = L.entries.filter(e => e.requiredAttribution), cc0 = L.entries.filter(e => !e.requiredAttribution);
     body.innerHTML = `<p>Thanks to everyone whose work is in this game.</p><div class="ksSec">Required credits (CC-BY) · ${req.length}</div>${req.map(row).join('')}<div class="ksSec">Free to use (CC0 / public domain) · ${cc0.length}</div>${cc0.map(row).join('')}`
       + (c ? `<div class="ksSec">More thanks · models, sounds and textures from earlier updates</div><ul class="crMore">${c.attribution.map(e => `<li>${escH(e.credit)}${e.url ? ` — <a href="${escH(e.url)}" target="_blank" rel="noopener">source</a>` : ''} <b>${escH(e.license)}</b></li>`).join('')}${c.cc0.map(e => `<li>${escH(e)}</li>`).join('')}</ul><p class="ksNote">${escH(c.footer)}</p>` : '')
+      + `<p class="ksNote">Online play lobby loop, friends-joined sting, and co-op complete jingle: original CC0 1.0 composition, 2026.</p>`
       + `<p class="ksNote">Made with Three.js.</p>`;
     body.dataset.done = 1; } catch (e) { body.textContent = 'Credits unavailable.'; } }
   body.scrollTop = 0; openOv('credits');
 }
 $('bInfo').onclick = () => showCredits(); $('startCredits').onclick = showCredits;
 $('crClose').onclick = () => closeOv('credits');
-let playing = false, paused = true;
+let playing = false, paused = true, lobby = null;
 function swapNext(d = 1) {
   const hl = helpers ? helpers.list : [], L = [...SPECIES_ORDER, ...hl], n = L.length;
   const i = rts.possessed ? SPECIES_ORDER.length + hl.indexOf(rts.possessed) : SPECIES_ORDER.indexOf(cur); const nx = L[(i + d + n) % n];
@@ -1278,7 +1283,33 @@ function enterHub() {
   if (inHub()) { closeValleyMap(); closeOv('title'); return; }
   startValleyPatch(HUB_ID);
 }
+const emoteBubbles = [];
+function showOnlineEmote(from, id) {
+  const em = emoteOf(id); if (!em) return;
+  const who = (lobby && lobby.players || []).find(p => p.id === from);
+  const bodyId = who && who.cls ? ({ bruiser: 'bear', trickster: 'raccoon', scout: 'bee' }[who.cls]) : (window.__game && window.__game.cur);
+  const p = (typeof P !== 'undefined' && bodyId && P[bodyId]) || (typeof P !== 'undefined' && P[cur]) || null;
+  const n = document.createElement('div'); n.className = 'olBubble'; n.textContent = em.em + ' ' + em.text;
+  document.body.appendChild(n);
+  const rec = { el: n, p, until: performance.now() + EMOTE_SHOW * 1000, ping: !!em.ping };
+  emoteBubbles.push(rec);
+  if (em.ping && p && fx) try { fx.burst(p.x, (p.y || 0) + 0.4, p.z, 16, 4); } catch (e) {}
+}
+function tickOnlineEmotes() {
+  const now = performance.now();
+  for (let i = emoteBubbles.length - 1; i >= 0; i--) {
+    const b = emoteBubbles[i];
+    if (now > b.until) { b.el.remove(); emoteBubbles.splice(i, 1); continue; }
+    const p = b.p; if (!p || !camera) continue;
+    const v = new THREE.Vector3(p.x, (p.y || 0) + 2.2, p.z); v.project(camera);
+    const show = v.z < 1;
+    b.el.style.display = show ? 'block' : 'none';
+    if (show) { b.el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; b.el.style.top = ((1 - v.y) / 2 * innerHeight) + 'px'; }
+  }
+}
+
 function onHubStation(k) {
+  if (k === 'friends') { if (lobby) lobby.open(); else toast('Online play is turned off on this device. Ask a grown-up.', 2800); return; }
   if (!inHub() || !playing) return; audio.blip?.(2);
   if (k === 'map') openValleyMap(0); // Trail Board → Meadow overview
   else if (k === 'crew') openCrewTent(() => {});
@@ -2038,7 +2069,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => slots.driven(), crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => slots.driven(), crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
   critters = createCritters(scene, { heightAt, tier: () => look.tier });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
@@ -2231,6 +2262,23 @@ async function boot() {
     pollLocalFrame: () => input && input.pollFrame ? input.pollFrame() : null,
     pulseWorld: (() => { let last = 0; return () => { const n = performance.now(); if (n - last < 45) return; last = n; try { if (zones && zones.update) zones.update(0, camera); } catch (e) {} }; })(),
   });
+  lobby = isOnlineDev() ? createLobby({
+    audio, toast,
+    getSettings: () => settings,
+    saveSettings: () => saveSettings(settings),
+    onOnlineSettings: (online) => {
+      settings.online = online;
+      saveSettings(settings);
+      try { zones?.refreshFriendsStation?.(canShowFriendsStation(settings)); } catch (e) {}
+    },
+    onEmote: (from, id) => showOnlineEmote(from, id),
+    hubMood: () => 'hub',
+  }) : null;
+  if (lobby) {
+    lobby.settings.mount();
+    try { lobby.maybeAutoJoin(); } catch (e) {}
+  }
+
   if (NEWFLAG) {
     if (NEWFLAG.lead && SPECIES[NEWFLAG.lead]) settings.lead = NEWFLAG.lead;
     if (NEWFLAG.mode) settings.mode = NEWFLAG.mode;
@@ -2244,7 +2292,7 @@ async function boot() {
   } else if (NEWFLAG && NEWFLAG.patch && valley) { const pid = NEWFLAG.patch; if (valley.get(pid)?.state === 'wilted') valley.setState(pid, 'in_progress'); startValleyPatch(pid); } else if (NEWFLAG) startNew(NEWFLAG.len || settings.len);
   else if (/[?&]lab=act3\b/.test(location.search) && valley) startValleyPatch('act3_lab');
   else if (/[?&](?:lab=bell|bell=1)\b/.test(location.search) && valley) startValleyPatch('act3_bell');
-  window.__game = { look, DCL, slots, stepPlayer, net, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, presentLevelTips, fillHowTips, openHow, dismissLevelTips, speak: id => audio.speak(id), openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
+  window.__game = { look, DCL, slots, stepPlayer, net, lobby, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, presentLevelTips, fillHowTips, openHow, dismissLevelTips, speak: id => audio.speak(id), openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
     tp: (x, z, up = 0) => { const p = P[cur]; p.x = x; p.z = z; p.y = world.phys.floor(x, z, 99, 99).y + up; p.vx = p.vz = p.vy = 0; },
     teleportNearFlower: () => { const B = world.blooms; const arr = B.byPol[polOf(cur)]; const i = arr[0]; const p = P[cur]; p.x = B.x[i] - 1; p.z = B.z[i]; p.y = Math.max(heightAt(p.x, p.z), B.y[i] - 0.5); p.vy = 0; } };
 }
@@ -2450,7 +2498,7 @@ function loop(now) {
   { const AB = abOf(cur), pp = P[cur]; gearFx.update(dt, t, cur, paused ? 0 : Math.min(1, (pp.speed || 0) / AB.mv.run), shopOpen ? 0.65 : Math.min(1, pp.carried / AB.cap)); }
   if (shopOpen) { shopT += dt; cam.yaw = shopBase + Math.sin(shopT * 0.55) * 0.95; }
   state.gT = (state.gT || 0) - dt; if (state.gT <= 0) { state.gT = 0.4; updateShopChip(); }
-  fx.update(dt); if (playing) rtsUpdate(rdt); updateCamera(rdt); if (build.active) updateBuildUi(rdt, t);
+  fx.update(dt); tickOnlineEmotes(); if (playing) rtsUpdate(rdt); updateCamera(rdt); if (build.active) updateBuildUi(rdt, t);
   state.hT = (state.hT || 0) - rdt; if (state.hT <= 0) { state.hT = 0.2; if (playing) updateRoundHud(); }
   state.rT = (state.rT || 0) - rdt; if (state.rT <= 0 && playing) { state.rT = 3; saveRound(); }
   if (admin) admin.update(rdt);
