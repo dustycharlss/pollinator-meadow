@@ -29,6 +29,9 @@ const PLAYER_STYLE = [
   { id: 'p2', fill: '#6db4d6', shape: 'square-chevron', tag: 'tag-p2' },
   { id: 'p3', fill: '#d45890', shape: 'hex-dots', tag: 'tag-p3' },
 ];
+const ANIMAL_OF = { bruiser: 'bear', trickster: 'raccoon', scout: 'bee' };
+const BADGE_TAB = { animals: 'animals', food: 'food-plants', outside: 'outside', home: 'home-toys' };
+const PICKS = (name) => ICON('picks', name);
 
 function peerId() {
   try {
@@ -77,17 +80,42 @@ export function createLobby(hooks = {}) {
   let lobbyMusic = false;
   let helloTimer = null, helloOff = null, findTimer = null;
   let pinHint = '';
+  let statusBanner = '';
+  let copiedOn = false;
+  let copiedT = 0;
+  let copiedEl = null;
+
 
   function audio() { return hooks.audio; }
   function sfx(name, vol = 0.5) { try { audio()?.sample?.('online/' + name, vol); } catch (e) {} }
   function toast(s, ms) { hooks.toast?.(s, ms); }
   function speak(id) { try { hooks.audio?.speak?.(id); } catch (e) {} }
+  function ensureCopiedEl() {
+    if (copiedEl) return copiedEl;
+    copiedEl = document.createElement('div');
+    copiedEl.id = 'olCopiedFloat';
+    copiedEl.className = 'olCopied';
+    copiedEl.hidden = true;
+    copiedEl.textContent = 'Copied!';
+    document.body.appendChild(copiedEl);
+    return copiedEl;
+  }
+  function showCopied() {
+    const n = ensureCopiedEl();
+    n.hidden = false;
+    n.textContent = 'Copied!';
+    copiedOn = true;
+    clearTimeout(copiedT);
+    copiedT = setTimeout(() => { copiedOn = false; n.hidden = true; if (root && !root.hidden) render(); }, 2400);
+    if (root && !root.hidden) render();
+  }
   const SCREEN_VOICE = {
     choice: 'lobby.btn-play-friends',
     join: 'lobby.join.title',
     host: 'lobby.host.title',
     asking: 'lobby.asking',
     full: 'lobby.full',
+    denied: 'lobby.denied',
     'pin-enter': 'lobby.pin.prompt',
     approve: 'lobby.approve-card',
   };
@@ -173,7 +201,7 @@ export function createLobby(hooks = {}) {
         stopFind();
         stopHello();
         toast('Room is full', 3200); speak('lobby.full');
-        showScreen('full');
+        statusBanner = 'Room is full'; showScreen('full');
         render();
       }
     });
@@ -227,12 +255,12 @@ export function createLobby(hooks = {}) {
       }
     }
     if (d.to && d.to !== me) return;
-    if (typ === 'full') { stopFind(); stopHello(); toast('Room is full', 3200); speak('lobby.full'); showScreen('full'); render(); return; }
+    if (typ === 'full') { stopFind(); stopHello(); toast('Room is full', 3200); speak('lobby.full'); statusBanner = 'Room is full'; showScreen('full'); render(); return; }
     if (typ === 'locked') { stopFind(); stopHello(); toast('This room is locked', 2600); showScreen('choice'); return; }
-    if (typ === 'deny') { stopFind(); stopHello(); toast('The host said not now', 2800); speak('lobby.denied'); showScreen('choice'); sfx('connection-lost', 0.4); return; }
+    if (typ === 'deny') { stopFind(); stopHello(); toast('The host said not now', 2800); speak('lobby.denied'); statusBanner = 'The host said not now'; showScreen('denied'); sfx('connection-lost', 0.4); render(); return; }
     if (typ === 'pin-nonce') { stopFind(); pinNonce = b64ToBytes(d.nonce); pinHostId = d.hostPeer || d.from || ''; pick = []; pinHint = ''; showScreen('pin-enter'); render(); return; }
     if (typ === 'pin-result') {
-      if (d.ok) { stopFind(); showScreen('asking'); render(); return; }
+      if (d.ok) { stopFind(); statusBanner = 'Asking the host…'; showScreen('asking'); render(); return; }
       if (d.room) { toast('This room is locked for a bit', 2600); showScreen('choice'); return; }
       showScreen('pin-enter');
       shakePin(d.lockMs || 0);
@@ -365,12 +393,12 @@ export function createLobby(hooks = {}) {
       if (!menu) return;
       b = document.createElement('button');
       b.id = 'playWithFriends';
-      b.className = 'big sec';
+      b.className = 'olPlayFriends';
       b.type = 'button';
       b.textContent = 'Play with friends';
       b.addEventListener('click', () => openChoice());
-      const after = document.getElementById('tSettings');
-      if (after && after.parentNode) after.parentNode.insertBefore(b, after);
+      const trow = document.querySelector('#title .trow');
+      if (trow && trow.parentNode) trow.parentNode.insertBefore(b, trow);
       else menu.appendChild(b);
     }
     const on = allowed();
@@ -379,7 +407,7 @@ export function createLobby(hooks = {}) {
   }
 
   function startHosting() {
-    if (!allowed()) { toast('Online play is turned off on this device. Ask a grown-up.', 2800); speak('lobby.onlineOff'); return; }
+    if (!allowed()) { showOffline(); return; }
     role = 'host';
     code = randomCode();
     pinWords = null;
@@ -400,13 +428,14 @@ export function createLobby(hooks = {}) {
   }
 
   function beginJoin(words) {
-    if (!allowed()) { toast('Online play is turned off on this device. Ask a grown-up.', 2800); speak('lobby.onlineOff'); return; }
+    if (!allowed()) { showOffline(); return; }
     const parsed = Array.isArray(words) ? words : parseCode(words);
     if (!parsed) { toast('Not a known code. Check the four pictures.', 2400); return; }
     role = 'client';
     stopHello();
     attachRoom(parsed);
     playLobbyMusic();
+    statusBanner = 'Asking the host…';
     showScreen('asking');
     render();
     const tryHello = () => { if (screen === 'asking') send('hello', { want: 'join' }); };
@@ -458,6 +487,7 @@ export function createLobby(hooks = {}) {
       if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url);
       else throw new Error('no clipboard');
       toast('Copied!', 2400);
+      showCopied();
     } catch (e) { toast(url, 4000); }
   }
 
@@ -517,7 +547,7 @@ export function createLobby(hooks = {}) {
     const head = el('div', 'olHead');
     const back = imgBtn(ICON('lobby', 'btn-back'), 'Back', () => {
       if (screen === 'choice') { leave('back'); return; }
-      if (screen === 'join' || screen === 'host' || screen === 'asking' || screen === 'pin-enter') { if (role) leave('back'); showScreen('choice'); render(); return; }
+      if (screen === 'join' || screen === 'host' || screen === 'asking' || screen === 'pin-enter' || screen === 'denied' || screen === 'full') { if (role) leave('back'); statusBanner = ''; showScreen('choice'); render(); return; }
       showScreen('choice'); render();
     });
     const title = el('h2');
@@ -525,18 +555,32 @@ export function createLobby(hooks = {}) {
     const body = el('div', 'olBody');
     card.append(head, body);
     root.append(card);
+    if (statusBanner) {
+      const ban = el('div', 'olBanner', statusBanner);
+      ban.setAttribute('role', 'status');
+      head.after(ban);
+    }
 
     if (screen === 'choice') {
       title.textContent = 'Play with friends';
-      const row = el('div', 'olRow');
-      const h = el('button', 'olChoice', '🏠 Host a game');
-      const j = el('button', 'olChoice', '🚪 Join a game');
-      h.onclick = startHosting;
-      j.onclick = () => { pick = []; tab = 0; showScreen('join'); render(); };
-      row.append(h, j);
+      const row = el('div', 'olChoiceRow');
+      const mkChoice = (file, label, fn) => {
+        const b = el('button', 'olChoiceCard');
+        b.type = 'button';
+        b.setAttribute('aria-label', label);
+        const im = document.createElement('img');
+        im.src = ICON('lobby', file); im.alt = '';
+        b.append(im, el('span', '', label));
+        b.onclick = fn;
+        return b;
+      };
+      row.append(
+        mkChoice('choice-host', 'Host a game', startHosting),
+        mkChoice('choice-join', 'Join a game', () => { pick = []; tab = 0; statusBanner = ''; showScreen('join'); render(); }),
+      );
       body.append(row);
       const fold = el('details', 'olHint');
-      fold.innerHTML = `<summary>For grown-ups</summary><p>Playing with friends online. Your child can play with up to 2 friends using a secret 4-picture code (and, if the host wants, a secret picture PIN) that only you share. There's no chat. Players can only tap friendly emoji buttons like 👋 and 🎉. There are no accounts, names, or ads, and we don't store anything about your child. To connect the games, your device's internet address (IP) goes to Cloudflare, the connection service. Other players' devices never see it, unless a grown-up turns on <b>Direct mode</b> in Settings (off by default) on both devices. Only share the code with people you know. The host can say no to anyone and can lock the room. If the game can't reach the relay, it shows an error and never switches to a direct connection on its own.</p>`;
+      fold.innerHTML = `<summary>For grown-ups</summary><p>Playing with friends online. Your child can play with up to 2 friends using a secret 4-picture code (and, if the host wants, a secret picture PIN) that only you share. There's no chat. Players can only tap friendly emoji buttons like 👋 and 🎉. There are no accounts, names, or ads, and we don't store anything about your child. To connect the games, your device's internet address (IP) goes to Cloudflare, the connection service. Other players' devices never see it, unless a grown-up turns on <b>Direct mode</b> in Settings (off by default) on both devices. Only share the code with people you know. The host can say no to anyone and can lock the room. If the game can't reach Cloudflare's relay, it shows an error. It never switches to a direct connection on its own.</p>`;
       body.append(fold);
       return;
     }
@@ -566,15 +610,17 @@ export function createLobby(hooks = {}) {
       return;
     }
 
-    if (screen === 'asking') {
+    if (screen === 'asking' || screen === 'full' || screen === 'denied') {
       title.textContent = 'Join a game';
-      body.append(el('p', 'olHint', 'Asking the host…'));
-      return;
-    }
-
-    if (screen === 'full') {
-      title.textContent = 'Join a game';
-      body.append(el('p', 'olHint', 'Room is full'));
+      if (screen === 'asking' && !statusBanner) statusBanner = 'Asking the host…';
+      if (screen === 'full' && !statusBanner) statusBanner = 'Room is full';
+      if (screen === 'denied' && !statusBanner) statusBanner = 'The host said not now';
+      if (statusBanner && !root.querySelector('.olBanner')) {
+        const ban = el('div', 'olBanner', statusBanner);
+        ban.setAttribute('role', 'status');
+        head.after(ban);
+      }
+      renderPicker(body, { pin: false, onJoin: () => beginJoin(pick) });
       return;
     }
 
@@ -595,65 +641,133 @@ export function createLobby(hooks = {}) {
 
     if (screen === 'host' || screen === 'room') {
       title.textContent = role === 'host' ? 'Your room' : 'Friends';
-      const slots = el('div', 'olSlots');
-      (code || []).forEach(w => {
-        const s = el('div', 'olSlot');
-        const im = document.createElement('img');
-        im.src = WORD_ICON(w); im.alt = w;
-        const badge = el('span', 'olBadge', TABS[tabOf(w)]?.em || '');
-        s.append(im, badge);
-        s.title = w;
-        slots.append(s);
-      });
-      body.append(slots);
+      body.append(renderCodeWells(code || []));
       if (role === 'host') {
-        const tools = el('div', 'olRow');
+        const tools = el('div', 'olTools');
         tools.append(
-          btn('Copy link', copyLink),
-          btn(locked ? 'Unlock' : 'Lock', () => { locked = !locked; broadcastState(); render(); }),
-          btn(usePin ? '🔐 Secret PIN on' : '🔐 Secret PIN', togglePin),
+          iconTool(ICON('lobby', 'btn-copy-link'), 'Copy link', copyLink),
+          iconTool(ICON('lobby', locked ? 'btn-lock-on' : 'btn-lock-off'), locked ? 'Unlock' : 'Lock', () => { locked = !locked; broadcastState(); render(); }),
+          iconTool(ICON('lobby', usePin ? 'btn-pin-on' : 'btn-pin-off'), usePin ? 'Secret PIN on' : 'Secret PIN', togglePin),
         );
         body.append(tools);
         if (usePin && pinWords) {
-          const pr = el('div', 'olSlots');
-          pinWords.forEach(w => {
-            const s = el('div', 'olSlot');
-            const im = document.createElement('img'); im.src = WORD_ICON(w); im.alt = w; s.append(im);
-            s.title = w; pr.append(s);
-          });
           body.append(el('p', 'olHint', 'Say the PIN out loud. It is not in the link.'));
-          body.append(pr);
-          body.append(btn('🔄 New PIN', freshPin, 'olBtn sec'));
+          body.append(renderCodeWells(pinWords, { badges: false }));
+          body.append(iconTool((import.meta.env.BASE_URL || './') + 'ui/online/pin/btn-reroll.png', 'New PIN', freshPin));
         }
-        body.append(el('p', 'olHint', players.length < 2 ? 'Waiting for friends' : 'Friends are in!'));
+        body.append(el('p', 'olHint', 'Waiting for friends'));
       }
-      const cards = el('div', 'olCards');
-      const taken = takenClasses();
-      const mine = players.find(p => p.id === me);
-      CLASSES.forEach(c => {
-        const b = el('button', 'olClass', `${c.em}<br>${c.label}`);
-        const holder = players.find(p => p.cls === c.id);
-        if (holder) {
-          b.classList.add('taken', holder.style || 'p1');
-          b.innerHTML = `${c.em}<br>${c.label}<br><small>${holder.id === me ? 'you' : 'taken'}</small>`;
-        }
-        b.disabled = !!(holder && holder.id !== me);
-        b.onclick = () => {
-          if (b.disabled) return;
-          if (mine) mine.cls = c.id;
-          if (role === 'host') { broadcastState(); render(); }
-          else send('pick-class', { cls: c.id });
-          render();
-        };
-        cards.append(b);
-      });
-      body.append(cards);
-      if (role === 'host') {
-        const go = btn('Done', () => { closeUi(); bar.hidden = false; }, 'olBtn');
-        body.append(go);
+      body.append(renderRoster());
+      body.append(renderClassCards());
+      if (copiedOn) body.append(el('div', 'olCopied', 'Copied!'));
+      if (role) {
+        const leaveBtn = el('button', 'olLeave', 'Leave game');
+        leaveBtn.type = 'button';
+        leaveBtn.onclick = () => leave('lobby');
+        body.append(leaveBtn);
       }
       return;
     }
+  }
+
+  function iconTool(src, label, fn) {
+    const b = el('button', 'olTool');
+    b.type = 'button';
+    b.setAttribute('aria-label', label);
+    const im = document.createElement('img');
+    im.src = src; im.alt = '';
+    b.append(im, el('span', '', label));
+    b.onclick = fn;
+    return b;
+  }
+  function renderCodeWells(words, { badges = true } = {}) {
+    const row = el('div', 'olWells');
+    (words || []).forEach(w => {
+      const s = el('div', 'olWell');
+      const im = document.createElement('img');
+      im.src = WORD_ICON(w); im.alt = w;
+      s.append(im);
+      s.title = w;
+      if (badges) {
+        const tab = TABS[tabOf(w)];
+        if (tab) {
+          const badge = document.createElement('img');
+          badge.className = 'olTabBadge';
+          badge.src = ICON('lobby', 'badge-tab-' + (BADGE_TAB[tab.id] || tab.id));
+          badge.alt = tab.label;
+          s.append(badge);
+        }
+      }
+      row.append(s);
+    });
+    return row;
+  }
+
+  function renderRoster() {
+    const row = el('div', 'olRoster');
+    for (let i = 0; i < 3; i++) {
+      const pl = players[i];
+      const style = (pl && pl.style) || PLAYER_STYLE[i].id;
+      const slot = el('button', 'olRosterSlot' + (!pl ? '' : '') + (pl && !pl.cls ? ' empty' : ''));
+      slot.type = 'button';
+      slot.style.setProperty('--ol-fill', (pl && pl.fill) || PLAYER_STYLE[i].fill);
+      const im = document.createElement('img');
+      im.className = 'olSlotFace';
+      if (pl && pl.cls) {
+        const animal = ANIMAL_OF[pl.cls] || 'bear';
+        im.src = PICKS(`slot-${style}-${animal}`);
+        im.alt = `${style} ${animal}`;
+        im.onerror = () => { im.onerror = null; im.src = ICON('lobby', 'slot-empty'); };
+        if (pl.id === me) slot.onclick = () => hooks.openSkinPick?.(pl.cls);
+      } else if (pl) {
+        // Seated but no class yet — still show colour + shape so P3 is visible.
+        im.src = ICON('lobby', 'slot-empty');
+        im.alt = style + ' seated';
+        const tag = document.createElement('img');
+        tag.className = 'olRosterTag';
+        tag.src = ICON('players', PLAYER_STYLE.find(s => s.id === style)?.tag || ('tag-' + style));
+        tag.alt = style;
+        slot.append(im, tag);
+        row.append(slot);
+        continue;
+      } else {
+        im.src = ICON('lobby', 'slot-empty');
+        im.alt = 'empty slot';
+      }
+      slot.append(im);
+      row.append(slot);
+    }
+    return row;
+  }
+
+  function renderClassCards() {
+    const cards = el('div', 'olCards');
+    const mine = players.find(p => p.id === me);
+    CLASSES.forEach(c => {
+      const holder = players.find(p => p.cls === c.id);
+      const b = el('button', 'olClass' + (holder ? ' taken ' + (holder.style || 'p1') : ''));
+      b.type = 'button';
+      const im = document.createElement('img');
+      if (holder) {
+        im.src = PICKS(`class-${c.id}-taken-${holder.style || 'p1'}`);
+        im.alt = c.label;
+        im.onerror = () => { im.onerror = null; im.src = ICON('lobby', `class-${c.id}-taken`); };
+      } else {
+        im.src = ICON('lobby', `class-${c.id}`);
+        im.alt = c.label;
+      }
+      b.append(im, el('small', 'olClassLab', c.label));
+      b.disabled = !!(holder && holder.id !== me);
+      b.onclick = () => {
+        if (b.disabled) return;
+        if (mine) mine.cls = c.id;
+        if (role === 'host') { broadcastState(); render(); }
+        else send('pick-class', { cls: c.id });
+        render();
+      };
+      cards.append(b);
+    });
+    return cards;
   }
 
   function btn(label, fn, cls = 'olBtn') {
@@ -681,36 +795,48 @@ export function createLobby(hooks = {}) {
 
   function renderPicker(body, { pin, onJoin }) {
     const words = pin ? PIN_WORDS : TABS[tab].words;
-    const slots = el('div', 'olSlots');
+    const picker = el('div', 'olPicker');
+    const left = el('div', 'olPickerLeft');
+    const slots = el('div', 'olWells');
     for (let i = 0; i < 4; i++) {
-      const s = el('div', 'olSlot');
+      const s = el('div', 'olWell');
       s.onclick = () => { pick = pick.slice(0, i); render(); };
       if (pick[i]) {
         const im = document.createElement('img'); im.src = WORD_ICON(pick[i]); im.alt = pick[i];
         s.append(im);
-        if (!pin) s.append(el('span', 'olBadge', TABS[tabOf(pick[i])]?.em || ''));
+        if (!pin) {
+          const tabInfo = TABS[tabOf(pick[i])];
+          if (tabInfo) {
+            const badge = document.createElement('img');
+            badge.className = 'olTabBadge';
+            badge.src = ICON('lobby', 'badge-tab-' + (BADGE_TAB[tabInfo.id] || tabInfo.id));
+            badge.alt = tabInfo.label;
+            s.append(badge);
+          }
+        }
       }
       slots.append(s);
     }
-    body.append(slots);
+    left.append(slots);
     if (!pin) {
       const tabs = el('div', 'olTabs');
-      TABS.forEach((t, i) => {
-        const b = el('button', 'olTab' + (i === tab ? ' on' : ''), `${t.em} ${t.label}`);
+      TABS.forEach((tb, i) => {
+        const b = el('button', 'olTab' + (i === tab ? ' on' : ''), `${tb.em} ${tb.label}`);
         b.onclick = () => { tab = i; render(); };
         tabs.append(b);
       });
-      body.append(tabs);
+      left.append(tabs);
     }
-    const grid = el('div', 'olGrid');
+    const grid = el('div', 'olGrid' + (pin ? ' olPinGrid' : ''));
     words.forEach((w, i) => {
-      const b = el('button', 'olTile' + (pick.includes(w) && pick[pick.length - 1] === w ? ' on' : ''));
+      const picked = pick.includes(w) && pick[pick.length - 1] === w;
+      const b = el('button', 'olTile' + (picked ? ' on' : ''));
       b.type = 'button';
       b.setAttribute('aria-label', w);
       const im = document.createElement('img'); im.src = WORD_ICON(w); im.alt = '';
       b.append(im);
       const r = Math.floor(i / 4), c = i % 4;
-      if (focusRC[0] === r && focusRC[1] === c) b.classList.add('on');
+      if (focusRC[0] === r && focusRC[1] === c) b.classList.add('focus');
       b.onclick = () => {
         sfx('pin-tap', 0.35);
         if (pick.length >= 4) return;
@@ -719,10 +845,10 @@ export function createLobby(hooks = {}) {
       };
       grid.append(b);
     });
-    body.append(grid);
+    const join = el('div', 'olJoinRow');
     const go = btn(pin ? 'Enter PIN' : 'Join', onJoin);
     go.disabled = pick.length !== 4;
-    body.append(go);
+    join.append(go);
     if (!pin) {
       const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
       if (!touch || typeOpen) {
@@ -739,13 +865,21 @@ export function createLobby(hooks = {}) {
             if (pick.length < 4 && isWord(w)) { pick = pick.concat(w); inp.value = ''; tab = Math.max(0, tabOf(w)); render(); }
           }
         });
-        body.append(inp);
+        join.append(inp);
       } else {
-        const kb = btn('⌨️', () => { typeOpen = true; render(); }, 'olBtn sec');
+        const kb = el('button', 'olTool');
+        kb.type = 'button';
         kb.setAttribute('aria-label', 'Type words');
-        body.append(kb);
+        const kim = document.createElement('img');
+        kim.src = ICON('lobby', 'btn-type'); kim.alt = '';
+        kb.append(kim);
+        kb.onclick = () => { typeOpen = true; render(); };
+        join.append(kb);
       }
     }
+    left.append(join);
+    picker.append(left, grid);
+    body.append(picker);
   }
 
   function onKey(ev) {
@@ -772,9 +906,19 @@ export function createLobby(hooks = {}) {
     else if (ev.key === 'Escape') { ev.preventDefault(); root.querySelector('.olHead button')?.click(); }
   }
 
+  function showOffline() {
+    const line = 'Online play is turned off on this device. Ask a grown-up.';
+    toast(line, 2800); speak('lobby.onlineOff');
+    statusBanner = line;
+    playLobbyMusic();
+    showScreen('choice');
+    render();
+  }
+
   function openChoice() {
     if (!isOnlineDev()) return;
-    if (!allowed()) { toast('Online play is turned off on this device. Ask a grown-up.', 2800); speak('lobby.onlineOff'); return; }
+    if (!allowed()) { showOffline(); return; }
+    statusBanner = '';
     playLobbyMusic();
     showScreen('choice');
     render();
@@ -783,7 +927,8 @@ export function createLobby(hooks = {}) {
   function maybeAutoJoin() {
     if (!isOnlineDev()) return;
     if (!allowed()) {
-      if (parseJoinCode()) toast('Online play is turned off on this device. Ask a grown-up.', 3200); speak('lobby.onlineOff');
+      if (parseJoinCode()) showOffline();
+      else { toast('Online play is turned off on this device. Ask a grown-up.', 3200); speak('lobby.onlineOff'); }
       return;
     }
     const raw = parseJoinCode();

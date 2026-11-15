@@ -54,3 +54,130 @@
   .olTile { min-width: 64px; min-height: 64px; }
   .olTile img { width: 48px; height: 48px; }
 }
+
+/* ---- N2.1 gap-fill (ui-n2 QA) ---- */
+.olIco { width: 56px; height: 56px; min-width: 56px; min-height: 56px; }
+.olBanner {
+  width: min(358px, calc(100% - 8px)); min-height: 64px; margin: 0 auto 8px;
+  padding: 16px 20px 20px 20px; box-sizing: border-box;
+  border-style: solid; border-width: 16px 20px 20px 20px;
+  border-image: var(--ol-banner-toast) 16 20 20 20 fill / 16px 20px 20px 20px;
+  background: none; text-align: center;
+  font: 800 16px/1.25 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #3b2614; pointer-events: none;
+}
+.olCopied, #olCopiedFloat {
+  width: min(358px, calc(100% - 8px)); min-height: 64px; margin: 8px auto 0;
+  padding: 16px 20px 20px 48px; box-sizing: border-box;
+  border-style: solid; border-width: 16px 20px 20px 40px;
+  border-image: var(--ol-toast-copied) 16 20 20 40 fill / 16px 20px 20px 40px;
+  background: none; text-align: left;
+  font: 800 18px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #3b2614; pointer-events: none;
+}
+#olCopiedFloat {
+  position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%); z-index: 120; margin: 0;
+}
+.olCopied[hidden], #olCopiedFloat[hidden], .olBanner[hidden] { display: none !important; }
+
+.olTools { display: flex; gap: 16px; justify-content: center; margin: 4px 0 10px; }
+.olTool { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: 0; cursor: pointer; color: #3b2614; font: 700 11px system-ui, sans-serif; padding: 0; min-width: 56px; min-height: 48px; }
+.olTool img { width: 56px; height: 56px; display: block; }
+
+.olWells { display: flex; gap: 8px; justify-content: center; margin: 6px 0 10px; }
+.olWell { width: 80px; height: 80px; padding: 0; border-style: solid; border-width: 16px; border-image: var(--ol-code-well) 16 16 16 16 fill / 16px 16px 16px 16px; background: none; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; box-sizing: border-box; }
+.olWell img { width: 56px; height: 56px; display: block; }
+.olWell .olTabBadge { position: absolute; right: -6px; bottom: -6px; width: 24px; height: 24px; }
+
+.olRoster { display: flex; gap: 8px; justify-content: center; margin: 8px 0 12px; }
+.olRosterSlot { width: 96px; height: 112px; padding: 0; border: 0; background: transparent; position: relative; cursor: default; }
+.olRosterSlot img.olSlotFace { width: 96px; height: 112px; display: block; pointer-events: none; }
+.olRosterSlot .olRosterTag { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); width: 44px; height: 16px; }
+.olRosterSlot.empty { box-shadow: inset 0 0 0 3px var(--ol-fill, #3b2614); border-radius: 16px; }
+
+.olCards { align-items: flex-end; }
+.olClass { width: 100px; min-width: 100px; height: 100px; min-height: 100px; padding: 0; border: 0; background: transparent; box-shadow: none !important; opacity: 1; filter: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.olClass img { width: 100px; height: 100px; display: block; pointer-events: none; }
+.olClass small, .olClass .olClassLab { font: 700 11px system-ui, sans-serif; color: #3b2614; }
+.olClass.taken { opacity: 1; cursor: default; filter: none; }
+
+.olChoiceRow { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.olChoiceCard { width: 148px; background: none; border: 0; padding: 0; cursor: pointer; color: #3b2614; font: 800 14px system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.olChoiceCard img { width: 148px; height: 160px; display: block; pointer-events: none; }
+
+button.olLeave, #pLeave, .olLeave {
+  width: 280px; height: 56px; min-height: 56px; min-width: 140px;
+  margin: 8px auto; display: flex; align-items: center; justify-content: center;
+  padding: 20px 28px 24px 56px; box-sizing: border-box;
+  border-style: solid; border-width: 20px 28px 24px 48px;
+  border-image: var(--ol-btn-leave) 20 28 24 48 fill / 20px 28px 24px 48px;
+  background: none; color: #3b2614;
+  font: 800 16px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  cursor: pointer;
+}
+button.olLeave[hidden], #pLeave[hidden] { display: none !important; }
+
+#title #playWithFriends, #playWithFriends {
+  width: 300px; height: 60px; min-height: 60px; min-width: 200px;
+  margin: 8px auto 4px; display: block; align-self: center;
+  padding: 20px 28px 24px 28px; box-sizing: border-box;
+  border-style: solid; border-width: 20px 28px 24px 28px;
+  border-image: var(--ol-btn-play) 20 28 24 28 fill / 20px 28px 24px 28px;
+  background: none; color: #3b2614;
+  font: 800 16px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  cursor: pointer; box-shadow: none;
+}
+#title #playWithFriends[hidden], #playWithFriends[hidden] { display: none !important; }
+
+.olPicker { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.olJoinRow { display: flex; gap: 8px; justify-content: center; align-items: center; flex: none; width: 100%; }
+.olTile.focus { outline: 3px solid #ffd23f; outline-offset: 2px; }
+.olTile.on { box-shadow: 0 0 0 3px #3b2614, 0 4px 0 #3b2614; transform: translateY(-2px); background: #ffe7b0; }
+.olGrid.olPinGrid { width: 344px; grid-template-columns: repeat(4, minmax(80px, 1fr)); gap: 8px; }
+.olGrid.olPinGrid .olTile { min-width: 80px; min-height: 80px; border-style: solid; border-width: 16px; border-image: var(--ol-pin-tile) 16 16 16 16 fill / 16px 16px 16px 16px; background: none; }
+.olGateRing { opacity: .9; background: conic-gradient(#a99cf0 var(--ol-p, 0%), rgba(169,156,240,.12) 0); }
+
+/* Costume Closet skin pick */
+#skinPick .panel.closetPanel {
+  width: min(320px, 96vw); max-height: min(480px, 92vh);
+  padding: 12px 16px 20px; border-style: solid;
+  border-width: 144px 40px 90px 40px;
+  border-image: var(--ol-closet-panel) 144 40 90 40 fill / 144px 40px 90px 40px;
+  background: none; box-shadow: none; border-radius: 0;
+}
+.spTabs { display: flex; gap: 6px; justify-content: center; margin: 0 0 8px; }
+.spTab { width: 88px; height: 48px; min-height: 48px; border: 0; padding: 0; background: none; cursor: pointer; }
+.spTab img { width: 88px; height: 48px; display: block; pointer-events: none; }
+.spc.closet { width: 88px; min-height: 88px; border: 0; background: none; padding: 0; }
+.spc.closet .spI { width: 80px; height: 80px; }
+.spc.closet .spCardFace { width: 88px; height: 88px; background-size: 100% 100%; background-repeat: no-repeat; display: flex; align-items: center; justify-content: center; }
+.spc.on .spCardFace, .spc.equipped .spCardFace { background-image: var(--ol-closet-equipped); }
+.spc.closet:not(.on) .spCardFace { background-image: var(--ol-closet-unequipped); }
+
+/* Hide in-world hub labels over the pause card */
+body:has(#pause.on) .hubLbl { visibility: hidden !important; }
+
+/* Landscape 844×390: wells + tabs left, 72px grid right, Join stays on-canvas */
+@media (orientation: landscape) and (max-height: 420px) {
+  .olCard { flex-direction: column; width: min(844px, calc(100vw - 16px)); max-height: calc(100dvh - 12px); }
+  .olHead { flex-direction: row; width: auto; flex: none; padding: 4px 8px; }
+  .olBody { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-start; padding: 4px 10px 8px; }
+  .olPicker { flex-direction: row; align-items: stretch; justify-content: center; flex: 1; min-height: 0; width: 100%; }
+  .olPickerLeft { display: flex; flex-direction: row; gap: 6px; align-items: flex-start; flex: none; position: relative; padding-bottom: 56px; }
+  .olPicker .olWells { flex-direction: column; margin: 0; gap: 4px; }
+  .olPicker .olWell { width: 64px; height: 64px; }
+  .olPicker .olWell img { width: 44px; height: 44px; }
+  .olPicker .olTabs { flex-direction: column; margin: 0; }
+  .olGrid { width: 312px; grid-template-columns: repeat(4, minmax(72px, 1fr)); gap: 8px; }
+  .olTile { min-width: 72px; min-height: 72px; }
+  .olTile img { width: 56px; height: 56px; }
+  .olGrid.olPinGrid { width: 312px; grid-template-columns: repeat(4, minmax(72px, 1fr)); }
+  .olGrid.olPinGrid .olTile { min-width: 72px; min-height: 72px; }
+  .olJoinRow { position: absolute; left: 0; right: 0; bottom: 0; }
+  button.olLeave, #pLeave { width: 140px; padding: 20px 28px 24px 48px; border-image-source: var(--ol-btn-leave-compact); }
+  .olRosterSlot { width: 80px; height: 94px; }
+  .olRosterSlot img.olSlotFace { width: 80px; height: 94px; }
+  .olClass, .olClass img { width: 80px; height: 80px; min-width: 80px; min-height: 80px; }
+  .olChoiceCard img { width: 120px; height: 130px; }
+}

@@ -12,6 +12,7 @@ import { createSlots } from './slots.js';
 import { createNet } from './net/session.js';
 import { isOnlineDev, canShowFriendsStation } from './net/flags.js';
 import { createLobby } from './net/lobby.js';
+import { installOnlineArt } from './net/art.js';
 import { emoteOf, EMOTE_SHOW } from './net/emotes.js';
 import './online.css';
 import { onAssets, iconUrl, ico } from './assets.js';
@@ -1416,6 +1417,7 @@ function toTitle() { persist(); saveRound(); noSave = true; try { sessionStorage
 function openPause() { $('bPause').classList.remove('pulse');
   if (shopOpen) closeShop();
   if (!playing || round.over || $('pause').classList.contains('on')) return;
+  if ($('pLeave')) $('pLeave').hidden = !lobby?.role;
   $('pauseInfo').textContent = `${round.free ? '∞ Free play (no stars)' : `⏱ ${fmtT(round.left)} left`} `; openOv('pause'); hubSet('game');
 }
 // title: Challenge / Relaxed set mode then open Valley Map (overhaul primary path)
@@ -1447,6 +1449,13 @@ $('cont').onclick = () => { audio.start(); beginRound(); };
 $('bPause').onclick = openPause; $('pResume').onclick = () => closeOv('pause');
 $('pRestart').onclick = () => confirmDlg('Restart round?', 'Everything built or collected this round will be reset. Your gear and journal are kept.', 'Restart', () => startNew(round.len));
 $('pQuit').onclick = () => confirmDlg('Quit to title?', 'Your round is saved. You can pick it up again with “Continue round”.', 'Quit', toTitle);
+if ($('pLeave')) $('pLeave').onclick = () => {
+  confirmDlg('Leave game?', 'You will leave this online room and go back to the title.', 'Leave', () => {
+    try { lobby?.leave?.('pause'); } catch (e) {}
+    closeOv('pause');
+    toTitle();
+  });
+};
 $('pJournal').onclick = () => openJournal(); $('pSettings').onclick = () => openOv('settings');
 $('tJournal').onclick = () => openJournal(); $('tSettings').onclick = () => openOv('settings');
 function openHow() {
@@ -2291,6 +2300,7 @@ async function boot() {
       return zones.actAs ? zones.actAs(id) : withCur(id, () => zones.act());
     },
   });
+  installOnlineArt();
   lobby = isOnlineDev() ? createLobby({
     audio, toast,
     getSettings: () => settings,
@@ -2302,6 +2312,7 @@ async function boot() {
     },
     onEmote: (from, id) => showOnlineEmote(from, id),
     hubMood: () => 'hub',
+    openSkinPick: (cls) => openSkinPick(),
   }) : null;
   if (lobby) {
     lobby.settings.mount();

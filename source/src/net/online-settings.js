@@ -113,7 +113,6 @@ export function createOnlineSettings(hooks = {}) {
       <p class="ksNote">For grown-ups: press and hold for 3 seconds.</p>
       <button type="button" class="olGate" id="sOnlineGate" aria-label="For grown-ups: press and hold for 3 seconds.">
         <span class="olGateRing" id="sOnlineGateRing"></span>
-        <span>Hold 3 seconds to change</span>
       </button>
       <p class="ksNote" id="sOnlineHint">More online settings appear after the hold.</p>
       <label class="ksChk"><input type="checkbox" id="sAllow"><span>Allow playing with friends (online)</span></label>
