@@ -1137,7 +1137,7 @@ export function createZones(scene, host) {
       case 'spider': if (c === 'scout') return false; return inCone(e, q, e.o.cone[0], e.o.cone[1]);
       case 'crow': { const air = !p.grounded || c === 'scout'; if (!air) return false; if (hidden(q, 'canopy') || bearAt(q, 2.2)) return false; return inCone({ x: e.x, z: e.z }, q, e.o.cone[0], e.o.cone[1], e.yaw); }
       case 'nest': { if (e.calm) return false; if (S.smokes.some(s => t < s.until && flatD(s, q) < s.r)) return false; return flatD(e, q) < e.o.ring && q.y - e.gy < 4; }
-      case 'owl': if (!S.night) return false; if (gearOn('lantern') && c === 'scout') return false; if (!inCone(e, q, e.o.cone[0], e.o.cone[1])) return false; return !losBlocked(e, q);
+      case 'owl': { if (!owlAwake(S)) return false; if (gearOn('lantern') && c === 'scout') return false; const k = S.time === 'dusk' ? 0.5 : 1; if (!inCone(e, q, (e.o.cone[0] || 11) * k, e.o.cone[1])) return false; return !losBlocked(e, q); }
       case 'fox': {
         const tiny = c === 'scout', hide = tiny && (hidden(q, 'log') || bearAt(q, 1.8));
         if (hide) return false;
@@ -1172,6 +1172,7 @@ export function createZones(scene, host) {
     S.stuck = null;
     S.bonks++; S.safeT = t + 1.6 * EZ('safe'); (S.bonkLog ||= []).push({ t: +t.toFixed(1), src: src || (e && e.name) || '?', who: ctx.cur(), x: at.x, z: at.z }); e.alertT = t; e.sus = 0;
     resetEscorts(cp);
+    if (S.master) S.master.coolUntil = 0; // S4 §1.6: bonk does not reset the Master Bell; cooldown clears so they can ring at once
     if ((S.acorns || []).some(a => a.by === ctx.cur())) acornBack();
     fx(p.x, p.y + 0.6, p.z); ctx.audio?.sample?.(src === 'ember' || (S.escorts || []).length ? 'act3/gentle-bonk-poof' : 'ui/error-bonk', 0.5); // Act 3: the gentle poof
     if (src === 'ember') { tst('💨 Puff! Soot on your nose — poof, back to the 🚩 flag. Douse embers with a 🫧 bubble, or ring 🌱 spring to dim them', 2600); return; }
@@ -1240,13 +1241,13 @@ export function createZones(scene, host) {
         W.position.z = push;
         W.children.forEach((w, i) => { const a = w.userData.a + t * (e.calm ? 0.4 : 2.2), rr = e.calm ? 1.1 : (e.st === 'alert' ? 2.6 : 1.7); w.position.set(Math.cos(a) * rr, 1.2 + Math.sin(t * 3 + i) * 0.4 - (e.calm ? 0.8 : 0), Math.sin(a) * rr); });
       } else if (e.kind === 'owl') {
-        const bait = S.night && gearOn('lantern') && posOfId(idOfCls('scout'));
-        if (bait && flatD(e, bait) < Math.max(22, (e.o.cone[0] || 11) * 1.8)) {
+        const awake = owlAwake(S), dusk = S.time === 'dusk', bait = awake && gearOn('lantern') && posOfId(idOfCls('scout'));
+        if (bait && flatD(e, bait) < Math.max(22, (e.o.cone[0] || 11) * 1.8 * (dusk ? 0.5 : 1))) {
           const want = Math.atan2(bait.x - e.x, bait.z - e.z);
-          e.yaw += Math.atan2(Math.sin(want - e.yaw), Math.cos(want - e.yaw)) * Math.min(1, dt * 2.4);
+          e.yaw += Math.atan2(Math.sin(want - e.yaw), Math.cos(want - e.yaw)) * Math.min(1, dt * 2.4 * (dusk ? 0.5 : 1));
           e.bait = true;
-        } else { e.bait = false; e.yaw = e.baseYaw + Math.sin(t * (e.o.sweepV || 0.45)) * (e.o.sweep || 1.1); }
-        for (const m of e.G.userData.eyes) m.scale.y = S.night ? (Math.sin(t * 0.9) > 0.97 ? 0.15 : 1) : 0.12;
+        } else { e.bait = false; e.yaw = e.baseYaw + Math.sin(t * (e.o.sweepV || 0.45) * (dusk ? 0.5 : 1)) * (e.o.sweep || 1.1); }
+        for (const m of e.G.userData.eyes) m.scale.y = owlAwake(S) ? (Math.sin(t * 0.9) > 0.97 ? 0.15 : 1) : 0.12;
       } else if (e.kind === 'fox') {
         if (!e.peek && S.pingAt && t - S.pingAt.t < 0.3 && flatD(e, S.pingAt) < 18) e.pingLure = { x: S.pingAt.x, z: S.pingAt.z, phase: 'go' };
         if (e.pingLure) {
@@ -1269,7 +1270,7 @@ export function createZones(scene, host) {
       if (e.kind !== 'sprinkler') e.G.rotation.y = e.yaw; else e.G.rotation.y = e.baseYaw;
       if (e.cone && e.kind !== 'sprinkler') e.cone.rotation.y = e.yaw;
       // awareness: ? (grace) then ! (react)
-      const asleep = (e.kind === 'owl' && !S.night) || (e.kind === 'turtle' && t < (e.napT || -1)) || e.calm || e.paused;
+      const asleep = (e.kind === 'owl' && !owlAwake(S)) || (e.kind === 'turtle' && t < (e.napT || -1)) || e.calm || e.paused;
       let see = false, seeId = null;
       if (!asleep && t > S.safeT && !tw) {
         const ids = ctx.driven();
@@ -1513,7 +1514,30 @@ export function createZones(scene, host) {
       AA().gifts.push({ kind, x: w.x, y: w.y, z: w.z, G, got: false }); },
     // ---- M7 Seasons ----
     seasonBells(x, z, h) { [['summer', '☀️', 0xffd23f], ['winter', '❄️', 0xbfe8ff], ['spring', '🌱', 0x8be07a]].forEach(([s, em, col], i) => this.toggleBell('bell:' + s, x + (i - 1) * 2.6, z, h, () => setSeason(s), { label: `${s[0].toUpperCase() + s.slice(1)} bell`, em, col })); },
-    creek(id, x0, z0, x1, z1) { const pd = this.pond(id, x0, z0, x1, z1, { level: 'mid' }); const ice = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.2, z1 - z0), new THREE.MeshLambertMaterial({ color: 0xe8f6ff, emissive: 0x6aa8d0, emissiveIntensity: 0.25, transparent: true, opacity: 0.92 })); ice.position.set(A.x + (x0 + x1) / 2, pd.gy + 0.22, A.z + (z0 + z1) / 2); ice.visible = false; group.add(ice); pd.ice = ice; pd.creek = true; AA().creeks.push(pd); return pd; },
+
+    // S4 Master Bell (act3-levels-22-24.md §1): one hill bell cycles A→B→C→A (season + time + wind). Any class. Never flips SEASONS_ENABLED.
+    masterBell(x, z, h = 2, o = {}) {
+      const start = (o.start === 'C' || o.start === 'B') ? o.start : 'A';
+      const g = gy(x, z), G = new THREE.Group(); G.position.set(A.x + x, g, A.z + z); group.add(G);
+      const plinth = bx(2.2, h, 2.2, 0x9a8f7a, 0, h / 2, 0); G.add(plinth);
+      const bellG = new THREE.Group(); bellG.position.y = h; G.add(bellG);
+      const bl = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.9, 1.15, 12), mat(0xe8c44a, 0.45)); bl.position.y = 0.85; bellG.add(bl);
+      const cap = bx(0.22, 0.22, 0.22, 0x6b4a30, 0, 1.5, 0); bellG.add(cap);
+      const clap = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), mat(0xc9a227)); clap.position.y = 0.28; bellG.add(clap);
+      decoInto(bellG, 'act3/master-bell', 1.8, { byLong: true, fallback: [bl, cap, clap] });
+      const nowG = new THREE.Group(); nowG.position.set(0, h * 0.55, 1.28); G.add(nowG);
+      nowG.add(bx(1.7, 0.72, 0.12, 0x5a3b22, 0, 0, 0));
+      decoInto(nowG, 'act3/teach-plaque', 1.1, { byLong: true });
+      const nowLbl = masterTextSprite('Now', 0.42); nowLbl.position.set(0, 0.38, 0.1); nowG.add(nowLbl);
+      const nowRow = masterIconRow(MASTER[start].em, 0.48); nowRow.position.set(0, -0.02, 0.1); nowG.add(nowRow);
+      const nextG = new THREE.Group(); nextG.position.set(0, h + 2.5, 0); G.add(nextG);
+      const nextRow = masterIconRow(MASTER[masterNext(start)].em, 0.85); nextG.add(nextRow);
+      const pr = { kind: 'master', act: 'master', cls: null, sig: 'masterBell', x: A.x + x, y: g + h + 0.8, z: A.z + z, r: 3.5, re: true, label: o.label || 'Master Bell', G, bellG, clap, nowRow, nextRow, nowEms: MASTER[start].em.join(''), nextEms: MASTER[masterNext(start)].em.join('') };
+      props.push(pr);
+      const S = AA(); S.master = { state: start, next: masterNext(start), start, coolUntil: 0, pr };
+      return pr;
+    },
+    creek(id, x0, z0, x1, z1, o = {}) { const pd = this.pond(id, x0, z0, x1, z1, { level: 'mid' }); const ice = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.2, z1 - z0), new THREE.MeshLambertMaterial({ color: 0xe8f6ff, emissive: 0x6aa8d0, emissiveIntensity: 0.25, transparent: true, opacity: 0.92 })); ice.position.set(A.x + (x0 + x1) / 2, pd.gy + 0.22, A.z + (z0 + z1) / 2); ice.visible = false; group.add(ice); pd.ice = ice; pd.creek = true; pd.melt = !!o.melt; AA().creeks.push(pd); return pd; },
     snowPile(s, x, z, w, d, h) { this.cracked(s, x, z, w, d, h, { label: 'Snow pile' }); const pr = props[props.length - 1]; pr.m.material = mat(0xf4f8ff); pr.G.visible = false; pr.s.off = true; pr.m.visible = false; pr.snow = true; pr.need = 'winter'; pr.needWhy = 'Only in winter'; AA().seasonal.push({ pr, when: 'winter' }); },
     mudSlide(s, ax, az, ha, bx2, bz, hb, o = {}) { const a = L2W(ax, az, ha), b = L2W(bx2, bz, hb), L = Math.hypot(b.x - a.x, b.z - a.z), m = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.2, L), mat(0x6a4a28)); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.05, (a.z + b.z) / 2); m.rotation.y = Math.atan2(b.x - a.x, b.z - a.z); m.rotation.x = Math.atan2(a.y - b.y, L); group.add(m);
       props.push({ kind: 'slide', act: 'slide', cls: 'trickster', sig: s, x: a.x, y: a.y, z: a.z, b, r: 2.2, need: 'spring', needWhy: 'The chute is frozen or dry — ring the 🌱 Spring bell for mud', label: o.label || 'Mud chute', two: true, icon: badge('trickster', a.x, a.y + 2, a.z, 0.9) }); },
@@ -1564,21 +1588,89 @@ export function createZones(scene, host) {
   });
   function windVec(w) { const S = AA(); if (w.alt) { const d = S.wind > 0 ? w.alt.up : w.alt.down; return { dx: d[0], dz: d[1] }; } return { dx: w.dx * S.wind, dz: w.dz * S.wind }; }
   function applyWind(v, quiet) {
-    const S = AA(); if (S.wind === v) return;
-    S.wind = v; S.windFlipT = t;
-    setSig('wind:up', v > 0); setSig('wind:down', v < 0);
-    const WY = recipe && recipe.windYaw; for (const V of S.vanes || []) V.rotation.y = WY ? (v > 0 ? WY.up : WY.down) : (v > 0 ? 0 : Math.PI);
+    const prev = AA().wind;
+    setMasterWind({ dz: v > 0 ? 1 : v < 0 ? -1 : 0, mag: v === 0 ? 0 : 6 }, true, { flip: true });
+    if (prev === v) return;
     const WT = recipe && recipe.windText; if (!quiet) tst(WT ? (v > 0 ? WT.up : WT.down) : v > 0 ? '🌬️ The wind turns — it blows UP the hill now' : '🌬️ The wind turns — it blows DOWN the hill now', 2000);
   }
-  function setNightA2(v) { const S = AA(); S.night = !!v; setSig('night', S.night); setSig('day', !S.night); ctx.setNight(S.night); tst(S.night ? '🌙 Night! The owl wakes up…' : '☀️ Day! The owl dozes off.', 2000); }
-  function setSeason(s) {
-    const S = AA(); if (S.season === s) { tst(`${s} already`, 900); return; } S.season = s;
+  function setMasterWind({ dz = 0, dx = 0, mag = 0 } = {}, quiet, o = {}) {
+    const S = AA();
+    const v = mag === 0 ? 0 : (dz > 0 ? 1 : dz < 0 ? -1 : (dx >= 0 ? 1 : -1));
+    const flip = o.flip !== false;
+    if (flip && S.wind !== v) S.windFlipT = t;
+    S.wind = v; S.windMag = mag; S.windDx = dx; S.windDz = dz;
+    setSig('wind:up', v > 0); setSig('wind:down', v < 0);
+    setSig('wind:north', mag > 0 && v > 0); setSig('wind:south', mag > 0 && v < 0); setSig('wind:calm', mag === 0 || v === 0);
+    const WY = recipe && recipe.windYaw; for (const V of S.vanes || []) V.rotation.y = WY ? (v > 0 ? WY.up : WY.down) : (v > 0 ? 0 : Math.PI);
+  }
+  function setNightA2(v, quiet) { setTimeA2(v ? 'night' : 'day', quiet); }
+  function setTimeA2(mode, quiet) {
+    const S = AA(), m = mode === 'dusk' ? 'dusk' : mode === 'night' ? 'night' : 'day';
+    S.time = m; S.night = m === 'night';
+    setSig('night', m === 'night'); setSig('day', m === 'day'); setSig('dusk', m === 'dusk');
+    if (ctx.setTime) ctx.setTime(m, true); else ctx.setNight(S.night);
+    if (!quiet) tst(m === 'night' ? '🌙 Night! The owl wakes up…' : m === 'dusk' ? '🌇 Dusk! The owl is drowsy…' : '☀️ Day! The owl dozes off.', 2000);
+  }
+  function setSeason(s, quiet) {
+    const S = AA(); if (S.season === s) { if (!quiet) tst(`${s} already`, 900); return; } S.season = s;
     for (const k of ['summer', 'winter', 'spring']) setSig(k, k === s);
-    for (const pd of S.creeks) { setPond(pd, s === 'winter' ? 'ice' : 'mid'); }
+    for (const pd of S.creeks) { const lv = pd.melt ? (s === 'winter' ? 'ice' : s === 'spring' ? 'high' : 'mid') : (s === 'winter' ? 'ice' : 'mid'); setPond(pd, lv, true); }
     for (const it of S.seasonal) { const on = s === it.when && !it.pr.done; it.pr.s.off = !on; it.pr.m.visible = on; }
     if (terrMesh) { const m = terrMesh.material; if (s === 'winter') { m.color.set(0xffffff); m.emissive = new THREE.Color(0x9ab0c8); m.emissiveIntensity = 0.75; } else if (s === 'spring') { m.color.set(0xdfffd0); m.emissive = new THREE.Color(0x203010); m.emissiveIntensity = 0.3; } else { m.color.set(0xffffff); m.emissive = new THREE.Color(0); m.emissiveIntensity = 0; } m.needsUpdate = true; }
-    tst({ summer: '☀️ Summer! The creek flows — logs can float.', winter: '❄️ Winter! The creek freezes, snow hides your scent.', spring: '🌱 Spring! Mud for sliding and vines can grow.' }[s], 2400);
+    if (!quiet) tst({ summer: '☀️ Summer! The creek flows — logs can float.', winter: '❄️ Winter! The creek freezes, snow hides your scent.', spring: '🌱 Spring! Mud for sliding and vines can grow.' }[s], 2400);
   }
+  // S4 Master Bell — shared A/B/C table (act3-integration.md, act3-levels-22-24.md §1.1). Writes only per-level S.season / S.time / S.wind.
+  const MASTER = {
+    A: { season: 'winter', time: 'night', wind: { dz: 1, dx: 0, mag: 6 }, em: ['❄️', '🌙', '⬆️'], line: '🔔 A · Winter, night, north wind' },
+    B: { season: 'spring', time: 'day', wind: { dz: -1, dx: 0, mag: 6 }, em: ['🌱', '☀️', '⬇️'], line: '🔔 B · Spring, day, south wind' },
+    C: { season: 'summer', time: 'dusk', wind: { dz: 0, dx: 0, mag: 0 }, em: ['☀️', '🌇', '▪️'], line: '🔔 C · Summer, dusk, calm' },
+  };
+  const MASTER_ORDER = ['A', 'B', 'C'];
+  const masterNext = s => MASTER_ORDER[(MASTER_ORDER.indexOf(s) + 1) % 3];
+  function masterIconRow(ems, s = 0.7) { const row = new THREE.Group(); ems.forEach((em, i) => { const sp = emojiSprite(em, s); sp.position.x = (i - 1) * (s * 0.9); row.add(sp); }); return row; }
+  function masterTextSprite(text, s = 0.45) {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 64; const g = c.getContext('2d');
+    g.clearRect(0, 0, 256, 64); g.font = 'bold 44px ui-rounded, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#f4efe4'; g.fillText(text, 128, 34);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); sp.scale.set(s * 2.4, s * 0.6, 1); sp.renderOrder = 9; return sp;
+  }
+  function applyMaster(state, opts = {}) {
+    const S = AA(), st = MASTER[state] ? state : 'A', M = MASTER[st];
+    S.master = S.master || { start: st, coolUntil: 0 };
+    S.master.state = st; S.master.next = masterNext(st);
+    for (const k of MASTER_ORDER) setSig('master:' + k, k === st);
+    setSeason(M.season, true);
+    setTimeA2(M.time, true);
+    setMasterWind(M.wind, true, { flip: st === 'B' && !opts.init }); // wasps blow 6 s only when B is entered, not on load
+    if (S.master.pr) paintMaster(S.master.pr);
+    if (!opts.quiet) tst(M.line, 2400);
+  }
+  function paintMaster(pr) {
+    const S = AA(); if (!pr || !S.master) return;
+    const now = MASTER[S.master.state].em, nxt = MASTER[S.master.next].em, cool = t < (S.master.coolUntil || 0);
+    if (pr.nowEms !== now.join('')) { pr.nowRow.clear(); now.forEach((em, i) => { const sp = emojiSprite(em, 0.48); sp.position.x = (i - 1) * 0.43; pr.nowRow.add(sp); }); pr.nowEms = now.join(''); }
+    if (pr.nextEms !== nxt.join('')) { pr.nextRow.clear(); nxt.forEach((em, i) => { const sp = emojiSprite(em, 0.85); sp.position.x = (i - 1) * 0.76; pr.nextRow.add(sp); }); pr.nextEms = nxt.join(''); }
+    pr.nextRow.children.forEach(sp => { if (sp.material) sp.material.opacity = cool ? 0.28 : 1; });
+  }
+  function ringMaster(pr) {
+    const S = AA(); if (!S.master) return true;
+    if (t < (S.master.coolUntil || 0)) { say('🔔 Wait for the bell to settle.', 1600); return true; }
+    const to = S.master.next;
+    applyMaster(to);
+    S.master.coolUntil = t + 2;
+    pr.ringT = t;
+    paintMaster(pr);
+    ctx.audio?.sample?.('act3/master-bell-chime-' + to.toLowerCase(), 0.62);
+    return true;
+  }
+  function updateMasterViz(pr) {
+    const S = AA(); if (!S.master) return;
+    paintMaster(pr);
+    const ringing = pr.ringT != null && t - pr.ringT < 1.0, cool = t < (S.master.coolUntil || 0);
+    if (ringing) { const k = 1 - (t - pr.ringT) / 1.0; pr.bellG.rotation.z = Math.sin((t - pr.ringT) * 20) * 0.28 * k; if (pr.clap) pr.clap.position.x = Math.sin((t - pr.ringT) * 20) * 0.12 * k; }
+    else { pr.bellG.rotation.z = 0; if (pr.clap) pr.clap.position.x = 0; } // cooldown: clapper visibly still; Interact is a no-op
+    void cool;
+  }
+  const owlAwake = (S = AA()) => !!(S.night || S.time === 'dusk');
   function pondSurf(pd, level = pd.level) {
     const H = pd.heights || {};
     if (level === 'low' || level === 'ice') return pd.gy + (H.low || 0);
@@ -1604,6 +1696,7 @@ export function createZones(scene, host) {
       case 'cut': { const sp = pr.spider; if (sp && !sp.look && !pr.web.free) { sp.alertT = t; bonk(sp); return true; } pr.done = true; pr.web.s.off = true; pr.web.G.visible = false; setSig(pr.sig); tst('✂️ Snip! The web is cut', 1600); return true; }
       case 'pluck': { const sp = pr.spider; if (sp) sp.look = { x: pr.x, z: pr.z, until: t + 8 }; tst('🎸 Twang! The spider turns to look…', 1600); return true; }
       case 'leaf': { const tu = pr.turtle; if (tu) tu.look = { x: pr.leafAt.x, z: pr.leafAt.z, until: t + 9 }; tst('🍃 The leaf floats by — the turtle watches it', 1800); return true; }
+      case 'master': return ringMaster(pr);
       case 'crank': { applyWind(-S.wind); return true; }
       case 'slide': { const to = pr._atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.3, z: to.z }, 0.7, 0.2); setSig(pr.sig); tst('🛷 Wheee! Belly-slide!', 1200); return true; }
       case 'stomp': { const until = t + pr.dur * EZ('puff'); S.smokes.push({ x: pr.x, z: pr.z, r: pr.smokeR, until, m: smokeCloud(pr.x, pr.y, pr.z, pr.smokeR) }); setSig(pr.sig); a2Burst(pr.x, pr.z, 6); tst('🍄 Poof! A calm smoke cloud — walk through it', 2000); return true; }
@@ -1836,7 +1929,7 @@ export function createZones(scene, host) {
   function enemyNearBaby(b, r) {
     const S = a2; if (!S) return null;
     for (const e of S.en) {
-      const asleep = (e.kind === 'owl' && !S.night) || (e.kind === 'turtle' && t < (e.napT || -1)) || e.calm || e.paused || e.o.friendly;
+      const asleep = (e.kind === 'owl' && !owlAwake(S)) || (e.kind === 'turtle' && t < (e.napT || -1)) || e.calm || e.paused || e.o.friendly;
       if (asleep) continue;
       if (flatD(e, b) < r) return e;
     }
@@ -2031,7 +2124,7 @@ export function createZones(scene, host) {
     S.flagT = t + 8; flagBtn.style.display = 'block';
   }
   function flagBack() { const S = a2; if (!S || !S.cp) return false; const p = ctx.getP(); warpTo(p, S.cp, 0.6, -0.6); fx(p.x, p.y + 0.6, p.z); if (flagBtn) flagBtn.style.display = 'none'; tst('🚩 Hop! Back up at your flag', 1400); return true; }
-  function a2Clear() { if (flagBtn) flagBtn.style.display = 'none'; if (a2) { for (const e of a2.en) e.el.remove(); for (const b of a2.escorts || []) b.el?.remove(); } a2 = null; sneak = false; document.body.classList.remove('a2', 'hasEscort'); ctx.onSneak?.(false); }
+  function a2Clear() { const hadMaster = !!(a2 && a2.master); if (flagBtn) flagBtn.style.display = 'none'; if (a2) { for (const e of a2.en) e.el.remove(); for (const b of a2.escorts || []) b.el?.remove(); } a2 = null; sneak = false; document.body.classList.remove('a2', 'hasEscort'); ctx.onSneak?.(false); if (hadMaster) ctx.holdClock?.(false); }
 
   /** Lush leafy frame outside the play rect — instanced blocky trees/bushes (phone-cheap). */
   function buildLeafyBackdrop(bounds) {
@@ -2146,7 +2239,8 @@ export function createZones(scene, host) {
     for (const k of ['summer', 'winter', 'spring']) setSig(k, k === S.season);
     setSig('day', true); setSig('night', false); setSig('wind:down', S.wind < 0); setSig('wind:up', S.wind > 0);
     for (const it of S.seasonal) { const on = S.season === it.when; it.pr.s.off = !on; it.pr.m.visible = on; }
-    if (recipe.night) setNightA2(true);
+    if (S.master) { ctx.holdClock?.(true); applyMaster(S.master.start || recipe.masterStart || S.master.state || 'A', { quiet: true, init: true }); }
+    else if (recipe.night) setNightA2(true);
     if (recipe.loanGear && !S.borrow) { S.borrow = recipe.loanGear === 'all' ? { lantern: true, whistle: true, pouch: true, glider: true, sling: true, eqL: true, eqW: false, eqP: true, eqG: true, eqS: true, slot: { scout: 'lantern', trickster: 'whistle', bruiser: 'sling' } } : { lantern: true, whistle: true, eqL: true, eqW: false }; ctx.onGear?.(); }
     autoStump();
     S.cp = null;
@@ -2235,7 +2329,7 @@ export function createZones(scene, host) {
   function doAct(pr, p) {
     if (pr.act === 'gear') return stumpSwap(pr);
     const c = clsOfCur(), C = CLASSES[pr.cls];
-    if (pr.cls !== c) { say(`${C.em} Only a ${C.name} can ${ACTS[pr.act].verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
+    if (pr.cls && pr.cls !== c) { say(`${C.em} Only a ${C.name} can ${ACTS[pr.act].verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
     if (pr.need && !isOn(pr.need)) { say('🔒 ' + (pr.needWhy || 'Not yet — something else has to happen first'), 2600); return true; }
     const atB = pr._atB;
     if (a2 && a2Act(pr, p)) { if (pr.icon && pr.done && !pr.two) pr.icon.visible = false; return true; }
@@ -2523,6 +2617,7 @@ export function createZones(scene, host) {
       }
       if (pr.kind === 'tbell') { if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0; }
       if (pr.kind === 'bell') { if (pr.ringT != null && t - pr.ringT < 1.2) pr.G.rotation.z = Math.sin((t - pr.ringT) * 22) * 0.5 * (1 - (t - pr.ringT) / 1.2); else pr.G.rotation.z = 0; }
+      if (pr.kind === 'master') updateMasterViz(pr);
       if (pr.icon && !pr.done) pr.icon.position.y += Math.sin(t * 3 + pr.x) * 0.004;
     }
     for (const k of picks) {
@@ -2908,6 +3003,11 @@ export function createZones(scene, host) {
     placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
     escort: () => a2 ? a2.escorts.map(b => ({ kind: b.kind, glb: b.G.userData.babyGlb || null, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), y: +b.y.toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })) : [], heldTool: () => a2 ? a2.heldTool : null,
     moody() { return !!(a2 && recipe && recipe.moody) ? !!AA().night : null; },
+    timeLocked: () => !!(a2 && a2.master), // S4: Master Bell owns clock.t (dusk/night/day) until clear()
+    debugBonk(src = 'test') { if (a2) bonk({ name: 'Test' }, src); },
+    // N1 should fold these into the full §2.5 snapshot. evt shape: { bell: 'A'|'B'|'C' } plus season / time / wind.
+    netState() { if (!a2) return null; return { sig: { ...sig }, season: a2.season, night: !!a2.night, time: a2.time || (a2.night ? 'night' : 'day'), wind: a2.wind, windMag: a2.windMag ?? (a2.wind ? 6 : 0), bell: a2.master ? a2.master.state : null, master: a2.master ? { state: a2.master.state, next: a2.master.next, start: a2.master.start, cool: +Math.max(0, (a2.master.coolUntil || 0) - t).toFixed(2) } : null }; },
+    applyNetState(s) { if (!s || !a2) return; if (s.bell || (s.master && s.master.state)) { applyMaster(s.bell || s.master.state, { quiet: true, net: true }); if (a2.master && s.master && s.master.cool != null) a2.master.coolUntil = t + Math.max(0, +s.master.cool); } },
     gearInfo(c) { const k = slotOf(c); if (!k || !a2) return null; const own = GEAR_BY_CLS[c].filter(q => gearHas(q)); return { k, em: GEAR_INFO[k].em, icon: GEAR_INFO[k].icon ? import.meta.env.BASE_URL + GEAR_INFO[k].icon : null, name: GEAR_INFO[k].name, has: gearHas(k), on: gearOn(k), borrowed: !gear[k] && gearHas(k), own, full: k === 'pouch' ? !!a2.pouch.full : undefined }; },
     toggleGear(c) { const k = slotOf(c || CLASS_OF[ctx.cur()]); if (!k || !a2) return false; return setGear(k, !gearOn(k)); },
     swapGear(c, k) { if (!a2 || !GEAR_BY_CLS[c] || !GEAR_BY_CLS[c].includes(k) || !gearHas(k)) return false; setSlot(c, k); setGear(k, true, true); return true; },
@@ -2915,6 +3015,6 @@ export function createZones(scene, host) {
     gearViz: () => { const V = a2 && a2.gviz; if (!V) return null; const o = {}; for (const k of ['pouch', 'glider', 'sling']) { const m = V[k].children.find(c => c.userData && c.userData.model); const sz = m && m.visible !== false && V[k].visible ? new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3()) : null; o[k] = { shown: V[k].visible, model: !!m, size: sz ? [+sz.x.toFixed(2), +sz.y.toFixed(2), +sz.z.toFixed(2)] : null }; } return o; },
     gearList: () => Object.keys(GEAR_INFO).map(k => ({ k, ...GEAR_INFO[k], has: !!gear[k] })),
     setT: v => { t = +v; }, forcePuzzles, setTiming: k => { timingK = +k > 0 ? +k : 1; }, timing: () => TK(),
-    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, cpPos: a2.cp ? { x: +(a2.cp.x - A.x).toFixed(2), z: +(a2.cp.z - A.z).toFixed(2) } : null, cps: a2.cps.map(c => ({ x: c.x - A.x, z: c.z - A.z, on: !!c.on })), hidEver: !!a2.hidEver, bonkLog: (a2.bonkLog || []).slice(-20), dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0, stayedFar: !!e.stayedFar })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })) } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
+    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, cpPos: a2.cp ? { x: +(a2.cp.x - A.x).toFixed(2), z: +(a2.cp.z - A.z).toFixed(2) } : null, cps: a2.cps.map(c => ({ x: c.x - A.x, z: c.z - A.z, on: !!c.on })), hidEver: !!a2.hidEver, bonkLog: (a2.bonkLog || []).slice(-20), dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0, stayedFar: !!e.stayedFar })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })), time: a2.time || (a2.night ? 'night' : 'day'), windMag: a2.windMag ?? 6, master: a2.master ? { state: a2.master.state, next: a2.master.next, start: a2.master.start, cool: +Math.max(0, (a2.master.coolUntil || 0) - t).toFixed(2) } : null } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }

@@ -43,7 +43,7 @@ import { createPackUp } from './packup.js';
 import { paintValleyMap, setHealArt, playPackupBurst } from './valley-art.js';
 const SPECIAL = FEATURES.teamFoods ? SPECIAL0 : [];
 import { ANIMAL_FACTS, MOMENTS } from './moments.js';
-import { SEASONS_ENABLED, SEASONS, SEASON_INFO, SU, LOOK, patchSeason, createClock, nightOf, warmOf, NIGHT_T, DAY_T } from './seasons.js';
+import { SEASONS_ENABLED, SEASONS, SEASON_INFO, SU, LOOK, patchSeason, createClock, nightOf, warmOf, NIGHT_T, DAY_T, DUSK_T } from './seasons.js';
 import { buildWeather } from './weather.js';
 import { createGear, GEAR, SLOTS, SLOT_LABEL, RANGE_M, SPEED_M, DRAIN_M, RECH_M, capBonus, costOf, ringMult } from './gear.js';
 import { buildBabies } from './babies.js';
@@ -89,7 +89,8 @@ if (!savedR) { save.units = {}; save.pos = {}; save.dew = []; save.coop = { stag
 const roundDone = savedR ? (savedR.roundDone || {}) : {};
 let noSave = false;
 const savePos = () => { for (const id of SPECIES_ORDER) { const q = P[id]; if (q && isFinite(q.x + q.y + q.z)) save.pos[id] = [+q.x.toFixed(2), +q.y.toFixed(2), +q.z.toFixed(2), +q.yaw.toFixed(2)]; } };
-const persist = () => { if (noSave) return; savePos(); save.clock = clock.serialize(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
+let clockSnap = null; // S4: snapshot of clock.t / speed while a Master Bell level owns the clock (not written to the save)
+const persist = () => { if (noSave) return; savePos(); const snap = clock.serialize(); if (clockSnap) snap.t = +clockSnap.t.toFixed(4); save.clock = snap; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
 
 // polish2: Squid textless launch splash — title, "Loading…" text and the 9-slice bar placed over the cover art (README layout, CSS px of the 390x844 / 844x390 art)
 const LS = { portrait: { w: 390, h: 844, title: [195, 420, 32], txt: [195, 640], bar: [75, 656] }, landscape: { w: 844, h: 390, title: [422, 222, 30], txt: [422, 276], bar: [302, 292] } };
@@ -250,7 +251,7 @@ function selectSpecies(id, first) {
   if (!first && prev !== id) { cam.swoop = 1.3; voice(id, 0.4, 0.6) || VOICE[id] || audio.blip(6); fx.burst(P[id].x, P[id].y + 2.2, P[id].z, 16, 4); }
   const sp = SPECIES[id], p = P[id];
   $('spEm').textContent = skinEm(id); $('spName').textContent = skinName(id); $('actTxt').textContent = sp.actName; $('actEm').textContent = sp.actEmoji; /* stamChip hidden — stamina is a world ring */
-  if (sp.nocturnal !== curNight) setNight(sp.nocturnal, true);
+  if (sp.nocturnal !== curNight && !(zones && zones.timeLocked && zones.timeLocked())) setNight(sp.nocturnal, true);
   journalUnlock('a:' + id, sp.name);
   world.sparkle.setSpecies(id, performance.now() / 1000);
   if (first) { cam.yaw = p.yaw; cam.fx = p.x; cam.fz = p.z; cam.fy = p.y; } cam.pitch = 0.35; fxColor(sp.color); buildTray(); coopTipT = 0;
@@ -258,6 +259,17 @@ function selectSpecies(id, first) {
   buildCards(); setActLabel(); if (build && build.active) renderBTray(true);
 }
 function setNight(v, auto) { clock.set(v ? NIGHT_T : DAY_T); if (!auto) state.skipT = 0; syncNightFlag(); }
+// S4 Master Bell: dusk is 18.7/24 (warmOf already strong). Day/night keep today's snap. holdClock freezes and restores the pre-level clock; serialize uses the snapshot.
+function setTimeOfDay(mode, auto = true) {
+  if (mode === 'dusk') clock.set(DUSK_T);
+  else clock.set(mode === 'night' ? NIGHT_T : DAY_T);
+  if (!auto) state.skipT = 0;
+  syncNightFlag();
+}
+function holdClock(on) {
+  if (on) { if (!clockSnap) clockSnap = { t: clock.t, speed: clock.speed }; clock.speed = 0; }
+  else if (clockSnap) { clock.t = clockSnap.t; clock.speed = clockSnap.speed; clockSnap = null; syncNightFlag(); }
+}
 function syncNightFlag() { const v = nightOf(clock.t) > 0.5; if (v === curNight) return; if (state.musicLive) { moodOver = v ? 'dusk' : 'morning'; moodOverT = performance.now() / 1000 + 26; } curNight = v; $('bNight').textContent = v ? '☀️ Switch to day' : '🌙 Switch to night'; }
 
 // ---------- HUD ----------
@@ -879,8 +891,10 @@ function updateNight(dt) {
   clock.speed = sp.nocturnal ? (nF < 0.5 ? 3 : 0.55) : (nF > 0.5 ? 3 : 1);
   if (state.freeze) clock.speed = 0;
   // moody-night Act 2 levels (Owl Wood): the level's day/night bell owns the clock; restore the animal's usual sky on leaving
+  const locked = playing && zones && zones.timeLocked && zones.timeLocked();
   const mw = playing && zones && zones.moody ? zones.moody() : null;
-  if (mw !== null) { clock.speed = 0; if ((nightOf(clock.t) > 0.5) !== mw) clock.set(mw ? NIGHT_T : DAY_T); }
+  if (locked || clockSnap) { clock.speed = 0; } // S4: the Master Bell owns t; do not snap dusk back to day
+  else if (mw !== null) { clock.speed = 0; if ((nightOf(clock.t) > 0.5) !== mw) clock.set(mw ? NIGHT_T : DAY_T); }
   else if (state.moodWas != null) setNight(!!SPECIES[cur].nocturnal, true);
   state.moodWas = mw;
   const season0 = clock.season; clock.update(cdt); if (clock.season !== season0) onSeasonChange();
@@ -1266,6 +1280,7 @@ function onHubStation(k) {
   else if (k === 'closet') { toast('👗 Costume Closet · looks are just for fun', 2200); openSkinPick(() => {}); }
   else if (k === 'stars') { vActPage = 3; openValleyMap(); }
   else if (k === 'lab') startValleyPatch('act3_lab');
+  else if (k === 'bell') startValleyPatch('act3_bell');
 }
 function hubArrived() {
   if (noSave) return; // startNew is reloading the page — the fresh page runs this again
@@ -1986,7 +2001,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => slots.driven(), crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), swoop: () => { cam.swoop = 0.9; } });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => slots.driven(), crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), swoop: () => { cam.swoop = 0.9; } });
   critters = createCritters(scene, { heightAt, tier: () => look.tier });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
@@ -2168,6 +2183,7 @@ async function boot() {
     startNew(p.len);
   } else if (NEWFLAG && NEWFLAG.patch && valley) { const pid = NEWFLAG.patch; if (valley.get(pid)?.state === 'wilted') valley.setState(pid, 'in_progress'); startValleyPatch(pid); } else if (NEWFLAG) startNew(NEWFLAG.len || settings.len);
   else if (/[?&]lab=act3\b/.test(location.search) && valley) startValleyPatch('act3_lab');
+  else if (/[?&](?:lab=bell|bell=1)\b/.test(location.search) && valley) startValleyPatch('act3_bell');
   window.__game = { look, DCL, slots, stepPlayer, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
     tp: (x, z, up = 0) => { const p = P[cur]; p.x = x; p.z = z; p.y = world.phys.floor(x, z, 99, 99).y + up; p.vx = p.vz = p.vy = 0; },
     teleportNearFlower: () => { const B = world.blooms; const arr = B.byPol[polOf(cur)]; const i = arr[0]; const p = P[cur]; p.x = B.x[i] - 1; p.z = B.z[i]; p.y = Math.max(heightAt(p.x, p.z), B.y[i] - 0.5); p.vy = 0; } };

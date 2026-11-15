@@ -54,6 +54,7 @@ export const PATCHES = [
   { act: 3, n: 24, id: 'starheart_summit', name: 'Starheart Summit', emoji: '🌟', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'The finale: four rings of everything, with every rescued friend helping.', teach: 'Finale · all friends' },
   // Meadow Hub (S1): the home glade between levels — not a level (no exit, no stars)
   { act: 'lab', id: 'act3_lab', name: 'Practice Yard', emoji: '🧪', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'A sandbox to try calling a baby friend, and new ways to move sleepy critters.', teach: 'Escort + enemy lures' },
+  { act: 'lab', id: 'act3_bell', name: 'Bell Yard', emoji: '🔔', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'A sandbox to try the Master Bell: each ring changes the season, the time, and the wind together.', teach: 'Master Bell A · B · C' },
   { act: 'hub', id: 'meadow_hub', name: 'Meadow Hub', emoji: '🏡', need: ['cls-scout', 'cls-trickster', 'cls-bruiser'], neighbor: null, contest: null, blurb: 'Home glade. Pick your crew, visit rescued friends, choose a level.' },
 ];
 export const ACT1_PATCHES = PATCHES.filter(p => !p.act);

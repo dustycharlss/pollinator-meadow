@@ -1,4 +1,4 @@
-// Act 3 maps (Fern act3-integration.md). Patch 1: Meadow Hub. Patch 2: S5 escort + S3 lures (Practice Yard sandbox). Patch 3: S2 gear yard (stump, pouch, sling, glider).
+// Act 3 maps (Fern act3-integration.md). Patch 1: Meadow Hub. Patch 2: S5 escort + S3 lures (Practice Yard sandbox). Patch 3: S2 gear yard (stump, pouch, sling, glider). S4: Master Bell kit + Bell Yard demo (act3_bell). Levels 22-24 ship later.
 // Levels 17-24 are added here one patch at a time; a level tile is playable as soon as its map exists.
 export const MAPS3 = {
   // ===== S1 Meadow Hub: walk to a station to open it. Rescued friends move in and open features. =====
@@ -21,6 +21,7 @@ export const MAPS3 = {
       B.hubPad('closet', -9, -7, { emoji: '👗', label: 'Costume Closet', need: 'fawn', col: 0xff8ad8, lockTx: '🔒 Costume Closet · rescue the Fawn in level 22 (Thaw Valley) to open it' });
       B.hubPad('stars', -9, 11, { emoji: '⭐', label: 'Star Board', need: 'owlet', col: 0xffe07a, lockTx: '🔒 Star Board · help the Owlet in level 19 (Night Market) to open it' });
       B.hubPad('lab', 0, 16, { emoji: '🧪', label: 'Practice Yard · try new tricks', col: 0x7ad0c8 });
+      B.hubPad('bell', 5.5, 16, { emoji: '🔔', label: 'Bell Yard · try the Master Bell', col: 0xe8c44a });
       // rescued friends who move in (hidden until rescued)
       B.friend('badger', 12.5, -6.5, { id: 'badger', s: 0.8, yaw: -1.2, say: ['🦡 Badger Bramble: I only LOOK grumpy. Want to see some gear?', '🦡 Badger Bramble: Zzz… oh! Hello, friends.'] });
       for (let i = 0; i < 3; i++) B.friend('duckling', 9.6 + i * 0.9, 12.2 + i * 0.4, { id: 'ducklings', s: 1, yaw: 2.6, say: ['🐥 Ducklings: Peep! Peep peep! (Want to replay a level?)'] });
@@ -288,4 +289,29 @@ export const MAPS3 = {
       for (let i = 0; i < 3; i++) B.pickup('petal', 25 + i * 3, 26, 0.9);
     },
   },
+
+  // ===== S4 Bell Yard (sandbox): Master Bell demo, testable before levels 22 and 24 exist. Kept off act3_lab so Practice Yard gear tests stay on summer day. =====
+  act3_bell: {
+    goal: 'Ring the Master Bell. Each ring changes the season, the time, and the wind together.',
+    act2: true, noStars: true, key: 'puzzles', ceil: 10, exit: [0, 28], par: 0, masterStart: 'A',
+    bounds: { x0: -14, x1: 14, z0: -8, z1: 34 },
+    intro: ['🔔 This is the Master Bell. One ring changes the season, the time, and the wind together.', 'The three pictures above the bell show what comes next. The plaque says what is true now.', '❄️🌙⬆️ is A (winter night, north wind) · 🌱☀️⬇️ is B (spring day, south wind) · ☀️🌇▪️ is C (summer dusk, calm).', 'Anyone can ring it. Wait a moment for the clapper to settle. A bonk does not undo the ring.'],
+    pip: [
+      ['start', 'Walk up the ramp and ring the big gold bell.'],
+      ['sig:master:B', 'Spring, day, and a south wind! Ring again for summer dusk.'],
+      ['sig:master:C', 'Calm summer dusk. One more ring takes you back to winter night.'],
+    ],
+    build(B) {
+      B.home(0, -4); B.lane(-14, 14, -8, 34);
+      B.glade(0, 4); B.checkpoint(0, 0);
+      // plinth is 2 m; ramp run 5.5 m keeps the slope gentler than 1:2.5 so the bear can walk up. Air above the bell stays open for the Scout.
+      B.ramp(0, 8.5, 0, 14, 2, { w: 6, look: 'stone' });
+      B.masterBell(0, 16, 2, { start: 'A' });
+      B.creek('cMelt', -11, 6, -5, 14, { melt: true }); // ice in A, high in B, mid in C
+      B.snowPile('sn1', 6.5, 10, 3.2, 3.2, 1.4);
+      B.windZone(-6, 12, 6, 22, { dx: 0, dz: 1, push: 7 });
+      B.puzzle('bell', 'Learn the Master Bell', ['scout', 'trickster', 'bruiser'], ['master:C'], { hint: 'Ring the bell: A is winter night, B melts the creek, C is calm dusk. The pictures tell you what is next.' });
+    },
+  },
+
 };

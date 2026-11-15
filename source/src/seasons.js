@@ -87,7 +87,7 @@ export function patchSeason(mat, kind = 'prop') {
 
 // ---------------- clock ----------------
 const sm = (a, b, x) => { x = Math.min(1, Math.max(0, (x - a) / (b - a))); return x * x * (3 - 2 * x); };
-export const NIGHT_T = 0.93, DAY_T = 0.3;
+export const NIGHT_T = 0.93, DAY_T = 0.3, DUSK_T = 18.7 / 24; // Master Bell C: dusk hour where warmOf is already strong
 /** 0 = full day, 1 = full night, for clock t in [0,1) (0 = midnight). */
 export function nightOf(t) { const h = t * 24; if (h < 5 || h >= 20.5) return 1; if (h < 6.8) return 1 - sm(5, 6.8, h); if (h >= 18.4) return sm(18.4, 20.5, h); return 0; }
 /** warm glow around sunrise and sunset, 0..1 */
