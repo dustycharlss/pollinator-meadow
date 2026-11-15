@@ -1160,7 +1160,7 @@ export function createZones(scene, host) {
   function warpTo(q, cp, ox, oz) { if (!q || !cp) return; q.x = cp.x + ox; q.y = cp.y + 0.8; q.z = cp.z + oz; q.vx = q.vy = q.vz = 0; q._safe = { x: q.x, z: q.z }; q.goto = null; }
   function resetEscorts(cp) {
     const S = a2; if (!S) return;
-    (S.escorts || []).forEach((b, i) => { const c = cp || b.home; b.x = c.x + (i % 3) * 0.7 - 0.5; b.z = c.z + 0.8 + (i * 0.35); b.y = (c.y || gy(b.x - A.x, b.z - A.z)) + 0.2; b.hide = false; b.vx = b.vz = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); });
+    (S.escorts || []).forEach((b, i) => { const c = cp || b.home; b.x = c.x + (i % 3) * 0.7 - 0.5; b.z = c.z + 0.8 + (i * 0.35); b.y = (c.y || gy(b.x - A.x, b.z - A.z)) + 0.2; b.hide = false; b.vx = b.vz = 0; b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); });
   }
   function bonk(e, src) {
     const S = AA(), p = ctx.getP(); if (tw) tw = null; const at = { x: +(p.x - A.x).toFixed(1), z: +(p.z - A.z).toFixed(1) };
@@ -1924,16 +1924,78 @@ export function createZones(scene, host) {
     setSig('called'); tst('📣 Come on, little one! The baby follows you', 2200); ctx.audio?.sample?.('act3/baby-call-chirp', 0.5); setTimeout(() => ctx.audio?.sample?.('act3/baby-follow-happy', 0.45), 420);
     return true;
   }
+  function babyInHazard(b, x, z) {
+    if (a2 && a2.embers.some(em => em.st === 'hot' && inEmber(em, { x, z }, 0.4))) return 'ember';
+    if (a2 && (a2.grates || []).some(g => inRect(x, z, g)) && a2.ponds.some(pd => pd.level === 'mid' || pd.level === 'high')) return 'grate';
+    if (!b.info.float && deep.some(r => !r.off && inRect(x, z, r) && (r.y == null || (ctx.heightAt(x, z) ?? b.y ?? 0) < r.y - 0.25))) {
+      if (!crossings.some(c => c.on && inRect(x, z, c))) return 'deep';
+    }
+    return null;
+  }
+  /** How far inside a hazard (0 = clear). Used so a cub already in water/embers can walk out, but not further in. */
+  function babyEscapeDist(b, x, z) {
+    let d = 0;
+    if (a2) {
+      for (const em of a2.embers) if (em.st === 'hot' && inEmber(em, { x, z }, 0.4)) {
+        const hw = (em.rect ? em.hw : em.r) + 0.4, hd = (em.rect ? em.hd : em.r) + 0.4;
+        d = Math.max(d, Math.min(hw - Math.abs(x - em.x), hd - Math.abs(z - em.z)));
+      }
+      if (a2.ponds.some(pd => pd.level === 'mid' || pd.level === 'high')) {
+        for (const g of (a2.grates || [])) if (inRect(x, z, g)) d = Math.max(d, Math.min(x - g.x0, g.x1 - x, z - g.z0, g.z1 - z));
+      }
+    }
+    if (!b.info.float) {
+      for (const r of deep) if (!r.off && inRect(x, z, r) && (r.y == null || (ctx.heightAt(x, z) ?? b.y ?? 0) < r.y - 0.25) && !crossings.some(c => c.on && inRect(x, z, c))) {
+        d = Math.max(d, Math.min(x - r.x0, r.x1 - x, z - r.z0, r.z1 - z));
+      }
+    }
+    return Math.max(0, d);
+  }
   function babyCanStep(b, nx, nz) {
-    if (a2 && a2.embers.some(em => em.st === 'hot' && inEmber(em, { x: nx, z: nz }, 0.4))) { if (!sig.cubBlocked) { setSig('cubBlocked'); tst(`${b.info.em} The ${b.info.name} won't step on hot grass — damp it or blow the sparks away`, 2200); } return false; } // the cub only crosses dimmed, blown or doused embers
     const y0 = ctx.heightAt(b.x, b.z), y1 = ctx.heightAt(nx, nz);
     if (y1 - y0 > 0.85) return false;
     if (y0 - y1 > 1.4) return false;
-    if (a2 && (a2.grates || []).some(g => inRect(nx, nz, g)) && a2.ponds.some(pd => pd.level === 'mid' || pd.level === 'high')) return false; // drain grate: cannot float this last gap (hop stone at low)
-    if (!b.info.float && deep.some(r => !r.off && inRect(nx, nz, r) && (r.y == null || (b.y || 0) < r.y - 0.25))) {
-      if (!crossings.some(c => c.on && inRect(nx, nz, c))) return false;
+    const destD = babyEscapeDist(b, nx, nz), curD = babyEscapeDist(b, b.x, b.z);
+    if (destD > 0 && destD >= curD - 1e-6) {
+      if (curD === 0 && babyInHazard(b, nx, nz) === 'ember' && !sig.cubBlocked) { setSig('cubBlocked'); tst(`${b.info.em} The ${b.info.name} won't step on hot grass — damp it or blow the sparks away`, 2200); }
+      return false;
     }
     return true;
+  }
+  /** A late unstuck snap may not skip hazards, land on the lead, or land on the exit. */
+  function babyHazardAt(b, x, z) {
+    if (a2 && a2.embers.some(em => em.st === 'hot' && inEmber(em, { x, z }, 0.4))) return true;
+    if (a2 && (a2.grates || []).some(g => inRect(x, z, g)) && a2.ponds.some(pd => pd.level === 'mid' || pd.level === 'high')) return true;
+    const y = ctx.heightAt(x, z);
+    if (!b.info.float && deep.some(r => !r.off && inRect(x, z, r) && (r.y == null || (y == null || y < r.y - 0.25)))) {
+      if (!crossings.some(c => c.on && inRect(x, z, c))) return true;
+    }
+    return false;
+  }
+  function babyPathClear(b, x1, z1, x2, z2) {
+    const dist = Math.hypot(x2 - x1, z2 - z1), n = Math.max(1, Math.ceil(dist / 0.4));
+    for (let i = 1; i <= n; i++) {
+      const k = i / n, x = x1 + (x2 - x1) * k, z = z1 + (z2 - z1) * k;
+      if (babyHazardAt(b, x, z)) return false;
+    }
+    return true;
+  }
+  function babySnapOk(b, x, z, lead) {
+    if (babyHazardAt(b, x, z) || !babyPathClear(b, b.x, b.z, x, z)) return false;
+    const y0 = ctx.heightAt(b.x, b.z), y1 = ctx.heightAt(x, z);
+    if (y1 == null || y1 < baseY - 2 || y1 - y0 > 0.85 || y0 - y1 > 1.4) return false;
+    if (lead && Math.hypot(x - lead.x, z - lead.z) < 1.6) return false;
+    if (exitAt && Math.hypot(x - exitAt.x, z - exitAt.z) < (exitAt.r || 3) + 0.6) return false;
+    return true;
+  }
+  function babySafeNear(b, tx, tz, lead) {
+    const d = Math.hypot(tx - b.x, tz - b.z) || 1, ux = (tx - b.x) / d, uz = (tz - b.z) / d, px = -uz, pz = ux;
+    // Prefer the follow target itself (escortGoal may already sit 2.4 m ahead of the player).
+    for (const back of [0, 0.8, 1.6, 2.4, 3.2]) for (const side of [0, 0.9, -0.9, 1.6, -1.6]) {
+      const x = tx - ux * back + px * side, z = tz - uz * back + pz * side;
+      if (babySnapOk(b, x, z, lead)) return { x, z };
+    }
+    return null;
   }
   function enemyNearBaby(b, r) {
     const S = a2; if (!S) return null;
@@ -1971,14 +2033,39 @@ export function createZones(scene, host) {
         }
         const d = Math.hypot(tx - b.x, tz - b.z);
         if (d > 0.12) {
-          if (d > 4 && babyCanStep(b, tx, tz)) { b.x = tx; b.z = tz; b.yaw = Math.atan2(tx - b.x, tz - b.z); spd = b.info.speed; }
-          else {
-            const nx = b.x + (tx - b.x) / d * Math.min(d, b.info.speed * dt);
-            const nz = b.z + (tz - b.z) / d * Math.min(d, b.info.speed * dt);
-            if (babyCanStep(b, nx, nz)) { b.x = nx; b.z = nz; b.yaw = Math.atan2(tx - b.x, tz - b.z); spd = b.info.speed; }
+          // Walk each frame and honor hazards. Do not teleport onto the lead when d > 4
+          // (that stacked cubs, skipped embers, and could warp a leftover cub onto the exit).
+          // Far catch-up is a faster walk, never a one-shot teleport. Sub-steps
+          // keep ember/grate/height checks honest even if dt or the burst is large.
+          const burst = d > 4 ? Math.min(4, 1 + (d - 4) * 0.35) : 1;
+          const ux = (tx - b.x) / d, uz = (tz - b.z) / d;
+          let remain = Math.min(d, (b.info.speed || 3) * burst * dt);
+          const tryStep = (nx, nz) => { if (!babyCanStep(b, nx, nz)) return false; b.x = nx; b.z = nz; b.yaw = Math.atan2(tx - b.x, tz - b.z); spd = b.info.speed; return true; };
+          let stepped = false;
+          while (remain > 1e-4) {
+            const s = Math.min(remain, 0.4);
+            if (!tryStep(b.x + ux * s, b.z + uz * s)) break;
+            stepped = true; remain -= s;
           }
-        }
-      }
+          if (!stepped) {
+            // Walk-speed heading fan: slide around water/embers; never a 1 m sidestep hop.
+            const s = Math.min(d, (b.info.speed || 3) * dt);
+            for (const ang of [0.5, -0.5, 0.9, -0.9, 1.2, -1.2, 1.57, -1.57]) {
+              const c = Math.cos(ang), sA = Math.sin(ang);
+              if (tryStep(b.x + (ux * c - uz * sA) * s, b.z + (ux * sA + uz * c) * s)) { stepped = true; break; }
+            }
+          }
+          if (stepped) b.stuckFor = 0;
+          else b.stuckFor = (b.stuckFor || 0) + dt;
+          if (d > 4) b.lagFor = (b.lagFor || 0) + dt; else b.lagFor = 0;
+          // Catch up only after 3 s of lag or being stuck, and only onto a path-clear
+          // tile near the follow target — never onto the lead or the exit, never over hazards.
+          if ((b.stuckFor || 0) >= 3 || (b.lagFor || 0) >= 3) {
+            const snap = babySafeNear(b, tx, tz, p);
+            if (snap) { b.x = snap.x; b.z = snap.z; b.yaw = Math.atan2(tx - b.x, tz - b.z); b.stuckFor = 0; b.lagFor = 0; spd = b.info.speed; }
+          }
+        } else { b.stuckFor = 0; b.lagFor = 0; }
+      } else { b.stuckFor = 0; b.lagFor = 0; }
       if (b.info.windblown && S.wind && !b.hide) { b.x += Math.sin(0) * S.wind * 0.4 * dt; b.z += S.wind * 0.5 * dt; }
       // reached by an enemy: contact bonk (cover keeps them safe)
       const hit = !inCover && t > S.safeT && enemyNearBaby(b, 1.7);
@@ -3215,7 +3302,7 @@ export function createZones(scene, host) {
     toggleSneak(v) { if (!a2 || !recipe?.act2) return false; sneak = v == null ? !sneak : !!v; const bp = ctx.getP(); if (bp) bp.sneak = sneak; ctx.onSneak?.(sneak); tst(sneak ? '🐾 Sneaking: slow, quiet paws' : '🏃 Walking normally', 1200); return sneak; }, sneakOn: () => { const bp = ctx.getP(); return !!(a2 && (bp && bp.sneak || sneak)); }, isAct2: () => !!(a2 && recipe && recipe.act2),
     setAct2Night: v => { if (a2) setNightA2(!!v); },
     flagBack, callEscort, throwToolAt: (kind, lx, lz) => throwTool(kind, A.x + lx, A.z + lz),
-    placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
+    placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
     escort: () => a2 ? a2.escorts.map(b => ({ kind: b.kind, glb: b.G.userData.babyGlb || null, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), y: +b.y.toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })) : [], heldTool: () => a2 ? a2.heldTool : null,
     moody() { return !!(a2 && recipe && recipe.moody) ? !!AA().night : null; },
     timeLocked: () => !!(a2 && a2.master), // S4: Master Bell owns clock.t (dusk/night/day) until clear()
