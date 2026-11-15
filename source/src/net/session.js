@@ -183,15 +183,14 @@ export function createNet(hooks = {}) {
     if (wantFull) lastFullAt = now;
     lastEncoded = c;
     lastSnapAt = now;
-    broadcast('snap', buf);
+    try { net.broadcast('snap', buf); } catch (e) {}
   }
 
   function sendEvt(obj) {
     if (role !== 'host' && obj && obj.type !== 'hello' && obj.type !== 'pose' && obj.type !== 'join' && obj.type !== 'in') {
-      // clients only send hello / pose / join / in
-      if (role === 'client' && obj.type) { /* fall through if allowed */ } else if (role === 'client') return;
+      if (role === 'client' && obj.type) { /* allowed */ } else if (role === 'client') return;
     }
-    broadcast('evt', obj);
+    try { net.broadcast('evt', obj); } catch (e) {}
   }
 
   function sendHello() {
@@ -324,7 +323,7 @@ export function createNet(hooks = {}) {
     const typ = data.type;
     if (typ === 'hello') {
       markPeer(data.from || data.role || 'peer');
-      if (role === 'host') sendWelcome();
+      if (role === 'host' && !ready) sendWelcome();
       return;
     }
     if (typ === 'welcome' || typ === 'load') {
@@ -433,8 +432,11 @@ export function createNet(hooks = {}) {
     if (role === 'host') {
       const hz = snapRate();
       const period = 1000 / Math.max(1, hz);
-      if (now - lastSnapAt >= period - 2) sendSnap(false);
-      if (now - lastHelloAt > 2000) sendHello();
+      if (!lastSnapAt) lastSnapAt = now;
+      // Catch up so a slow rAF (two WebGL tabs) still hits ~20 Hz on the wall clock.
+      let n = 0;
+      while (now - lastSnapAt >= period - 2 && n < 8) { sendSnap(false); n++; }
+      if (now - lastHelloAt > 4000) sendHello();
     } else if (role === 'client') {
       // Send local teleports/input BEFORE snapshots overwrite P (T.tpL + T.step are sync).
       if (now - lastInAt >= 50) {
@@ -446,7 +448,7 @@ export function createNet(hooks = {}) {
       }
       applyClientView();
       tryApplyPending();
-      if (now - lastHelloAt > 2000) {
+      if (now - lastHelloAt > 4000) {
         sendHello();
         sendEvt({ type: 'join', from: 'client' });
       }
@@ -467,12 +469,27 @@ export function createNet(hooks = {}) {
     }
   }
 
+  let snapClock = null;
+  function armSnapClock() {
+    if (snapClock) { try { clearInterval(snapClock); } catch (e) {} snapClock = null; }
+    if (role !== 'host' || typeof setInterval === 'undefined') return;
+    snapClock = setInterval(() => {
+      try {
+        const hz = snapRate();
+        const period = 1000 / Math.max(1, hz);
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        if (!lastSnapAt || now - lastSnapAt >= period - 2) sendSnap(false);
+      } catch (e) {}
+    }, 16);
+  }
+
   // Activate
   if (active && role) {
     attachTransport();
     listen();
     // Hello after a tick so the other tab's listener is up
-    if (typeof setTimeout !== 'undefined') setTimeout(() => { sendHello(); if (role === 'client') sendEvt({ type: 'join', from: 'client' }); }, 50);
+    if (typeof setTimeout !== 'undefined') setTimeout(() => { try { sendHello(); if (role === 'client') sendEvt({ type: 'join', from: 'client' }); } catch (e) {} }, 50);
+    if (role === 'host') armSnapClock();
     connected = false;
     ready = !!role;
   }
