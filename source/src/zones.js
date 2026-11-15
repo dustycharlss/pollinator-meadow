@@ -1971,12 +1971,14 @@ export function createZones(scene, host) {
         }
         const d = Math.hypot(tx - b.x, tz - b.z);
         if (d > 0.12) {
-          if (d > 4 && babyCanStep(b, tx, tz)) { b.x = tx; b.z = tz; b.yaw = Math.atan2(tx - b.x, tz - b.z); spd = b.info.speed; }
-          else {
-            const nx = b.x + (tx - b.x) / d * Math.min(d, b.info.speed * dt);
-            const nz = b.z + (tz - b.z) / d * Math.min(d, b.info.speed * dt);
-            if (babyCanStep(b, nx, nz)) { b.x = nx; b.z = nz; b.yaw = Math.atan2(tx - b.x, tz - b.z); spd = b.info.speed; }
-          }
+          // Catch up faster when far, but never teleport: a one-shot snap skips
+          // ember/height checks along the path and lands on the leader in a single
+          // T.step (L17-E02 / L17-K04).
+          const burst = d > 4 ? Math.min(4, 1 + (d - 4) * 0.35) : 1;
+          const step = Math.min(d, (b.info.speed || 3) * burst * dt);
+          const nx = b.x + (tx - b.x) / d * step;
+          const nz = b.z + (tz - b.z) / d * step;
+          if (babyCanStep(b, nx, nz)) { b.x = nx; b.z = nz; b.yaw = Math.atan2(tx - b.x, tz - b.z); spd = b.info.speed; }
         }
       }
       if (b.info.windblown && S.wind && !b.hide) { b.x += Math.sin(0) * S.wind * 0.4 * dt; b.z += S.wind * 0.5 * dt; }

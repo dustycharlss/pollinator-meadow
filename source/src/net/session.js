@@ -259,7 +259,9 @@ export function createNet(hooks = {}) {
     lastAckTick = dec.tick;
     connected = true;
     ready = true;
-    // ack via the next in/evt is enough; also send a tiny ack evt occasionally
+    // Apply immediately: the guest tab's rAF is often throttled, and T.step
+    // does not run the rAF loop. Tests read g.P after a short wait.
+    applyClientView();
   }
 
   function lerpNum(a, b, k) { return a + (b - a) * k; }

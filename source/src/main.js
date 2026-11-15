@@ -1752,6 +1752,7 @@ function updateBuildUi(dt, t) {
 
 // ---- game flow helpers
 function worldTick(dt, st) {
+  try { net?.tick?.(0); } catch (e) {}
   if (net && net.isClient) {
     // Client: don't simulate bodies (host is authoritative). T.tpL still writes P; snaps apply in net.tick.
   } else if (rts.on) { for (const id of SPECIES_ORDER) stepParked(id, dt, st); }
