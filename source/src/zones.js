@@ -2780,6 +2780,7 @@ export function createZones(scene, host) {
         pl.holder = holder;
       }
       setSig(pl.sig, !!holder);
+      if (pl.sig === 'foxPl') setSig('foxPlFox', !!(holder && String(holder).startsWith('fox:')));
       pl.m.position.y = pl.y + (holder ? 0.02 : 0.12);
       if (pl.icon) pl.icon.visible = !holder;
     }

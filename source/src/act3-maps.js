@@ -514,7 +514,7 @@ export const MAPS3 = {
       B.deco('act3/fox-den', 13, 20, 2.4, { yaw: -Math.PI / 2 });
       B.door('foxPl', 18, 10.4, 16, { x: 12, w: 3.2, label: 'Den gate' });
       B.dig('digKit', 14, 21, 14, 24, { friend: 'foxkit', label: 'Soft dirt' });
-      B.door('foxPl', 28, -6.5, 6.5, { label: 'Door A' });
+      B.door('foxPlFox', 28, -6.5, 6.5, { label: 'Door A' }); // opens only when the fox holds the plate, not when a crew member runs over it
       B.checkpoint(0, 26);
       // first rise is the terrace [28,36,4] — no extra B.ramp solids (they blocked the path as knee-high steps)
       B.windZone(-6.5, -1, 6.5, 26, { push: 6, h: 3, lift: 0, alt: { down: [0, -1], up: [0, 1] } });
