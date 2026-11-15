@@ -3,6 +3,7 @@
 // so this file never touches saves or rounds itself. Layout + art knobs are CSS variables in map-screen.css.
 import './map-screen.css';
 import GRID from './map/grid.json';
+import { showIntroCard, preloadIntroCard } from './intro-card.js';
 import LAYOUT from './map/layout.json';
 
 const UI = './ui/map/';
@@ -199,7 +200,7 @@ ${s.seed ? img2x('nodes/marker-starseed', 'tSeed') : ''}</span>
   }
 
   // ---- input ----
-  grid.addEventListener('click', e => { const b = e.target.closest('.msTile'); if (!b) return; ctx.blip?.(); S.sel[S.view] = b.dataset.id; render(); });
+  grid.addEventListener('click', e => { const b = e.target.closest('.msTile'); if (!b) return; ctx.blip?.(); S.sel[S.view] = b.dataset.id; preloadIntroCard(b.dataset.id); render(); });
   grid.addEventListener('dblclick', e => { const b = e.target.closest('.msTile'); if (b && !$('vGo').disabled) $('vGo').click(); });
   world.addEventListener('click', e => {
     const b = e.target.closest('.msNode'); if (!b) return; ctx.blip?.();
@@ -213,7 +214,7 @@ ${s.seed ? img2x('nodes/marker-starseed', 'tSeed') : ''}</span>
   $('vTimed').onclick = () => { ctx.setTimed(!ctx.timed()); ctx.blip?.(); renderPanel(); };
   $('vGo').onclick = () => {
     if ($('vGo').disabled) return;
-    if (S.view === 'world') { const id = S.sel.world, n = GRID.overview.nodes.find(q => q.id === id); if (!n || n.kind === 'hub') ctx.onEnterHub?.(); else show(n.opens, { fromWorld: true }); return; }
+    if (S.view === 'world') { const id = S.sel.world, n = GRID.overview.nodes.find(q => q.id === id); if (!n || n.kind === 'hub') ctx.onEnterHub?.(); else showIntroCard(id, { onDone: () => show(n.opens, { fromWorld: true }) }); return; }
     const id = S.sel[S.view]; if (id) ctx.onPlay?.(id, !!ctx.timed() && GRID.acts[S.view].tiles.find(t => t.id === id)?.kind !== 'tutorial');
   };
   addEventListener('keydown', e => {

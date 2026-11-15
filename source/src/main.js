@@ -27,6 +27,7 @@ import { createCosmetics, EMOTES } from './cosmetics.js';
 import { createValley, PATCHES, HEAL_PACKUP, ACT1_PATCHES, ACT2_PATCHES, ACT3_PATCHES, ACT1_IDS, HUB_ID, HUB_FRIENDS, testUnlock, LEVEL_GATES_ENABLED } from './valley.js';
 import { createZones, hasLevel } from './zones.js';
 import { createMapScreen } from './map-screen.js';
+import { showIntroCard, dismissIntroCard, preloadIntroCard, hasIntroCard, introCardId } from './intro-card.js';
 import { CLIP } from './declutter.js';
 import { createLook } from './look.js';
 import { createCritters } from './critters.js';
@@ -962,7 +963,7 @@ const mapUI = createMapScreen($('valley'), {
   setTimed: on => { try { localStorage.setItem(MAP_TIMED_KEY, on ? '1' : '0'); } catch (e) {} },
   inHub: () => inHub() && playing,
   gatesOff: () => !LEVEL_GATES_ENABLED,
-  onSelect: id => { vSelPatch = id; },
+  onSelect: id => { vSelPatch = id; preloadIntroCard(id); },
   onPlay: (id, timed) => { vSelPatch = id; startValleyIn(timed ? 'challenge' : 'relaxed'); },
   onEnterHub: () => enterHub(),
   onBack: () => { if (inHub() && playing) { closeValleyMap(); return; } closeValleyMap(); openOv('title'); $('title').classList.add('on'); },
@@ -1096,6 +1097,7 @@ function startValleyPatch(patchId) {
   updateHealUi();
   onb?.note?.('valleyIn');
   if (patchId === HUB_ID) { toast('🏡 Meadow Hub · walk to a station! 🪧 Trail Board picks a level', 3200); hubArrived(); } else toast(ADVENTURE ? `${def.emoji} ${def.name} · solve it with your crew!` : `${def.emoji} ${def.name} · heal the meadow with your crew!`, 3200);
+  showIntroCard(patchId);
 }
 // ---------- class skins (cosmetic only: physics/hitbox/abilities stay on bee · raccoon · bear) ----------
 const baseRiders = {}, skinRiderP = {}, skinThumbs = {};
@@ -2123,7 +2125,7 @@ async function boot() {
     startNew(p.len);
   } else if (NEWFLAG && NEWFLAG.patch && valley) { const pid = NEWFLAG.patch; if (valley.get(pid)?.state === 'wilted') valley.setState(pid, 'in_progress'); startValleyPatch(pid); } else if (NEWFLAG) startNew(NEWFLAG.len || settings.len);
   else if (/[?&]lab=act3\b/.test(location.search) && valley) startValleyPatch('act3_lab');
-  window.__game = { look, DCL, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
+  window.__game = { look, DCL, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
     tp: (x, z, up = 0) => { const p = P[cur]; p.x = x; p.z = z; p.y = world.phys.floor(x, z, 99, 99).y + up; p.vx = p.vz = p.vy = 0; },
     teleportNearFlower: () => { const B = world.blooms; const arr = B.byPol[polOf(cur)]; const i = arr[0]; const p = P[cur]; p.x = B.x[i] - 1; p.z = B.z[i]; p.y = Math.max(heightAt(p.x, p.z), B.y[i] - 0.5); p.vy = 0; } };
 }

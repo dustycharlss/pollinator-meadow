@@ -1,0 +1,640 @@
+{
+  "holdMs": 2500,
+  "defaultTitle": {
+    "color": "#3b2614",
+    "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)"
+  },
+  "safeArea": {
+    "purpose": "runtime title text; no vignette focus inside",
+    "px960": {
+      "x": 96,
+      "y": 24,
+      "w": 768,
+      "h": 144
+    },
+    "px1920": {
+      "x": 192,
+      "y": 48,
+      "w": 1536,
+      "h": 288
+    },
+    "uv": {
+      "x": 0.1,
+      "y": 0.0444,
+      "w": 0.8,
+      "h": 0.2667
+    },
+    "note": "uv origin top-left, fractions of width/height; same rect on every card and identical to the Act 3 set"
+  },
+  "cards": {
+    "act1_region": {
+      "id": "act1-title",
+      "slug": "act1-title",
+      "title": "Act 1",
+      "n": null,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-act1-title.png",
+      "png2x": "card-act1-title@2x.png",
+      "webp": "card-act1-title.webp",
+      "webp2x": "card-act1-title@2x.webp"
+    },
+    "training_garden": {
+      "id": "training-garden",
+      "slug": "training-garden",
+      "title": "Training Garden",
+      "n": null,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-training-garden.png",
+      "png2x": "card-training-garden@2x.png",
+      "webp": "card-training-garden.webp",
+      "webp2x": "card-training-garden@2x.webp"
+    },
+    "sunny_hollow": {
+      "id": "level-01",
+      "slug": "01-sunny-hollow",
+      "title": "Sunny Hollow",
+      "n": 1,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-01-sunny-hollow.png",
+      "png2x": "card-01-sunny-hollow@2x.png",
+      "webp": "card-01-sunny-hollow.webp",
+      "webp2x": "card-01-sunny-hollow@2x.webp"
+    },
+    "creek_bend": {
+      "id": "level-02",
+      "slug": "02-creek-bend",
+      "title": "Creek Bend",
+      "n": 2,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-02-creek-bend.png",
+      "png2x": "card-02-creek-bend@2x.png",
+      "webp": "card-02-creek-bend.webp",
+      "webp2x": "card-02-creek-bend@2x.webp"
+    },
+    "moon_meadow": {
+      "id": "level-03",
+      "slug": "03-moon-meadow",
+      "title": "Moon Meadow",
+      "n": 3,
+      "theme": "night",
+      "color": "#f6f2ff",
+      "shadow": "0 1px 2px rgba(16,12,36,.9), 0 2px 10px rgba(16,12,36,.65)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-03-moon-meadow.png",
+      "png2x": "card-03-moon-meadow@2x.png",
+      "webp": "card-03-moon-meadow.webp",
+      "webp2x": "card-03-moon-meadow@2x.webp"
+    },
+    "log_jam": {
+      "id": "level-04",
+      "slug": "04-log-jam",
+      "title": "Log Jam",
+      "n": 4,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-04-log-jam.png",
+      "png2x": "card-04-log-jam@2x.png",
+      "webp": "card-04-log-jam.webp",
+      "webp2x": "card-04-log-jam@2x.webp"
+    },
+    "picnic_lawn": {
+      "id": "level-05",
+      "slug": "05-picnic-lawn",
+      "title": "Picnic Lawn",
+      "n": 5,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-05-picnic-lawn.png",
+      "png2x": "card-05-picnic-lawn@2x.png",
+      "webp": "card-05-picnic-lawn.webp",
+      "webp2x": "card-05-picnic-lawn@2x.webp"
+    },
+    "cliff_orchard": {
+      "id": "level-06",
+      "slug": "06-cliff-orchard",
+      "title": "Cliff Orchard",
+      "n": 6,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-06-cliff-orchard.png",
+      "png2x": "card-06-cliff-orchard@2x.png",
+      "webp": "card-06-cliff-orchard.webp",
+      "webp2x": "card-06-cliff-orchard@2x.webp"
+    },
+    "windy_rise": {
+      "id": "level-07",
+      "slug": "07-windy-rise",
+      "title": "Windy Rise",
+      "n": 7,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-07-windy-rise.png",
+      "png2x": "card-07-windy-rise@2x.png",
+      "webp": "card-07-windy-rise.webp",
+      "webp2x": "card-07-windy-rise@2x.webp"
+    },
+    "festival_glade": {
+      "id": "level-08",
+      "slug": "08-festival-glade",
+      "title": "Festival Glade",
+      "n": 8,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-08-festival-glade.png",
+      "png2x": "card-08-festival-glade@2x.png",
+      "webp": "card-08-festival-glade.webp",
+      "webp2x": "card-08-festival-glade@2x.webp"
+    },
+    "act2_region": {
+      "id": "act2-title",
+      "slug": "act2-title",
+      "title": "Act 2",
+      "n": null,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-act2-title.png",
+      "png2x": "card-act2-title@2x.png",
+      "webp": "card-act2-title.webp",
+      "webp2x": "card-act2-title@2x.webp"
+    },
+    "trailhead_trials": {
+      "id": "trailhead-trials",
+      "slug": "trailhead-trials",
+      "title": "Trailhead Trials",
+      "n": null,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-trailhead-trials.png",
+      "png2x": "card-trailhead-trials@2x.png",
+      "webp": "card-trailhead-trials.webp",
+      "webp2x": "card-trailhead-trials@2x.webp"
+    },
+    "sunbeam_grove": {
+      "id": "level-09",
+      "slug": "09-sunbeam-grove",
+      "title": "Sunbeam Grove",
+      "n": 9,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-09-sunbeam-grove.png",
+      "png2x": "card-09-sunbeam-grove@2x.png",
+      "webp": "card-09-sunbeam-grove.webp",
+      "webp2x": "card-09-sunbeam-grove@2x.webp"
+    },
+    "mill_pond": {
+      "id": "level-10",
+      "slug": "10-mill-pond",
+      "title": "Mill Pond",
+      "n": 10,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-10-mill-pond.png",
+      "png2x": "card-10-mill-pond@2x.png",
+      "webp": "card-10-mill-pond.webp",
+      "webp2x": "card-10-mill-pond@2x.webp"
+    },
+    "bramble_patch": {
+      "id": "level-11",
+      "slug": "11-bramble-patch",
+      "title": "Bramble Patch",
+      "n": 11,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-11-bramble-patch.png",
+      "png2x": "card-11-bramble-patch@2x.png",
+      "webp": "card-11-bramble-patch.webp",
+      "webp2x": "card-11-bramble-patch@2x.webp"
+    },
+    "weathervane_hill": {
+      "id": "level-12",
+      "slug": "12-weathervane-hill",
+      "title": "Weathervane Hill",
+      "n": 12,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-12-weathervane-hill.png",
+      "png2x": "card-12-weathervane-hill@2x.png",
+      "webp": "card-12-weathervane-hill.webp",
+      "webp2x": "card-12-weathervane-hill@2x.webp"
+    },
+    "hornet_hedge": {
+      "id": "level-13",
+      "slug": "13-hornet-hedge",
+      "title": "Hornet Hedge",
+      "n": 13,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-13-hornet-hedge.png",
+      "png2x": "card-13-hornet-hedge@2x.png",
+      "webp": "card-13-hornet-hedge.webp",
+      "webp2x": "card-13-hornet-hedge@2x.webp"
+    },
+    "owl_wood": {
+      "id": "level-14",
+      "slug": "14-owl-wood",
+      "title": "Owl Wood",
+      "n": 14,
+      "theme": "night",
+      "color": "#f6f2ff",
+      "shadow": "0 1px 2px rgba(16,12,36,.9), 0 2px 10px rgba(16,12,36,.65)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-14-owl-wood.png",
+      "png2x": "card-14-owl-wood@2x.png",
+      "webp": "card-14-owl-wood.webp",
+      "webp2x": "card-14-owl-wood@2x.webp"
+    },
+    "frost_hollow": {
+      "id": "level-15",
+      "slug": "15-frost-hollow",
+      "title": "Frost Hollow",
+      "n": 15,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-15-frost-hollow.png",
+      "png2x": "card-15-frost-hollow@2x.png",
+      "webp": "card-15-frost-hollow.webp",
+      "webp2x": "card-15-frost-hollow@2x.webp"
+    },
+    "backyard_split": {
+      "id": "level-16",
+      "slug": "16-backyard-split",
+      "title": "Backyard Split",
+      "n": 16,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-16-backyard-split.png",
+      "png2x": "card-16-backyard-split@2x.png",
+      "webp": "card-16-backyard-split.webp",
+      "webp2x": "card-16-backyard-split@2x.webp"
+    },
+    "act3_region": {
+      "id": "act3-title",
+      "slug": "act3-title",
+      "title": "Act 3",
+      "n": null,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-act3-title.png",
+      "png2x": "card-act3-title@2x.png",
+      "webp": "card-act3-title.webp",
+      "webp2x": "card-act3-title@2x.webp"
+    },
+    "ember_ridge": {
+      "id": "level-17",
+      "slug": "17-ember-ridge",
+      "title": "Ember Ridge",
+      "n": 17,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-17-ember-ridge.png",
+      "png2x": "card-17-ember-ridge@2x.png",
+      "webp": "card-17-ember-ridge.webp",
+      "webp2x": "card-17-ember-ridge@2x.webp"
+    },
+    "flooded_mill": {
+      "id": "level-18",
+      "slug": "18-flooded-mill",
+      "title": "Flooded Mill",
+      "n": 18,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-18-flooded-mill.png",
+      "png2x": "card-18-flooded-mill@2x.png",
+      "webp": "card-18-flooded-mill.webp",
+      "webp2x": "card-18-flooded-mill@2x.webp"
+    },
+    "night_market": {
+      "id": "level-19",
+      "slug": "19-night-market",
+      "title": "Night Market",
+      "n": 19,
+      "theme": "night",
+      "color": "#f6f2ff",
+      "shadow": "0 1px 2px rgba(16,12,36,.9), 0 2px 10px rgba(16,12,36,.65)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-19-night-market.png",
+      "png2x": "card-19-night-market@2x.png",
+      "webp": "card-19-night-market.webp",
+      "webp2x": "card-19-night-market@2x.webp"
+    },
+    "mirror_caves": {
+      "id": "level-20",
+      "slug": "20-mirror-caves",
+      "title": "Mirror Caves",
+      "n": 20,
+      "theme": "night",
+      "color": "#f6f2ff",
+      "shadow": "0 1px 2px rgba(16,12,36,.9), 0 2px 10px rgba(16,12,36,.65)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-20-mirror-caves.png",
+      "png2x": "card-20-mirror-caves@2x.png",
+      "webp": "card-20-mirror-caves.webp",
+      "webp2x": "card-20-mirror-caves@2x.webp"
+    },
+    "storm_orchard": {
+      "id": "level-21",
+      "slug": "21-storm-orchard",
+      "title": "Storm Orchard",
+      "n": 21,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-21-storm-orchard.png",
+      "png2x": "card-21-storm-orchard@2x.png",
+      "webp": "card-21-storm-orchard.webp",
+      "webp2x": "card-21-storm-orchard@2x.webp"
+    },
+    "thaw_valley": {
+      "id": "level-22",
+      "slug": "22-thaw-valley",
+      "title": "Thaw Valley",
+      "n": 22,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-22-thaw-valley.png",
+      "png2x": "card-22-thaw-valley@2x.png",
+      "webp": "card-22-thaw-valley.webp",
+      "webp2x": "card-22-thaw-valley@2x.webp"
+    },
+    "grand_garden": {
+      "id": "level-23",
+      "slug": "23-grand-garden",
+      "title": "Grand Garden",
+      "n": 23,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-23-grand-garden.png",
+      "png2x": "card-23-grand-garden@2x.png",
+      "webp": "card-23-grand-garden.webp",
+      "webp2x": "card-23-grand-garden@2x.webp"
+    },
+    "starheart_summit": {
+      "id": "level-24",
+      "slug": "24-starheart-summit",
+      "title": "Starheart Summit",
+      "n": 24,
+      "theme": "day",
+      "color": "#3b2614",
+      "shadow": "0 1px 0 rgba(255,248,230,.95), 0 2px 8px rgba(255,236,200,.75)",
+      "safeArea": {
+        "uv": {
+          "x": 0.1,
+          "y": 0.0444,
+          "w": 0.8,
+          "h": 0.2667
+        }
+      },
+      "png": "card-24-starheart-summit.png",
+      "png2x": "card-24-starheart-summit@2x.png",
+      "webp": "card-24-starheart-summit.webp",
+      "webp2x": "card-24-starheart-summit@2x.webp"
+    }
+  }
+}

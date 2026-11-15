@@ -1,0 +1,24 @@
+/* Level intro card overlay. Default enter is a short zoom+fade; reduce motion drops the motion (no zoom or slide). */
+#introCard{
+  position:fixed;inset:0;z-index:16;display:none;align-items:center;justify-content:center;
+  background:rgba(16,10,24,.72);
+  padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
+  -webkit-user-select:none;user-select:none;touch-action:manipulation
+}
+#introCard.on{display:flex}
+#introCard[hidden]{display:none!important}
+.icHit{display:flex;align-items:center;justify-content:center;width:100%;height:100%;margin:0;border:0;padding:0;background:none;cursor:pointer;color:inherit;-webkit-tap-highlight-color:transparent}
+.icFrame{
+  position:relative;width:min(100%, calc((100dvh - 16px) * 16 / 9));
+  aspect-ratio:16/9;max-height:calc(100dvh - 16px);border-radius:18px;overflow:hidden;
+  box-shadow:0 0 0 3px #3b2614, 0 8px 28px rgba(0,0,0,.45);
+  animation:icIn .4s cubic-bezier(.2,1.1,.4,1) both
+}
+#introCard.icStill .icFrame,html.reduceMotion #introCard .icFrame,html.reduceMotion #introCard{animation:none!important;transition:none!important;transform:none!important}
+@keyframes icIn{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+.icPic,.icPic picture,.icPic img{display:block;width:100%;height:100%;object-fit:fill;background:#1a1420}
+.icTitle{
+  position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;
+  font:800 clamp(22px,5.4vw,54px)/1.15 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  letter-spacing:.01em;pointer-events:none;padding:0 2%;box-sizing:border-box;margin:0
+}
