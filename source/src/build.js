@@ -5,7 +5,7 @@ import { WORLD_R, POND, WATER_Y, SPECIES_ORDER, inWater } from './data.js';
 import { SITES, siteDist } from './sites.js';
 import { FEATURES } from './features.js';
 import { loadGLB, bakeParts, lambertFrom, loadURL } from './models.js';
-import { lodFor, makeLOD } from './lod.js';
+import { lodFor, makeLOD, lodDists } from './lod.js';
 import { patchSeason } from './seasons.js';
 import { badge } from './coop.js';
 
@@ -147,7 +147,7 @@ export async function createBuild(scene, ctx) {
       const lv = [1, 2, 3].map(i => sc.getObjectByName('lv' + i)); if (!lv[2]) return null;
       const h3 = new THREE.Box3().setFromObject(lv[2]).getSize(new THREE.Vector3()).y || 1, k = 4.6 / h3;
       const key = SPEC_KEY[t], r = lodFor(key), mat = ps => ps.map(p => ({ geometry: p.geometry, material: patchSeason(lambertFrom(p.material), 'prop') }));
-      const extra = r ? [[r.l1, r.d1], [r.l2, r.d2]].filter(([p, d]) => p && d != null) : [];
+      const dd = r ? lodDists(r) : [], extra = r ? [[r.l1, dd[0]], [r.l2, dd[1]]].filter(([p, d]) => p && d != null) : []; // polish4: lite → closest distances
       return Promise.all(extra.map(([p]) => loadURL(p))).then(G => lv.map((n, li) => { if (!n) return null; const h = new THREE.Box3().setFromObject(n).getSize(new THREE.Vector3()).y || h3;
         const b0 = bakeParts({ scene: n }, { size: h * k, mode: 'height' }), out = [{ d: 0, parts: mat(b0.parts) }];
         // polish3: phone LODs keep the lv1/lv2/lv3 node names, so each stage gets its own LOD chain at LOD0's scale

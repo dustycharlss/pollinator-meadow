@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { SPECIES, AMBIENT, WORLD_R, POND } from './data.js';
 import { loadGLB, bakeParts, lambertFrom, makeFlapMaterial, updateFlaps } from './models.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { lodify, lodBakedMeshes } from './lod.js';
 import { heightAt } from './world.js';
 import { makeGroundRider, BIRD_IDS, attachBirdWings } from './animals.js';
 export { BIRD_IDS, attachBirdWings, animateBirdWings, isBird } from './animals.js';
@@ -66,18 +67,19 @@ async function buildRider(scene, id, look = id, size = null) {
     // Bat has a real Flying clip (integration-map clips + clip_alias) — keep skin + mixer.
     if (look === 'bat' && gltf.animations && gltf.animations.some(a => /Flying/i.test(a.name))) {
       const sk = makeBatSkinned(gltf, sz);
-      body.add(sk.wrap); body.userData.box = sk.box; root.userData.box = sk.box;
+      body.add(sk.wrap); body.userData.box = sk.box; root.userData.box = sk.box; lodify(sk.wrap, lk.model, { drop: true }); // polish4: skinned LODs from lod-map.json
       root.userData.mixer = sk.mixer; root.userData.flyAct = sk.flyAct;
     } else {
-      const { parts, box } = bakeParts(gltf, { size: sz, mode: 'max', rot, ground: false });
+      const { parts, box, M } = bakeParts(gltf, { size: sz, mode: 'max', rot, ground: false });
       const bird = BIRD_IDS.has(look);
-      const flap = bird ? null : (lk.flap || BAT_FLAP);
+      const flap = bird ? null : (lk.flap || BAT_FLAP), meshes0 = [];
       for (const p of parts) {
         const span = Math.max(box.max.x, -box.min.x) * 2;
         const m = flap ? flapMat(p.material, flap, span, TINT[lk.model]) : lambertFrom(p.material);
-        const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh);
+        const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh); meshes0.push(mesh);
         if (flap) (root.userData.flapMats ||= []).push(m);
       }
+      lodBakedMeshes(root, lk.model, parts, meshes0, M, rot); // polish4
       body.userData.box = box; root.userData.box = box;
       if (bird) attachBirdWings(root, body, { ...lk, size: sz });
     }
@@ -229,18 +231,19 @@ export async function makeFlierModel(id) {
   if (gltf) {
     if (id === 'bat' && gltf.animations && gltf.animations.some(a => /Flying/i.test(a.name))) {
       const sk = makeBatSkinned(gltf, sp.size);
-      body.add(sk.wrap); body.position.y = -sk.box.min.y; root.userData.box = sk.box;
+      body.add(sk.wrap); body.position.y = -sk.box.min.y; root.userData.box = sk.box; lodify(sk.wrap, sp.model, { drop: true });
       root.userData.mixer = sk.mixer; root.userData.flyAct = sk.flyAct;
     } else {
-      const { parts, box } = bakeParts(gltf, { size: sp.size, mode: 'max', rot: MODEL_ROT[sp.model] || [0, 0, 0], ground: false });
+      const fRot = MODEL_ROT[sp.model] || [0, 0, 0], { parts, box, M } = bakeParts(gltf, { size: sp.size, mode: 'max', rot: fRot, ground: false }), meshes0 = [];
       const bird = BIRD_IDS.has(id);
       const flap = bird ? null : (sp.flap || BAT_FLAP);
       for (const p of parts) {
         const span = Math.max(box.max.x, -box.min.x) * 2;
         const m = flap ? flapMat(p.material, flap, span, TINT[sp.model]) : lambertFrom(p.material);
-        const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh);
+        const mesh = new THREE.Mesh(p.geometry, m); mesh.frustumCulled = false; body.add(mesh); meshes0.push(mesh);
         if (flap) (root.userData.flapMats ||= []).push(m);
       }
+      lodBakedMeshes(root, sp.model, parts, meshes0, M, fRot); // polish4
       body.position.y = -box.min.y; root.userData.box = box;
       if (bird) attachBirdWings(root, body, sp);
     }

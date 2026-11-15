@@ -8,6 +8,7 @@ import { setZoneHeight } from './world.js';
 import { CLASSES, CLASS_OF, ACTS, classOf } from './classes.js';
 import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
+import { lodify } from './lod.js';
 import { waterSurface, FOAM_MAT } from './water.js';
 import { MAPS2 } from './act2-maps.js';
 import { MAPS3 } from './act3-maps.js';
@@ -588,7 +589,7 @@ export function createZones(scene, host) {
       o.scale.set(w / sz.x, h / sz.y, d / sz.z);
       const bb2 = new THREE.Box3().setFromObject(o), c = bb2.getCenter(new THREE.Vector3());
       o.position.set(-c.x, -bb2.min.y, -c.z);
-      const wrap = new THREE.Group(); wrap.add(o); wrap.position.y = -h / 2; holder.add(wrap);
+      const wrap = new THREE.Group(); wrap.add(o); wrap.position.y = -h / 2; holder.add(wrap); lodify(o, key); // polish4: lod-map.json levels
       if (fallback) fallback.visible = false;
     });
   }
@@ -971,7 +972,7 @@ export function createZones(scene, host) {
       const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; } });
       const bb = new THREE.Box3().setFromObject(m), sz = bb.getSize(new THREE.Vector3()), L = o.byLong ? Math.max(sz.x, sz.y, sz.z) : sz.y; if (L < 1e-4) return;
       const k = size / L; m.scale.setScalar(k); const bb2 = new THREE.Box3().setFromObject(m), c = bb2.getCenter(new THREE.Vector3()); m.position.set(-c.x, -bb2.min.y + (o.sink || 0), -c.z);
-      holder.add(m); if (o.fallback) o.fallback.forEach(f => { f.visible = false; }); o.onLoad?.(m);
+      holder.add(m); lodify(m, key); if (o.fallback) o.fallback.forEach(f => { f.visible = false; }); o.onLoad?.(m);
     });
   }
   function gearModel(k, holder, fallback, onLoad) {
@@ -980,7 +981,7 @@ export function createZones(scene, host) {
       if (!g || !holder.parent) return;
       const o = g.scene.clone(true); o.traverse(m => { if (m.isMesh) { const tr = m.material && m.material.transparent; m.material = lambertFrom(m.material); if (tr) { m.material.transparent = true; m.material.opacity = 0.7; m.material.depthWrite = false; } m.castShadow = false; } });
       const sz = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3()), L = Math.max(sz.x, sz.y, sz.z); if (L < 1e-4) return;
-      o.scale.setScalar(I.size / L); holder.add(o); if (fallback) fallback.visible = false; holder.userData.model = o; onLoad?.(o);
+      o.scale.setScalar(I.size / L); holder.add(o); lodify(o, I.glb); if (fallback) fallback.visible = false; holder.userData.model = o; onLoad?.(o);
     });
   }
   // timed-window multiplier (default 1). A later easy mode sets it (e.g. 1.5 → the 6 s gusts last 9 s): zones.setTiming(k) or ctx.timing()
@@ -1067,7 +1068,7 @@ export function createZones(scene, host) {
       const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; } });
       const b2 = new THREE.Box3().setFromObject(m), h2 = b2.max.y - b2.min.y; if (h2 < 1e-4) return;
       const k = H / h2; m.scale.setScalar(k); m.position.y = -b2.min.y * k;
-      old.forEach(c => { if (!c.parent || c.parent === G) c.visible = false; }); G.add(m); G.userData.enGlb = key;
+      old.forEach(c => { if (!c.parent || c.parent === G) c.visible = false; }); G.add(m); G.userData.enGlb = key; lodify(m, key, { drop: true });
       const clip = (g.animations || []).find(a => /idle/i.test(a.name)) || (g.animations || [])[0];
       if (clip) { const mx = new THREE.AnimationMixer(m); mx.clipAction(clip).play(); mx.setTime(Math.random() * 2); babyMixers.push(mx); }
     });
@@ -1083,7 +1084,7 @@ export function createZones(scene, host) {
       const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; } });
       const b2 = new THREE.Box3().setFromObject(m), h2 = b2.max.y - b2.min.y; if (h2 < 1e-4) return;
       const k = H / h2; m.scale.setScalar(k); m.position.y = -b2.min.y * k;
-      old.forEach(c => { c.visible = false; }); G.add(m); G.userData.babyGlb = key;
+      old.forEach(c => { c.visible = false; }); G.add(m); G.userData.babyGlb = key; lodify(m, 'act3/babies/' + key, { drop: true });
       const clip = (g.animations || []).find(a => /idle/i.test(a.name)) || (g.animations || [])[0];
       if (clip) { const mx = new THREE.AnimationMixer(m); mx.clipAction(clip).play(); mx.setTime(Math.random() * 2); babyMixers.push(mx); }
     });

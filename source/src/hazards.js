@@ -2,6 +2,7 @@
 // Relaxed: every hit is a short 0.8× slowdown for 1 s — no drops, stick, dizzy, etc.
 import * as THREE from 'three';
 import { loadGLB, bakeParts, lambertFrom } from './models.js';
+import { lodBaked } from './lod.js';
 import { WORLD_R } from './data.js';
 
 const DEFS = [
@@ -68,9 +69,9 @@ export async function createHazards(scene, ctx) {
     if (matCache.has(ck)) return matCache.get(ck);
     const gl = await loadGLB(key);
     if (!gl) { matCache.set(ck, null); return null; }
-    const { parts } = bakeParts(gl, { size, mode: 'height' });
-    const g = new THREE.Group();
-    for (const p of parts) g.add(new THREE.Mesh(p.geometry, lambertFrom(p.material)));
+    const { parts, M } = bakeParts(gl, { size, mode: 'height' });
+    const g = new THREE.Group(), mk = ps => { const o = new THREE.Group(); for (const p of ps) o.add(new THREE.Mesh(p.geometry, lambertFrom(p.material))); return o; };
+    g.add(await lodBaked(key, parts, M, [0, 0, 0], mk, { drop: true })); // polish4: HystLOD when lod-map.json has this hazard (clones keep the levels)
     matCache.set(ck, g); return g;
   }
 

@@ -2,6 +2,9 @@
 import * as THREE from 'three';
 import { SPECIES, SPECIES_ORDER, WORLD_R } from './data.js';
 import { loadGLB } from './models.js';
+import { lodify } from './lod.js';
+// polish4: every rival clone takes lod-map.json levels in place (no-op until Beans ships entries for these keys)
+const lodC = (proto, key) => { const c = proto.clone(true); lodify(c, key, { drop: true }); return c; };
 
 const TEAM = {
   bee: '#ffd23f', bumblebee: '#ff8a1f', butterfly: '#4aa8ff', moth: '#9b6bdc', hummingbird: '#13b5a5',
@@ -155,22 +158,22 @@ export async function createRivals(scene, ctx) {
 
   async function loadBuilding(sp, role) {
     const key = `x/buildings/rivals/${sp}/${sp}-${role}`;
-    if (cache.has(key)) return cache.get(key).clone(true);
+    if (cache.has(key)) return lodC(cache.get(key), key);
     const gl = await loadGLB(key);
     if (!gl) { cache.set(key, null); return null; }
     const proto = gl.scene.clone(true);
     retintTeam(proto, TEAM[sp] || '#ffd23f');
     scaleTo(proto, role === 'home' ? 3.6 : 2.8);
     cache.set(key, proto);
-    return proto.clone(true);
+    return lodC(proto, key);
   }
   async function loadMarker(sp) {
     const key = `x/buildings/rivals/territory/territory-marker-${sp}`;
-    if (cache.has(key)) return cache.get(key).clone(true);
+    if (cache.has(key)) return lodC(cache.get(key), key);
     const gl = await loadGLB(key);
     if (!gl) return null;
     const proto = gl.scene.clone(true); retintTeam(proto, TEAM[sp] || '#ffd23f'); scaleTo(proto, 2.2);
-    cache.set(key, proto); return proto.clone(true);
+    cache.set(key, proto); return lodC(proto, key);
   }
 
   function pickRival(lead) {
@@ -270,7 +273,7 @@ export async function createRivals(scene, ctx) {
         cache.set(key, proto);
       }
       if (!proto) return;
-      const mesh = proto.clone(true);
+      const mesh = lodC(proto, key);
       const ang = Math.atan2(-(home.z || 0), -(home.x || 0));
       mesh.position.set(Math.cos(ang) * 3.4, 0, Math.sin(ang) * 3.4);
       home.g.add(mesh); home.pileMesh = mesh;

@@ -7,6 +7,7 @@ import { GROUND_AMBIENT, SPECIES, FOODS, POND, WORLD_R } from './data.js';
 import { POLS } from './world.js';
 import { getGLB, bakeParts, lambertFrom, toFloat } from './models.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { lodify, lodBakedMeshes } from './lod.js';
 
 // If real animal GLBs get added later, list them here (key in public/models + target size) and they replace the stand-ins.
 // Real models (Beans Bot's pack). len = target length (nose to tail) in world units at SPECIES.size; skinned ones get animation clips.
@@ -118,8 +119,10 @@ const tintedMat = (m, tint) => { const n = lambertFrom(m).clone(); if (tint) n.c
 /** Static baked parts [{geometry, material}] of a real ground model at its target length. */
 function realParts(kind) {
   const m = modelOf(kind); if (!m) return null;
-  const { parts } = bakeParts(posedScene(getGLB(m.key), m.skinned ? CLIPS.idle : null), { size: m.len, mode: 'length', rot: m.rot || [0, 0, 0] });
-  return parts.map(p => ({ geometry: p.geometry, material: tintedMat(p.material, m.tint) }));
+  const { parts, M } = bakeParts(posedScene(getGLB(m.key), m.skinned ? CLIPS.idle : null), { size: m.len, mode: 'length', rot: m.rot || [0, 0, 0] });
+  const out = parts.map(p => ({ geometry: p.geometry, material: tintedMat(p.material, m.tint) }));
+  if (!m.skinned) out.lod = { key: m.key, parts, M, rot: m.rot || [0, 0, 0] }; // polish4: static ground models can take lod-map.json levels
+  return out;
 }
 
 const G = { s: (r, w = 10, h = 7) => new THREE.SphereGeometry(r, w, h), c: (rt, rb, h, n = 8) => new THREE.CylinderGeometry(rt, rb, h, n), k: (r, h, n = 8) => new THREE.ConeGeometry(r, h, n), b: (x, y, z) => new THREE.BoxGeometry(x, y, z) };
@@ -227,7 +230,7 @@ function makeRealRider(kind, size, m) {
     const raw = new THREE.Box3().setFromObject(posedScene(gltf, CLIPS.idle).scene), sz = raw.getSize(new THREE.Vector3()), c = raw.getCenter(new THREE.Vector3());
     const s = m.len / Math.max(sz.z, 1e-5); inst.scale.setScalar(s); inst.position.set(-c.x * s, -raw.min.y * s, -c.z * s);
     if (m.wide) inst.scale.x *= m.wide;
-    const wrap = new THREE.Group(); wrap.add(inst); body.add(wrap);
+    const wrap = new THREE.Group(); wrap.add(inst); body.add(wrap); lodify(inst, m.key, { drop: true }); // polish4: skinned LODs from lod-map.json
     const mixer = new THREE.AnimationMixer(inst), acts = {};
     for (const [key, name] of Object.entries(CLIPS)) { const clip = gltf.animations.find(a => a.name.endsWith(name)); if (clip) { acts[key] = mixer.clipAction(clip); acts[key].play(); acts[key].weight = key === 'idle' ? 1 : 0; } }
     u.mixer = mixer; u.acts = acts; u.cur = 'idle';
@@ -238,9 +241,11 @@ function makeRealRider(kind, size, m) {
       box = new THREE.Box3();
       for (const p of parts) { p.geometry.computeBoundingBox(); box.union(p.geometry.boundingBox); }
     }
+    const meshes0 = [];
     for (const p of parts) {
-      const mesh = new THREE.Mesh(p.geometry, p.material); mesh.frustumCulled = false; body.add(mesh);
+      const mesh = new THREE.Mesh(p.geometry, p.material); mesh.frustumCulled = false; body.add(mesh); meshes0.push(mesh);
     }
+    if (parts.lod) lodBakedMeshes(root, parts.lod.key, parts.lod.parts, meshes0, parts.lod.M, parts.lod.rot); // polish4
     if (box) { u.box = box; body.userData.box = box; }
     if (kind === 'robin') attachBirdWings(root, body, SPECIES.robin);
   }

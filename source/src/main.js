@@ -60,7 +60,7 @@ import { createAdmin } from './admin.js';
 import { ARCH, priceFor, barsHtml, SIZE_NAME, statBars } from './species.js';
 import { createTech, TREES, TIER, nodeOf } from './tech.js';
 import { mapWhenReady } from './tex.js';
-import { lodTick, lodSummary } from './lod.js';
+import { lodTick, lodSummary, setLodLite } from './lod.js';
 
 const $ = id => document.getElementById(id);
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && innerWidth < 1100);
@@ -2012,7 +2012,7 @@ async function boot() {
   const nestInfo = SPECIES_ORDER.map(id => SPECIES[id].nest);
   setLoad(0.05, 'Loading creatures…'); await loadMany(NEEDED, p => setLoad(0.05 + p * 0.2));
   setLoad(0.3, 'Growing the meadow…');
-  DCL.W[0] = scene.children.length; world = await buildWorld(scene, { quality: QUALITY, nests: nestInfo, renderer, lite: ADVENTURE }); resize(); DCL.W[1] = scene.children.length;
+  DCL.W[0] = scene.children.length; setLodLite(ADVENTURE); world = await buildWorld(scene, { quality: QUALITY, nests: nestInfo, renderer, lite: ADVENTURE }); resize(); DCL.W[1] = scene.children.length;
   setLoad(0.7, 'Waking the pollinators…');
   riders = await buildRiders(scene); gearFx = createGear(scene, riders); for (const id of SPECIES_ORDER) gearFx.set(id, save.gear[id].t); DCL.AMB[0] = scene.children.length; ambient = await buildAmbient(scene, world, QUALITY); groundAmb = buildGroundAmbient(scene, world, QUALITY); DCL.AMB[1] = scene.children.length;
   setLoad(0.85, 'Building nests…'); DCL.NEST[0] = scene.children.length; nests = await buildNests(scene);

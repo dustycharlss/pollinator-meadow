@@ -8,8 +8,32 @@ import { loadURL, bakeParts } from './models.js';
 
 export const HYST = 0.2, HOLD = 250;
 const OFF = typeof location !== 'undefined' && /[?&]lod=0\b/.test(location.search);
-/** lod record for a model key (or its resolved path), or null */
-export function lodFor(key) { if (OFF) return null; const r = MAP[key] || MAP[URLS[key]]; return r && !r.skinned && (r.l1 || r.l2) ? r : null; }
+
+// polish4: Beans delivers new phone LODs (characters, flyers, gardens, hazards, rivals) as assets-incoming/optimized/lod/ → repo
+// models-lod/ with its lod-map.json. Any lod-map.json dropped there (Beans' raw {entries:[…]} format or the flat key map) is
+// merged over the built-in map at build time — import.meta.glob of a missing file is just {}, so no runtime fetch / 404.
+const DROPS = import.meta.glob(['../../models-lod/lod-map.json', '../../models-lod/**/lod-map.json'], { eager: true, import: 'default' });
+function mergeDrop(j) {
+  if (!j) return 0; let n = 0;
+  const put = (k, r) => { if (k && r && (r.l1 || r.l2)) { MAP[k] = r; n++; } };
+  if (Array.isArray(j.entries)) for (const e of j.entries) {
+    if (e.skipped) continue; const D = e.distances || {};
+    const r = { l1: e.lod1 || null, l2: e.lod2 || null, d1: D.lod1 ?? null, d2: D.lod2 ?? null, cls: e.size_class, skinned: !!e.skinned, src: 'drop' };
+    for (const k of [...(e.keys || []), ...(e.short_keys || []), e.tc_path, e.lod0]) put(k, r);
+  } else for (const [k, r] of Object.entries(j)) if (r && typeof r === 'object') put(k, { ...r, src: 'drop' });
+  return n;
+}
+export const lodDrops = Object.entries(DROPS).map(([p, j]) => ({ path: p, entries: mergeDrop(j) }));
+
+// polish4 (Chaz): campaign lite mode uses LODs with the closest switch distances (Beans' phone-first "small" preset for every model)
+const CLOSEST = [6, 14];
+let LITE = false;
+export function setLodLite(v) { LITE = !!v; }
+/** [d1, d2] switch distances for a record (lite → the closest preset; a model with no LOD2 keeps null) */
+export function lodDists(r) { return LITE ? [r.l1 ? CLOSEST[0] : null, r.l2 ? (r.l1 ? CLOSEST[1] : CLOSEST[0]) : null] : [r.d1, r.d2]; }
+/** lod record for a model key (or its resolved path), or null. Skinned records only when the caller can rebind skins (lodify). */
+// drop: only entries from a Beans drop in models-lod/ (characters, flyers, gardens, hazards, rivals wait for those — Chaz, polish4)
+export function lodFor(key, { skinned = false, drop = false } = {}) { if (OFF || !key) return null; const r = MAP[key] || MAP[URLS[key]]; return r && (!r.skinned || skinned) && (!drop || r.src === 'drop') && (r.l1 || r.l2) ? r : null; }
 
 // ---- camera "busy" guard: fast pan / zoom ease / cut → hold all switches until it settles
 const camP = new THREE.Vector3(), camQ = new THREE.Quaternion(), tmpV = new THREE.Vector3();
@@ -55,10 +79,10 @@ export class HystLOD extends THREE.LOD {
 }
 
 /** load + bake LOD1/LOD2 with LOD0's normalisation. levels: [{d, parts}] (LOD0 first). */
-export async function bakeLevels(key, parts0, M, rot) {
-  const r = lodFor(key); if (!r) return null;
-  const out = [{ d: 0, parts: parts0 }];
-  for (const [p, d] of [[r.l1, r.d1], [r.l2, r.d2]]) {
+export async function bakeLevels(key, parts0, M, rot, opt = {}) {
+  const r = lodFor(key, opt); if (!r) return null;
+  const out = [{ d: 0, parts: parts0 }], [d1, d2] = lodDists(r);
+  for (const [p, d] of [[r.l1, d1], [r.l2, d2]]) {
     if (!p || d == null) continue;
     const g = await loadURL(p); if (!g) continue;
     out.push({ d, parts: bakeParts(g, { M, rot }).parts });
@@ -109,14 +133,97 @@ export class LodBuckets {
     });
   }
 }
+// ---- polish4: in-place LODs for scene-graph clones (decor, enemies, babies, rivals, skinned characters) ----
+// Beans' LOD files keep node, mesh and joint names, so each LOD0 mesh gets a sibling per level with the level's geometry, the
+// LOD0 mesh's material (tints / retints survive) and its local transform; skinned meshes are bound to LOD0's own skeleton
+// (skinIndex remapped by joint name), so one mixer drives every level. Same hysteresis / hold / camera-ease guard as HystLOD.
+const switches = new Set(); let FORCE = -1;
+const nm = o => o.name || '';
+function levelMeshes(g) { const by = new Map(), list = []; g.scene.traverse(o => { if (!o.isMesh) return; list.push(o); if (nm(o) && !by.has(nm(o))) by.set(nm(o), o); }); by.list = list; return by; }
+function remapSkin(geo, srcJoints, dstBones) {
+  const idx = srcJoints.map(n => dstBones.findIndex(b => b.name === n)); if (idx.some(i => i < 0)) return null;
+  if (idx.every((v, i) => v === i)) return geo;
+  const g = geo.clone(), a = g.attributes.skinIndex; for (let i = 0; i < a.count; i++) for (let c = 0; c < a.itemSize; c++) a.setComponent(i, c, idx[a.getComponent(i, c)] ?? 0);
+  a.needsUpdate = true; return g;
+}
+class MeshLOD {
+  constructor(root, dists, sets) { this.root = root; this.dists = dists; this.sets = sets; this._cur = -1; this._want = 0; this._since = 0; this.nextGC = 0; switches.add(this); lodStats.objects++; }
+  show(t) { this.sets.forEach((set, i) => { for (const m of set) m.visible = i === t; }); }
+  update(cp, now, busy) {
+    if (FORCE >= 0) { const t = Math.min(FORCE, this.sets.length - 1); if (t !== this._cur) { this._cur = t; this.show(t); } return; } // debug: __lod.force(n)
+    const d = cp.distanceTo(this.root.getWorldPosition(tmpV));
+    if (this._cur < 0) { this._cur = this._want = pick(this.dists, 0, d); this.show(this._cur); return; }
+    const t = pick(this.dists, this._cur, d);
+    if (t !== this._want) { this._want = t; this._since = now; }
+    if (t === this._cur || now - this._since < HOLD) return;
+    if (busy) { lodStats.deferred++; return; }
+    this._cur = t; this.show(t); lodStats.switches++;
+  }
+  dispose() { switches.delete(this); }
+}
+const inScene = o => { while (o.parent) o = o.parent; return !!o.isScene; };
+/** add LOD levels in place under obj (a clone of `key`'s scene, already scaled / tinted). Resolves to the MeshLOD or null. */
+export async function lodify(obj, key, { drop = false } = {}) {
+  const r = lodFor(key, { skinned: true, drop }); if (!r || !obj) return null;
+  const [d1, d2] = lodDists(r), lv = [[r.l1, d1], [r.l2, d2]].filter(([p, d]) => p && d != null);
+  const G = await Promise.all(lv.map(([p]) => loadURL(p)));
+  const base = []; obj.traverse(o => { if (o.isMesh && !o.userData.lodLevel) base.push(o); }); if (!base.length) return null;
+  const dists = [0], sets = [base];
+  G.forEach((g, li) => {
+    if (!g) return; const by = levelMeshes(g), set = [];
+    const jointsOf = new Map(); g.scene.traverse(o => { if (o.isSkinnedMesh) jointsOf.set(o, o.skeleton.bones.map(b => b.name)); });
+    for (const m0 of base) {
+      const src = nm(m0) ? by.get(nm(m0)) : by.list.length === base.length ? by.list[base.indexOf(m0)] : null; if (!src) continue; // part dropped at this level → LOD0 mesh simply hides
+      let m;
+      if (m0.isSkinnedMesh && src.isSkinnedMesh) {
+        const geo = remapSkin(src.geometry, jointsOf.get(src), m0.skeleton.bones); if (!geo) continue;
+        m = new THREE.SkinnedMesh(geo, m0.material); m.bind(m0.skeleton, m0.bindMatrix); m.bindMode = m0.bindMode;
+      } else if (!m0.isSkinnedMesh && !src.isSkinnedMesh) m = new THREE.Mesh(src.geometry, m0.material);
+      else continue;
+      m.name = m0.name; m.position.copy(m0.position); m.quaternion.copy(m0.quaternion); m.scale.copy(m0.scale);
+      m.castShadow = m0.castShadow; m.receiveShadow = m0.receiveShadow; m.frustumCulled = m0.frustumCulled; m.renderOrder = m0.renderOrder;
+      m.userData.lodLevel = li + 1; m.visible = false; m0.parent.add(m); set.push(m);
+    }
+    if (set.length) { dists.push(lv[li][1]); sets.push(set); }
+  });
+  if (sets.length < 2) return null;
+  const ml = new MeshLOD(obj, dists, sets); ml.key = key; obj.userData.meshLOD = ml; return ml;
+}
+/** baked parts already turned into meshes under one parent (riders, fliers, ground animals): add level meshes beside them, matched
+ *  to LOD0 parts by material name (or order when the part counts agree), reusing each LOD0 mesh's material (flap shaders, tints). */
+export async function lodBakedMeshes(root, key, parts0, meshes0, M, rot, opt = { drop: true }) {
+  const lv = await bakeLevels(key, parts0, M, rot, opt); if (!lv || !meshes0.length) return null;
+  const dists = [0], sets = [meshes0.slice()];
+  lv.slice(1).forEach((L, li) => {
+    const set = [];
+    L.parts.forEach((p, j) => {
+      const nmM = p.material && p.material.name;
+      let i = nmM ? parts0.findIndex(q => q.material && q.material.name === nmM) : -1;
+      if (i < 0 && L.parts.length === parts0.length) i = j; if (i < 0) return;
+      const m0 = meshes0[i], m = new THREE.Mesh(p.geometry, m0.material);
+      m.position.copy(m0.position); m.quaternion.copy(m0.quaternion); m.scale.copy(m0.scale); m.frustumCulled = m0.frustumCulled;
+      m.userData.lodLevel = li + 1; m.visible = false; m0.parent.add(m); set.push(m);
+    });
+    if (set.length) { dists.push(L.d); sets.push(set); }
+  });
+  if (sets.length < 2) return null;
+  const ml = new MeshLOD(root, dists, sets); ml.key = key; root.userData.meshLOD = ml; return ml;
+}
+/** baked parts (bakeParts with M) → HystLOD; mk(parts) builds one level. Falls back to mk(parts0) when there is no LOD. */
+export async function lodBaked(key, parts0, M, rot, mk, opt = {}) {
+  const lv = await bakeLevels(key, parts0, M, rot, opt); return lv ? makeLOD(lv, mk) : mk(parts0);
+}
+
 /** call once per frame before render */
 export function lodTick(camera) {
-  if (!buckets.length) return;
+  if (!buckets.length && !switches.size) return;
   const now = sampleCam(camera), busy = camBusy();
   for (const b of buckets) b.tick(camP, now, busy);
+  for (const s of switches) { if (now > s.nextGC) { s.nextGC = now + 2000; if (!inScene(s.root)) { s.dispose(); continue; } } s.update(camP, now, busy); }
 }
 export function lodSummary() {
   const per = [0, 0, 0]; for (const b of buckets) for (let i = 0; i < b.n; i++) per[b.cur[i]] = (per[b.cur[i]] || 0) + 1;
-  return { ...lodStats, instancesPerLevel: per };
+  const sw = [0, 0, 0]; for (const s of switches) sw[Math.max(0, s._cur)]++;
+  return { ...lodStats, instancesPerLevel: per, meshLODs: switches.size, meshLODKeys: [...new Set([...switches].map(s => s.key))], meshLODPerLevel: sw, lite: LITE, drops: lodDrops };
 }
-if (typeof window !== 'undefined') window.__lod = { summary: lodSummary, stats: lodStats };
+if (typeof window !== 'undefined') window.__lod = { summary: lodSummary, stats: lodStats, force: n => { FORCE = n == null ? -1 : n; } };
