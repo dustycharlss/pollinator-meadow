@@ -8,7 +8,7 @@ import { setZoneHeight } from './world.js';
 import { CLASSES, CLASS_OF, ACTS, classOf } from './classes.js';
 import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
-import { lodify } from './lod.js';
+import { lodify, lodFor } from './lod.js';
 import { canShowFriendsStation } from './net/flags.js';
 import { waterSurface, FOAM_MAT } from './water.js';
 import { MAPS2 } from './act2-maps.js';
@@ -22,7 +22,7 @@ export const SIZE = Object.fromEntries(Object.entries(CLASS_OF).map(([id, c]) =>
 export const FLYERS = new Set(['bee', 'butterfly', 'hummingbird', 'moth', 'bumblebee']);
 const NEED = { team: { tiny: 3, medium: 2, bear: 1 }, heavy: { tiny: 5, medium: 3, bear: 1 }, heaviest: { tiny: 2, medium: 2, bear: 2 } };
 const TIER = {
-  petal: { name: 'Petal', em: '🌸', col: 0xff8fc8, heal: 0.012, geo: () => new THREE.OctahedronGeometry(0.55) },
+  petal: { name: 'Petal', em: '🌸', col: 0xffb7d6, heal: 0.012, geo: () => new THREE.OctahedronGeometry(0.55) },
   dew: { name: 'Dewdrop', em: '💧', col: 0x7fd8ff, heal: 0.02, geo: () => new THREE.SphereGeometry(0.5, 12, 10) },
   star: { name: 'Starseed', em: '⭐', col: 0xffe066, heal: 0.08, geo: () => new THREE.IcosahedronGeometry(0.7) },
 };
@@ -529,7 +529,7 @@ export function createZones(scene, host) {
   let hubPads = [], hubFr = [], friendsSpec = null;
   let exitAt = null, exitOpen = false, exitMesh = null, exitLabel = null, starGot = false;
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
-  let sampleH = null, waterMeshes = [], terrMesh = null;
+  let sampleH = null, waterMeshes = [], terrMesh = null, instWalls = [], decoJobs = new Map(), decoBatching = false;
   // three-class puzzle state
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
@@ -549,14 +549,15 @@ export function createZones(scene, host) {
 
   function buildTerrainMesh(fn, bounds) {
     const { x0, x1, z0, z1 } = bounds;
-    const Wd = x1 - x0 + 8, D = z1 - z0 + 8, SEG = 64;
+    const Wd = x1 - x0 + 8, D = z1 - z0 + 8, SEG = 96;
     const geo = new THREE.PlaneGeometry(Wd, D, SEG, SEG); geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position, col = new Float32Array(pos.count * 3);
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, lem = !!recipe.lemonade;
     for (let i = 0; i < pos.count; i++) {
       const lx = pos.getX(i) + cx, lz = pos.getZ(i) + cz;
       let rel = fn(lx, lz); if (rel == null) rel = -4;
-      pos.setY(i, rel);
+      // visual-only roll (~8 cm). sampleH / terrainFrom stay the walk-route source of truth
+      pos.setY(i, rel + 0.08 * Math.sin(lx * 0.17 + 0.4) * Math.cos(lz * 0.13));
       if (rel < -1.2) { col[i * 3] = lem ? 0.9 : 0.08; col[i * 3 + 1] = lem ? 0.75 : 0.32; col[i * 3 + 2] = lem ? 0.3 : 0.72; }
       else if (rel < 0.05) { col[i * 3] = 0.62; col[i * 3 + 1] = 0.36; col[i * 3 + 2] = 0.26; } // peach mud bank so the shore reads (art pass: B mud #e8b8a0, a touch darker)
       else { const n = 0.5 + 0.5 * Math.sin(lx * 0.23 + 1.7) * Math.cos(lz * 0.19), j = 1 + 0.025 * Math.sin(lx * 0.7) * Math.cos(lz * 0.6); // B grass tones #98d8a0..#cdeeb8 (linear), large-scale mix
@@ -579,8 +580,7 @@ export function createZones(scene, host) {
       col.set(colA);
     }
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
-    const smooth = !!(recipe && (recipe.id === 'thaw_valley' || recipe.id === 'grand_garden' || recipe.id === 'starheart_summit' || recipe.id === 'storm_orchard' || recipe.id === 'mirror_caves'));
-    const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !smooth }));
+    const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: false }));
     mesh.userData.terrain = true; mesh.userData.lookTerrain = snowLook; mesh.userData.colA = colA; mesh.userData.colB = colB; mesh.userData.colC = colC; mesh.userData.colT = 1; mesh.userData.wantSeason = recipe && recipe.masterStart === 'A' ? 'winter' : 'summer';
     mesh.position.set(A.x + cx, baseY, A.z + cz); group.add(mesh); terrMesh = mesh;
     sampleH = (lx, lz) => {
@@ -626,15 +626,15 @@ export function createZones(scene, host) {
   let bloomGeo = null;
   function bloomMesh() {
     if (!bloomGeo) { const parts = [new THREE.OctahedronGeometry(0.55 * 1.4)]; for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, g = new THREE.OctahedronGeometry(0.3 * 1.4); g.translate(Math.cos(a) * 0.62, 0.05, Math.sin(a) * 0.62); parts.push(g); } bloomGeo = mergeGeos(parts); }
-    const G = new THREE.Group(); G.add(new THREE.Mesh(bloomGeo, mat(0xff6fb4, 0.85))); const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.34), mat(0xffd23f, 0.9)); c.position.y = 0.28; G.add(c); return G;
+    const G = new THREE.Group(); G.add(new THREE.Mesh(bloomGeo, mat(0xffb7d6, 0.22))); const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.34), mat(0xffe08a, 0.28)); c.position.y = 0.28; G.add(c); return G;
   }
   const B = {
-    water(c = 0x1f8cff) {
+    water(c = 0x8fc8e8) {
       // t159u: saturated, rippling surface + white foam lines at the shore (top face only, so no z-fighting)
       const lem = c === 0xffd65a, foamM = FOAM_MAT();
       for (const r of recipe.deep || []) {
         const w = r[2] - r[0], d = r[3] - r[1];
-        const m = waterSurface(new THREE.PlaneGeometry(w + 1.4, d + 1.4).rotateX(-Math.PI / 2), { color: lem ? c : 0x1f8cff, repeat: [(w + 1.4) / 6, (d + 1.4) / 6], lemonade: lem });
+        const m = waterSurface(new THREE.PlaneGeometry(w + 1.4, d + 1.4).rotateX(-Math.PI / 2), { color: lem ? c : (c || 0x8fc8e8), repeat: [(w + 1.4) / 6, (d + 1.4) / 6], lemonade: lem });
         m.position.set(A.x + (r[0] + r[2]) / 2, baseY - 0.9, A.z + (r[1] + r[3]) / 2); group.add(m); waterMeshes.push(m);
         // foam where the water meets the bank (~0.37 outside the rect, where the bank slope crosses the surface)
         for (const [fx, fz, fw, fd] of [[(r[0] + r[2]) / 2, r[1] - 0.37, w + 0.7, 0.32], [(r[0] + r[2]) / 2, r[3] + 0.37, w + 0.7, 0.32], [r[0] - 0.37, (r[1] + r[3]) / 2, 0.32, d + 0.7], [r[2] + 0.37, (r[1] + r[3]) / 2, 0.32, d + 0.7]]) {
@@ -646,14 +646,46 @@ export function createZones(scene, host) {
     wall(x, z, w, d, top, o = {}) {
       const g = gy(x, z), bot = o.bot ?? -1.5, T = top - bot, col = o.c ?? LOOK[o.look] ?? COL.stone;
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, T, d), mat(col));
-      m.position.set(A.x + x, g + bot + T / 2, A.z + z); m.rotation.y = o.yaw || 0; group.add(m);
-      if (o.look === 'hedge' || o.look === 'leaf') { const cap = new THREE.Mesh(new THREE.BoxGeometry(w + 0.12, 0.25, d + 0.12), mat(o.look === 'leaf' ? 0x4f9a3e : COL.hedgeTop)); cap.position.set(A.x + x, g + top + 0.08, A.z + z); group.add(cap); }
-      if (o.look === 'glass') { m.material = new THREE.MeshLambertMaterial({ color: 0xcff0ff, transparent: true, opacity: 0.35 }); }
+      m.position.set(A.x + x, g + bot + T / 2, A.z + z); m.rotation.y = o.yaw || 0;
+      if (!o.hidden) {
+        group.add(m);
+        if (o.look === 'hedge' || o.look === 'leaf') { const cap = new THREE.Mesh(new THREE.BoxGeometry(w + 0.12, 0.25, d + 0.12), mat(o.look === 'leaf' ? 0x4f9a3e : COL.hedgeTop)); cap.position.set(A.x + x, g + top + 0.08, A.z + z); group.add(cap); }
+        if (o.look === 'glass') { m.material = new THREE.MeshLambertMaterial({ color: 0xcff0ff, transparent: true, opacity: 0.35 }); }
+      } else m.visible = false;
       const s = addSolid({ type: 'box', x: A.x + x, z: A.z + z, hx: w / 2, hz: d / 2, yaw: -(o.yaw || 0), y0: g + bot, top: g + top, kind: 'zone' });
-      if (o.hidden) { m.visible = false; s.off = true; }
+      if (o.hidden) { s.off = true; }
       { const ca = Math.abs(Math.cos(o.yaw || 0)), sa = Math.abs(Math.sin(o.yaw || 0)), hx = (w * ca + d * sa) / 2, hz = (w * sa + d * ca) / 2;
         if (Math.max(w, d) < 14) { const e = { roots: [m], x0: A.x + x - hx, x1: A.x + x + hx, z0: A.z + z - hz, z1: A.z + z + hz, y0: g + bot, y1: g + top + 0.3, a: 1 }; fades.push(e); s.fadeM = e; } } // long boundary cliffs keep the camera pull-in
       return { m, s, g };
+    },
+    /** one instanced hedge (or leaf) strip that follows the ground, plus 2 m collision segments and a fly cap.
+     *  Use this for Act 3 corridor sides instead of a 2 m B.wall loop — same walk routes, far fewer draws. */
+    hedgeRun(x, z0, z1, o = {}) {
+      const look = o.look || 'hedge', h = o.h ?? 2.4, thick = o.w ?? 0.6, col = LOOK[look] ?? COL.hedge;
+      const topC = look === 'leaf' ? 0x4f9a3e : COL.hedgeTop;
+      const boxes = [], caps = [], fadeEs = [];
+      for (let z = z0; z < z1 - 0.01; z += 2) {
+        const L = Math.min(2, z1 - z), zc = z + L / 2, g = gy(x, zc), ww = thick, dd = L + 0.05;
+        const s = addSolid({ type: 'box', x: A.x + x, z: A.z + zc, hx: ww / 2, hz: dd / 2, yaw: 0, y0: g - 1.5, top: g + h, kind: 'zone' });
+        const capS = addSolid({ type: 'box', x: A.x + x, z: A.z + zc, hx: ww / 2, hz: dd / 2, yaw: 0, y0: g + h - 0.1, top: g + 30, kind: 'zone' });
+        capS.off = false;
+        const T = h + 1.5, ca = 1, sa = 0, hx = ww / 2, hz = dd / 2;
+        boxes.push({ x: A.x + x, y: g - 1.5 + T / 2, z: A.z + zc, w: ww, T, d: dd });
+        caps.push({ x: A.x + x, y: g + h + 0.08, z: A.z + zc, w: ww + 0.12, T: 0.25, d: dd + 0.12 });
+        const e = { inst: true, i: boxes.length - 1, x0: A.x + x - hx, x1: A.x + x + hx, z0: A.z + zc - hz, z1: A.z + zc + hz, y0: g - 1.5, y1: g + h + 0.3, a: 1, want: 1 };
+        fades.push(e); fadeEs.push(e); s.fadeM = e;
+      }
+      const mk = (list, c) => {
+        const n = list.length; if (!n) return null;
+        const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mat(c), n);
+        const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), P = new THREE.Vector3(), S = new THREE.Vector3();
+        list.forEach((b, i) => { P.set(b.x, b.y, b.z); S.set(b.w, b.T, b.d); M.compose(P, Q, S); im.setMatrixAt(i, M); b.base = M.clone(); });
+        im.instanceMatrix.needsUpdate = true; group.add(im);
+        instWalls.push({ im, list });
+        return im;
+      };
+      const imB = mk(boxes, col), imC = mk(caps, topC);
+      fadeEs.forEach((e, i) => { e.ims = [imB, imC].filter(Boolean); e.bases = [boxes[i] && boxes[i].base, caps[i] && caps[i].base]; });
     },
     cyl(x, z, r, h, c, base = 0) {
       const g = gy(x, z) + base, T = h + 1.5, m = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.94, r, T, 12), mat(c));
@@ -905,14 +937,14 @@ export function createZones(scene, host) {
     pickup(tier, x, z, h, o = {}) {
       if (tier === 'dew') tier = 'petal'; // adventure: Petals are the only score
       const T = TIER[tier], val = tier === 'petal' ? Math.max(1, o.value || 1) : 1, bloom = val > 1;
-      const m = bloom ? bloomMesh() : new THREE.Mesh(T.geo(), mat(T.col, 0.8));
+      const m = bloom ? bloomMesh() : new THREE.Mesh(T.geo(), mat(T.col, T.col === 0xffb7d6 ? 0.22 : 0.8));
       m.position.set(A.x + x, gy(x, z) + h, A.z + z); group.add(m);
       const rec = { tier, m, y: m.position.y, got: false, nightOnly: false, show: o.show, set: o.set, who: o.who, whyNot: o.whyNot, value: val, bloom };
       if (o.show) m.visible = false;
       picks.push(rec);
     },
     nightDew(x, z, h) {
-      const T = TIER.petal, m = new THREE.Mesh(T.geo(), mat(T.col, 0.9));
+      const T = TIER.petal, m = new THREE.Mesh(T.geo(), mat(T.col, 0.22));
       m.position.set(A.x + x, gy(x, z) + h, A.z + z); m.visible = false; group.add(m);
       const rec = { tier: 'petal', m, y: m.position.y, got: false, nightOnly: true, alive: false };
       picks.push(rec); nightDews.push(rec);
@@ -952,7 +984,7 @@ export function createZones(scene, host) {
       const W = o.w || 10, gt = this.gate(s, 0, z, W, 0.6, 2.8, { latch: o.held ? false : true, label: 'Gate' });
       const g = gy(0, z);
       gt.extra = addSolid({ type: 'box', x: A.x, z: A.z + z, hx: W / 2, hz: 0.3, yaw: 0, y0: g + 2.7, top: g + 20, kind: 'zone', fadeM: true });
-      gt.lock = emojiSprite('🔒', 1.6); gt.lock.position.set(A.x, g + 3.8, A.z + z - 0.4); group.add(gt.lock);
+      gt.lock = emojiSprite('🔒', 1.6, true); gt.lock.position.set(A.x, g + 3.8, A.z + z - 0.4); group.add(gt.lock);
       return gt;
     },
     kidFlower(key, x, z, base = 0) {
@@ -1011,11 +1043,47 @@ export function createZones(scene, host) {
   function decoInto(holder, key, size, o = {}) {
     loadGLB(key).then(g => {
       if (!g || !holder.parent) return;
-      const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; } });
+      const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; if (recipe && recipe.night && n.material.emissive) { n.material.emissive = n.material.color.clone().multiplyScalar(0.18); n.material.emissiveIntensity = Math.max(n.material.emissiveIntensity || 0, 0.16); } } });
       const bb = new THREE.Box3().setFromObject(m), sz = bb.getSize(new THREE.Vector3()), L = o.byLong ? Math.max(sz.x, sz.y, sz.z) : sz.y; if (L < 1e-4) return;
       const k = size / L; m.scale.setScalar(k); const bb2 = new THREE.Box3().setFromObject(m), c = bb2.getCenter(new THREE.Vector3()); m.position.set(-c.x, -bb2.min.y + (o.sink || 0), -c.z);
       holder.add(m); lodify(m, key); if (o.fallback) o.fallback.forEach(f => { f.visible = false; }); o.onLoad?.(m);
     });
+  }
+  /** Instance repeated static decos (dry-grass, trees, stalls). Unique or 1–2 copies still use decoInto. LOD1/2 stay with the polish lod-map loader — this only batches LOD0. */
+  function flushDecos() {
+    const jobs = decoJobs; decoJobs = new Map();
+    for (const [key, list] of jobs) {
+      if (list.length < 3 || lodFor(key)) { list.forEach(j => decoInto(j.H, key, j.size, j.o)); continue; } // polish LOD pass 2 wins when lod-map has this key
+      loadGLB(key).then(g => {
+        const live = list.filter(j => j.H.parent); if (!g || !live.length) { live.forEach(j => decoInto(j.H, key, j.size, j.o)); return; }
+        const src = g.scene, night = !!(recipe && recipe.night);
+        src.updateMatrixWorld(true);
+        const bb0 = new THREE.Box3().setFromObject(src), sz0 = bb0.getSize(new THREE.Vector3()), mid = bb0.getCenter(new THREE.Vector3());
+        const parts = [];
+        src.traverse(n => {
+          if (!n.isMesh || !n.geometry) return;
+          const geo = n.geometry.clone(); geo.applyMatrix4(n.matrixWorld);
+          const mat0 = lambertFrom(n.material);
+          if (night && mat0.emissive) { mat0.emissive = mat0.color.clone().multiplyScalar(0.18); mat0.emissiveIntensity = Math.max(mat0.emissiveIntensity || 0, 0.16); }
+          parts.push({ geo, mat: mat0 });
+        });
+        if (!parts.length) { live.forEach(j => decoInto(j.H, key, j.size, j.o)); return; }
+        const n = live.length;
+        const mats = live.map(j => {
+          const L = j.o.byLong ? Math.max(sz0.x, sz0.y, sz0.z) : sz0.y, k = L > 1e-4 ? j.size / L : 1;
+          j.H.updateMatrixWorld(true);
+          const off = new THREE.Matrix4().makeTranslation(-mid.x * k, -bb0.min.y * k + (j.o.sink || 0), -mid.z * k);
+          return j.H.matrixWorld.clone().multiply(off).multiply(new THREE.Matrix4().makeScale(k, k, k));
+        });
+        for (const part of parts) {
+          const im = new THREE.InstancedMesh(part.geo, part.mat, n);
+          im.castShadow = false;
+          mats.forEach((m, i) => im.setMatrixAt(i, m));
+          im.instanceMatrix.needsUpdate = true; group.add(im);
+        }
+        live.forEach(j => { if (j.o.fallback) j.o.fallback.forEach(f => { f.visible = false; }); });
+      });
+    }
   }
   function gearModel(k, holder, fallback, onLoad) {
     const I = GEAR_INFO[k]; if (!I.glb) return;
@@ -1390,7 +1458,7 @@ export function createZones(scene, host) {
       if (R > 0.05) addSolid({ type: 'box', x: A.x + x1 - R / 2, z: A.z + z, hx: R / 2, hz: 0.5, yaw: 0, y0: g - 1, top: g + 30, kind: 'zone', fadeM: true });
       if (!s) return null;
       const gt = this.gate(s, dx, z, dw, 0.7, h - 0.2, { latch: o.held ? false : true, label: o.label || 'Gate' });
-      gt.lock = emojiSprite('🔒', 1.3); gt.lock.position.set(A.x + dx, g + h + 0.6, A.z + z - 0.5); group.add(gt.lock);
+      gt.lock = emojiSprite('🔒', 1.3, true); gt.lock.position.set(A.x + dx, g + h + 0.6, A.z + z - 0.5); group.add(gt.lock);
       return gt;
     },
     hide(kind, x, z, r, h = 3) { // canopy (crow), trunk (owl), log (fox)
@@ -1484,7 +1552,7 @@ export function createZones(scene, host) {
       deep.push(rect); return rect;
     },
     /** decor model on the ground (no collider) */
-    deco(key, x, z, size = 1, o = {}) { const w = L2W(x, z, o.h || 0), H = new THREE.Group(); H.position.set(w.x, w.y, w.z); H.rotation.y = o.yaw || 0; group.add(H); decoInto(H, key, size, o); return H; },
+    deco(key, x, z, size = 1, o = {}) { const w = L2W(x, z, o.h || 0), H = new THREE.Group(); H.position.set(w.x, w.y, w.z); H.rotation.y = o.yaw || 0; group.add(H); if (!decoBatching) { decoInto(H, key, size, o); return H; } const job = { H, size, o }; const L = decoJobs.get(key) || []; L.push(job); decoJobs.set(key, L); return H; },
     sprinkler(id, x, z, o = {}) { const e = enemy('sprinkler', id, x, z, { r: o.r || 7, beam: o.beam || 0.22, ...o }); e.cone = coneMesh(e.o.r, e.o.beam, 0x7fd8ff); e.F.add(e.cone); e.F.rotation.y = e.baseYaw; e.grace = o.grace ?? 0.45; if (o.high) { const H = Math.min(o.high, 8), cg = new THREE.PlaneGeometry(e.o.r, H).rotateY(Math.PI / 2); cg.translate(0, H / 2, e.o.r / 2); const cur = new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ color: 0x9fe4ff, transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide })); e.cone.add(cur); for (let i = 0; i < 9; i++) { const k = (i + 1) / 10, d = bx(0.34, 0.34, 0.34, 0xbfeeff, 0, 0.6 + H * 0.9 * Math.sin(Math.PI * k * 0.85), e.o.r * k); d.material = new THREE.MeshBasicMaterial({ color: 0xbfeeff, transparent: true, opacity: 0.8 }); e.cone.add(d); } } return e; },
     mower(id, x0, x1, z, o = {}) { const e = enemy('mower', id, x0, z, { x0, x1, period: o.period || 9, dur: o.dur || 3.2, yaw: Math.PI / 2, ...o }); e.grace = 0.05; const L = Math.abs(x1 - x0), m = new THREE.Mesh(new THREE.PlaneGeometry(L + 2, 2.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff6a3a, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); const w = L2W((x0 + x1) / 2, z); m.position.set(w.x, w.y + 0.1, w.z); group.add(m); e.lane = m; return e; },
     gravel(x0, z0, x1, z1) { const S = AA(); S.gravel.push({ x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1 }); const w = L2W((x0 + x1) / 2, (z0 + z1) / 2); const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.08, z1 - z0), mat(0xb8b0a0)); m.position.set(w.x, w.y + 0.05, w.z); group.add(m); for (let i = 0; i < 14; i++) { const s = bx(0.3, 0.15, 0.3, 0x8a8478, w.x + (Math.sin(i * 7.1) * 0.5) * (x1 - x0), w.y + 0.1, w.z + (Math.cos(i * 3.3) * 0.5) * (z1 - z0)); group.add(s); } },
@@ -1509,9 +1577,9 @@ export function createZones(scene, host) {
     pond(id, x0, z0, x1, z1, o = {}) {
       const S = AA(), w = L2W((x0 + x1) / 2, (z0 + z1) / 2), W2 = x1 - x0, D2 = z1 - z0;
       const mud = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2).rotateX(-Math.PI / 2), mat(0x6a5030)); mud.position.set(w.x, w.y + 0.04, w.z); group.add(mud);
-      const wm = waterSurface(new THREE.PlaneGeometry(W2 + 0.4, D2 + 0.4).rotateX(-Math.PI / 2), { color: 0x1f8cff, repeat: [W2 / 6, D2 / 6] }); wm.position.set(w.x, w.y + 0.2, w.z); group.add(wm); waterMeshes.push(wm);
+      const wm = waterSurface(new THREE.PlaneGeometry(W2 + 0.4, D2 + 0.4).rotateX(-Math.PI / 2), { color: o.color || 0x8fc8e8, repeat: [W2 / 6, D2 / 6], emissive: o.emissive, emissiveIntensity: o.emissiveIntensity, opacity: o.opacity }); wm.position.set(w.x, w.y + 0.2, w.z); group.add(wm); waterMeshes.push(wm);
       if (recipe && (recipe.id === 'thaw_valley' || recipe.id === 'grand_garden')) {
-        wm.material.color.set(recipe.id === 'thaw_valley' ? 0x8fc8e8 : 0x8fc8e8); wm.material.emissive.setHex(0x000000); wm.material.emissiveIntensity = 0; wm.material.opacity = recipe.id === 'grand_garden' ? 0.6 : 0.8;
+        wm.material.emissive.setHex(0x000000); wm.material.emissiveIntensity = 0; wm.material.opacity = recipe.id === 'grand_garden' ? 0.6 : 0.8;
         if (wm.children[0] && wm.children[0].material) wm.children[0].material.opacity = 0.08;
       }
       const rect = { x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1, off: false };
@@ -2434,6 +2502,7 @@ export function createZones(scene, host) {
     fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady');
     sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
+    instWalls = []; decoJobs = new Map();
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
     tutorI = 0; tutorT = -99; endLines = []; result = null;
     for (const h of hubPads) h.el.remove(); hubPads = []; hubFr = []; document.body.classList.remove('inHub');
@@ -2449,7 +2518,8 @@ export function createZones(scene, host) {
     A = { x: anchor.x, z: anchor.z };
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
-    recipe.build(B);
+    decoBatching = true; recipe.build(B); decoBatching = false;
+    flushDecos();
     if (!recipe.hub) { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); } else hubInit();
     buildLeafyBackdrop(recipe.bounds);
     decorateProps();
@@ -3076,6 +3146,12 @@ export function createZones(scene, host) {
       if (!e.cl && e.want >= 1) continue;
       if (e.cl && Math.abs(e.a - e.want) < 0.005) continue;
       e.cl = true; e.a += (e.want - e.a) * Math.min(1, dt * 10); if (Math.abs(e.a - e.want) < 0.01) e.a = e.want;
+      if (e.inst && e.ims) {
+        const hide = e.a < 0.6, M = new THREE.Matrix4(), Z = new THREE.Matrix4().makeScale(0, 0, 0);
+        e.ims.forEach((im, k) => { if (!im || !e.bases[k]) return; im.setMatrixAt(e.i, hide ? Z : e.bases[k]); im.instanceMatrix.needsUpdate = true; });
+        continue;
+      }
+      if (!e.roots) continue;
       for (const r of e.roots) r.traverse(m => {
         if (!m.isMesh) return;
         if (!m.userData._fc) { m.userData._fc = 1; m.material = m.material.clone(); m.userData._fo = m.material.opacity ?? 1; m.material.transparent = true; }
@@ -3084,10 +3160,22 @@ export function createZones(scene, host) {
     }
   }
   // ---- Training Garden runtime (t159u): one tiny step at a time, a big picture card, a pointing hand ----
-  function emojiSprite(e, s = 1.4) {
+  const _spPos = new THREE.Vector3();
+  function emojiSprite(e, s = 1.4, clamp = false) {
     const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
     g.font = '96px system-ui, "Apple Color Emoji", "Noto Color Emoji", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70);
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); sp.scale.set(s, s, 1); sp.renderOrder = 9; return sp;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); sp.scale.set(s, s, 1); sp.renderOrder = 9;
+    if (clamp) {
+      sp.userData.baseS = s;
+      sp.onBeforeRender = (_r, _sc, cam) => {
+        const d = cam.position.distanceTo(sp.getWorldPosition(_spPos));
+        // leave .visible to the gate; hide a too-close lock by opacity so it does not cover Interact
+        sp.material.opacity = d < 1.15 ? 0 : 1;
+        const sc = THREE.MathUtils.clamp(sp.userData.baseS * (d / 10), 0.4, 0.95);
+        sp.scale.set(sc, sc, 1);
+      };
+    }
+    return sp;
   }
   let kid = null;
   const crewOfCls = c => ctx.crewIds().find(i => CLASS_OF[i] === c);

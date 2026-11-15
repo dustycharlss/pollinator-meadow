@@ -1,10 +1,11 @@
 // Art pass (Nov 14, 2026): Squid's "Golden Hour Pastel" (preset B) applied to the live game, driven by the perf.js auto tiers.
-// perf tier -> look:   low  = preset 'low'  (no post, grade baked into lights/sky/fog, CSS vignette, no shadows, 12 motes)
-//                      med  = preset 'medium' minus bloom (grade pass only), no shadows, 24 motes
-//                      high = preset 'medium' (half-res bloom + grade), 1024 PCFSoft sun shadow, 24 motes (46 on desktop)
-//                      ultra (desktop only) = preset 'high' but a 2048 map (never 4096), full bloom, MSAA 4, 46 motes
-// Phones never go past 'high' (pixel ratio capped at 1.5, med 1.25, low 1.0). Day/night, seasons, weather and the moody
-// Owl Wood night still come from main.js updateNight(); tune() blends the day share of that toward preset B every frame.
+// perf tier -> look (Act 3 art pass / phone-safe STYLE-GUIDE §5):
+//   low  = no post, grade baked into lights/sky/fog, CSS vignette, 1024 PCF shadows, 12 motes, fog 30–70
+//   med  = grade pass only (no bloom), no shadows, 24 motes, fog 30–95
+//   high = half-res bloom + grade, 1024 PCFSoft sun shadow, 24 motes, pixel ratio 1.75 (phones cap 1.5), fog 30–95
+//   ultra (desktop only) = 2048 map (never 4096), full bloom, MSAA 4, 46 motes, fog 30–95
+// Phones never go past 'high'. Day/night, seasons, weather and moody night still come from main.js updateNight();
+// tune() blends the day share of that toward preset B every frame.
 import * as THREE from 'three';
 import { PRESET_B as B, pastelize, createComposerB, cssOverlayB, sunDirectionB } from './preset-B.js';
 import { initPerf } from './perf.js';
@@ -52,12 +53,12 @@ function lerpPreset(a, b, t) {
 }
 
 const C = h => new THREE.Color(h);
-const QMAP = { low: 'low', med: 'medium', high: 'medium', ultra: 'high' };
+const QMAP = { low: 'low', med: 'medium', high: 'medium', ultra: 'high' }; // phone High = Medium column (look-targets); LOOKS.high is still the phone-safe half-res / 1024 / 24-mote row
 const LOOKS = {
-  low:   { post: false, bloom: false, bloomScale: 0, grade: false, msaa: 0, shadow: 0, motes: 12, fogFar: 100, vignette: true, bake: true },
-  med:   { post: true, bloom: false, bloomScale: 0, grade: true, msaa: 0, shadow: 0, motes: 24, fogFar: 110 },
-  high:  { post: true, bloom: true, bloomScale: 0.5, grade: true, msaa: 0, shadow: 1024, motes: 24, fogFar: 120 },
-  ultra: { post: true, bloom: true, bloomScale: 1, grade: true, msaa: 4, shadow: 2048, motes: 46, fogFar: 130 },
+  low:   { post: false, bloom: false, bloomScale: 0, grade: false, msaa: 0, shadow: 1024, motes: 12, fogFar: 70, vignette: true, bake: true },
+  med:   { post: true, bloom: false, bloomScale: 0, grade: true, msaa: 0, shadow: 0, motes: 24, fogFar: 95 },
+  high:  { post: true, bloom: true, bloomScale: 0.5, grade: true, msaa: 0, shadow: 1024, motes: 24, fogFar: 95 },
+  ultra: { post: true, bloom: true, bloomScale: 1, grade: true, msaa: 4, shadow: 2048, motes: 46, fogFar: 95 },
 };
 const SUN_B = new THREE.Vector3(...B.sun.worldDir).normalize();
 
@@ -259,7 +260,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     hemi.color.lerp(cHS, k); hemi.groundColor.lerp(cHG, k); hemi.intensity = lerp(hemi.intensity, P.hemi.intensity, k);
     sun.color.lerp(cSun, k); sun.intensity = lerp(sun.intensity, P.sun.intensity, k);
     const fogFar = (tierName === 'low' && P.quality && P.quality.low && P.quality.low.fogFar) ? P.quality.low.fogFar : (owned && P.fog && P.fog.far) ? P.fog.far : L.fogFar;
-    const fogNear = owned && P.fog ? P.fog.near : B.fog.near + 8;
+    const fogNear = owned && P.fog ? P.fog.near : B.fog.near;
     scene.fog.color.lerp(cFog, k); scene.fog.near = lerp(scene.fog.near, fogNear, k); scene.fog.far = lerp(scene.fog.far, fogFar, k);
     if (L.bake) { sun.color.lerp(tc.copy(sun.color).multiply(LT), k); hemi.color.lerp(tc.copy(hemi.color).multiply(LT), k); hemi.groundColor.lerp(tc.copy(hemi.groundColor).multiply(LT), k); scene.fog.color.lerp(HZ, ((P.quality && P.quality.low && P.quality.low.bakeGrade && P.quality.low.bakeGrade.hazeMix) || B.quality.low.bakeGrade.hazeMix) * k); }
     // sun: day direction from preset B (low, raking), night keeps the moon key from main.js — unless a look target owns the key (L22 A moon, L24 dusk)

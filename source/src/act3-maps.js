@@ -53,12 +53,14 @@ export const MAPS3 = {
     build(B) {
       B.home(0, -5); B.lane(-18, 12, -10, 86, { look: 'hedge' });
       // corridor hedges at x = ±6.5 (2 m segments follow the terraces) + an invisible tall cap so nobody flies around the doors
-      const hedge = (x, z0, z1) => { for (let z = z0; z < z1 - 0.01; z += 2) { const L = Math.min(2, z1 - z), zc = z + L / 2; B.wall(x, zc, 0.6, L + 0.05, 2.4, { look: 'hedge' }); B.wall(x, zc, 0.6, L + 0.05, 30, { bot: 2.3, hidden: true }).s.off = false; } };
+      const hedge = (x, z0, z1) => B.hedgeRun(x, z0, z1, { look: 'hedge' });
       hedge(-6.5, -10, 0); hedge(-6.5, 4, 59); hedge(-6.5, 65, 86); hedge(6.5, -10, 86);
-      // the cool cave (west, z 0..8): stone walls, a 3 m mouth at (-8, 2)
+      // the cool cave (west, z 0..8): enclosed stone room, a 3 m mouth at (-8, 2)
       const rock = (x, z, w, d, top = 3) => { B.wall(x, z, w, d, top, { look: 'stone' }); B.wall(x, z, w, d, 30, { bot: top - 0.1, hidden: true }).s.off = false; };
-      rock(-12.25, -0.3, 11.5, 0.6); rock(-13, 8.3, 10, 0.6); rock(-8, 0.25, 0.6, 0.5, 2.4); rock(-8, 5.9, 0.6, 4.2, 2.4); rock(-7.25, 6.2, 1.5, 4, 2.4);
-      B.wall(-13, 4, 10, 8.6, 3.2, { bot: 2.6, look: 'stone' }); // roof (cool + dim inside)
+      rock(-12.25, -0.3, 11.5, 0.6, 5.2); rock(-13, 8.3, 10, 0.6, 5.2); rock(-18.15, 4, 0.7, 8.6, 5.2);
+      rock(-8, 0.25, 0.6, 0.5, 2.4); rock(-8, 5.9, 0.6, 4.2, 2.4); rock(-7.25, 6.2, 1.5, 4, 2.4);
+      B.wall(-13, 4, 11, 9.2, 5.2, { bot: 3.6, look: 'stone' }); // ceiling high enough for the crew, low enough to read as an interior
+      B.wall(-13, 4, 10.4, 8.6, 5.0, { bot: 3.8, look: 'cliff' }); // cooler inner soffit
       B.deco('act3/ember-ridge/cave-entrance', -8.6, 2, 3.4, { yaw: -Math.PI / 2 });
       B.deco('act3/ember-ridge/rock-tall', -17, 1.5, 2.2); B.deco('act3/ember-ridge/rock-large', -16.5, 7, 1.6);
       B.gift('bubble', -14, 2, 0.6);
@@ -144,7 +146,7 @@ export const MAPS3 = {
     ],
     build(B) {
       B.home(0, -5); B.lane(-16, 16, -10, 78, { look: 'hedge' });
-      const hedge = (x, z0, z1) => { for (let z = z0; z < z1 - 0.01; z += 2) { const L = Math.min(2, z1 - z), zc = z + L / 2; B.wall(x, zc, 0.6, L + 0.05, 2.4, { look: 'hedge' }); B.wall(x, zc, 0.6, L + 0.05, 30, { bot: 2.3, hidden: true }).s.off = false; } };
+      const hedge = (x, z0, z1) => B.hedgeRun(x, z0, z1, { look: 'hedge' });
       hedge(-6.5, -10, 10); hedge(6.5, -10, 10);
       B.checkpoint(0, -1);
       B.escort('duckling', 3, -2, { count: 3 });
@@ -271,8 +273,9 @@ export const MAPS3 = {
       const laneGate = (s, x, z, w = 13) => { B.gate(s, x, z, w, 0.7, 2.8, { latch: true, label: 'Gate' }); B.wall(x, z, w, 0.7, 30, { bot: 2.7, hidden: true }).s.off = false; };
 
       // ford cap (z 58–66): hides when owB is baited or day is rung
-      const fordWall = B.wall(0, 63, 0.6, 8, 2.4, { look: 'hedge' });
-      const fordCap = B.wall(0, 63, 0.6, 8, 30, { bot: 2.3, hidden: true });
+      // visible lip stays low so the reunion pad at (0, 62) is not inside a 2.4 m teal slab
+      const fordWall = B.wall(0, 63, 0.6, 8, 0.45, { look: 'hedge' });
+      const fordCap = B.wall(0, 63, 0.6, 8, 30, { bot: 0.4, hidden: true });
       fordCap.s.off = false;
       const emW58 = B.ember('emW58', -6, 58, 1.6, { dimIn: false });
       const emE58 = B.ember('emE58', 6, 58, 1.6, { dimIn: false });

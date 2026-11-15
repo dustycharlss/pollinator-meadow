@@ -659,7 +659,7 @@ body.adv #bBuild,body.adv #bRts,body.adv #nestBar,body.adv #shopChip,body.adv #d
 
 /* t158u declutter: no round timer/score in adventure; objective tracker + off-screen arrow; compact Pip + toasts at the top */
 body.adv #roundBar,body.adv #vGo,body.adv #spChip{display:none!important}
-body.adv #toast{top:calc(max(8px,env(safe-area-inset-top)) + 64px);font-size:14px;line-height:1.25;padding:6px 12px;max-width:min(80vw,330px);border-radius:12px}
+body.adv #toast{top:calc(max(8px,env(safe-area-inset-top)) + 8px + var(--objH, 0px));font-size:14px;line-height:1.25;padding:6px 12px;max-width:min(80vw,330px);border-radius:12px}
 #objT{position:fixed;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 2px);transform:translateX(-50%);z-index:7;display:none;align-items:center;gap:8px;width:max-content;max-width:calc(100vw - 120px);background:var(--cream,#fff3d8);color:var(--ink,#3b2614);border:3px solid var(--oc,#ffd23f);border-radius:14px;padding:5px 10px;box-shadow:0 3px 0 rgba(59,38,20,.55);pointer-events:none;font:800 13px/1.2 system-ui}
 #objT #objDot{width:12px;height:12px;border-radius:50%;background:var(--oc,#ffd23f);flex:none;box-shadow:0 0 8px var(--oc,#ffd23f)}
 #objT b{display:block;font-weight:900}

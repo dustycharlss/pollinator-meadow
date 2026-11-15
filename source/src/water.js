@@ -18,14 +18,16 @@ function rippleCanvas(seed) {
 function texes() { if (!tex) { tex = rippleCanvas(7); tex2 = rippleCanvas(31); } return [tex, tex2]; }
 function tick() { const t = performance.now() / 1000; tex.offset.set((t * 0.035) % 1, (t * 0.02) % 1); tex2.offset.set((-t * 0.025) % 1, (t * 0.04) % 1); }
 /** a water surface mesh (top face only — no box sides to z-fight the banks) */
-export function waterSurface(geo, { color = 0x1f8cff, repeat = [4, 4], lemonade = false } = {}) {
+export function waterSurface(geo, { color = 0x8fc8e8, repeat = [4, 4], lemonade = false, emissive, emissiveIntensity, opacity } = {}) {
   const [a, b] = texes();
   const t1 = a.clone(), t2 = b.clone(); t1.needsUpdate = t2.needsUpdate = true; t1.repeat.set(...repeat); t2.repeat.set(repeat[0] * 0.7, repeat[1] * 0.7);
-  const base = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color, map: t1, emissive: lemonade ? 0x7a5200 : 0x0a62d8, emissiveIntensity: 0.45, transparent: true, opacity: 0.88, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+  const em = emissive != null ? emissive : (lemonade ? 0x7a5200 : 0x6a9cc0);
+  const ei = emissiveIntensity != null ? emissiveIntensity : (lemonade ? 0.45 : 0.08);
+  const base = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color, map: t1, emissive: em, emissiveIntensity: ei, transparent: true, opacity: opacity != null ? opacity : (lemonade ? 0.88 : 0.72), depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
   const shim = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xffffff, map: t2, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }));
   shim.position.y = 0.02; base.add(shim); base.renderOrder = 2; shim.renderOrder = 3;
   base.onBeforeRender = () => { const t = performance.now() / 1000; t1.offset.set((t * 0.035) % 1, (t * 0.02) % 1); t2.offset.set((-t * 0.025) % 1, (t * 0.04) % 1); };
   return base;
 }
-export const FOAM_MAT = () => new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+export const FOAM_MAT = () => new THREE.MeshBasicMaterial({ color: 0xfff6ea, transparent: true, opacity: 0.75, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 export { tick as waterTick };
