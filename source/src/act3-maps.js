@@ -505,8 +505,9 @@ export const MAPS3 = {
       B.masterPost(0, 0);
       B.masterPost(0, 2, { yaw: 0 }); // smaller trail post that mirrors the hill bell's Now icons
       // A · fox valley: first creek (ice in A, mid otherwise — not a melt flood). Banks stay open for the crew.
-      B.creek('cA', -6.5, 4, 6.5, 10);
-      B.fox('fxA', 2, 18, { yaw: Math.PI, ring: 5, path: [[-4, 18], [6, 18]], speed: 1.4 });
+      B.creek('cA', -6.5, 4, 0.2, 10);
+      B.creek('cA2', 3.6, 4, 6.5, 10); // dirt ford at x 0.2..3.6 so the crew and fawn walk the middle, not the ice
+      B.fox('fxA', 7, 16.2, { yaw: Math.PI, ring: 5, path: [[6, 16], [9.2, 16]], speed: 1.8 }); // stands next to the plate so a short whistle ping can latch it
       B.plate('foxPl', 8, 16, { label: 'Fox plate' });
       B.gearStump(-4, 12, { label: 'Echo Whistle stump' });
       B.hide('log', -3, 14, 1.4, 1.4);
@@ -549,7 +550,7 @@ export const MAPS3 = {
       B.deco('act3/thaw-valley/kenney-holiday-snow-pile', 14, 54.6, 1.6);
       // Petals (26)
       const P = (x, z, y) => B.pickup('petal', x, z, y);
-      for (let i = 0; i < 4; i++) P(-3 + i * 2, -3, 0.9);
+      for (let i = 0; i < 4; i++) P(-3 + i * 2, -8.2, 0.9); // behind the nest so start poses do not auto-collect them
       for (let i = 0; i < 4; i++) P(-5 + i * 10 / 3, 2, 0.9);
       for (let i = 0; i < 3; i++) P(-4 + i * 5, 16, 0.9);
       P(12, 20, 0.9); P(14, 24, 0.9);
