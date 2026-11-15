@@ -493,11 +493,13 @@ export function createNet(hooks = {}) {
       while (now - lastSnapAt >= period - 2 && n < 8) { sendSnap(false); n++; }
       if (now - lastHelloAt > 4000) sendHello();
     } else if (role === 'client') {
-      // Send local teleports/input BEFORE snapshots overwrite P (T.tpL + T.step are sync).
+      // Always harvest poses before applyClientView so a T.tp in the same
+      // T.step is marked pending (the 50 ms input cadence used to skip it
+      // and the latest host snap rewound the guest off the plate — N1-SIG).
+      const poses = poseSeeded ? posePayload() : (seedPosesFrom(currentSnapState()), null);
+      if (poses) sendEvt({ type: 'pose', from: 'client', bodies: poses });
       if (now - lastInAt >= 50) {
         lastInAt = now;
-        const poses = poseSeeded ? posePayload() : (seedPosesFrom(currentSnapState()), null);
-        if (poses) sendEvt({ type: 'pose', from: 'client', bodies: poses });
         const frame = hooks.pollLocalFrame?.();
         if (frame) broadcast('in', encodeInput(frame));
       }
