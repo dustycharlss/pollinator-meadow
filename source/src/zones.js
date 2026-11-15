@@ -2077,6 +2077,7 @@ export function createZones(scene, host) {
       // on the far lane; contact range (~1.7) still bonks if they walk under it.
       if (e.kind === 'owl' && e.bait && r > 2) continue;
       if (e.kind === 'fox' && S.season === 'winter') continue; // snow hides scent: the fawn will not hide in Master Bell state A
+      if (e.kind === 'fox' && r > 2 && (b.x - A.x) < 6.5) continue; // fox scent stays in the east den; the valley path does not make the fawn hide unprompted
       if (flatD(e, b) < r) return e;
     }
     return null;
