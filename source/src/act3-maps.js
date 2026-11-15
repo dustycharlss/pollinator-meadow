@@ -124,6 +124,116 @@ export const MAPS3 = {
     },
   },
 
+  // ===== 18 · Flooded Mill (Fern act3-levels-17-21.md §3): Water Level (M2) + Carry Chain (M5) + turtle ride (S3). Baby: 3 ducklings. =====
+  flooded_mill: {
+    ambience: 'flooded-mill', // Beans CC0 loop (Berwitz watermill + Nox_Sound stream), SFX bus
+    goal: 'Flooded Mill', act2: true, key: 'puzzles', ceil: 14, exit: [0, 72], par: 600,
+    bounds: { x0: -16, x1: 16, z0: -10, z1: 78 },
+    crew: 'Bee · Raccoon · Bear', friend: ['ducklings', 'turtle'],
+    escortGoal: { z: 70, sig: 'ducks:bank' },
+    banter: { start: ['🦝 Raccoon: Three floors of water. I’ll work every sluice.', '🐝 Bee: Ducklings, stay in a line! I can scout ahead!', '🐻 Bear: If the turtle rides high, we follow behind it.', '🦝 Raccoon: Lucky I packed a keep-dry snack. Don’t drop it.'], end: ['🐝 Bee: All three ducklings made it! Peep-peep parade!', '🐻 Bear: Shelly can visit the Hub. Slow and steady.', '🐢 Shelly: Thanks for the ride home, friends.', '🦝 Raccoon: I still have a dry snack. Miracle.', '🐥 Ducklings: Peep! Peep peep!'] },
+    pip: [
+      ['start', 'The turtle rides high water to a far rock.'],
+      ['near:lever', 'Try each sluice. Watch where the turtle goes.'],
+      ['z:24.5', 'Pass the millstone down: Bee, then Raccoon, then Bear.'],
+      ['stuck:gear', 'High for Bee. Middle for Raccoon. Low for Bear.'],
+      ['sig:ms18:home', 'Ducklings float when the water is high.'],
+      ['stuck:ducks', 'Lower the water so the ducklings can hop.'],
+    ],
+    build(B) {
+      B.home(0, -5); B.lane(-16, 16, -10, 78, { look: 'hedge' });
+      const hedge = (x, z0, z1) => { for (let z = z0; z < z1 - 0.01; z += 2) { const L = Math.min(2, z1 - z), zc = z + L / 2; B.wall(x, zc, 0.6, L + 0.05, 2.4, { look: 'hedge' }); B.wall(x, zc, 0.6, L + 0.05, 30, { bot: 2.3, hidden: true }).s.off = false; } };
+      hedge(-6.5, -10, 10); hedge(6.5, -10, 10);
+      B.checkpoint(0, -1);
+      B.escort('duckling', 3, -2, { count: 3 });
+      B.gearStump(-4, 10, { label: 'Gear stump' });
+      B.hide('log', -4, 12, 1.4, 1.4);
+      // sluices (Trickster) — custom mill pond: dry / 2.4 m / 5.0 m
+      B.pond('millPond', -14, 10, 14, 67.5, { level: 'mid', heights: { low: 0, mid: 2.4, high: 5.0 } });
+      B.sluice('millPond', 6, 8, 'high', { label: 'Sluice · high water' });
+      B.sluice('millPond', 0, 8, 'mid', { label: 'Sluice · mid water' });
+      B.sluice('millPond', -6, 8, 'low', { label: 'Sluice · low water' });
+      B.deco('act3/flooded-mill/sluice', 6, 8, 1.8, { yaw: Math.PI });
+      B.deco('act3/flooded-mill/sluice', 0, 8, 1.8, { yaw: Math.PI });
+      B.deco('act3/flooded-mill/sluice', -6, 8, 1.8, { yaw: Math.PI });
+      // east turtle rocks. After the first high ride the turtle stays on the far rock.
+      B.wall(12, 16, 3, 3, 0.6, { bot: 0, look: 'stone' });
+      [[12, 22], [12, 28], [12, 34]].forEach(([x, z]) => B.wall(x, z, 1.6, 1.6, 0.6, { bot: 0, look: 'stone' }));
+      B.wall(12, 38, 3, 3, 0.6, { bot: 0, look: 'stone' });
+      B.turtle('tu18', 12, 16, { yaw: Math.PI, pond: 'millPond', ride: { high: [12, 38], low: [12, 16] }, farSig: 'tu18:far', rideSpeed: 6.5, nap: 20, leaf: [8, 12], leafTo: [14, 36] });
+      B.checkpoint(12, 22, 0.6);
+      // mill house (-8..8, 24..52): stone walls, south door on tu18:far, north door on ms18:home
+      const cap = (x, z, w, d, top) => { B.wall(x, z, w, d, top, { look: 'stone' }); B.wall(x, z, w, d, 30, { bot: top - 0.1, hidden: true }).s.off = false; };
+      cap(-4.8, 24, 6.4, 1, 8); cap(4.8, 24, 6.4, 1, 8);
+      B.gate('tu18:far', 0, 24, 3.2, 0.7, 8, { latch: true, label: 'Mill door' });
+      B.wall(0, 24, 3.2, 0.7, 30, { bot: 7.9, hidden: true }).s.off = false;
+      B.checkpoint(0, 26);
+      cap(-4.8, 52, 6.4, 1, 8); cap(4.8, 52, 6.4, 1, 8);
+      B.gate('ms18:home', 0, 52, 3.2, 0.7, 8, { latch: true, label: 'North mill door' });
+      B.wall(0, 52, 3.2, 0.7, 30, { bot: 7.9, hidden: true }).s.off = false;
+      cap(-8, 30, 1, 11, 8); cap(-8, 46, 1, 11, 8);
+      cap(8, 41.4, 1, 20.2, 8); // east wall north of the loft window
+      cap(8, 25.4, 1, 2.0, 8); // east wall south of the loft window
+      B.wall(8, 28.2, 1, 3.6, 5.8, { look: 'stone' }); // under the window
+      B.wall(8, 28.2, 1, 3.6, 8, { bot: 7.4, look: 'stone' }); // lintel
+      B.slip(8.8, 28, 6.5, 6.6, 28, 6.5, { label: 'Loft window' });
+      // Floor 1 gallery at y=3 (dry at mid, flooded at high); centre left open so the bed is walkable at low
+      B.wall(-5, 38, 4, 24, 3.0, { bot: 2.55, look: 'wood' });
+      B.wall(4, 40, 6, 3.2, 3.0, { bot: 2.55, look: 'wood' }); // mid hand-off (r2), leaves a centre aisle
+      B.wall(5, 32, 4, 8, 3.0, { bot: 2.55, look: 'wood' });
+      B.checkpoint(0, 40, 3.0);
+      // Floor 2 loft at y=6 (always dry)
+      B.wall(3, 30, 8, 10, 6.0, { bot: 5.55, look: 'wood' });
+      B.deco('act3/flooded-mill/planks', 3, 30, 1.2, { h: 6.0 });
+      // west bear ramps (outside): yard 0 to floor 1 (z 26..32), landing, then to the loft (z 38..46)
+      B.ramp(-10, 26, 0, 32, 3, { w: 3.2 });
+      B.wall(-10, 35, 3.2, 6.2, 3.0, { bot: 2.55, look: 'wood' });
+      B.ramp(-10, 38, 3, 46, 6, { w: 3.2 });
+      B.deco('act3/flooded-mill/stairs', -10, 29, 3.2);
+      B.deco('act3/flooded-mill/stairs', -10, 42, 3.2, { h: 3 });
+      // millstone carry chain + waterwheel (starts stuck; ms18:home spins it and opens the north door)
+      B.acornChain('ms18', [
+        { x: 6, z: 30, h: 6.0, who: 'scout' },
+        { x: 2, z: 34, h: 5.2, who: 'trickster' },
+        { x: 2, z: 40, h: 3.0, who: 'trickster' },
+        { x: 6, z: 46, h: 0.0, who: 'bruiser', home: true },
+      ], { model: 'act3/flooded-mill/millstone', modelSize: 1.15, noun: 'millstone', em: '⚙️', timed: true, window: 8, homeLabel: 'Wheel slot' });
+      B.waterwheel('wheel18', 8, 46, { axle: 3, size: 6, spin: 'ms18:home', yaw: -Math.PI / 2 });
+      B.floatLog('lgA', 'millPond', 2, 24, 2, 36, { w: 2.6, d: 2.2, model: 'act3/flooded-mill/crate', modelSize: 2.4 });
+      B.crossing(-2.2, 47.65, 2.2, 52.4); B.checkpoint(0, 50);
+      B.hide('log', -5, 28, 1.4, 1.4); B.deco('act3/flooded-mill/barrel', -5, 28, 1.3);
+      B.hide('log', 4, 44, 1.4, 1.4); B.deco('act3/flooded-mill/barrel', 4, 44, 1.3);
+      // north pool, drain grate (ducklings cannot float this last bit), hop stone only at low
+      B.hide('log', -6, 58, 1.4, 1.4);
+      B.grate(-3, 69, 3, 71);
+      B.hopStone('millPond:low', 0, 70, { r: 0.8, top: 0.15 });
+      B.checkpoint(0, 70);
+      // secret Starseed: east loft nook behind the wheel, Scout only
+      B.wall(12, 46, 2.2, 2.2, 6.5, { bot: 6.1, look: 'wood' });
+      B.pickup('star', 12, 46, 6.5, { who: ['scout'], whyNot: 'Only Bee fits behind the wheel paddles.', set: 'millStar' });
+      // Petals (28)
+      const P = (x, z, h = 0.9) => B.pickup('petal', x, z, h);
+      for (let i = 0; i < 5; i++) P(-5 + i * 2.5, -2);
+      for (let i = 0; i < 5; i++) P(-10 + i * 5, 10);
+      for (let i = 0; i < 3; i++) P(12, 22 + i * 6, 1.5);
+      for (let i = 0; i < 4; i++) P(-4 + i * 8 / 3, 32 + i, 3.9);
+      for (let i = 0; i < 3; i++) P(3 + i * 1.5, 28 + i * 2, 6.9);
+      P(-10, 26, 0.9); P(-10, 35, 3.9); P(-10, 46, 6.9);
+      for (let i = 0; i < 4; i++) P(-8 + i * 16 / 3, 58);
+      P(0, 70);
+      // dressing
+      B.deco('act3/flooded-mill/watermill', 8, 48, 5.5, { yaw: -Math.PI / 2 });
+      B.deco('act3/flooded-mill/wall-wood', -8, 36, 3.5, { yaw: Math.PI / 2 });
+      B.deco('act3/flooded-mill/roof', 0, 38, 4.5, { h: 8 });
+      B.deco('act3/flooded-mill/barrel', 5, 10, 1.1, { yaw: 0.6 });
+      B.deco('act3/flooded-mill/crate', -12, 8, 1.2, { yaw: 1.1 });
+      [[-14, -6], [14, -7], [-14, 70], [14, 74], [-13, 20], [14.5, 50]].forEach(([x, z], i) => B.tree(x, z, 0.85 + (i % 3) * 0.12));
+      B.puzzle('turtle', 'Turtle ride', ['trickster'], ['tu18:far'], { hint: '🐾 Pull the high sluice. The turtle rides to the far rock and naps — then the south mill door opens. Walk the east rocks (go behind the turtle, or wait until it has left).', track: [['millPond:high', 'trickster', 'pull the high sluice', 6, 8], ['tu18:far', 'any', 'watch the turtle nap on the far rock', 12, 38]] });
+      B.puzzle('gear', 'Millstone chain', ['scout', 'trickster', 'bruiser'], ['ms18:home'], { hint: '🪽 At high water, fly through the loft window and pass the millstone to the floating crate · 🐾 lower to mid and carry along the gallery · 🐻 lower to low and fit the stone in the wheel.', track: [['ms18:r0', 'scout', 'fly in the loft window and pick the millstone', 6, 30, 6], ['ms18:r1', 'scout', 'drop it on the high crate ring', 2, 34, 5.2], ['ms18:r2', 'trickster', 'lower to mid, carry along the gallery', 2, 40, 3], ['ms18:home', 'bruiser', 'lower to low, fit the millstone in the wheel', 6, 46]] });
+      B.puzzle('ducks', 'Duckling plan', ['scout', 'trickster', 'bruiser'], ['ducks:bank'], { hint: '📣 Call the ducklings · raise the water so they float the wide north pool · lower it so the hop stone appears, then walk the grate gap together.', track: [['ducks:bank', 'any', 'float the north pool at high, then hop the grate at low', 0, 70]] });
+    },
+  },
+
   // ===== S5/S3 Practice Yard (sandbox, not a campaign level): escort + every new enemy lure =====
   act3_lab: {
     goal: 'Call the baby, try every lure, then bring your crew AND the cub to the 🏁 exit',

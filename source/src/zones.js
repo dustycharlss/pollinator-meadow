@@ -919,7 +919,7 @@ export function createZones(scene, ctx) {
   let gear = gearLoad(); // { lantern, whistle (found) , eqL, eqW (equipped) }
   const gearSave = () => { try { localStorage.setItem(GEAR_KEY, JSON.stringify(gear)); } catch (e) {} };
   let sneak = false, a2 = null;
-  const a2New = () => ({ en: [], cps: [], cp: null, hides: [], ghosts: [], mirrors: [], srcs: [], beamPool: [], shades: [], ponds: [], logs: [], seeds: [], drips: [], pads: [], winds: [], puffs: [], acorn: null, rings: [], smokes: [], glowSteps: [], hidden: [], gifts: [], season: 'summer', seasonal: [], creeks: [], slides: [], bonks: 0, burst: null, pingT: -99, pingNext: 0, pingAt: null, wind: -1, windFlipT: -99, night: false, lastCur: null, stuck: null, dew: null, borrow: null, movers: [], gravel: [], swoosh: 0, safeT: 0, cpEl: null, terr: null, light: null, outlines: [], escorts: [], shots: [], cups: [], tools: [], heldTool: null, stumps: [], embers: [], targets: [], pouch: { full: false }, slingT: -9, glide: 0, gviz: null });
+  const a2New = () => ({ en: [], cps: [], cp: null, hides: [], ghosts: [], mirrors: [], srcs: [], beamPool: [], shades: [], ponds: [], logs: [], seeds: [], drips: [], pads: [], winds: [], puffs: [], acorn: null, rings: [], smokes: [], glowSteps: [], hidden: [], gifts: [], season: 'summer', seasonal: [], creeks: [], slides: [], bonks: 0, burst: null, pingT: -99, pingNext: 0, pingAt: null, wind: -1, windFlipT: -99, night: false, lastCur: null, stuck: null, dew: null, borrow: null, movers: [], gravel: [], swoosh: 0, safeT: 0, cpEl: null, terr: null, light: null, outlines: [], escorts: [], shots: [], cups: [], tools: [], heldTool: null, stumps: [], embers: [], targets: [], pouch: { full: false }, slingT: -9, glide: 0, gviz: null, wheels: [], grates: [] });
   const AA = () => a2 || (a2 = a2New());
   // POLISH easy mode (Fern accessibility.md §7): per-item multipliers, read live (toggle mid-level works). ctx.easy() comes from settings.easyMode
   const EASY = { wind: 1.5, acorn: 2.0, gust: 1.5, path: 0.7, crow: 0.7, spin: 0.7, grace: 1.75, puff: 1.35, mower: 1.4, safe: 1.25 };
@@ -1038,6 +1038,21 @@ export function createZones(scene, ctx) {
   };
   // ---------- enemies ----------
   // Beans' blocky baby GLBs (CC0, Y-up, origin at feet, facing +Z, `idle` clip). The primitive model stays as the fallback until the GLB loads.
+  const EN_GLB = { turtle: 'act3/enemies/turtle', owl: 'act3/enemies/owl', crow: 'act3/enemies/crow' };
+  function enemyModel(G, kind) {
+    const key = EN_GLB[kind]; if (!key) return;
+    const old = G.children.filter(c => c.isMesh || c.type === 'Group');
+    const bb = new THREE.Box3().setFromObject(G), H = Math.max(0.4, bb.max.y - bb.min.y);
+    loadGLB(key).then(g => {
+      if (!g || !G.parent) return;
+      const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; } });
+      const b2 = new THREE.Box3().setFromObject(m), h2 = b2.max.y - b2.min.y; if (h2 < 1e-4) return;
+      const k = H / h2; m.scale.setScalar(k); m.position.y = -b2.min.y * k;
+      old.forEach(c => { if (!c.parent || c.parent === G) c.visible = false; }); G.add(m); G.userData.enGlb = key;
+      const clip = (g.animations || []).find(a => /idle/i.test(a.name)) || (g.animations || [])[0];
+      if (clip) { const mx = new THREE.AnimationMixer(m); mx.clipAction(clip).play(); mx.setTime(Math.random() * 2); babyMixers.push(mx); }
+    });
+  }
   const BABY_GLB = { cub: 'badger-cub', duckling: 'duckling', owlet: 'owlet', batpup: 'bat-pup', chick: 'robin-chick', fawn: 'fawn', snail: 'snail' };
   const babyMixers = [];
   function babyModel(G, kind) {
@@ -1068,6 +1083,7 @@ export function createZones(scene, ctx) {
     const S = AA(), w = L2W(x, z, o.base || 0), G = MODEL[kind](); G.position.set(w.x, w.y + (o.lift || 0), w.z); G.rotation.y = o.yaw || 0; group.add(G);
     const F = new THREE.Group(); F.position.set(w.x, w.y + 0.12, w.z); group.add(F); // awareness decals live on the ground
     const e = { kind, id, name: EN_NAME[kind], G, F, x: w.x, y: w.y, z: w.z, gy: w.y, yaw: o.yaw || 0, baseYaw: o.yaw || 0, home: { x: w.x, z: w.z }, st: 'idle', sus: 0, grace: o.grace ?? 1, alertT: -99, peek: !!(o.peek || recipe.peek), o, cone: null, ring: null, el: null };
+    enemyModel(G, kind);
     if (o.cone) { e.cone = coneMesh(o.cone[0], o.cone[1]); F.add(e.cone); }
     if (o.ring) { e.ring = ringMesh(o.ring); F.add(e.ring); }
     const el = document.createElement('div'); el.className = 'a2Mark'; document.body.appendChild(el); e.el = el;
@@ -1171,10 +1187,15 @@ export function createZones(scene, ctx) {
         const pond = e.o.pond && S.ponds.find(q => q.id === e.o.pond);
         if (pond && pond.level === 'high') e.napT = t + (e.o.nap || 14);
         if (e.ride && pond) {
-          const tgt = pond.level === 'high' ? e.ride.high : pond.level === 'low' ? e.ride.low : e.ride.mid;
+          if (pond.level === 'high' && flatD(e, e.ride.high) < 0.7) {
+            e.stayedFar = true; e.napT = Math.max(e.napT || 0, t + (e.o.nap || 14));
+            if (e.o.farSig && !sig[e.o.farSig]) { setSig(e.o.farSig); tst('🐢 The turtle naps on the far rock', 2000); }
+          }
+          const tgt = e.stayedFar ? e.ride.high : (pond.level === 'high' ? e.ride.high : pond.level === 'low' ? e.ride.low : e.ride.mid);
           const d = flatD(e, tgt);
-          if (d > 0.35) { const v = Math.min(d, 1.8 * dt); e.x += (tgt.x - e.x) / d * v; e.z += (tgt.z - e.z) / d * v; e.yaw = Math.atan2(tgt.x - e.x, tgt.z - e.z); }
-          const waterY = e.gy + (pond.level === 'high' ? 0.45 : pond.level === 'low' || pond.level === 'ice' ? 0 : 0.15);
+          if (d > 0.35) { const v = Math.min(d, (e.o.rideSpeed || 1.8) * dt); e.x += (tgt.x - e.x) / d * v; e.z += (tgt.z - e.z) / d * v; e.yaw = Math.atan2(tgt.x - e.x, tgt.z - e.z); }
+          const dryPark = e.stayedFar && pond.level !== 'high';
+          const waterY = dryPark ? e.gy : pondSurf(pond) + (pond.heights ? 0 : -0.1);
           e.G.position.y += (waterY - e.G.position.y) * Math.min(1, dt * 3);
         }
         if (e.look && t > e.look.until) e.look = null;
@@ -1405,7 +1426,7 @@ export function createZones(scene, ctx) {
       const wm = waterSurface(new THREE.PlaneGeometry(W2 + 0.4, D2 + 0.4).rotateX(-Math.PI / 2), { color: 0x1f8cff, repeat: [W2 / 6, D2 / 6] }); wm.position.set(w.x, w.y + 0.2, w.z); group.add(wm); waterMeshes.push(wm);
       const rect = { x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1, off: false };
       deep.push(rect);
-      const pd = { id, rect, wm, mud, gy: w.y, level: o.level || 'mid', wr: [] };
+      const pd = { id, rect, wm, mud, gy: w.y, level: o.level || 'mid', wr: [], heights: o.heights || null };
       S.ponds.push(pd); setPond(pd, pd.level, true); return pd;
     },
     sluice(pondId, x, z, level, o = {}) { this.lever(`${pondId}:${level}:lv`, x, z, { label: o.label || `Sluice · ${level} water` }); const pr = props[props.length - 1]; pr.act = 'sluice'; pr.re = true; pr.pond = pondId; pr.level = level; },
@@ -1414,6 +1435,7 @@ export function createZones(scene, ctx) {
       const m = new THREE.Group(); m.add(bx(wd, 0.7, dd, 0x8b6a45, 0, 0, 0), bx(wd + 0.05, 0.35, 0.5, 0xd9b07a, 0, 0, 0)); group.add(m);
       const s = addSolid({ type: 'box', x: a.x, z: a.z, hx: wd / 2, hz: dd / 2, yaw: 0, y0: a.y - 1, top: a.y + 0.5, kind: 'zone', off: true });
       const cr = { x0: 0, z0: 0, x1: 0, z1: 0, on: false, thin: false }; crossings.push(cr);
+      if (o.model) decoInto(m, o.model, o.modelSize || wd, { fallback: m.children.slice(), byLong: true });
       S.logs.push({ id, pond: pondId, a, b, m, s, cr, k: 0, dir: 1, wd, dd, x: a.x, z: a.z, season: o.season });
     },
     // ---- M3 Seed Growing ----
@@ -1444,9 +1466,11 @@ export function createZones(scene, ctx) {
     },
     // ---- M5 Carry Chain ----
     acornChain(id, rings, o = {}) {
-      const S = AA(), m = new THREE.Group(); m.add(bx(0.9, 0.8, 0.9, 0xffc93c, 0, 0, 0, 0.5), bx(1.0, 0.35, 1.0, 0x8b5a2b, 0, 0.45, 0), bx(0.15, 0.3, 0.15, 0x5a3b22, 0, 0.75, 0)); group.add(m);
-      const R = rings.map((r, i) => { const w = L2W(r.x, r.z, r.h || 0); const rg = ringMesh(1.2, CLASSES[r.who].color, r.who); rg.position.set(w.x, w.y + 0.08, w.z); group.add(rg); const pr = { kind: 'ring', act: 'pick', cls: r.who, sig: `${id}:r${i}`, x: w.x, y: w.y, z: w.z, r: 2.2, re: true, label: r.home ? 'Acorn home' : 'Hand-off ring', icon: badge(r.who, w.x, w.y + 2.2, w.z, 0.85) }; props.push(pr); return { ...r, i, w, rg, pr }; });
-      const ch = { id, m, rings: R, at: o.start || 0, last: o.start || 0, by: null, dropT: -99, home: false, timed: !!o.timed, win: typeof o.window === 'number' ? o.window : ACORN_WINDOW };
+      const S = AA(), m = new THREE.Group(); const fb = [bx(0.9, 0.8, 0.9, 0xffc93c, 0, 0, 0, 0.5), bx(1.0, 0.35, 1.0, 0x8b5a2b, 0, 0.45, 0), bx(0.15, 0.3, 0.15, 0x5a3b22, 0, 0.75, 0)]; fb.forEach(p => m.add(p)); group.add(m);
+      if (o.model) decoInto(m, o.model, o.modelSize || 1.2, { fallback: fb });
+      const noun = o.noun || 'Golden Acorn', em = o.em || '🌰', homeLb = o.homeLabel || (o.model ? 'Wheel slot' : 'Acorn home');
+      const R = rings.map((r, i) => { const w = L2W(r.x, r.z, r.h || 0); const rg = ringMesh(1.2, CLASSES[r.who].color, r.who); rg.position.set(w.x, w.y + 0.08, w.z); group.add(rg); const pr = { kind: 'ring', act: 'pick', cls: r.who, sig: r.home ? `${id}:home` : `${id}:r${i}`, x: w.x, y: w.y, z: w.z, r: 2.2, re: true, label: r.home ? homeLb : 'Hand-off ring', icon: badge(r.who, w.x, w.y + 2.2, w.z, 0.85) }; props.push(pr); return { ...r, i, w, rg, pr }; });
+      const ch = { id, m, rings: R, at: o.start || 0, last: o.start || 0, by: null, dropT: -99, home: false, timed: !!o.timed, win: typeof o.window === 'number' ? o.window : ACORN_WINDOW, noun, em };
       (S.acorns = S.acorns || []).push(ch); if (!S.acorn) S.acorn = ch;
     },
     // ---- M5 Wasp smoke ----
@@ -1470,6 +1494,40 @@ export function createZones(scene, ctx) {
       props.push({ kind: 'slide', act: 'slide', cls: 'trickster', sig: s, x: a.x, y: a.y, z: a.z, b, r: 2.2, need: 'spring', needWhy: 'The chute is frozen or dry — ring the 🌱 Spring bell for mud', label: o.label || 'Mud chute', two: true, icon: badge('trickster', a.x, a.y + 2, a.z, 0.9) }); },
     split(map) { recipe.splitAt = map; },
     /** run fn(on, api) when signal s flips; api: night(v), season(s) */
+    /** 6 m waterwheel; starts stuck, spins when `spin` sig is on (axle at y = axle). */
+    waterwheel(id, x, z, o = {}) {
+      const S = AA(), axle = o.axle ?? 3, size = o.size || 6, w = L2W(x, z), G = new THREE.Group();
+      G.position.set(w.x, w.y + axle, w.z); G.rotation.y = o.yaw ?? 0; group.add(G);
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(size / 2, size / 2, 0.5, 14), mat(0x8b6a45)); disc.rotation.z = Math.PI / 2; G.add(disc);
+      for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, pad = bx(0.18, size * 0.46, 0.7, 0xc69c6d, 0, Math.cos(a) * size * 0.22, Math.sin(a) * size * 0.22); pad.rotation.x = a; G.add(pad); }
+      decoInto(G, o.model || 'act3/flooded-mill/waterwheel', size, { fallback: G.children.slice(), byLong: true });
+      S.wheels.push({ id, G, spin: o.spin || (id + ':spin') });
+    },
+    /** gap ducklings cannot float (drain grate). Solid decoration; hop stone fills it at low water. */
+    grate(x0, z0, x1, z1, o = {}) {
+      const S = AA(), w = L2W((x0 + x1) / 2, (z0 + z1) / 2), W2 = x1 - x0, D2 = z1 - z0;
+      const G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
+      G.add(bx(W2, 0.12, D2, 0x4a4a52, 0, 0.08, 0));
+      for (let i = -2; i <= 2; i++) G.add(bx(0.12, 0.35, D2 * 0.9, 0x6a6a70, i * (W2 / 5), 0.22, 0));
+      decoInto(G, o.model || 'act3/flooded-mill/drain-grate', Math.max(0.6, Math.min(W2, D2)), { byLong: true });
+      S.grates.push({ x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1 });
+    },
+    /** disc that is solid and visible only while `sig` is on (hop stone at low water). */
+    hopStone(sig, x, z, o = {}) {
+      const r = o.r || 0.8, top = o.top ?? 0.15, w = L2W(x, z);
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.3, 12), mat(0x8a8578)); m.position.set(w.x, w.y + top, w.z); m.visible = false; group.add(m);
+      const s = addSolid({ type: 'cyl', x: w.x, z: w.z, r, y0: w.y - 1, top: w.y + top + 0.15, kind: 'zone', off: true });
+      steps.push({ sig, fn: on => { m.visible = !!on; s.off = !on; } });
+    },
+    /** stepped bear ramp from (x, z0, y0) to (x, z1, y1). Slope is a run of flat landings (solids have flat tops). */
+    ramp(x, z0, y0, z1, y1, o = {}) {
+      const W = o.w || 3, rise = y1 - y0, run = z1 - z0, n = Math.max(4, Math.ceil(Math.abs(run) / 1.25));
+      for (let i = 0; i < n; i++) {
+        const t1 = (i + 1) / n, zc = z0 + run * ((i + 0.5) / n), y = y0 + rise * t1, d = Math.abs(run) / n + 0.06;
+        this.wall(x, zc, W, d, y, { bot: Math.max(0, y - 0.45), look: o.look || 'wood' });
+      }
+    },
+    crossing(x0, z0, x1, z1) { crossings.push({ x0: A.x + Math.min(x0, x1), z0: A.z + Math.min(z0, z1), x1: A.x + Math.max(x0, x1), z1: A.z + Math.max(z0, z1), on: true, thin: false }); },
     onSig(s, fn) { let last = false; steps.push({ sig: s, fn: on => { if (on === last) return; last = on; fn(on, { night: v => setNightA2(v), season: v => setSeason(v), wind: v => applyWind(v), pond: (pid, lv) => { const pd = AA().ponds.find(q => q.id === pid); if (pd) setPond(pd, lv); } }); } }); },
     /** the last boulder slides much farther in winter (ice): to (x,z) with slot height, sets iceSig */
     iceSlot(iceSig, x, z, slotH = 0.6) { const pr = props.filter(q => q.kind === 'boulder').pop(); if (!pr) return; pr.ice = { x: A.x + x, z: A.z + z, top: gy(x, z) + slotH }; pr.iceSig = iceSig; },
@@ -1496,21 +1554,27 @@ export function createZones(scene, ctx) {
     if (terrMesh) { const m = terrMesh.material; if (s === 'winter') { m.color.set(0xffffff); m.emissive = new THREE.Color(0x9ab0c8); m.emissiveIntensity = 0.75; } else if (s === 'spring') { m.color.set(0xdfffd0); m.emissive = new THREE.Color(0x203010); m.emissiveIntensity = 0.3; } else { m.color.set(0xffffff); m.emissive = new THREE.Color(0); m.emissiveIntensity = 0; } m.needsUpdate = true; }
     tst({ summer: '☀️ Summer! The creek flows — logs can float.', winter: '❄️ Winter! The creek freezes, snow hides your scent.', spring: '🌱 Spring! Mud for sliding and vines can grow.' }[s], 2400);
   }
+  function pondSurf(pd, level = pd.level) {
+    const H = pd.heights || {};
+    if (level === 'low' || level === 'ice') return pd.gy + (H.low || 0);
+    if (level === 'high') return pd.gy + (H.high != null ? H.high : 0.55);
+    return pd.gy + (H.mid != null ? H.mid : 0.2);
+  }
   function setPond(pd, level, quiet) {
     pd.level = level; const dry = level === 'low' || level === 'ice';
-    pd.rect.off = dry;
+    pd.rect.off = dry; pd.rect.y = dry ? null : pondSurf(pd);
     for (const r of pd.wr) { const i = WATER_RECTS.indexOf(r); if (i >= 0) WATER_RECTS.splice(i, 1); } pd.wr = [];
-    if (!dry) { const R = pd.rect, st = 1.4; for (let x = R.x0 + 0.7; x < R.x1; x += st) for (let z = R.z0 + 0.7; z < R.z1; z += st) { const r = { x, z, hw: st * 0.55, hd: st * 0.55 }; WATER_RECTS.push(r); pd.wr.push(r); } }
-    pd.wm.visible = !dry; pd.wm.position.y = pd.gy + (level === 'high' ? 0.55 : 0.2); if (pd.ice) pd.ice.visible = level === 'ice';
+    if (!dry) { const R = pd.rect, st = 1.4, wy = pondSurf(pd); for (let x = R.x0 + 0.7; x < R.x1; x += st) for (let z = R.z0 + 0.7; z < R.z1; z += st) { const r = { x, z, hw: st * 0.55, hd: st * 0.55, y: wy }; WATER_RECTS.push(r); pd.wr.push(r); } }
+    pd.wm.visible = !dry; pd.wm.position.y = pondSurf(pd); if (pd.ice) pd.ice.visible = level === 'ice';
     for (const k of ['low', 'mid', 'high']) setSig(`${pd.id}:${k}`, level === k);
-    if (!quiet) tst({ low: '🚰 Water down — the pond bed is dry!', mid: '🚰 Water at the middle', high: '🌊 Water up high — logs float!', ice: '❄️ The creek froze solid' }[level], 1800);
+    if (!quiet) tst({ low: '🚰 Water down — the pond bed is dry!', mid: '🚰 Water at the middle', high: pd.heights ? '🌊 Water up high — the mill floods!' : '🌊 Water up high — logs float!', ice: '❄️ The creek froze solid' }[level], 1800);
   }
   /** Act-2 Interact verbs */
   function a2Act(pr, p) {
     const S = AA();
     switch (pr.act) {
       case 'aim': { const m = pr.mir; m.k = (m.k + 1) % m.aims.length; m.F.rotation.y = m.k * 0.9; tst('🪞 Mirror turned', 900); ctx.audio?.sample?.('ui2/lantern-click', 0.4); return true; }
-      case 'sluice': { const pd = S.ponds.find(q => q.id === pr.pond); if (pd) setPond(pd, pr.level); pr.arm.rotation.z = pr.arm.rotation.z > 0 ? -0.5 : 0.5; ctx.audio?.sample?.('ui2/lantern-click', 0.5); return true; }
+      case 'sluice': { const pd = S.ponds.find(q => q.id === pr.pond); if (pd) setPond(pd, pr.level); pr.arm.rotation.z = pr.arm.rotation.z > 0 ? -0.5 : 0.5; ctx.audio?.sample?.('act3/sluice-water', 0.55); return true; }
       case 'plant': { const sd = pr.seed; if (sd.planted) { say('🌱 Planted! Now a Scout brings a 💧 dewdrop from a drip leaf', 2200); return true; } sd.planted = true; sd.sprout.visible = true; pr.done = true; setSig(pr.sig); tst('🌰 Seed planted! A Scout must water it with a dewdrop 💧', 2400); return true; }
       case 'cut': { const sp = pr.spider; if (sp && !sp.look && !pr.web.free) { sp.alertT = t; bonk(sp); return true; } pr.done = true; pr.web.s.off = true; pr.web.G.visible = false; setSig(pr.sig); tst('✂️ Snip! The web is cut', 1600); return true; }
       case 'pluck': { const sp = pr.spider; if (sp) sp.look = { x: pr.x, z: pr.z, until: t + 8 }; tst('🎸 Twang! The spider turns to look…', 1600); return true; }
@@ -1518,12 +1582,14 @@ export function createZones(scene, ctx) {
       case 'crank': { applyWind(-S.wind); return true; }
       case 'slide': { const to = pr._atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.3, z: to.z }, 0.7, 0.2); setSig(pr.sig); tst('🛷 Wheee! Belly-slide!', 1200); return true; }
       case 'stomp': { const until = t + pr.dur * EZ('puff'); S.smokes.push({ x: pr.x, z: pr.z, r: pr.smokeR, until, m: smokeCloud(pr.x, pr.y, pr.z, pr.smokeR) }); setSig(pr.sig); a2Burst(pr.x, pr.z, 6); tst('🍄 Poof! A calm smoke cloud — walk through it', 2000); return true; }
-      case 'pick': { const ac = S.acorns.find(a => a.rings.some(r => r.pr === pr)); const R = ac && ac.rings.find(r => r.pr === pr); if (ac) S.acorn = ac; if (!R || ac.at !== R.i || ac.by) return true; ac.by = ctx.cur(); ac.at = -1; ac.last = R.i; tst('🌰 Got the Golden Acorn! Carry it to the next ring', 1600); return true; }
-      case 'drop': { const ac = S.acorns.find(a => a.rings.some(r => r.pr === pr)); const R = ac && ac.rings.find(r => r.pr === pr); if (!R || ac.by !== ctx.cur()) return true; ac.by = null; ac.at = R.i; ac.dropT = t; setSig(R.pr.sig); if (R.home) { ac.home = true; S.acorn = S.acorns.find(a => !a.home) || ac; setSig(ac.id + ':home'); tst('🌰 The Golden Acorn is home!', 2200); ctx.audio?.chime?.(); } else tst('⭕ Hand-off! The next friend picks it up', 1600); return true; }
+      case 'pick': { const ac = S.acorns.find(a => a.rings.some(r => r.pr === pr)); const R = ac && ac.rings.find(r => r.pr === pr); if (ac) S.acorn = ac; if (!R || ac.at !== R.i || ac.by) return true; ac.by = ctx.cur(); ac.at = -1; ac.last = R.i; tst(`${ac.em || '🌰'} Got the ${ac.noun || 'Golden Acorn'}! Carry it to the next ring`, 1600); return true; }
+      case 'drop': { const ac = S.acorns.find(a => a.rings.some(r => r.pr === pr)); const R = ac && ac.rings.find(r => r.pr === pr); if (!R) return true;
+        const fit = R.home && !ac.by && !ac.home && ac.at >= 0 && CLASS_OF[ctx.cur()] === (R.homeBy || 'bruiser');
+        if (!fit && ac.by !== ctx.cur()) return true; ac.by = null; ac.at = R.i; ac.dropT = t; setSig(R.pr.sig); if (R.home) { ac.home = true; S.acorn = S.acorns.find(a => !a.home) || ac; setSig(ac.id + ':home'); tst(`${ac.em || '🌰'} The ${ac.noun || 'Golden Acorn'} is home!`, 2200); ctx.audio?.chime?.(); } else tst('⭕ Hand-off! The next friend picks it up', 1600); return true; }
     }
     return false;
   }
-  function acornBack() { const ac = (AA().acorns || []).find(a => a.by === ctx.cur()); if (!ac) return; ac.by = null; ac.at = ac.last; tst('🌰 The acorn floats back to its ring', 1600); }
+  function acornBack() { const ac = (AA().acorns || []).find(a => a.by === ctx.cur()); if (!ac) return; ac.by = null; ac.at = ac.last; tst(`${ac.em || '🌰'} The ${ac.noun || 'acorn'} floats back to its ring`, 1600); }
   function smokeCloud(x, y, z, r) { const G = new THREE.Group(); G.position.set(x, y, z); for (let i = 0; i < 9; i++) { const a = i / 9 * 6.28, s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.32, 8, 6), new THREE.MeshLambertMaterial({ color: 0xf4f0ff, transparent: true, opacity: 0.45, depthWrite: false })); s.position.set(Math.cos(a) * r * 0.55, 0.8 + (i % 3) * 0.6, Math.sin(a) * r * 0.55); G.add(s); } group.add(G); return G; }
   function beamSeg(i, a, b) { const S = AA(); let m = S.beamPool[i]; if (!m) { m = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff27a, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })); m.renderOrder = 6; group.add(m); S.beamPool[i] = m; }
     const d = new THREE.Vector3(b.x - a.x, b.y - a.y, b.z - a.z), L = d.length(); m.visible = L > 0.05; m.scale.set(1, L, 1); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
@@ -1629,7 +1695,8 @@ export function createZones(scene, ctx) {
     const sid = idOfCls('scout'), sq = sid && posOfId(sid), pouchOn = gearOn('pouch') && sq;
     if (pouchOn && !S.pouch.full) {
       const gyq = ctx.heightAt(sq.x, sq.z), low = sq.y - gyq < 3.2;
-      const wet = low && (WATER_RECTS.some(r => Math.abs(sq.x - r.x) < r.hw + 0.4 && Math.abs(sq.z - r.z) < r.hd + 0.4) || S.cups.some(q => q.on && flatD(q, sq) < 1.6));
+      const nearSurf = S.ponds.some(pd => pd.level !== 'low' && pd.level !== 'ice' && inRect(sq.x, sq.z, pd.rect) && Math.abs(sq.y - pondSurf(pd)) < 2.4);
+      const wet = (low && WATER_RECTS.some(r => Math.abs(sq.x - r.x) < r.hw + 0.4 && Math.abs(sq.z - r.z) < r.hd + 0.4)) || nearSurf || S.cups.some(q => q.on && flatD(q, sq) < 1.6);
       if (wet) { S.pouch.full = true; ctx.onGear?.(); ctx.audio?.sample?.('act3/bubble-splash', 0.5); if (sid === cur) tst('🫧 Glug! The Bubble Pouch is full — tap Interact to shoot the bubble', 2200); setSig('pouch:full'); }
     }
     if (!pouchOn || !S.pouch.full) setSig('pouch:full', false);
@@ -1735,7 +1802,8 @@ export function createZones(scene, ctx) {
     const y0 = ctx.heightAt(b.x, b.z), y1 = ctx.heightAt(nx, nz);
     if (y1 - y0 > 0.85) return false;
     if (y0 - y1 > 1.4) return false;
-    if (!b.info.float && deep.some(r => !r.off && inRect(nx, nz, r))) {
+    if (a2 && (a2.grates || []).some(g => inRect(nx, nz, g)) && a2.ponds.some(pd => pd.level === 'mid' || pd.level === 'high')) return false; // drain grate: cannot float this last gap (hop stone at low)
+    if (!b.info.float && deep.some(r => !r.off && inRect(nx, nz, r) && (r.y == null || (b.y || 0) < r.y - 0.25))) {
       if (!crossings.some(c => c.on && inRect(nx, nz, c))) return false;
     }
     return true;
@@ -1762,11 +1830,23 @@ export function createZones(scene, ctx) {
       const darkOk = !b.info.darkOnly || !lantern || flatD(b, (idOfCls('scout') && posOfId(idOfCls('scout'))) || p) > 5.5;
       let spd = 0;
       if (b.following && !b.hide && !leadAir && darkOk) {
-        const dx = lead.x - b.x, dz = lead.z - b.z, d = Math.hypot(dx, dz), stay = lead === p ? 1.55 : 1.1;
-        if (d > stay) {
-          const nx = b.x + dx / d * Math.min(d - stay, b.info.speed * dt);
-          const nz = b.z + dz / d * Math.min(d - stay, b.info.speed * dt);
-          if (babyCanStep(b, nx, nz)) { b.x = nx; b.z = nz; b.yaw = Math.atan2(dx, dz); spd = b.info.speed; }
+        const mates = S.escorts.filter(q => q.kind === b.kind), slot = Math.max(0, mates.indexOf(b));
+        const spread = (slot - (mates.length - 1) / 2) * 0.9;
+        let tx = p.x + spread, tz = p.z;
+        const goal = recipe && recipe.escortGoal;
+        const wet = S.ponds.some(pd => pd.level === 'mid' || pd.level === 'high');
+        if (goal && goal.z != null && wet && p.z < A.z + goal.z - 0.5) {
+          const cap = (S.grates || []).reduce((m, gtr) => Math.min(m, gtr.z0 - 0.2), A.z + goal.z - 0.4);
+          tz = Math.min(cap, p.z + 2.4);
+        }
+        const d = Math.hypot(tx - b.x, tz - b.z);
+        if (d > 0.12) {
+          if (d > 4 && babyCanStep(b, tx, tz)) { b.x = tx; b.z = tz; b.yaw = Math.atan2(tx - b.x, tz - b.z); spd = b.info.speed; }
+          else {
+            const nx = b.x + (tx - b.x) / d * Math.min(d, b.info.speed * dt);
+            const nz = b.z + (tz - b.z) / d * Math.min(d, b.info.speed * dt);
+            if (babyCanStep(b, nx, nz)) { b.x = nx; b.z = nz; b.yaw = Math.atan2(tx - b.x, tz - b.z); spd = b.info.speed; }
+          }
         }
       }
       if (b.info.windblown && S.wind && !b.hide) { b.x += Math.sin(0) * S.wind * 0.4 * dt; b.z += S.wind * 0.5 * dt; }
@@ -1775,7 +1855,8 @@ export function createZones(scene, ctx) {
       if (hit) { bonk(hit, 'escort'); break; }
       const gyw = ctx.heightAt(b.x, b.z);
       const hop = spd ? Math.abs(Math.sin(t * 8 + b.ph)) * 0.16 : 0;
-      b.y = gyw + hop + (b.hide ? -0.12 : 0);
+      const onPd = b.info.float && S.ponds.find(q => q.level !== 'low' && q.level !== 'ice' && inRect(b.x, b.z, q.rect) && !(S.grates || []).some(g => inRect(b.x, b.z, g)));
+      b.y = (onPd ? pondSurf(onPd) : gyw) + hop + (b.hide ? -0.12 : 0);
       b.G.position.set(b.x, b.y, b.z); b.G.rotation.y = b.yaw;
       b.G.scale.setScalar((b.info.scale || 1) * (b.hide ? 0.85 : 1));
       const mk = !b.called ? '📣' : b.hide ? '🙈' : (b.following ? '' : '📣');
@@ -1784,6 +1865,8 @@ export function createZones(scene, ctx) {
       b.el.style.display = on ? 'block' : 'none';
       if (on) { b.el.textContent = mk; b.el.className = 'a2Mark q'; b.el.style.left = ((_v.x + 1) / 2 * innerWidth) + 'px'; b.el.style.top = ((1 - _v.y) / 2 * innerHeight) + 'px'; }
     }
+    const g = recipe && recipe.escortGoal;
+    if (g && S.escorts.every(b => g.z == null || (b.z - A.z) >= g.z)) setSig(g.sig || 'escort:goal');
   }
   function a2Update(dt, cam, p, cur) {
     const S = a2; if (!S) return; const c = CLASS_OF[cur], ids = ctx.crewIds();
@@ -1816,13 +1899,17 @@ export function createZones(scene, ctx) {
     }
     // ---- water level: logs + turtle naps handled in enemies ----
     for (const L of S.logs) {
-      const pd = S.ponds.find(q => q.id === L.pond); const floatOK = pd && (L.season ? (S.season === L.season && pd.level === 'mid') : pd.level === 'high');
-      const y = pd ? pd.gy + (floatOK ? (pd.level === 'high' ? 0.55 : 0.2) : -0.6) : L.a.y; const bid = idOfCls('bruiser'), bq = bid && posOfId(bid);
+      const pd = S.ponds.find(q => q.id === L.pond);
+      const afloat = pd && pd.level !== 'low' && pd.level !== 'ice' && (!L.season || S.season === L.season);
+      const rideOK = afloat && (L.season ? pd.level === 'mid' : pd.level === 'high');
+      const y = pd ? (afloat ? pondSurf(pd) : pd.gy - 0.6) : L.a.y; const bid = idOfCls('bruiser'), bq = bid && posOfId(bid);
       const onIt = q => q && Math.abs(q.x - L.x) < L.wd / 2 + 0.2 && Math.abs(q.z - L.z) < L.dd / 2 + 0.2 && Math.abs(q.y - (y + 0.35)) < 0.8;
-      if (floatOK && onIt(bq) && L.k < 1) { const old = { x: L.x, z: L.z }; L.k = Math.min(1, L.k + dt / (Math.hypot(L.b.x - L.a.x, L.b.z - L.a.z) / 2.2)); L.x = L.a.x + (L.b.x - L.a.x) * L.k; L.z = L.a.z + (L.b.z - L.a.z) * L.k; for (const id of ids) { const q = posOfId(id); if (onIt(q)) { q.x += L.x - old.x; q.z += L.z - old.z; q._safe = { x: q.x, z: q.z }; } } if (L.k >= 1 && !L.arrived) { L.arrived = true; setSig('log:' + L.id); tst('🪵 The log floated across!', 1600); } }
-      L.m.position.set(L.x, y, L.z); L.s.x = L.x; L.s.z = L.z; L.s.top = y + 0.35; L.s.y0 = y - 1; L.s.off = !floatOK;
-      L.cr.on = floatOK; L.cr.x0 = L.x - L.wd / 2 - 0.3; L.cr.x1 = L.x + L.wd / 2 + 0.3; L.cr.z0 = L.z - L.dd / 2 - 0.3; L.cr.z1 = L.z + L.dd / 2 + 0.3;
+      if (rideOK && onIt(bq) && L.k < 1) { const old = { x: L.x, z: L.z }; L.k = Math.min(1, L.k + dt / (Math.hypot(L.b.x - L.a.x, L.b.z - L.a.z) / 2.2)); L.x = L.a.x + (L.b.x - L.a.x) * L.k; L.z = L.a.z + (L.b.z - L.a.z) * L.k; for (const id of ids) { const q = posOfId(id); if (onIt(q)) { q.x += L.x - old.x; q.z += L.z - old.z; q._safe = { x: q.x, z: q.z }; } } if (L.k >= 1 && !L.arrived) { L.arrived = true; setSig('log:' + L.id); tst('🪵 The log floated across!', 1600); } }
+      L.m.position.set(L.x, y, L.z); L.s.x = L.x; L.s.z = L.z; L.s.top = y + 0.35; L.s.y0 = y - 1; L.s.off = !afloat;
+      L.cr.on = afloat; L.cr.x0 = L.x - L.wd / 2 - 0.3; L.cr.x1 = L.x + L.wd / 2 + 0.3; L.cr.z0 = L.z - L.dd / 2 - 0.3; L.cr.z1 = L.z + L.dd / 2 + 0.3;
     }
+    // ---- waterwheels ----
+    for (const wh of S.wheels || []) { if (sig[wh.spin]) wh.G.rotation.z += dt * 0.7; }
     // ---- seeds: dew carry + growing + mushroom bounce ----
     for (const d of S.drips) { d.d.position.y = -0.4 - ((t * 0.6) % 1) * 0.3; if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
     if (S.dew) { const q = posOfId(S.dew.who); if (q) S.dew.m.position.set(q.x, q.y + 1.4 + Math.sin(t * 4) * 0.1, q.z); }
@@ -1853,11 +1940,12 @@ export function createZones(scene, ctx) {
       const carrier = ac.by && posOfId(ac.by);
       if (carrier) ac.m.position.set(carrier.x, carrier.y + 2.0 + Math.sin(t * 4) * 0.08, carrier.z); else { const R = ac.rings[ac.at]; if (R) ac.m.position.set(R.w.x, R.w.y + 0.8 + Math.sin(t * 2) * 0.12, R.w.z); }
       ac.m.rotation.y += dt * 1.5;
-      if (ac.timed && !ac.by && !ac.home && ac.at !== ac.last && t - ac.dropT > ac.win * EZ('acorn') && ac.dropT > 0) { ac.at = ac.last; ac.dropT = -99; tst('🌰 Too slow — the acorn floated back. Have the next friend waiting!', 2200); }
+      if (ac.timed && !ac.by && !ac.home && ac.at !== ac.last && t - ac.dropT > ac.win * EZ('acorn') && ac.dropT > 0) { ac.at = ac.last; ac.dropT = -99; tst(`${ac.em || '🌰'} Too slow — the ${ac.noun || 'acorn'} floated back. Have the next friend waiting!`, 2200); }
       for (const R of ac.rings) {
         const pr = R.pr, here = ac.at === R.i && !ac.by;
         if (here && !ac.home && !R.home) { pr.act = 'pick'; pr.cls = R.who; }
         else if (ac.by && ac.at !== R.i && !(R.home && ac.home)) { pr.act = 'drop'; pr.cls = CLASS_OF[ac.by]; if (R.home && CLASS_OF[ac.by] !== (R.homeBy || 'bruiser')) pr.act = null; }
+        else if (R.home && !ac.home && !ac.by && ac.at >= 0) { pr.act = 'drop'; pr.cls = R.homeBy || 'bruiser'; }
         else pr.act = null;
         const glow = here && ac.timed && t - ac.dropT < ac.win * EZ('acorn') ? 0.6 + 0.4 * Math.sin(t * 10) : here ? 0.9 : ac.by ? 0.55 : 0.25;
         R.rg.userData.mats[0].opacity = glow; R.rg.userData.mats[1].opacity = glow * 0.3; pr.icon.visible = !!pr.act;
@@ -2211,7 +2299,7 @@ export function createZones(scene, ctx) {
   function deepBlock(q, idd, isCur) {
     if (!deep.length || CLASS_OF[idd] === 'scout') return;
     const gliding = CLASS_OF[idd] === 'trickster' && isCur && gearOn('glider') && !q.grounded;
-    const inD = deep.some(r => !r.off && inRect(q.x, q.z, r) && !(gliding && r.glide));
+    const inD = deep.some(r => !r.off && inRect(q.x, q.z, r) && !(gliding && r.glide) && (r.y == null || q.y < r.y - 0.25));
     const gapR = !inD && gliding && deep.find(r => !r.off && r.glide && inRect(q.x, q.z, r));
     if (gapR) return; // mid-glide over the gap: keep the last safe spot on the take-off edge
     const cr = crossings.find(c => c.on && inRect(q.x, q.z, c));
@@ -2723,6 +2811,20 @@ export function createZones(scene, ctx) {
     kid = null; kidObjs = []; document.body.classList.remove('kidTut');
   }
   function rect() { const b = recipe?.bounds || { x0: -20, x1: 20, z0: -20, z1: 20 }; return { x0: A.x + b.x0, x1: A.x + b.x1, z0: A.z + b.z0, z1: A.z + b.z1 }; }
+  function forcePuzzles(ids) {
+    // Test hook for Fern session C (fail-stars): mark required puzzles done and open the exit
+    // without collecting petals or the Starseed. Does not finish the level; checkKey still
+    // needs the crew (and baby) at the flag.
+    const want = Array.isArray(ids) && ids.length ? new Set(ids) : null;
+    const out = [];
+    for (const pz of puzzles) {
+      if (want && !want.has(pz.id)) continue;
+      for (const k of pz.sigs) setSig(k);
+      pz.done = true; setSig(pz.id); out.push(pz.id);
+    }
+    checkKey();
+    return out;
+  }
   function status() { return { id, t, exit: exitAt ? { x: exitAt.x - A.x, z: exitAt.z - A.z, open: exitOpen, n: crewAtExit() } : null, starGot, sig: { ...sig }, puzzles: puzzles.map(p => ({ id: p.id, done: p.done, req: p.req })), keyDone, picked, keyDew, props: props.filter(p => p.act).map(p => ({ act: p.act, cls: p.cls, sig: p.sig, label: p.label, x: p.x, y: p.y, z: p.z, done: !!p.done, b: p.b || null, from: p.from || null })), plates: plates.map(p => ({ sig: p.sig, x: p.x, y: p.y, z: p.z, heavy: p.heavy, holder: p.holder })), nodes: nodes.map(n => ({ kind: n.kind, x: n.m.position.x, y: n.m.position.y, z: n.m.position.z, done: n.done, sig: n.sig })), picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, show: k.show || null, who: k.who || null, night: k.nightOnly, value: k.value || 1, bloom: !!k.bloom })), hoops: hoops.map(h => ({ x: h.m.position.x, y: h.m.position.y, z: h.m.position.z, got: h.got })), A: { ...A }, baseY, petalValue: petalV, kid: kidState(), cps: a2 ? a2.cps.map(c => ({ x: +(c.x - A.x).toFixed(2), h: +(c.y - baseY).toFixed(2), z: +(c.z - A.z).toFixed(2), show: c.show, vis: c.G.visible, on: c.on })) : [], chains: (a2?.acorns || []).map(c => ({ id: c.id, timed: c.timed, win: c.win, ezWin: c.win * EZ('acorn') })), easy: !!ctx.easy?.() }; }
   /** kid-tutorial cursor (Fern regression §0.6): i = forward-only card index, max = high-water mark, n = station, slip = slipped hold step or -1 */
   function kidState() { if (!kid || !kid.steps) return null; const st = kid.steps[Math.max(0, kid.i)]; return { i: kid.i, max: kid.max, n: st ? st.n : 0, slip: kid.slip, latch: !!(st && st.latch !== false), safe: kid.safe ? { x: +(kid.safe.x - A.x).toFixed(2), z: +(kid.safe.z - A.z).toFixed(2) } : null, say: st ? st.say : '', slipSay: kid.slip >= 0 ? kid.steps[kid.slip].say : null }; }
@@ -2745,7 +2847,7 @@ export function createZones(scene, ctx) {
     useGear: () => { const p = ctx.getP(); return !!(a2 && p && useGear(p)); },
     gearViz: () => { const V = a2 && a2.gviz; if (!V) return null; const o = {}; for (const k of ['pouch', 'glider', 'sling']) { const m = V[k].children.find(c => c.userData && c.userData.model); const sz = m && m.visible !== false && V[k].visible ? new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3()) : null; o[k] = { shown: V[k].visible, model: !!m, size: sz ? [+sz.x.toFixed(2), +sz.y.toFixed(2), +sz.z.toFixed(2)] : null }; } return o; },
     gearList: () => Object.keys(GEAR_INFO).map(k => ({ k, ...GEAR_INFO[k], has: !!gear[k] })),
-    setT: v => { t = +v; }, setTiming: k => { timingK = +k > 0 ? +k : 1; }, timing: () => TK(),
-    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, cpPos: a2.cp ? { x: +(a2.cp.x - A.x).toFixed(2), z: +(a2.cp.z - A.z).toFixed(2) } : null, cps: a2.cps.map(c => ({ x: c.x - A.x, z: c.z - A.z, on: !!c.on })), hidEver: !!a2.hidEver, bonkLog: (a2.bonkLog || []).slice(-20), dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0 })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })) } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
+    setT: v => { t = +v; }, forcePuzzles, setTiming: k => { timingK = +k > 0 ? +k : 1; }, timing: () => TK(),
+    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, cpPos: a2.cp ? { x: +(a2.cp.x - A.x).toFixed(2), z: +(a2.cp.z - A.z).toFixed(2) } : null, cps: a2.cps.map(c => ({ x: c.x - A.x, z: c.z - A.z, on: !!c.on })), hidEver: !!a2.hidEver, bonkLog: (a2.bonkLog || []).slice(-20), dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0, stayedFar: !!e.stayedFar })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })) } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }
