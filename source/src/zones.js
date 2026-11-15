@@ -1242,11 +1242,14 @@ export function createZones(scene, host) {
         W.children.forEach((w, i) => { const a = w.userData.a + t * (e.calm ? 0.4 : 2.2), rr = e.calm ? 1.1 : (e.st === 'alert' ? 2.6 : 1.7); w.position.set(Math.cos(a) * rr, 1.2 + Math.sin(t * 3 + i) * 0.4 - (e.calm ? 0.8 : 0), Math.sin(a) * rr); });
       } else if (e.kind === 'owl') {
         const awake = owlAwake(S), dusk = S.time === 'dusk', bait = awake && gearOn('lantern') && posOfId(idOfCls('scout'));
-        if (bait && flatD(e, bait) < Math.max(22, (e.o.cone[0] || 11) * 1.8 * (dusk ? 0.5 : 1))) {
+        if (bait && flatD(e, bait) < (e.o.baitR || Math.max(22, (e.o.cone[0] || 11) * 1.8 * (dusk ? 0.5 : 1)))) {
           const want = Math.atan2(bait.x - e.x, bait.z - e.z);
           e.yaw += Math.atan2(Math.sin(want - e.yaw), Math.cos(want - e.yaw)) * Math.min(1, dt * 2.4 * (dusk ? 0.5 : 1));
           e.bait = true;
         } else { e.bait = false; e.yaw = e.baseYaw + Math.sin(t * (e.o.sweepV || 0.45) * (dusk ? 0.5 : 1)) * (e.o.sweep || 1.1); }
+        if (e.o.baitSig && e.bait) setSig(e.o.baitSig, true);
+        if (e.o.daySig && !S.night) setSig(e.o.daySig, true);
+        if (e.o.friendSig && isOn(e.o.friendSig)) e.o.friendly = true;
         for (const m of e.G.userData.eyes) m.scale.y = owlAwake(S) ? (Math.sin(t * 0.9) > 0.97 ? 0.15 : 1) : 0.12;
       } else if (e.kind === 'fox') {
         if (!e.peek && S.pingAt && t - S.pingAt.t < 0.3 && flatD(e, S.pingAt) < 18) e.pingLure = { x: S.pingAt.x, z: S.pingAt.z, phase: 'go' };
@@ -1508,7 +1511,7 @@ export function createZones(scene, host) {
     dayNightBell(x, z, h, o = {}) { this.toggleBell('dnBell', x, z, h, () => setNightA2(!AA().night), { label: o.label || 'Day/Night bell', em: '🌗', col: 0xc9b6ff }); },
     glowStep(x, z, w, d, top, o = {}) { const r = this.wall(x, z, w, d, top, { bot: top - 0.5, c: 0x9fe8ff }); r.m.material = new THREE.MeshLambertMaterial({ color: 0x9fe8ff, emissive: 0x3aa0e8, emissiveIntensity: 0.9, transparent: true, opacity: 0.0, depthWrite: false }); r.s.off = true; AA().glowSteps.push({ r, x: A.x + x, z: A.z + z, on: false }); },
     hiddenStep(x, z, w, d, top) { const r = this.wall(x, z, w, d, top, { bot: top - 0.4, c: 0xc9b6ff }); r.m.material = new THREE.MeshBasicMaterial({ color: 0xd9c6ff, transparent: true, opacity: 0, depthWrite: false, wireframe: false }); AA().hidden.push({ r, x: A.x + x, z: A.z + z, kind: 'step' }); },
-    hiddenLever(s, x, z, o = {}) { this.lever(s, x, z, o); const pr = props[props.length - 1]; pr.secret = true; pr.found = false; pr.G.visible = false; pr.icon.visible = false; const sv = pr.act; pr.act = null; pr._act = sv; AA().hidden.push({ pr, x: pr.x, z: pr.z, kind: 'switch' }); },
+    hiddenLever(s, x, z, o = {}) { this.lever(s, x, z, o); const pr = props[props.length - 1]; pr.secret = true; pr.found = false; pr.G.visible = false; pr.icon.visible = false; const sv = pr.act; pr.act = null; pr._act = sv; AA().hidden.push({ pr, x: pr.x, z: pr.z, kind: 'switch', range: o.range || 16 }); },
     gift(kind, x, z, h = 0.6) { kind = GIFT_ALIAS[kind] || kind; const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.1, 0.8, 1.1, 0x5fae4a, 0, 0, 0, 0.3), bx(1.15, 0.18, 0.2, 0xff6bd6, 0, 0.1, 0, 0.4), bx(0.2, 0.18, 1.15, 0xff6bd6, 0, 0.1, 0, 0.4)); const sp = gearSprite(kind, 1.3); sp.position.y = 1.3; G.add(sp);
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloMap(), color: new THREE.Color(0xffe680), transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false })); halo.scale.set(3, 3, 1); G.add(halo);
       AA().gifts.push({ kind, x: w.x, y: w.y, z: w.z, G, got: false }); },
@@ -1577,7 +1580,9 @@ export function createZones(scene, host) {
       }
     },
     crossing(x0, z0, x1, z1) { crossings.push({ x0: A.x + Math.min(x0, x1), z0: A.z + Math.min(z0, z1), x1: A.x + Math.max(x0, x1), z1: A.z + Math.max(z0, z1), on: true, thin: false }); },
-    onSig(s, fn) { let last = false; steps.push({ sig: s, fn: on => { if (on === last) return; last = on; fn(on, { night: v => setNightA2(v), season: v => setSeason(v), wind: v => applyWind(v), pond: (pid, lv) => { const pd = AA().ponds.find(q => q.id === pid); if (pd) setPond(pd, lv); } }); } }); },
+    onSig(s, fn) { let last = false; steps.push({ sig: s, fn: on => { if (on === last) return; last = on; fn(on, { set: setSig, isOn, night: v => setNightA2(v), season: v => setSeason(v), wind: v => applyWind(v), pond: (pid, lv) => { const pd = AA().ponds.find(q => q.id === pid); if (pd) setPond(pd, lv); } }); } }); },
+    /** tick hook for map scripts (ford/reunion flags, etc.). */
+    hook(fn) { steps.push({ fn: () => fn({ set: setSig, isOn, en: AA().en, escorts: AA().escorts, night: () => !!AA().night, loc: (x, z) => ({ x: x - A.x, z: z - A.z }) }) }); },
     /** the last boulder slides much farther in winter (ice): to (x,z) with slot height, sets iceSig */
     iceSlot(iceSig, x, z, slotH = 0.6) { const pr = props.filter(q => q.kind === 'boulder').pop(); if (!pr) return; pr.ice = { x: A.x + x, z: A.z + z, top: gy(x, z) + slotH }; pr.iceSig = iceSig; },
     bridgeOn(s, x1, z1, x2, z2, w = 3) { const mx = (x1 + x2) / 2, mz = (z1 + z2) / 2, L = Math.hypot(x2 - x1, z2 - z1), yaw = Math.atan2(x2 - x1, z2 - z1), g = Math.max(gy(x1, z1), gy(x2, z2));
@@ -1931,6 +1936,9 @@ export function createZones(scene, host) {
     for (const e of S.en) {
       const asleep = (e.kind === 'owl' && !owlAwake(S)) || (e.kind === 'turtle' && t < (e.napT || -1)) || e.calm || e.paused || e.o.friendly;
       if (asleep) continue;
+      // Baited owl is staring at the lantern. Hide radius (≈6) should not freeze a cub
+      // on the far lane; contact range (~1.7) still bonks if they walk under it.
+      if (e.kind === 'owl' && e.bait && r > 2) continue;
       if (flatD(e, b) < r) return e;
     }
     return null;
@@ -2083,13 +2091,14 @@ export function createZones(scene, host) {
     }
     // ---- smoke ----
     for (let i = S.smokes.length - 1; i >= 0; i--) { const s = S.smokes[i], left = s.until - t; s.m.children.forEach((b, k) => { b.material.opacity = Math.max(0, Math.min(0.45, left * 0.2)); b.position.y = 0.8 + (k % 3) * 0.6 + Math.sin(t * 2 + k) * 0.15; }); if (left <= 0) { s.m.removeFromParent(); S.smokes.splice(i, 1); } }
+    applyLoan();
     // ---- night gear ----
     const sid = idOfCls('scout'), sq = sid && posOfId(sid), lantern = gearOn('lantern') && sq;
     if (lantern) { if (!S.light) { S.light = new THREE.PointLight(0xffd27a, 3, 12); group.add(S.light); } S.light.visible = true; S.light.position.set(sq.x, sq.y + 1.6, sq.z); } else if (S.light) S.light.visible = false;
     for (const gs of S.glowSteps) { const want = !!lantern && flatD(gs, sq) < 6.5; if (want !== gs.on) { gs.on = want; gs.r.s.off = !want; } gs.r.m.material.opacity += ((gs.on ? 0.85 : 0) - gs.r.m.material.opacity) * Math.min(1, dt * 6); }
     const tid = idOfCls('trickster'), tq = tid && posOfId(tid);
     if (gearOn('whistle') && tq && ctx.driven().includes(tid) && t >= S.pingNext) { S.pingNext = t + 8; S.pingT = t; S.pingAt = { x: tq.x, z: tq.z, t }; a2Burst(tq.x, tq.z, 7); ctx.audio?.sample?.('ui2/item-produced', 0.4); const ring = ringMesh(1, 0xc9b6ff); ring.position.set(tq.x, tq.y + 0.2, tq.z); group.add(ring); S.outlines.push({ m: ring, t0: t });
-      let found = 0; for (const h of S.hidden) { if (Math.hypot(h.x - tq.x, h.z - tq.z) > 16) continue; h.showT = t; if (h.kind === 'switch' && !h.pr.found) { h.pr.found = true; h.pr.act = h.pr._act; h.pr.G.visible = true; h.pr.icon.visible = true; found++; } }
+      let found = 0; for (const h of S.hidden) { if (Math.hypot(h.x - tq.x, h.z - tq.z) > (h.range || 16)) continue; h.showT = t; if (h.kind === 'switch' && !h.pr.found) { h.pr.found = true; h.pr.act = h.pr._act; h.pr.G.visible = true; h.pr.icon.visible = true; found++; } }
       tst(found ? '🎶 Echo-ping! A hidden switch appeared' : '🎶 Echo-ping! Hidden paths glow for 5 s', 1600); setSig('ping'); }
     for (const h of S.hidden) if (h.kind === 'step') { const on = t - (h.showT ?? -99) < 5; h.r.m.material.opacity = on ? 0.55 + 0.25 * Math.sin(t * 6) : 0; }
     for (let i = S.outlines.length - 1; i >= 0; i--) { const o = S.outlines[i], k = (t - o.t0) / 1.2; o.m.scale.set(1 + k * 14, 1, 1 + k * 14); o.m.userData.mats[0].opacity = Math.max(0, 0.8 * (1 - k)); if (k >= 1) { o.m.removeFromParent(); S.outlines.splice(i, 1); } }
@@ -2233,6 +2242,13 @@ export function createZones(scene, host) {
     else if (recipe.nightCycle) { nightOn = false; ctx.setNight(false); }
     introQ = recipe.kid ? [] : [...((banterOf(pid) || recipe.banter)?.start || []), ...(recipe.intro || [])]; // the goal lives in the objective tracker now
   }
+  function applyLoan() {
+    const S = a2; if (!S || !recipe || S.borrow) return;
+    const want = recipe.loanGear === 'all' || recipe.loanGear === true || (recipe.loanGear === 'test' && typeof window !== 'undefined' && window.T);
+    if (!want) return;
+    S.borrow = recipe.loanGear === 'all' ? { lantern: true, whistle: true, pouch: true, glider: true, sling: true, eqL: true, eqW: false, eqP: true, eqG: true, eqS: true, slot: { scout: 'lantern', trickster: 'whistle', bruiser: 'sling' } } : { lantern: true, whistle: true, eqL: false, eqW: false, slot: { scout: 'lantern', trickster: 'whistle' } };
+    ctx.onGear?.();
+  }
   function a2Init() {
     const S = AA(); document.body.classList.add('a2'); sneak = false; ctx.onSneak?.(false);
     if (S.escorts.length) document.body.classList.add('hasEscort');
@@ -2241,7 +2257,7 @@ export function createZones(scene, host) {
     for (const it of S.seasonal) { const on = S.season === it.when; it.pr.s.off = !on; it.pr.m.visible = on; }
     if (S.master) { ctx.holdClock?.(true); applyMaster(S.master.start || recipe.masterStart || S.master.state || 'A', { quiet: true, init: true }); }
     else if (recipe.night) setNightA2(true);
-    if (recipe.loanGear && !S.borrow) { S.borrow = recipe.loanGear === 'all' ? { lantern: true, whistle: true, pouch: true, glider: true, sling: true, eqL: true, eqW: false, eqP: true, eqG: true, eqS: true, slot: { scout: 'lantern', trickster: 'whistle', bruiser: 'sling' } } : { lantern: true, whistle: true, eqL: true, eqW: false }; ctx.onGear?.(); }
+    applyLoan();
     autoStump();
     S.cp = null;
   }
@@ -2294,9 +2310,10 @@ export function createZones(scene, host) {
       stars: { petals: pets.every(k => k.got), star: !hasStar || starGot, par: !recipe.par || (!easyOn && t <= recipe.par) }, end: (banterOf(id) || recipe.banter)?.end || [] };
     if (easyOn) { result.easy = true; if (recipe.par) result.easyPar = true; }
     if (recipe.noStars) result.noStars = true;
-    if (a2) { result.bonks = a2.bonks; if (a2.borrow) { a2.borrow = null; ctx.onGear?.(); } }
+    if (a2) { result.bonks = a2.bonks; result.hidEver = !!a2.hidEver; if (a2.borrow) { a2.borrow = null; ctx.onGear?.(); } }
     if (recipe.kid) { result.kid = true; result.stars = { petals: true, star: true, par: true }; confetti(true); setTimeout(() => kid && confetti(true), 700); }
-    result.n = Object.values(result.stars).filter(Boolean).length;
+    result.n = +!!result.stars.petals + +!!result.stars.star + +!!result.stars.par;
+    if (a2 && !recipe.kid) result.stars.challenge = !a2.hidEver;
     tst(`🏆 ${why}! ${'⭐'.repeat(result.n)}${'☆'.repeat(3 - result.n)}`, 3400); ctx.audio?.chime?.(); ctx.onComplete?.(result);
   }
   const clsOfCur = () => CLASS_OF[ctx.cur()] || 'trickster';

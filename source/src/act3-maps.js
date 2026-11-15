@@ -235,6 +235,163 @@ export const MAPS3 = {
     },
   },
 
+
+  // ===== 19 · Night Market (Fern act3-levels-17-21.md §4): night gear + owl bait (S3) + Two-Room Split (M8). Baby: owlet. =====
+  night_market: {
+    ambience: 'night-market', // Beans CC0 loop (Nox_Sound + qubodup), SFX bus
+    goal: 'Night Market', act2: true, moody: true, night: true, loanGear: 'test', key: 'puzzles', ceil: 10, exit: [0, 74], par: 600,
+    bounds: { x0: -16, x1: 16, z0: -10, z1: 80 },
+    crew: 'Bee · Raccoon · Bear', friend: ['owlet'],
+    banter: {
+      start: ['🦝 Raccoon: We are split by a stream! I’ll sneak the west stalls.', '🐝 Bee: I’ll hold the lantern so the owl looks at me!', '🐻 Bear: I’ll wait for the plates. Heavy work is my job.', '🦉 Owlet: …hoo?'],
+      end: ['🦉 Owlet: Hoo-hoo!', '🦉 Parent owl: Thank you for bringing our little one home.', '🐝 Bee: The market feels friendlier already.', '🐻 Bear: I like night markets. Quiet and glowy.', '🦝 Raccoon: Next snack is on me. Night snack.'],
+    },
+    pip: [
+      ['start', 'You are split up! Bee is across the stream.'],
+      ['z:8', 'Bee, hold the lantern on the roof. The owl looks!'],
+      ['z:26', 'Raccoon, whistle to find the hidden lever.'],
+      ['sig:hlW', 'Bee, ring the high bell for the others.'],
+      ['z:56', 'Bait the owl again. Then sneak the owlet across.'],
+      ['sig:ford19', 'Tap G to turn the lantern off if the owl stares.'],
+    ],
+    build(B) {
+      B.lane(-16, 16, -10, 80, { look: 'hedge' });
+      B.split({ trickster: [-6, -1], bruiser: [-4, -1], scout: [6, -1, 1] });
+      // cosmetic nest in the stream, unreachable
+      B.deco('act3/night-market/kenney-fantasytown-stall', 0, -6, 1.4, { yaw: Math.PI });
+
+      // stream wall + invisible fly cap (true two-room split until the ford opens)
+      B.wall(0, 24, 0.6, 64, 2.4, { look: 'hedge' });
+      B.wall(0, 24, 0.6, 64, 30, { bot: 2.3, hidden: true }).s.off = false;
+      // shallow water look along the stream bed
+      for (let z = -6; z <= 54; z += 6) B.deco('act3/night-market/kenney-nature-ground-river-straight', 0, z, 0.2, { yaw: 0, h: 3.2 });
+
+      const cap = (x, z, w, d, top) => { B.wall(x, z, w, d, top, { look: 'hedge' }); B.wall(x, z, w, d, 30, { bot: top - 0.1, hidden: true }).s.off = false; };
+      const laneGate = (s, x, z, w = 13) => { B.gate(s, x, z, w, 0.7, 2.8, { latch: true, label: 'Gate' }); B.wall(x, z, w, 0.7, 30, { bot: 2.7, hidden: true }).s.off = false; };
+
+      // ford cap (z 58–66): hides when owB is baited or day is rung
+      const fordWall = B.wall(0, 63, 0.6, 8, 2.4, { look: 'hedge' });
+      const fordCap = B.wall(0, 63, 0.6, 8, 30, { bot: 2.3, hidden: true });
+      fordCap.s.off = false;
+      const emW58 = B.ember('emW58', -6, 58, 1.6, { dimIn: false });
+      const emE58 = B.ember('emE58', 6, 58, 1.6, { dimIn: false });
+      B.onSig('ford19', on => {
+        fordCap.s.off = !!on; fordCap.m.visible = !on;
+        fordWall.s.off = !!on; fordWall.m.visible = !on;
+        if (on) {
+          for (const em of [emW58, emE58]) { if (!em) continue; em.st = 'out'; if (em.G) em.G.visible = false; }
+        }
+      });
+
+      B.checkpoint(-6, -1); B.checkpoint(6, -1);
+      // Small soot braziers on the walkBonk lines (z+8 from each flag). Walk around them.
+      B.ember('emW7', -6, 7, 1.6, { dimIn: false });
+      B.ember('emE7', 6, 7, 1.6, { dimIn: false });
+      B.ember('emW36', -6, 34, 1.6, { dimIn: false });
+      B.ember('emE36', 6, 34, 1.6, { dimIn: false });
+      B.ember('emX76', 0, 76, 1.6, { dimIn: false });
+      B.escort('owlet', -4, 3);
+      B.hide('trunk', -4, 3, 1.1, 1.2); // basket hide at spawn
+      B.deco('act3/night-market/kenney-fantasytown-cart', -4, 3, 1.1, { yaw: 0.4 });
+
+      B.gearStump(-10, 8, { label: 'Whistle stump' });
+      B.gearStump(10, 8, { label: 'Lantern stump' });
+      B.deco('act3/night-market/gear-stump', -10, 8, 1.0);
+      B.deco('act3/night-market/gear-stump', 10, 8, 1.0);
+
+      B.dayNightBell(8, 6, 2.0);
+
+      // bait roof (Scout) + marker
+      B.wall(8, 14, 4, 3, 4.0, { bot: 3.55, look: 'wood' });
+      B.marker('scout', 8, 14, 4, 'Hold the lantern here');
+      B.deco('act3/night-market/mushroom-stall', 8, 14, 2.2, { yaw: -Math.PI / 2 });
+      B.deco('act3/night-market/kenney-holiday-lantern-hanging', 8, 14, 5.2);
+
+      B.hide('trunk', -6, 10, 1.2); B.hide('trunk', -8, 14, 1.2); B.hide('trunk', -5, 18, 1.2);
+      B.deco('act3/night-market/kenney-fantasytown-stall-green', -8, 8, 1.8, { yaw: 0.2 });
+      B.deco('act3/night-market/kenney-fantasytown-stall-red', -12, 16, 1.8, { yaw: -0.3 });
+      B.deco('act3/night-market/kenney-fantasytown-stall', 12, 8, 1.8, { yaw: 0.5 });
+      B.deco('act3/night-market/kenney-nature-mushroom-red-group', -11, 12, 1.0);
+      B.deco('act3/night-market/kenney-nature-mushroom-tan-group', 11, 18, 1.0);
+
+      // owl A on a perch in the stream, looks south, baits toward the lantern
+      B.owl('owA', 0, 16, { yaw: Math.PI, perch: 4.0, r: 12, half: 0.40, sweep: 0.7, baitR: 32 });
+      B.deco('act3/night-market/perch-post', 0, 16, 4.2);
+
+      B.lever('lvW1', -8, 22, { label: 'West lever' });
+      laneGate('lvW1', -8, 24);
+      laneGate('lvW1', 8, 24);
+      B.checkpoint(-6, 28); B.checkpoint(6, 28);
+
+      B.hiddenLever('hlW', -10, 40, { label: 'Hidden lever', range: 24 });
+      laneGate('hlW', 8, 36);
+      B.wall(8, 38, 4, 3, 4.0, { bot: 3.55, look: 'wood' }); // bell stall roof
+      B.bell('bE', 8, 38, 4.5, { label: 'Stall bell' });
+      B.deco('act3/night-market/mushroom-stall', 8, 38, 2.2, { yaw: Math.PI / 2 });
+      laneGate('bE', -8, 36);
+
+      B.plate('plW', -10, 48, { heavy: true, label: 'Heavy plate' });
+      laneGate('plW', 8, 54); // east reunion hatch, latches open
+      laneGate('sq19', -8, 54); // west door 3: opens if plate or bell
+      B.checkpoint(-6, 50); B.checkpoint(6, 50);
+      B.hide('trunk', -8, 48, 1.3);
+      B.deco('act3/night-market/kenney-fantasytown-stall-green', -8, 48, 1.8);
+
+      // reunion square
+      B.hide('log', -3, 58, 1.3, 1.3);
+      B.deco('act3/night-market/kenney-fantasytown-cart', -3, 58, 1.1, { yaw: 1.1 });
+      B.owl('owB', 6, 62, { yaw: -Math.PI / 2, perch: 4.5, r: 11, half: 0.36, sweep: 0.5, baitR: 30, baitSig: 'ford19', daySig: 'ford19', friendSig: 'reunion' });
+      B.deco('act3/night-market/perch-post', 6, 62, 4.7);
+      B.wall(12, 64, 3, 3, 5.0, { bot: 4.55, look: 'wood' });
+      B.marker('scout', 12, 64, 5, 'Bait perch');
+      B.hide('canopy', 12, 64, 1.6, 4);
+      B.deco('act3/night-market/mushroom-stall', 12, 64, 2.4, { yaw: Math.PI });
+
+      B.checkpoint(0, 68);
+      B.exit(0, 74, 3);
+
+      // secret Starseed: whistle-revealed steps on the west, Trickster only
+      B.hiddenStep(-12, 44, 2.2, 2, 2.6);
+      B.hiddenStep(-12, 44, 2.2, 2, 3.9);
+      B.pickup('star', -12, 44, 3.9, { who: ['trickster'], whyNot: 'Only a Trickster can carry this Starseed.', set: 'marketStar' });
+
+      // petals (24)
+      const P = (x, z, h = 0.9) => B.pickup('petal', x, z, h);
+      [[-8, -3], [-6, -3], [-4, -3]].forEach(([x, z]) => P(x, z));
+      [[4, -3], [6, -3], [8, -3]].forEach(([x, z]) => P(x, z));
+      [[-8, 10], [-8, 15], [-8, 20]].forEach(([x, z]) => P(x, z));
+      P(8, 12, 4.9); P(8, 16, 4.9);
+      [[-10, 32], [-10, 38], [-10, 44]].forEach(([x, z]) => P(x, z));
+      [[8, 32], [8, 38], [8, 44]].forEach(([x, z]) => P(x, z));
+      P(8, 38, 5.4);
+      [[-4, 62], [-1.3, 62], [1.3, 62], [4, 62]].forEach(([x, z]) => P(x, z));
+      P(-3, 72); P(3, 72);
+
+      // lanterns / hanging lights
+      [[-12, 24], [12, 24], [-12, 40], [12, 50], [-10, 62], [10, 70]].forEach(([x, z], i) => B.deco('act3/night-market/kenney-fantasytown-lantern', x, z, 2.4, { yaw: i }));
+      [[-14, -6], [14, -7], [-14, 70], [14, 74], [-14, 30], [14, 46]].forEach(([x, z], i) => B.tree(x, z, 0.9 + (i % 3) * 0.1));
+
+      B.hook(({ set, isOn, escorts, night, loc, en }) => {
+        if (isOn('plW') || isOn('bE')) set('sq19', true);
+        const owB = en.find(e => e.id === 'owB');
+        if (owB && (owB.bait || !night())) set('ford19', true);
+        if (isOn('ford19')) {
+          for (const em of [emW58, emE58]) { if (!em) continue; em.st = 'out'; if (em.G) em.G.visible = false; }
+        }
+        const baby = escorts.find(b => b.kind === 'owlet');
+        if (baby && loc(baby.x, baby.z).z > 66) {
+          set('reunion', true);
+          if (owB) owB.o.friendly = true;
+        }
+      });
+
+      B.puzzle('bait', 'Lantern bait', ['scout', 'trickster'], ['lvW1'], { hint: '🪽 Fly to the stall roof and hold the lantern on. The owl looks away — then 🐾 sneak trunk to trunk and pull the west lever.', track: [['owA', 'scout', 'hold the lantern on the stall roof', 8, 14, 4], ['lvW1', 'trickster', 'sneak and pull the west lever', -8, 22]] });
+      B.puzzle('split', 'Split help', ['trickster', 'scout', 'bruiser'], ['plW'], { hint: '🐾 Whistle to find the hidden lever · 🪽 ring the high stall bell · 🐻 stand on the heavy plate so the east hatch latches open.', track: [['hlW', 'trickster', 'whistle, then pull the hidden lever', -10, 40], ['bE', 'scout', 'ring the high stall bell', 8, 38, 4.5], ['plW', 'bruiser', 'stand on the heavy plate', -10, 48]] });
+      B.puzzle('reunion', 'Owlet reunion', ['scout', 'trickster', 'bruiser'], ['reunion'], { hint: '📣 Call the owlet · 🪽 bait the parent owl on the far perch · sneak the owlet across the ford, then meet at the flag.', track: [['ford19', 'scout', 'hold the lantern on the far perch (or ring day)', 12, 64, 5], ['reunion', 'any', 'sneak the owlet across the open ford', 0, 68]] });
+      B.puzzle('marketStar', 'Secret Starseed', ['trickster'], ['marketStar'], { req: false, hint: '🐾 After west gate 2 opens, whistle and climb the hidden steps on the west wall.' });
+    },
+  },
+
   // ===== S5/S3 Practice Yard (sandbox, not a campaign level): escort + every new enemy lure =====
   act3_lab: {
     goal: 'Call the baby, try every lure, then bring your crew AND the cub to the 🏁 exit',

@@ -1155,7 +1155,10 @@
     "Act 3 SFX (sluice-water, echo-whistle-ping, crow-caw, starheart-lift, starheart-place, puff-stomp, vine-grow): synthesized for Pollinator Meadow, CC0 1.0",
     "Level 18 intro card (card-18-flooded-mill): Squid, for Pollinator Meadow",
     "Master Bell model and teach plaque: built for Pollinator Meadow (Act 3 S4), CC0 1.0",
-    "Master Bell chimes A/B/C: derived from Freesound “chimes bar” by urupin (https://freesound.org/people/urupin/sounds/122056/), CC0 1.0; Opus + AAC re-encode already shipped in audio/sfx/act3/"
+    "Master Bell chimes A/B/C: derived from Freesound “chimes bar” by urupin (https://freesound.org/people/urupin/sounds/122056/), CC0 1.0; Opus + AAC re-encode already shipped in audio/sfx/act3/",
+    "Level 19 Night Market dressing: Kenney (https://kenney.nl) Fantasy Town Kit (stalls, cart, lanterns, overhang) and Nature Kit (mushroom groups, river bed), CC0 · mushroom-stall, perch-post and gear-stump built for Pollinator Meadow, CC0",
+    "Night Market ambience: night-market bed by Nox_Sound and qubodup (Freesound), CC0 1.0 — see optimized/ambience credits",
+    "Level 19 intro card (card-19-night-market): Squid, for Pollinator Meadow"
   ],
   "footer": "All models are scaled, merged into instanced meshes and compressed for mobile; the wing-flap animation is procedural. Music: \"Blue Meadow in Green Sky\" (OpenGameArt). Ambience: Freesound #484371. Sky: Golden Hour Pastel shader dome (the Kloofendal 48d HDR from Poly Haven is kept for free roam). Particles: Kenney. See CREDITS.md for the full list."
 }
