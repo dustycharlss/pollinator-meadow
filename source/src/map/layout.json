@@ -1,0 +1,242 @@
+{
+  "portrait": {
+    "screen": [
+      390,
+      844
+    ],
+    "frame": [
+      8,
+      8,
+      374,
+      828
+    ],
+    "frame_nine_slice_1x": [
+      40,
+      40,
+      80,
+      80
+    ],
+    "back": [
+      16,
+      16,
+      56,
+      56
+    ],
+    "title": [
+      80,
+      20,
+      140,
+      48
+    ],
+    "chip_petals": [
+      226,
+      20,
+      76,
+      48
+    ],
+    "chip_stars": [
+      306,
+      20,
+      76,
+      48
+    ],
+    "tabs_row": [
+      16,
+      80,
+      358,
+      52
+    ],
+    "tab": [
+      [
+        16,
+        80,
+        114,
+        52
+      ],
+      [
+        137,
+        80,
+        114,
+        52
+      ],
+      [
+        258,
+        80,
+        114,
+        52
+      ]
+    ],
+    "map_well": [
+      16,
+      140,
+      358,
+      512
+    ],
+    "map_inner": [
+      24,
+      148,
+      342,
+      496
+    ],
+    "select_panel": [
+      16,
+      660,
+      358,
+      168
+    ],
+    "thumb": [
+      28,
+      672,
+      148,
+      84
+    ],
+    "select_text": [
+      184,
+      672,
+      178,
+      52
+    ],
+    "select_stars": [
+      184,
+      726,
+      178,
+      24
+    ],
+    "btn_play": [
+      28,
+      764,
+      200,
+      56
+    ],
+    "notes": "All rects are 1x CSS px [x,y,w,h] on a 390x844 artboard. map_inner is the grid well (and the Meadow overview's 0-1 space). The portrait grid is 3 columns of 102 px tiles; each cell also reserves a 28 px star row (4 px gap + 24 px art) under the tile, with an 8 px row gap. A 3\u00d73 of 9 tiles is 426 px tall including pad and fits the 496 px well without scrolling. Title, counters, Play, Timed and level-number chips are runtime text. Play is the main, largest button; the Timed toggle sits beside it (tap 120\u00d756). Hide Timed on the Meadow overview. Chrome/tile/overlay outlines are ~half the previous weight (see README); 9-slice insets are unchanged because they follow corner radius, not stroke.",
+    "toggle_timed": [
+      236,
+      764,
+      120,
+      56
+    ]
+  },
+  "landscape": {
+    "screen": [
+      844,
+      390
+    ],
+    "frame": [
+      8,
+      8,
+      828,
+      374
+    ],
+    "frame_nine_slice_1x": [
+      40,
+      40,
+      80,
+      80
+    ],
+    "back": [
+      16,
+      16,
+      52,
+      52
+    ],
+    "title": [
+      76,
+      16,
+      150,
+      52
+    ],
+    "tab": [
+      [
+        234,
+        16,
+        96,
+        52
+      ],
+      [
+        334,
+        16,
+        96,
+        52
+      ],
+      [
+        434,
+        16,
+        96,
+        52
+      ]
+    ],
+    "chip_petals": [
+      540,
+      16,
+      80,
+      52
+    ],
+    "chip_stars": [
+      624,
+      16,
+      80,
+      52
+    ],
+    "arrow_prev": [
+      712,
+      16,
+      52,
+      52
+    ],
+    "arrow_next": [
+      768,
+      16,
+      52,
+      52
+    ],
+    "map_well": [
+      16,
+      76,
+      544,
+      298
+    ],
+    "map_inner": [
+      24,
+      84,
+      528,
+      282
+    ],
+    "select_panel": [
+      568,
+      76,
+      260,
+      298
+    ],
+    "thumb": [
+      580,
+      88,
+      236,
+      110
+    ],
+    "select_text": [
+      580,
+      204,
+      236,
+      28
+    ],
+    "select_stars": [
+      580,
+      244,
+      112,
+      24
+    ],
+    "btn_play": [
+      580,
+      300,
+      236,
+      56
+    ],
+    "notes": "Tabs sit in the header so the map + selected panel can share the remaining height. map_inner is the grid well. Short landscape (this 844\u00d7390 artboard, height \u2264 500) uses 5 columns of 96 px tiles; each cell reserves a 28 px star row under the tile. A 5+4 of 9 tiles is 272 px tall including pad and fits the 282 px well without scrolling. Taller landscape uses 4 columns of 112 px (see grid.json) and will scroll. Timed sits on the name/stars row (tap 116\u00d756); Play stays the largest control at the bottom of the panel. Hide Timed when the selection is the Hub pin or an act region.",
+    "toggle_timed": [
+      700,
+      228,
+      116,
+      56
+    ]
+  }
+}

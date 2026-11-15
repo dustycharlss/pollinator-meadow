@@ -856,24 +856,8 @@ body:not(.inRound) #bFlag{display:none!important}
 <div id="wheelUi"></div>
 
 
-<div class="ov" id="valley"><div class="vWrap">
-  <h2>🗺️ Valley Map</h2>
-  <div class="vSub" id="vSub">Guide your crew of three through each level</div>
-  <div id="vActs"><button type="button" class="vAct on" id="vAct1">🗺️ Act 1 · Valley</button><button type="button" class="vAct" id="vAct2">🥾 Act 2 · Trail</button><button type="button" class="vAct" id="vAct3">🏡 Act 3 · Friends</button></div>
-  <div id="vAct2Page" hidden><div id="vA2Note"></div><div id="vA2Grid"></div></div>
-  <div id="vMapStage"><img id="vMapImg" alt="Valley map"><div id="vSlots"></div></div>
-  <div id="vPatches" hidden></div>
-  <div id="vDetail">Pick a patch</div>
-  <div id="vCrew"></div>
-  <div id="vTent"><button class="pill" id="vEditCrew">⛺ Crew Tent</button><button class="pill" id="vSkins">🎨 Skins</button></div>
-  <div id="vActions">
-    <button class="big sec" id="vBack">◀ Title</button>
-    <button class="big sec" id="vHub">🏡 Meadow Hub</button>
-    <button class="big" id="vFree" disabled>🌿 Free roam</button>
-    <button class="big" id="vGo" disabled>⏱ Challenge</button>
-  </div>
-  <p style="text-align:center;font-size:12px;font-weight:700;opacity:.75;margin:8px 0 0">🌿 Free roam: no timer, swap animals any time · ⏱ Challenge: timed &amp; scored · progress always saves</p>
-</div></div>
+<!-- Shared map screen (Act 1 · 2 · 3 + Meadow overview): built by src/map-screen.js -->
+<div class="ov" id="valley"></div>
 <div class="ov" id="festival"><div class="panel">
   <div class="festBadge">🎉</div>
   <h2>Meadow Festival!</h2>
@@ -886,6 +870,7 @@ body:not(.inRound) #bFlag{display:none!important}
 <div id="crewDock" aria-label="Crew swap"></div>
 <button id="packBtn" type="button">📦 Pack Up</button>
 <button id="bHubMap" type="button" aria-label="Level menu">🗺️ Levels</button>
+<div id="hubTools"><div class="htRow"><button id="bHubCrew" type="button">⛺ Crew</button><button id="bHubSkins" type="button">🎨 Skins</button></div><div id="hubNote">▶ Play: no timer, swap animals any time · ⏱ Timed: race the clock for stars · progress always saves</div></div>
 
 <div id="title" class="on fd"><picture><source media="(orientation:landscape)" srcset="./ui/screens/title-bg-landscape.webp"><img class="fdBg" src="./ui/screens/title-bg-portrait.webp" alt=""></picture><div class="logo" data-slot="logo"><img id="logoImg" src="./img/logo.png" alt="Pollinator Meadow" onerror="this.remove();document.getElementById('logoTxt').hidden=false"><div id="logoTxt" hidden><span class="fl">🌼</span><h1>Pollinator Meadow</h1></div><small>Grow your meadow. Gather, build and bloom.</small></div>
 <button class="fdBtn" id="tChallenge" hidden style="display:none"></button><button class="fdBtn" id="tRelaxed" hidden style="display:none"></button>

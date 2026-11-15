@@ -1,0 +1,199 @@
+/* Shared map screen — Squid ui-map kit (Golden Hour Pastel). Rects follow layout.json / grid.json.
+   ART KNOBS (Squid final art, Nov 14 — thinner outlines, stars in their own row):
+   Line weights at 1x CSS (baked into the PNGs; these vars drive every CSS-drawn line so both stay in step):
+     --map-line-frame  3px  frame, map well, selected panel
+     --map-line-ui     2px  tiles, tabs, chips, Play, Timed, back (+ CSS tile mode)
+     --map-line-ring   3px  selected / current honey ring (CSS tile mode)
+     --map-line-detail 1px  small details: number chip, thumb well, badge circles
+   Star row: --map-stars-gap (4px under the tile) · --map-stars-h (24px) · --map-stars-w (80px). Cell = tile + gap + row
+     (130px portrait, 124px short landscape) with --map-row-gap (8px) between rows.
+   Face overlays (% of the 112 tile, grid.json slots_on_source_112; all ≥4px inside the face at 96px):
+     --map-num-* · --map-thumb-* · --map-badge-* · --map-seed-*
+   --map-tile / --map-gap / --map-row-gap / --map-pad / --map-cols : grid metrics per breakpoint (set below) */
+body #valley.ov{padding:0;background:rgba(59,38,20,.45);backdrop-filter:blur(3px);align-items:stretch;justify-content:center}
+#mapScreen{
+  --map-ink:#3b2614;--map-cream:#fff3d8;--map-cream2:#ffeec0;--map-honey:#ffd23f;--map-mint:#79cf8c;--map-dusk:#6b5ca8;
+  --map-line-frame:3px;--map-line-ui:2px;--map-line-ring:3px;--map-line-detail:1px;
+  --map-outline-w:var(--map-line-ui);--map-outline-c:var(--map-ink);
+  --map-face-inset:7.143%;--map-tile-radius:14.3%;
+  /* face overlay slots, % of tile (source 112 px, grid.json slots_on_source_112) */
+  --map-num-x:12.5%;--map-num-y:12.5%;--map-num-w:19.64%;--map-num-h:17.86%;
+  --map-thumb-x:14.29%;--map-thumb-y:22.77%;--map-thumb-w:71.43%;--map-thumb-h:52.68%;--map-thumb-inset:1.2%; /* measured from the final tile art (grid.json says [16,38,80,52]) */
+  --map-pic-x:8.04%;--map-pic-y:8.04%;--map-pic-w:83.93%;--map-pic-radius:15.5%; /* square thumb = face minus 1px stroke (thumbs.json 94/112) */
+  --map-badge-x:67.86%;--map-badge-y:12.5%;--map-badge-w:19.64%;
+  --map-seed-x:12.5%;--map-seed-y:71.43%;--map-seed-w:19.64%;
+  /* star row under the tile (grid.json star_row) */
+  --map-stars-gap:4px;--map-stars-h:24px;--map-stars-w:80px;
+  --map-tile:102px;--map-gap:8px;--map-row-gap:8px;--map-pad:10px;--map-cols:3;
+  --map-node:56px;
+  position:relative;width:100%;height:100%;display:flex;align-items:stretch;justify-content:center;color:var(--map-ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
+  box-sizing:border-box;-webkit-user-select:none;user-select:none
+}
+#mapScreen *,#mapScreen *::before,#mapScreen *::after{box-sizing:border-box}
+#mapScreen button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#mapScreen button:focus-visible{outline:var(--map-line-ring) solid var(--map-dusk);outline-offset:2px}
+#mapScreen img{display:block}
+#mapScreen [hidden]{display:none!important}
+.msSr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+
+/* ---------- frame (portrait default) ---------- */
+.msFrame{position:relative;width:min(100%,560px);height:100%;max-height:1100px;margin:auto;display:grid;
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:8px;padding:8px}
+.msFrame{background:var(--map-cream);border-radius:28px;box-shadow:0 0 0 var(--map-line-frame) var(--map-ink),0 5px 0 var(--map-line-frame) var(--map-ink)}
+.msHead{display:grid;grid-template-columns:56px minmax(0,1fr) auto auto;grid-template-areas:"back title petals stars" "tabs tabs tabs tabs";align-items:center;gap:8px 6px}
+.msBack{grid-area:back;width:56px;height:56px;border:0;padding:0;background:none}
+.msBack img,.msArrow img{width:100%;height:100%}
+.msTitle{grid-area:title;margin:0;font:800 clamp(18px,5.6vw,24px)/1.1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msChip{min-width:76px;height:48px;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 10px;font:800 14px system-ui;
+  background:var(--ms-chip-1x) center/100% 100% no-repeat;background-image:var(--ms-chip)}
+#msPetals{grid-area:petals}#msStars{grid-area:stars}
+.msChipIc{font-size:17px}
+.msTabs{grid-area:tabs;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.msTab{height:52px;border:0;padding:0 6px 4px;display:flex;align-items:center;justify-content:center;gap:4px;font:800 14px system-ui;
+  background:center/100% 100% no-repeat;background-image:var(--ms-tab)}
+.msTab.on{background-image:var(--ms-tab-selected)}
+.msTabIc{width:26px;height:26px}
+.msArrow{display:none;width:52px;height:52px;border:0;padding:0;background:none}
+
+/* ---------- map well ---------- */
+.msWell{position:relative;min-height:0;border-radius:32px;overflow:hidden;background:#f6e6c8}
+.msBackdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.msWellRim{position:absolute;inset:0;pointer-events:none;border:36px solid transparent;
+  border-image:var(--ms-map-well-1x) 40 / 36px stretch}
+.msGrid{position:absolute;inset:8px;display:grid;grid-template-columns:repeat(var(--map-cols),minmax(48px,var(--map-tile)));grid-auto-rows:max-content;
+  gap:var(--map-row-gap) var(--map-gap);padding:var(--map-pad);justify-content:center;align-content:start;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  scrollbar-width:thin;-webkit-mask-image:linear-gradient(#000 calc(100% - 14px),transparent);mask-image:linear-gradient(#000 calc(100% - 14px),transparent)}
+.msEmpty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:8px;margin:16px auto;padding:12px;max-width:340px;text-align:center;
+  background:rgba(255,243,216,.9);border:var(--map-line-frame) solid var(--map-outline-c);border-radius:18px;font:700 14px system-ui}
+.msEmpty picture,.msEmpty img{display:block;width:100%;border-radius:10px}
+.msEmpty b{font-size:16px}
+
+/* ---------- tiles ---------- */
+.msTile{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;border:0;padding:0;background:none;container-type:inline-size;border-radius:var(--map-tile-radius)}
+.tSq{position:relative;width:100%;aspect-ratio:1;pointer-events:none}
+.tSq>*{position:absolute;pointer-events:none}
+.tRow{height:var(--map-stars-h);margin-top:var(--map-stars-gap);width:100%;display:flex;justify-content:center;pointer-events:none}
+.tFace{inset:0;background:var(--face) center/100% 100% no-repeat;background-image:image-set(var(--face) 1x,var(--face2x) 2x)}
+.tThumb{left:calc(var(--map-thumb-x) + var(--map-thumb-inset));top:calc(var(--map-thumb-y) + var(--map-thumb-inset));
+  width:calc(var(--map-thumb-w) - 2 * var(--map-thumb-inset));height:calc(var(--map-thumb-h) - 2 * var(--map-thumb-inset));border-radius:8%/13%;overflow:hidden;background:#e9dcc0}
+.tThumb picture{display:block;width:100%;height:100%}
+.tThumb img{width:100%;height:100%;object-fit:cover}
+/* Squid's square thumbs fill the face inside its stroke (94 of 112) */
+.msTile:not(.fb) .tThumb{left:var(--map-pic-x);top:var(--map-pic-y);width:var(--map-pic-w);height:var(--map-pic-w);border-radius:var(--map-pic-radius);background:none}
+.tEm{position:absolute;right:3%;bottom:2%;font-style:normal;font-size:24cqw;line-height:1;filter:drop-shadow(0 1px 0 rgba(59,38,20,.6))}
+.msTile[data-state="played"] .tThumb::after{content:"";position:absolute;inset:0;background:rgba(121,207,140,.18)}
+.tNum{left:var(--map-num-x);top:var(--map-num-y);min-width:var(--map-num-w);height:var(--map-num-h);display:flex;align-items:center;justify-content:center;padding:0 4%;
+  border-radius:999px;background:#7fc6e8;border:var(--map-line-detail) solid var(--map-outline-c);font:800 11cqw/1 system-ui,sans-serif;color:var(--map-ink);z-index:2}
+.tStars{width:min(var(--map-stars-w),100%);height:var(--map-stars-h);object-fit:contain}
+.tBadge{left:var(--map-badge-x);top:var(--map-badge-y);width:var(--map-badge-w);height:auto;z-index:3}
+.tSeed{left:var(--map-seed-x);top:var(--map-seed-y);width:var(--map-seed-w);height:auto;z-index:3}
+
+.msTile.lock .tThumb{filter:grayscale(.75) brightness(.9);opacity:.7}
+.msTile:active .tFace{transform:translateY(1px)}
+/* CSS-drawn tiles (?mapart=css, or add .msCssTiles): previews outline width without new art */
+.msCssTiles .tFace{inset:var(--map-face-inset);background:var(--map-cream);border:var(--map-line-ui) solid var(--map-outline-c);border-radius:var(--map-tile-radius);box-shadow:0 var(--map-line-ui) 0 var(--map-outline-c)}
+.msCssTiles .msTile[data-face="played"] .tFace{background:#d6f2d4}
+.msCssTiles .msTile[data-face="done"] .tFace{background:#ffe9a8}
+.msCssTiles .msTile[data-face="locked"] .tFace{background:#e3dccd}
+.msCssTiles .msTile[data-face="selected"] .tFace{box-shadow:0 0 0 var(--map-line-ring) var(--map-honey),0 0 0 calc(var(--map-line-ring) + var(--map-line-detail)) var(--map-outline-c)}
+.msCssTiles .msTile[data-face="current"] .tFace{background:var(--map-honey);box-shadow:0 0 0 var(--map-line-ring) var(--map-honey),0 0 0 calc(var(--map-line-ring) + var(--map-line-detail)) var(--map-outline-c)}
+.msCssTiles .tThumb{border:var(--map-line-detail) solid var(--map-outline-c)}
+
+/* ---------- Meadow overview ---------- */
+.msWorld{position:absolute;inset:8px}
+.msWorldBg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;border-radius:18px}
+.msNode{position:absolute;width:var(--map-node);height:var(--map-node);transform:translate(-50%,-50%);border:0;padding:0;background:none;z-index:2}
+.msNodeImg,.msNodeRing{position:absolute;inset:0;width:100%;height:100%}
+.msNode[data-kind="hub"] .msNodeRing{inset:-14%;width:128%;height:128%}
+.msNodeTx{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:2px;white-space:nowrap;font:800 13px system-ui;color:var(--map-ink);
+  text-shadow:0 0 3px #fff3d8,0 0 3px #fff3d8,0 0 6px #fff3d8}
+.msNode[data-kind="hub"] .msNodeTx{top:auto;bottom:100%;margin:0 0 4px}
+
+/* ---------- selected-level panel (portrait: under the well) ---------- */
+.msPanel{display:grid;grid-template-columns:148px minmax(0,1fr) 120px;grid-template-rows:auto auto 56px;
+  grid-template-areas:"thumb info info" "thumb stars stars" "play play timed";gap:6px 8px;padding:12px;position:relative}
+.msPanel::before{content:"";position:absolute;inset:0;z-index:-1;border:28px solid transparent;border-image:var(--ms-select-panel-1x) 28 fill / 28px stretch}
+.msPanel{z-index:0}
+.msThumb{grid-area:thumb;position:relative;width:148px;height:84px;padding:7px 8px;border-radius:14px;
+  background:center/100% 100% no-repeat;background-image:var(--ms-card-thumb-frame)}
+.msCard,.msCard picture{display:block;width:100%;height:100%}
+.msCard img,.msThumb img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+.msThumbEm{position:absolute;right:10px;bottom:6px;font-size:22px;filter:drop-shadow(0 1px 0 rgba(59,38,20,.6))}
+.msInfo{grid-area:info;min-width:0}
+.msName{font:800 17px/1.15 system-ui;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.msSubline{font:700 12px/1.25 system-ui;opacity:.8;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:2px}
+.msStarsRow{grid-area:stars;display:flex;align-items:center;gap:6px;min-height:24px}
+.pStars{height:24px;width:auto}.pBadge{width:24px;height:24px}.pSeed{width:26px;height:26px}.pTx{font:700 12px system-ui;opacity:.8}
+.msPlay{grid-area:play;height:56px;font:800 21px system-ui;color:var(--map-ink);
+  border-style:solid;border-color:transparent;border-width:10px 32px;border-image-source:var(--ms-btn-play-normal-1x);border-image-slice:10 32 10 32 fill;border-image-width:10px 32px;
+  background:none;display:flex;align-items:center;justify-content:center;padding:0 0 0 8px}
+body.adv #mapScreen #vGo{display:flex!important} /* index.html hides the old #vGo in adventure mode */
+.msPlay:active{border-image-source:var(--ms-btn-play-pressed-1x)}
+.msPlay:disabled{border-image-source:var(--ms-btn-play-disabled-1x);cursor:default;opacity:.85}
+.msTimed{grid-area:timed;width:120px;height:56px;border:0;padding:0 6px 0 42px;font:800 14px system-ui;text-align:center;
+  background:center/100% 100% no-repeat;background-image:var(--ms-toggle-timed-off)}
+.msTimed.on{background-image:var(--ms-toggle-timed-on)}
+#mapScreen[data-view="world"] .msPanel{grid-template-areas:"thumb info info" "thumb stars stars" "play play play"}
+#mapScreen[data-view="world"] .msPlay{max-width:236px}
+
+/* ---------- tall landscape (height > 500): 4 cols × 112 ---------- */
+@media (orientation:landscape){
+  #mapScreen{--map-cols:4;--map-tile:112px;--map-gap:8px;--map-pad:10px}
+  .msFrame{width:min(100%,1180px);max-height:none;grid-template-columns:minmax(0,1fr) 260px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"head head" "well panel"}
+  .msHead{grid-area:head;grid-template-columns:52px auto minmax(0,1fr) auto auto auto auto;grid-template-areas:"back title tabs petals stars prev next";gap:6px}
+  .msBack{width:52px;height:52px}
+  .msTitle{font-size:22px;padding-right:6px}
+  .msTabs{grid-template-columns:repeat(3,minmax(84px,120px));justify-content:center}
+  .msArrow{display:block}
+  #msPrev{grid-area:prev}#msNext{grid-area:next}
+  .msChip{height:52px;min-width:80px}
+  .msWell{grid-area:well}
+  .msPanel{grid-area:panel;grid-template-columns:minmax(0,1fr) 116px;grid-template-rows:auto auto auto minmax(0,1fr) 56px;
+    grid-template-areas:"thumb thumb" "info info" "stars timed" "gap gap" "play play";padding:12px}
+  .msThumb{width:100%;height:auto;aspect-ratio:236/110;padding:9px 10px}
+  .msTimed{width:116px}
+  .msPlay{max-width:none}
+  #mapScreen[data-view="world"] .msPanel{grid-template-areas:"thumb thumb" "info info" "stars stars" "gap gap" "play play"}
+  #mapScreen[data-view="world"] .msPlay{max-width:none}
+}
+/* ---------- short landscape (height ≤ 500, phones): 5 cols × 96, pad 8 ---------- */
+@media (orientation:landscape) and (max-height:500px){
+  #mapScreen{--map-cols:5;--map-tile:96px;--map-pad:8px;--map-node:52px}
+  #mapScreen{padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
+  .msFrame{gap:6px;padding:6px;border-radius:22px}
+  .msPanel{padding:8px 10px;gap:4px 8px}
+  .msThumb{max-height:118px}
+  .msName{font-size:16px}
+  .msTitle{font-size:20px}
+  .msTab span{font-size:13px}
+}
+@media (orientation:landscape) and (max-height:500px) and (max-width:760px){
+  .msChip{min-width:64px;padding:0 6px}
+  .msTabs{grid-template-columns:repeat(3,minmax(52px,96px))}
+  .msTab span{display:none}
+  .msFrame{grid-template-columns:minmax(0,1fr) 220px}
+}
+/* narrow portrait phones (< 360 wide): tiles shrink, never below 48 */
+@media (orientation:portrait) and (max-width:370px){
+  .msChip{min-width:62px;padding:0 6px;font-size:13px}
+  .msPanel{grid-template-columns:120px minmax(0,1fr) 108px}
+  .msThumb{width:120px;height:68px;padding:5px 6px}
+  .msTimed{width:108px}
+}
+@media (orientation:portrait) and (max-height:700px){
+  .msHead{gap:6px}
+  .msPanel{padding:8px 10px}
+}
+
+/* ---------- Hub HUD: Crew / Skins / Play-vs-Timed note moved off the map ---------- */
+#hubTools{display:none;position:fixed;left:50%;top:calc(max(12px,env(safe-area-inset-top)) + 58px);transform:translateX(-50%);z-index:9;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+body.inRound.inHub #hubTools{display:flex}
+body.inValley #hubTools{display:none!important}
+#hubTools .htRow{display:flex;gap:8px;pointer-events:auto}
+#hubTools button{min-height:48px;border:3px solid #3b2614;background:#fff3d8;color:#3b2614;font:800 14px system-ui;border-radius:14px;padding:8px 14px;box-shadow:0 3px 0 #3b2614;cursor:pointer}
+#hubNote{background:rgba(255,243,216,.94);border:2px solid #3b2614;border-radius:12px;padding:5px 10px;font:700 12px/1.25 system-ui;color:#3b2614;max-width:min(92vw,420px);text-align:center;animation:hubNoteFade 10s ease-in forwards}
+@keyframes hubNoteFade{0%,80%{opacity:1}100%{opacity:0;visibility:hidden}}
+@media (orientation:landscape) and (max-height:500px){#hubTools{top:max(10px,env(safe-area-inset-top));left:auto;right:max(84px,env(safe-area-inset-right));transform:none;align-items:flex-end}#hubTools button{min-height:44px;padding:6px 10px;font-size:13px}}
+#mapScreen[data-view="world"] .msBackdrop{filter:blur(5px);opacity:.55}

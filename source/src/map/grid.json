@@ -1,0 +1,441 @@
+{
+  "scheme": "Square level tiles in a CSS-style grid, used the same way for Act 1, Act 2 and Act 3. Origin of the grid is the top-left of layout.json map_inner. Tiles flow left-to-right, top-to-bottom in story order. There are no per-tile UVs. The Meadow overview (Hub map button) is not a grid \u2014 see overview.",
+  "tap_min_css": 48,
+  "columns": {
+    "portrait": 3,
+    "landscape": 4,
+    "landscape_short": 5,
+    "landscape_short_when": "orientation is landscape AND the viewport is 500 CSS px tall or less. The 844\u00d7390 phone artboard uses landscape_short."
+  },
+  "tile": {
+    "source_css": [
+      112,
+      112
+    ],
+    "radius_css": 16,
+    "portrait": [
+      102,
+      102
+    ],
+    "landscape": [
+      112,
+      112
+    ],
+    "landscape_short": [
+      96,
+      96
+    ],
+    "gap_portrait": 8,
+    "gap_landscape": 8,
+    "gap_landscape_short": 8,
+    "note": "Author at 112\u00d7112 (and @2x). The rounded face is inset 8 CSS px so the selected ring stays on-canvas. Scale down uniformly to the orientation size. Do not shrink below 48 px. Short-landscape pad is 8 so five 96 px tiles with 8 px column gaps fit the 528 px well exactly. Overlays (number, badge, Starseed) sit inside the face with at least 4 CSS px clear of any edge, at every tile size including 96 px. Stars are not on the face \u2014 see star_row.",
+    "slots_on_source_112": {
+      "face": [
+        8,
+        8,
+        96,
+        96
+      ],
+      "number": [
+        14,
+        14,
+        22,
+        20
+      ],
+      "thumb_well": [
+        16,
+        38,
+        80,
+        52
+      ],
+      "badge": [
+        76,
+        14,
+        22,
+        22
+      ],
+      "starseed": [
+        14,
+        80,
+        22,
+        22
+      ],
+      "note": "Number, badge and Starseed stay inside the face. Values already include a 6 px inset on the 112 source (5.1 px once scaled to a 96 px tile), which meets the 4 px display minimum. Stars are not a face slot."
+    },
+    "pad_portrait": 10,
+    "pad_landscape": 10,
+    "pad_landscape_short": 8,
+    "face_inset_css": 8,
+    "margin_min_css": 4,
+    "gap_row_portrait": 8,
+    "gap_row_landscape": 8,
+    "gap_row_landscape_short": 8
+  },
+  "scroll": {
+    "axis": "vertical",
+    "rule": "Lay out tiles in `columns` columns with column `gap` and `pad`. Each cell is tile height + star_row (4 px gap_above + 24 px art). Row gap (8) sits between the star row of one cell and the next tile. If the block is taller than map_inner.height, the grid scrolls vertically inside the well (no scroll-x, no shrinking tiles below 48 px). Portrait: 3 cells of 130 + 2\u00d78 gaps + 2\u00d710 pad = 426, well 496, leftover 70 \u2014 3\u00d73 of 9 tiles fits, no scroll. Short landscape: 2 cells of 124 + 8 gap + 2\u00d78 pad = 272, well 282, leftover 10 \u2014 5+4 of 9 tiles fits, no scroll. A taller landscape using 4 columns needs 3 rows for 9 tiles and will scroll on a 282 px-tall well."
+  },
+  "states": {
+    "new": {
+      "tile": "tiles/tile-new.png",
+      "stars": false,
+      "note": "Unplayed. Cream rounded square, empty well."
+    },
+    "played": {
+      "tile": "tiles/tile-played.png",
+      "stars": "stars-0 in the star row under scored levels; hide the row on tutorials (the cell height is still reserved)",
+      "note": "Visited, 0 stars (or a finished tutorial). Mint wash and a check."
+    },
+    "stars_1_3": {
+      "tile": "tiles/tile-done.png",
+      "stars": "nodes/stars-{1,2,3}.png in the star row under the tile",
+      "note": "Cleared with 1\u20133 base stars. Stars sit under the tile, 4 px clear of its bottom edge."
+    },
+    "challenge_star": {
+      "badge": "nodes/badge-challenge.png",
+      "slot": "badge",
+      "note": "Dusk challenge badge, top-right inside the face, at least 4 CSS px from any edge. Stacks on any cleared state."
+    },
+    "starseed": {
+      "marker": "nodes/marker-starseed.png",
+      "slot": "starseed",
+      "note": "Secret Starseed found. 48\u00d748 source, scaled into the starseed slot at the face's bottom-left, at least 4 CSS px from any edge. The tile itself is the tap target."
+    },
+    "selected": {
+      "tile": "tiles/tile-selected.png",
+      "note": "The tile whose details are in the selected-level panel. Honey ring. Use this when the tile is selected but is not also current."
+    },
+    "current": {
+      "tile": "tiles/tile-current.png",
+      "note": "The player's current / last-played level. Honey fill + honey ring. If the current tile is also selected, use tile-current (do not stack both rings)."
+    },
+    "locked": {
+      "tile": "tiles/tile-locked.png",
+      "note": "Optional. Gates are off in the current beta (LEVEL_GATES_ENABLED = false)."
+    },
+    "tutorial": {
+      "badge": "nodes/badge-trail.png",
+      "slot": "badge",
+      "note": "Training Garden and Trailhead Trials: no level number, no star row, trail badge in the badge slot."
+    }
+  },
+  "acts": {
+    "act1": {
+      "id": "act1",
+      "title": "Valley",
+      "subtitle": "Act 1",
+      "source": "tc/source/src/valley.js ACT1_PATCHES + training_garden, in PATCHES / MAP.slots story order. Training Garden is on the Act 1 grid but is not one of the eight story levels (ACT1_IDS).",
+      "order": [
+        "training_garden",
+        "sunny_hollow",
+        "creek_bend",
+        "moon_meadow",
+        "log_jam",
+        "picnic_lawn",
+        "cliff_orchard",
+        "windy_rise",
+        "festival_glade"
+      ],
+      "tiles": [
+        {
+          "id": "training_garden",
+          "name": "Training Garden",
+          "n": null,
+          "kind": "tutorial"
+        },
+        {
+          "id": "sunny_hollow",
+          "name": "Sunny Hollow",
+          "n": 1,
+          "kind": "level"
+        },
+        {
+          "id": "creek_bend",
+          "name": "Creek Bend",
+          "n": 2,
+          "kind": "level"
+        },
+        {
+          "id": "moon_meadow",
+          "name": "Moon Meadow",
+          "n": 3,
+          "kind": "level"
+        },
+        {
+          "id": "log_jam",
+          "name": "Log Jam",
+          "n": 4,
+          "kind": "level"
+        },
+        {
+          "id": "picnic_lawn",
+          "name": "Picnic Lawn",
+          "n": 5,
+          "kind": "level"
+        },
+        {
+          "id": "cliff_orchard",
+          "name": "Cliff Orchard",
+          "n": 6,
+          "kind": "level"
+        },
+        {
+          "id": "windy_rise",
+          "name": "Windy Rise",
+          "n": 7,
+          "kind": "level"
+        },
+        {
+          "id": "festival_glade",
+          "name": "Festival Glade",
+          "n": 8,
+          "kind": "level"
+        }
+      ]
+    },
+    "act2": {
+      "id": "act2",
+      "title": "Trail",
+      "subtitle": "Act 2",
+      "source": "tc/source/src/valley.js ACT2_PATCHES story order. Trailhead Trials is a square tile like the others (not a full-width banner).",
+      "order": [
+        "trailhead_trials",
+        "sunbeam_grove",
+        "mill_pond",
+        "bramble_patch",
+        "weathervane_hill",
+        "hornet_hedge",
+        "owl_wood",
+        "frost_hollow",
+        "backyard_split"
+      ],
+      "tiles": [
+        {
+          "id": "trailhead_trials",
+          "name": "Trailhead Trials",
+          "n": null,
+          "kind": "tutorial"
+        },
+        {
+          "id": "sunbeam_grove",
+          "name": "Sunbeam Grove",
+          "n": 9,
+          "kind": "level"
+        },
+        {
+          "id": "mill_pond",
+          "name": "Mill Pond",
+          "n": 10,
+          "kind": "level"
+        },
+        {
+          "id": "bramble_patch",
+          "name": "Bramble Patch",
+          "n": 11,
+          "kind": "level"
+        },
+        {
+          "id": "weathervane_hill",
+          "name": "Weathervane Hill",
+          "n": 12,
+          "kind": "level"
+        },
+        {
+          "id": "hornet_hedge",
+          "name": "Hornet Hedge",
+          "n": 13,
+          "kind": "level"
+        },
+        {
+          "id": "owl_wood",
+          "name": "Owl Wood",
+          "n": 14,
+          "kind": "level"
+        },
+        {
+          "id": "frost_hollow",
+          "name": "Frost Hollow",
+          "n": 15,
+          "kind": "level"
+        },
+        {
+          "id": "backyard_split",
+          "name": "Backyard Split",
+          "n": 16,
+          "kind": "level"
+        }
+      ]
+    },
+    "act3": {
+      "id": "act3",
+      "title": "Friends",
+      "subtitle": "Act 3",
+      "source": "tc/source/src/valley.js ACT3_PATCHES (levels 17\u201324). Meadow Hub is not a playable level and is not on this grid \u2014 it lives on the Meadow overview.",
+      "order": [
+        "ember_ridge",
+        "flooded_mill",
+        "night_market",
+        "mirror_caves",
+        "storm_orchard",
+        "thaw_valley",
+        "grand_garden",
+        "starheart_summit"
+      ],
+      "tiles": [
+        {
+          "id": "ember_ridge",
+          "name": "Ember Ridge",
+          "n": 17,
+          "kind": "level"
+        },
+        {
+          "id": "flooded_mill",
+          "name": "Flooded Mill",
+          "n": 18,
+          "kind": "level"
+        },
+        {
+          "id": "night_market",
+          "name": "Night Market",
+          "n": 19,
+          "kind": "level"
+        },
+        {
+          "id": "mirror_caves",
+          "name": "Mirror Caves",
+          "n": 20,
+          "kind": "level"
+        },
+        {
+          "id": "storm_orchard",
+          "name": "Storm Orchard",
+          "n": 21,
+          "kind": "level"
+        },
+        {
+          "id": "thaw_valley",
+          "name": "Thaw Valley",
+          "n": 22,
+          "kind": "level"
+        },
+        {
+          "id": "grand_garden",
+          "name": "Grand Garden",
+          "n": 23,
+          "kind": "level"
+        },
+        {
+          "id": "starheart_summit",
+          "name": "Starheart Summit",
+          "n": 24,
+          "kind": "level"
+        }
+      ]
+    }
+  },
+  "overview": {
+    "id": "world",
+    "title": "Meadow",
+    "official": true,
+    "opens_from": "The Hub's Levels / Trail Board button (#bHubMap). Tapping a region node opens that act's tab (the square-tile grid). Back in the header returns to the 3D Hub.",
+    "source": "Official design for the Hub map button. Three act-region nodes plus a Hub home pin, in the same shared frame. This is not a level grid.",
+    "coordinate_scheme": "Normalised 0\u20131 centres in layout.json map_inner (same well the grids use). Origin top-left. 56 CSS px nodes, tap 56.",
+    "path": [
+      "act1_region",
+      "act2_region",
+      "act3_region"
+    ],
+    "nodes": [
+      {
+        "id": "meadow_hub",
+        "name": "Meadow Hub",
+        "n": null,
+        "kind": "hub",
+        "portrait": {
+          "u": 0.5,
+          "v": 0.58
+        },
+        "landscape": {
+          "u": 0.48,
+          "v": 0.5
+        }
+      },
+      {
+        "id": "act1_region",
+        "name": "Valley",
+        "n": null,
+        "kind": "region",
+        "opens": "act1",
+        "portrait": {
+          "u": 0.3,
+          "v": 0.82
+        },
+        "landscape": {
+          "u": 0.16,
+          "v": 0.62
+        }
+      },
+      {
+        "id": "act2_region",
+        "name": "Trail",
+        "n": null,
+        "kind": "region",
+        "opens": "act2",
+        "portrait": {
+          "u": 0.76,
+          "v": 0.62
+        },
+        "landscape": {
+          "u": 0.55,
+          "v": 0.7
+        }
+      },
+      {
+        "id": "act3_region",
+        "name": "Friends",
+        "n": null,
+        "kind": "region",
+        "opens": "act3",
+        "portrait": {
+          "u": 0.46,
+          "v": 0.22
+        },
+        "landscape": {
+          "u": 0.84,
+          "v": 0.36
+        }
+      }
+    ]
+  },
+  "star_row": {
+    "height_css": 24,
+    "gap_above_css": 4,
+    "asset": "nodes/stars-{0,1,2,3}.png",
+    "asset_css": [
+      80,
+      24
+    ],
+    "note": "Stars sit in a dedicated row under the tile, never on the rounded square and never touching a tile edge. gap_above_css (4) is clear space from the tile's bottom edge to the star art. The star asset itself has 4 CSS px of internal padding so the tips do not touch its own box. Cell height = tile height + gap_above + star asset height (102+4+24=130 portrait, 96+4+24=124 short landscape). The 8 px row gap then separates the star row from the next tile (also >= 4 px). Every cell reserves this row so the grid stays aligned when a tile has no stars (new levels, tutorials)."
+  },
+  "thumbs": {
+    "dir": "thumbs/",
+    "spec": "thumbs/thumbs.json",
+    "tile_css": [
+      94,
+      94
+    ],
+    "tile_2x": [
+      188,
+      188
+    ],
+    "panel_css": [
+      236,
+      133
+    ],
+    "panel_2x": [
+      472,
+      266
+    ],
+    "note": "Square thumbs fill the tile face inside the 2 CSS px stroke at the largest tile size (112). Scale down uniformly for 102 and 96 px tiles. 16:9 panel thumbs cover the selected-level card-thumb rects (portrait 148\u00d784, landscape 236\u00d7110) without upscaling. Each entry in thumbs/thumbs.json maps a tile id to its intro card, the square crop, the 16:9 panel crop, and the shipped PNG/WebP files. Meadow Hub has no dedicated card; its thumb is a Home Stump crop of the Act 1 title."
+  }
+}
