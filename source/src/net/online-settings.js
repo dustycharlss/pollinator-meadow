@@ -160,7 +160,13 @@ export function createOnlineSettings(hooks = {}) {
     document.getElementById('sClose')?.addEventListener('click', onSettingsClosed);
     const ov = document.getElementById('settings');
     if (ov) {
-      const mo = new MutationObserver(() => { if (!ov.classList.contains('on')) onSettingsClosed(); });
+      const mo = new MutationObserver(() => {
+        if (!ov.classList.contains('on')) onSettingsClosed();
+        else if (isOnlineDev() && !document.getElementById('sOnline')?.hidden) {
+          // Visible before the grown-up hold (alba-add-hooks.md, N2 menu).
+          try { hooks.audio?.speak?.('settings.online.allow'); } catch (e) {}
+        }
+      });
       mo.observe(ov, { attributes: true, attributeFilter: ['class'] });
     }
     mounted = true;

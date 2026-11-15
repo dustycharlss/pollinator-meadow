@@ -81,6 +81,16 @@ export function createLobby(hooks = {}) {
   function audio() { return hooks.audio; }
   function sfx(name, vol = 0.5) { try { audio()?.sample?.('online/' + name, vol); } catch (e) {} }
   function toast(s, ms) { hooks.toast?.(s, ms); }
+  function speak(id) { try { hooks.audio?.speak?.(id); } catch (e) {} }
+  const SCREEN_VOICE = {
+    choice: 'lobby.btn-play-friends',
+    join: 'lobby.join.title',
+    host: 'lobby.host.title',
+    asking: 'lobby.asking',
+    full: 'lobby.full',
+    'pin-enter': 'lobby.pin.prompt',
+    approve: 'lobby.approve-card',
+  };
   function pathInfo() {
     const t = transport;
     return {
@@ -162,7 +172,7 @@ export function createLobby(hooks = {}) {
       if (err && err.code === 'room-full' && role !== 'host') {
         stopFind();
         stopHello();
-        toast('Room is full', 3200);
+        toast('Room is full', 3200); speak('lobby.full');
         showScreen('full');
         render();
       }
@@ -217,9 +227,9 @@ export function createLobby(hooks = {}) {
       }
     }
     if (d.to && d.to !== me) return;
-    if (typ === 'full') { stopFind(); stopHello(); toast('Room is full', 3200); showScreen('full'); render(); return; }
+    if (typ === 'full') { stopFind(); stopHello(); toast('Room is full', 3200); speak('lobby.full'); showScreen('full'); render(); return; }
     if (typ === 'locked') { stopFind(); stopHello(); toast('This room is locked', 2600); showScreen('choice'); return; }
-    if (typ === 'deny') { stopFind(); stopHello(); toast('The host said not now', 2800); showScreen('choice'); sfx('connection-lost', 0.4); return; }
+    if (typ === 'deny') { stopFind(); stopHello(); toast('The host said not now', 2800); speak('lobby.denied'); showScreen('choice'); sfx('connection-lost', 0.4); return; }
     if (typ === 'pin-nonce') { stopFind(); pinNonce = b64ToBytes(d.nonce); pinHostId = d.hostPeer || d.from || ''; pick = []; pinHint = ''; showScreen('pin-enter'); render(); return; }
     if (typ === 'pin-result') {
       if (d.ok) { stopFind(); showScreen('asking'); render(); return; }
@@ -244,9 +254,9 @@ export function createLobby(hooks = {}) {
       return;
     }
     if (typ === 'emote' && d.emote) hooks.onEmote?.(d.from, d.emote);
-    if (typ === 'pin-room-lock') { stopFind(); stopHello(); toast('Someone keeps guessing the PIN. Try a new code.', 3000); showScreen('choice'); }
+    if (typ === 'pin-room-lock') { stopFind(); stopHello(); toast('Someone keeps guessing the PIN. Try a new code.', 3000); speak('lobby.pin.guessing'); showScreen('choice'); }
     if (typ === 'host-left' || typ === 'ended') {
-      toast("The host's game ended. Back to your Meadow 🌼", 3200);
+      toast("The host's game ended. Back to your Meadow 🌼", 3200); speak('lobby.hostLeft');
       leave('host-left');
     }
   }
@@ -258,7 +268,7 @@ export function createLobby(hooks = {}) {
       if (!timingSafeEqual(reply, expect)) {
         const r = pinGuard.recordFail(d.from);
         send('pin-result', { to: d.from, ok: false, lockMs: r.lockMs, room: r.roomLocked });
-        if (r.roomLocked) toast('Someone keeps guessing your PIN. Make a new code? 🔄', 4000);
+        if (r.roomLocked) toast('Someone keeps guessing your PIN. Make a new code? 🔄', 4000); speak('lobby.pin.guessing');
         return;
       }
       pinGuard.recordPass(d.from);
@@ -369,7 +379,7 @@ export function createLobby(hooks = {}) {
   }
 
   function startHosting() {
-    if (!allowed()) { toast('Online play is turned off on this device. Ask a grown-up.', 2800); return; }
+    if (!allowed()) { toast('Online play is turned off on this device. Ask a grown-up.', 2800); speak('lobby.onlineOff'); return; }
     role = 'host';
     code = randomCode();
     pinWords = null;
@@ -390,7 +400,7 @@ export function createLobby(hooks = {}) {
   }
 
   function beginJoin(words) {
-    if (!allowed()) { toast('Online play is turned off on this device. Ask a grown-up.', 2800); return; }
+    if (!allowed()) { toast('Online play is turned off on this device. Ask a grown-up.', 2800); speak('lobby.onlineOff'); return; }
     const parsed = Array.isArray(words) ? words : parseCode(words);
     if (!parsed) { toast('Not a known code. Check the four pictures.', 2400); return; }
     role = 'client';
@@ -406,7 +416,7 @@ export function createLobby(hooks = {}) {
     findTimer = setTimeout(() => {
       findTimer = null;
       stopHello();
-      if (screen === 'asking') { toast("Couldn't find that game. Check the code.", 3000); showScreen('join'); render(); }
+      if (screen === 'asking') { toast("Couldn't find that game. Check the code.", 3000); speak('lobby.failed.title'); showScreen('join'); render(); }
     }, 15000);
   }
 
@@ -484,9 +494,11 @@ export function createLobby(hooks = {}) {
   }
 
   function showScreen(name) {
+    const changed = screen !== name;
     openRoot();
     screen = name;
     bar.hidden = !(name === 'room' || name === 'host');
+    if (changed && SCREEN_VOICE[name]) speak(SCREEN_VOICE[name]);
   }
 
   function imgBtn(src, label, fn, cls = 'olIco') {
@@ -657,9 +669,11 @@ export function createLobby(hooks = {}) {
       const s = Math.ceil(lockMs / 1000);
       pinHint = `Take a little break ⏳ 0:${String(s).padStart(2, '0')}`;
       toast(pinHint, 2800);
+      speak('lobby.pin.lockout');
     } else {
       pinHint = 'Not quite! Ask your friend for the PIN 🙂';
       toast(pinHint, 2600);
+      speak('lobby.pin.wrong');
     }
     pick = [];
     render();
@@ -760,7 +774,7 @@ export function createLobby(hooks = {}) {
 
   function openChoice() {
     if (!isOnlineDev()) return;
-    if (!allowed()) { toast('Online play is turned off on this device. Ask a grown-up.', 2800); return; }
+    if (!allowed()) { toast('Online play is turned off on this device. Ask a grown-up.', 2800); speak('lobby.onlineOff'); return; }
     playLobbyMusic();
     showScreen('choice');
     render();
@@ -769,7 +783,7 @@ export function createLobby(hooks = {}) {
   function maybeAutoJoin() {
     if (!isOnlineDev()) return;
     if (!allowed()) {
-      if (parseJoinCode()) toast('Online play is turned off on this device. Ask a grown-up.', 3200);
+      if (parseJoinCode()) toast('Online play is turned off on this device. Ask a grown-up.', 3200); speak('lobby.onlineOff');
       return;
     }
     const raw = parseJoinCode();
