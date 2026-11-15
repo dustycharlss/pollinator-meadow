@@ -1,6 +1,10 @@
-/** Resolve shipped online / closet art against the site base (Pages is not at /). */
-const BASE = import.meta.env.BASE_URL || './';
-const url = (p) => `url(${BASE}${p})`;
+/** Resolve shipped online / closet art against the document (not the CSS file in assets/). */
+function assetUrl(p) {
+  const base = import.meta.env.BASE_URL || './';
+  try { return new URL(p, new URL(base, document.baseURI)).href; }
+  catch (e) { return base + p; }
+}
+const url = (p) => `url("${assetUrl(p)}")`;
 
 export function installOnlineArt() {
   const r = document.documentElement.style;
@@ -15,5 +19,3 @@ export function installOnlineArt() {
   r.setProperty('--ol-closet-equipped', url('act3/ui/closet/card-equipped.png'));
   r.setProperty('--ol-closet-unequipped', url('act3/ui/closet/card-unequipped.png'));
 }
-
-export { BASE };

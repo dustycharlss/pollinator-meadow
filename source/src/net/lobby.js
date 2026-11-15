@@ -88,6 +88,11 @@ export function createLobby(hooks = {}) {
 
   function audio() { return hooks.audio; }
   function sfx(name, vol = 0.5) { try { audio()?.sample?.('online/' + name, vol); } catch (e) {} }
+  const PIN_TAPS = ['pin-tap', 'sfx-n2/pin-tap-b', 'sfx-n2/pin-tap-c', 'sfx-n2/pin-tap-d'];
+  function pinTapSfx() { sfx(PIN_TAPS[(Math.random() * PIN_TAPS.length) | 0], 0.35); }
+  const ASK_LOOP = 'online/sfx-n2/asking-host-loop';
+  function startAskingLoop() { try { audio()?.startLoop?.(ASK_LOOP, 0.4); } catch (e) {} }
+  function stopAskingLoop() { try { audio()?.stopLoop?.(ASK_LOOP); } catch (e) {} }
   function toast(s, ms) { hooks.toast?.(s, ms); }
   function speak(id) { try { hooks.audio?.speak?.(id); } catch (e) {} }
   function ensureCopiedEl() {
@@ -108,6 +113,7 @@ export function createLobby(hooks = {}) {
     clearTimeout(copiedT);
     copiedT = setTimeout(() => { copiedOn = false; n.hidden = true; if (root && !root.hidden) render(); }, 2400);
     if (root && !root.hidden) render();
+    sfx('sfx-n2/copied-pop', 0.5);
   }
   const SCREEN_VOICE = {
     choice: 'lobby.btn-play-friends',
@@ -160,10 +166,13 @@ export function createLobby(hooks = {}) {
   }
 
   function closeUi() {
+    const staying = !!role;
     if (root) root.hidden = true;
     screen = 'closed';
+    stopAskingLoop();
     if (lobbyMusic && audio()?.music?.current === 'lobby') audio().music.mood(hooks.hubMood?.() || 'hub');
     lobbyMusic = false;
+    if (staying) sfx('sfx-n2/room-start-whoosh', 0.55);
   }
 
   function openRoot() {
@@ -202,6 +211,7 @@ export function createLobby(hooks = {}) {
         stopHello();
         toast('Room is full', 3200); speak('lobby.full');
         statusBanner = 'Room is full'; showScreen('full');
+        sfx('sfx-n2/room-full', 0.5);
         render();
       }
     });
@@ -255,9 +265,9 @@ export function createLobby(hooks = {}) {
       }
     }
     if (d.to && d.to !== me) return;
-    if (typ === 'full') { stopFind(); stopHello(); toast('Room is full', 3200); speak('lobby.full'); statusBanner = 'Room is full'; showScreen('full'); render(); return; }
+    if (typ === 'full') { stopFind(); stopHello(); toast('Room is full', 3200); speak('lobby.full'); statusBanner = 'Room is full'; showScreen('full'); sfx('sfx-n2/room-full', 0.5); render(); return; }
     if (typ === 'locked') { stopFind(); stopHello(); toast('This room is locked', 2600); showScreen('choice'); return; }
-    if (typ === 'deny') { stopFind(); stopHello(); toast('The host said not now', 2800); speak('lobby.denied'); statusBanner = 'The host said not now'; showScreen('denied'); sfx('connection-lost', 0.4); render(); return; }
+    if (typ === 'deny') { stopFind(); stopHello(); toast('The host said not now', 2800); speak('lobby.denied'); statusBanner = 'The host said not now'; showScreen('denied'); sfx('sfx-n2/host-said-not-now', 0.5); render(); return; }
     if (typ === 'pin-nonce') { stopFind(); pinNonce = b64ToBytes(d.nonce); pinHostId = d.hostPeer || d.from || ''; pick = []; pinHint = ''; showScreen('pin-enter'); render(); return; }
     if (typ === 'pin-result') {
       if (d.ok) { stopFind(); statusBanner = 'Asking the host…'; showScreen('asking'); render(); return; }
@@ -271,7 +281,6 @@ export function createLobby(hooks = {}) {
         stopHello();
         role = 'client';
         sfx('joined', 0.55);
-        audio()?.music?.jingle?.('joined');
       }
       if (d.players) players = d.players;
       if (d.usePin != null) usePin = d.usePin;
@@ -396,7 +405,7 @@ export function createLobby(hooks = {}) {
       b.className = 'olPlayFriends';
       b.type = 'button';
       b.textContent = 'Play with friends';
-      b.addEventListener('click', () => openChoice());
+      b.addEventListener('click', () => { sfx('sfx-n2/play-friends-tap', 0.5); openChoice(); });
       const trow = document.querySelector('#title .trow');
       if (trow && trow.parentNode) trow.parentNode.insertBefore(b, trow);
       else menu.appendChild(b);
@@ -450,6 +459,7 @@ export function createLobby(hooks = {}) {
   }
 
   function leave(why) {
+    if (why === 'lobby' || why === 'pause') sfx('sfx-n2/leave-game', 0.5);
     stopHello();
     if (role) send('leave', { why });
     if (role === 'host') send('ended', { why });
@@ -529,6 +539,8 @@ export function createLobby(hooks = {}) {
     screen = name;
     bar.hidden = !(name === 'room' || name === 'host');
     if (changed && SCREEN_VOICE[name]) speak(SCREEN_VOICE[name]);
+    if (name === 'asking') startAskingLoop();
+    else stopAskingLoop();
   }
 
   function imgBtn(src, label, fn, cls = 'olIco') {
@@ -576,8 +588,8 @@ export function createLobby(hooks = {}) {
         return b;
       };
       row.append(
-        mkChoice('choice-host', 'Host a game', startHosting),
-        mkChoice('choice-join', 'Join a game', () => { pick = []; tab = 0; statusBanner = ''; showScreen('join'); render(); }),
+        mkChoice('choice-host', 'Host a game', () => { sfx('sfx-n2/choice-host', 0.5); startHosting(); }),
+        mkChoice('choice-join', 'Join a game', () => { sfx('sfx-n2/choice-join', 0.5); pick = []; tab = 0; statusBanner = ''; showScreen('join'); render(); }),
       );
       body.append(row);
       const fold = el('details', 'olHint');
@@ -642,7 +654,9 @@ export function createLobby(hooks = {}) {
 
     if (screen === 'host' || screen === 'room') {
       title.textContent = role === 'host' ? 'Your room' : 'Friends';
-      body.append(renderCodeWells(code || []));
+      const left = el('div', 'olRoomCol');
+      const right = el('div', 'olRoomCol');
+      left.append(renderCodeWells(code || []));
       if (role === 'host') {
         const tools = el('div', 'olTools');
         tools.append(
@@ -650,23 +664,24 @@ export function createLobby(hooks = {}) {
           iconTool(ICON('lobby', locked ? 'btn-lock-on' : 'btn-lock-off'), locked ? 'Unlock' : 'Lock', () => { locked = !locked; broadcastState(); render(); }),
           iconTool(ICON('lobby', usePin ? 'btn-pin-on' : 'btn-pin-off'), usePin ? 'Secret PIN on' : 'Secret PIN', togglePin),
         );
-        body.append(tools);
+        left.append(tools);
         if (usePin && pinWords) {
-          body.append(el('p', 'olHint', 'Say the PIN out loud. It is not in the link.'));
-          body.append(renderCodeWells(pinWords, { badges: false }));
-          body.append(iconTool((import.meta.env.BASE_URL || './') + 'ui/online/pin/btn-reroll.png', 'New PIN', freshPin));
+          left.append(el('p', 'olHint', 'Say the PIN out loud. It is not in the link.'));
+          left.append(renderCodeWells(pinWords, { badges: false }));
+          left.append(iconTool((import.meta.env.BASE_URL || './') + 'ui/online/pin/btn-reroll.png', 'New PIN', freshPin));
         }
-        body.append(el('p', 'olHint', 'Waiting for friends'));
+        left.append(el('p', 'olHint', 'Waiting for friends'));
       }
-      body.append(renderRoster());
-      body.append(renderClassCards());
-      if (copiedOn) body.append(el('div', 'olCopied', 'Copied!'));
+      right.append(renderRoster());
+      right.append(renderClassCards());
+      if (copiedOn) right.append(el('div', 'olCopied', 'Copied!'));
       if (role) {
         const leaveBtn = el('button', 'olLeave', 'Leave game');
         leaveBtn.type = 'button';
         leaveBtn.onclick = () => leave('lobby');
-        body.append(leaveBtn);
+        right.append(leaveBtn);
       }
+      body.append(left, right);
       return;
     }
   }
@@ -762,6 +777,7 @@ export function createLobby(hooks = {}) {
       b.onclick = () => {
         if (b.disabled) return;
         if (mine) mine.cls = c.id;
+        sfx('sfx-n2/character-pick', 0.5);
         if (role === 'host') { broadcastState(); render(); }
         else send('pick-class', { cls: c.id });
         render();
@@ -839,7 +855,7 @@ export function createLobby(hooks = {}) {
       const r = Math.floor(i / 4), c = i % 4;
       if (focusRC[0] === r && focusRC[1] === c) b.classList.add('focus');
       b.onclick = () => {
-        sfx('pin-tap', 0.35);
+        pinTapSfx();
         if (pick.length >= 4) return;
         pick = pick.concat(w);
         render();
@@ -902,7 +918,7 @@ export function createLobby(hooks = {}) {
     else if (ev.key === 'Enter' || ev.key === ' ') {
       if (pick.length === 4 && ev.key === 'Enter') { ev.preventDefault(); root.querySelector('.olBtn:not(.sec)')?.click(); return; }
       const w = words[focusRC[0] * 4 + focusRC[1]];
-      if (w && pick.length < 4) { pick = pick.concat(w); ev.preventDefault(); render(); }
+      if (w && pick.length < 4) { pinTapSfx(); pick = pick.concat(w); ev.preventDefault(); render(); }
     } else if (ev.key === 'Backspace') { pick = pick.slice(0, -1); ev.preventDefault(); render(); }
     else if (ev.key === 'Escape') { ev.preventDefault(); root.querySelector('.olHead button')?.click(); }
   }
@@ -910,6 +926,7 @@ export function createLobby(hooks = {}) {
   function showOffline() {
     const line = 'Online play is turned off on this device. Ask a grown-up.';
     toast(line, 2800); speak('lobby.onlineOff');
+    sfx('sfx-n2/online-play-off', 0.5);
     statusBanner = line;
     playLobbyMusic();
     showScreen('choice');

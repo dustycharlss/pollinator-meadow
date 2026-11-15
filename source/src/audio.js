@@ -46,6 +46,34 @@ export function createAudio() {
     for (const b of k === 'all' ? Object.keys(bus) : [k]) bus[b] && bus[b].gain.setTargetAtTime(gainOf(b), ctx.currentTime, 0.03);
   }
   const sfxOut = () => bus.sfx || ctx.destination;
+  const sfxLoops = new Map();
+  function startSfxLoop(name, vol = 0.45) {
+    api.start();
+    if (!ctx || muted) return;
+    const cur = sfxLoops.get(name);
+    if (cur && cur.el && !cur.el.paused) return;
+    if (cur) stopSfxLoop(name);
+    const ext0 = /^(act3|online)\//.test(name) ? EXT : EXT_SFX;
+    const el = withFallback(new Audio(BASE + 'audio/sfx/' + name + '.' + ext0));
+    el.loop = true; el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.muted = muted;
+    const rec = { el, g: null, vol, name };
+    try {
+      const src = ctx.createMediaElementSource(el), g = ctx.createGain();
+      g.gain.value = vol; src.connect(g); g.connect(sfxOut()); rec.g = g;
+    } catch (e) { rec.g = null; }
+    if (!rec.g) el.volume = Math.min(1, vol * gainOf('sfx') * gainOf('master'));
+    sfxLoops.set(name, rec);
+    if (!hidden && !muted) el.play().catch(() => {});
+  }
+  function stopSfxLoop(name) {
+    const stopOne = r => {
+      if (!r) return;
+      try { r.el.pause(); r.el.removeAttribute('src'); r.el.load(); } catch (e) {}
+      try { r.g && r.g.disconnect(); } catch (e) {}
+    };
+    if (name) { stopOne(sfxLoops.get(name)); sfxLoops.delete(name); }
+    else { for (const r of sfxLoops.values()) stopOne(r); sfxLoops.clear(); }
+  }
   const api = {
     music,
     start() {
@@ -66,7 +94,7 @@ export function createAudio() {
     set(k, v) { if (!(k in lv)) return; lv[k] = Math.max(0, Math.min(1, +v || 0)); apply(k); },
     levels: () => ({ ...lv }),
     volume(v) { api.set('master', v); },
-    setMute(m) { muted = !!m; for (const k in AMB) if (AMB[k].el) AMB[k].el.muted = muted; if (rainEl) rainEl.muted = muted; if (voiceEl) voiceEl.muted = muted; if (muted) api.stopVoice(); if (lvlAmb.el) { lvlAmb.el.muted = muted; if (!muted && !hidden) lvlAmb.el.play().catch(() => {}); } music.mute(muted); apply('master'); applyAmb(true); return !muted; },
+    setMute(m) { muted = !!m; for (const k in AMB) if (AMB[k].el) AMB[k].el.muted = muted; for (const r of sfxLoops.values()) r.el.muted = muted; if (rainEl) rainEl.muted = muted; if (voiceEl) voiceEl.muted = muted; if (muted) api.stopVoice(); if (lvlAmb.el) { lvlAmb.el.muted = muted; if (!muted && !hidden) lvlAmb.el.play().catch(() => {}); } music.mute(muted); apply('master'); applyAmb(true); return !muted; },
     toggle() { return api.setMute(!muted); },
     night(v, c = 0) { night = v; calm = c; applyAmb(); },
     /** ambience context: w = 0..1 closeness to water (creek bed), win = winter (no insects) */
@@ -116,6 +144,8 @@ export function createAudio() {
       if (!e.buf) { e.want = ctx.currentTime; return; }
       const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = e.buf; s.playbackRate.value = rate; g.gain.value = vol; s.connect(g); g.connect(/^ui2?\//.test(name) && bus.ui ? bus.ui : sfxOut()); s.start();
     },
+    startLoop: startSfxLoop,
+    stopLoop: stopSfxLoop,
     blip(n = 0) { if (!ctx || muted) return; const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(520 * Math.pow(1.0595, (n * 2) % 14), t); o.frequency.exponentialRampToValueAtTime(1100 * Math.pow(1.0595, (n * 2) % 14), t + 0.12); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28); o.connect(g).connect(sfxOut()); o.start(t); o.stop(t + 0.3); },
     chime() { if (!ctx || muted) return; [0, 4, 7, 12].forEach((s, i) => { const t = ctx.currentTime + i * 0.11, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = 440 * Math.pow(1.0595, s); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6); o.connect(g).connect(sfxOut()); o.start(t); o.stop(t + 0.65); }); },
     sparkle() { if (!ctx || muted) return; [0, 7, 12, 16, 19, 24].forEach((s, i) => { const t = ctx.currentTime + i * 0.07, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = 880 * Math.pow(1.0595, s); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); o.connect(g).connect(sfxOut()); o.start(t); o.stop(t + 0.55); }); },
@@ -164,6 +194,6 @@ export function createAudio() {
       return { rainSrc: rainEl ? (rainEl.paused ? 'loop-paused' : 'loop') : rainNoise ? 'noise' : 'none', started, ctxState: ctx && ctx.state, levels: { ...lv }, muted, bus: Object.fromEntries(Object.entries(bus).map(([k, b]) => [k, r(b.gain.value)])), busTarget: Object.fromEntries(Object.keys(bus).map(k => [k, r(gainOf(k))])), rainBase: RAIN_BASE, rainNode: rainN && r(rainN.gain.value), amb: Object.fromEntries(Object.entries(AMB).map(([k, A]) => [k, { loaded: !!A.el, playing: !!A.el && !A.el.paused, gain: A.g ? r(A.g.gain.value) : A.el ? r(A.el.volume) : 0, want: r(ambLevel(k)) }])) };
     },
   };
-  document.addEventListener('visibilitychange', () => { if (!started) return; music.hide(document.hidden); hidden = document.hidden; if (hidden) { for (const k in AMB) AMB[k].el && AMB[k].el.pause(); rainEl && rainEl.pause(); lvlAmb.el && lvlAmb.el.pause(); voiceEl && voiceEl.pause(); } else if (!muted) { ctx && ctx.resume && ctx.resume(); applyAmb(true); lvlAmb.el && lvlAmb.el.play().catch(() => {}); if (voiceEl && voiceEl.paused && voiceWant) voiceEl.play().catch(() => {}); } });
+  document.addEventListener('visibilitychange', () => { if (!started) return; music.hide(document.hidden); hidden = document.hidden; if (hidden) { for (const k in AMB) AMB[k].el && AMB[k].el.pause(); for (const r of sfxLoops.values()) r.el.pause(); rainEl && rainEl.pause(); lvlAmb.el && lvlAmb.el.pause(); voiceEl && voiceEl.pause(); } else if (!muted) { ctx && ctx.resume && ctx.resume(); applyAmb(true); for (const r of sfxLoops.values()) r.el.play().catch(() => {}); lvlAmb.el && lvlAmb.el.play().catch(() => {}); if (voiceEl && voiceEl.paused && voiceWant) voiceEl.play().catch(() => {}); } });
   return api;
 }
