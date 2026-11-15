@@ -1,0 +1,364 @@
+{
+ "id": "L24-starheart-summit",
+ "level": 24,
+ "recipeKey": "starheart_summit",
+ "name": "Starheart Summit",
+ "setting": "The finale: a spiral mountain with four rings reviewing past acts, the giant Starheart at the peak, then the carry relay back to the nest (Fern act3-levels-22-24.md \u00a74). Starts in Master Bell state C (summer, dusk, calm), moody. Enemies: Great Owl, Prowling Fox, wasps.",
+ "state": "Master Bell C: summer / dusk / calm (start state)",
+ "setpiece": "The summit plinth with the 12-sided Starheart and star crystals, the celebration arch and the Master Bell on the ring path, the spiral ledge curling down, dusk sky.",
+ "how_to_apply": "import PRESET_B from preset-B.json; const P = deepMerge(structuredClone(PRESET_B), presetB_override); const fx = applyPresetB(scene, renderer, { quality, camera, target, sky: true }, P); const composer = createComposerB(renderer, scene, camera, fx, P); then add extras.fills, materials from extras.emissive / water / ice.",
+ "presetB_override": {
+  "palette": {
+   "sky": {
+    "zenith": "#7c84d0",
+    "mid": "#f0a8c0",
+    "horizon": "#ffc89a"
+   },
+   "terrain": {
+    "grass": [
+     "#a2d6a2",
+     "#b4dca8",
+     "#94cc9c",
+     "#c4e0b0"
+    ]
+   },
+   "rock": {
+    "stone": "#9889a8"
+   }
+  },
+  "sun": {
+   "color": "#ffb08a",
+   "intensity": 2.6,
+   "azimuthDeg": 72,
+   "elevationDeg": 12
+  },
+  "hemi": {
+   "sky": "#b8a8f0",
+   "ground": "#ffc8a8",
+   "intensity": 2.2
+  },
+  "fog": {
+   "color": "#f4c0b8",
+   "near": 34,
+   "far": 100
+  },
+  "exposure": 1.0,
+  "skyGlow": {
+   "wide": 0.18,
+   "widePower": 6,
+   "core": 0.22,
+   "corePower": 60
+  },
+  "bloom": {
+   "strength": 0.4,
+   "radius": 0.7,
+   "threshold": 0.8
+  },
+  "grade": {
+   "vignette": 0.24,
+   "vignetteColor": "#b06888",
+   "haze": 0.025,
+   "hazeColor": "#ffc8a8",
+   "contrast": 1.05
+  },
+  "shadow": {
+   "camera": {
+    "left": -30,
+    "right": 30,
+    "top": 26,
+    "bottom": -26,
+    "near": 1,
+    "far": 180
+   },
+   "lengthPerMetre": 4.7
+  },
+  "quality": {
+   "low": {
+    "fogFar": 72,
+    "bakeGrade": {
+     "lightTint": "#ffdcc0",
+     "skyTint": "#ffd0b0",
+     "hazeMix": 0.2
+    }
+   }
+  }
+ },
+ "bloom_per_quality": {
+  "high": {
+   "strength": 0.4,
+   "radius": 0.7,
+   "threshold": 0.8,
+   "resolutionScale": 1.0
+  },
+  "medium": {
+   "strength": 0.34,
+   "radius": 0.7,
+   "threshold": 0.8,
+   "resolutionScale": 0.5,
+   "note": "game phone \"High\""
+  },
+  "low": {
+   "enabled": false,
+   "note": "no post; grade baked into lights (quality.low.bakeGrade); vignette via cssOverlayB"
+  }
+ },
+ "extras": {
+  "background": "sky dome (dusk C); distant peaks as one merged, fog-coloured backdrop mesh (1 call)",
+  "fills": [
+   {
+    "name": "crewFill",
+    "type": "PointLight",
+    "follow": "active crew member",
+    "color": "#ffe2c4",
+    "intensity": 6,
+    "distance": 8,
+    "decay": 1.5,
+    "quality": [
+     "high",
+     "medium"
+    ],
+    "note": "dusk only; off on Low (baked into hemi +0.2)"
+   },
+   {
+    "name": "starheartGlow",
+    "type": "PointLight",
+    "at": "Starheart",
+    "color": "#ffd27a",
+    "intensity": 5,
+    "distance": 8,
+    "decay": 2,
+    "quality": [
+     "high",
+     "medium",
+     "low"
+    ]
+   }
+  ],
+  "emissive": {
+   "starheart": {
+    "geometry": "DodecahedronGeometry (tc zones.js:877)",
+    "color": "#ffe066",
+    "emissive": "#ffb020",
+    "intensity": 0.15,
+    "colorMultiply": "#ffd070",
+    "roughness": 0.35,
+    "halo": null,
+    "note": "saturated gold body; no halo sprite (it turns the gem into a pale ghost against the dusk sky)"
+   },
+   "starCrystals": {
+    "color": "#ffe08a",
+    "emissive": "#e0b040",
+    "intensity": 0.45
+   },
+   "archLanterns": {
+    "emissive": "#ffb070",
+    "intensity": 0.6
+   },
+   "rule": "Starheart emissive <= 0.15 (warm #ffb020) under dusk bloom: higher values bloom into an orange blob (seen in the ending renders and the first summit target)."
+  },
+  "states": {
+   "C_summer_dusk": "this file (start)",
+   "A_winter_night": "use L22 values (moon key, crew fill 6, bloom threshold 0.88) with snow piles on Ring 3",
+   "B_spring_day": "use base B with sun 2.8 at 28 deg"
+  },
+  "terrain": "Spiral ring ledges are collision; render the mountain as one smooth heightfield/lathe with 2 m rounded ledge lips, rock vertex colours on steep faces (slope > 40 deg) and grass on treads; flatShading false.",
+  "crewFloor": {
+   "minMedianY": {
+    "bear": 0.046,
+    "raccoon": 0.04,
+    "bee": 0.32
+   },
+   "reference": "80% of each animal's median relative luminance in the base-B daylight frame (L23: bear 0.058, raccoon 0.050, bee 0.396)",
+   "note": "measured at 1x from the id-masks; night/cave/dusk must keep the crew as readable as daylight B (QA 5)"
+  },
+  "budget": {
+   "high": {
+    "calls": 400,
+    "tris": 190000
+   },
+   "medium": {
+    "calls": 290,
+    "tris": 125000
+   },
+   "low": {
+    "calls": 200,
+    "tris": 80000
+   },
+   "shadowMap": {
+    "high": 2048,
+    "medium": 2048,
+    "low": 1024
+   }
+  }
+ },
+ "budget_note": "Counts are renderer.info.render per frame INCLUDING the shadow pass, at 390x844 portrait gameplay framing. Game \"High\" on phones = preset medium (QA diff 1), so phone High uses the Medium column; desktop Ultra may use preset high.",
+ "instancing": [
+  "One InstancedMesh per (geometry, material) pair for every repeated deco: trees, flowers, grass tufts, rocks, crystals, fence/hedge segments, snow piles, pickups (petals). Never one Mesh per placement.",
+  "Merge static, non-interactive level geometry (terrain chunk + lane walls + backdrop) per 16 m z-chunk and per material with BufferGeometryUtils.mergeGeometries; keep interactables (levers, plates, mirrors, gates, bell) as their own meshes.",
+  "Atlas / share materials: <= 12 distinct materials per level on Low, <= 20 on High; reuse one pastelized MeshStandardMaterial per colour (cache by hex), and use vertex colours for terrain and rocks.",
+  "Shadows: only crew, babies, enemies and props taller than 1.5 m cast. Terrain, walls, small deco and pickups receive only. Low: 1024 PCF on, caster list = crew + babies + enemies only.",
+  "Cull: fog far is a hard draw distance. Hide (visible=false) any chunk whose nearest edge is beyond fog far + 5 m; never draw the full corridor.",
+  "World-space badges / rings / halos: one shared sprite material + InstancedMesh or a single Points cloud; cap screen size (QA minor 9).",
+  "Pollen motes stay the single InstancedMesh from makePollenMotesB."
+ ],
+ "deviations": [
+  {
+   "what": "Palette for CVD: Starheart gold #f0a030, rock #9889a8, path #b4a182",
+   "why": "Bee vs Starheart, bell vs rock and path vs grass were < 10 dE in grayscale.",
+   "approved": "Approved by Chaz, 14 Nov 2026 (CVD swatch deviations)"
+  },
+  {
+   "what": "Dusk sky and sun 2.6 at 12 deg",
+   "why": "State C is dusk (Fern \u00a74); the low warm sun is the finale mood. 12 deg not lower: shadows stay at 4.7 m per metre instead of 7+ so the ring path stays lit."
+  },
+  {
+   "what": "Shadow camera +/-30 m",
+   "why": "The summit view is wider than the meadow frame."
+  },
+  {
+   "what": "Starheart gold body, emissive 0.15, no halo, + local glow light; bloom 0.4 / threshold 0.8; grade haze 0.025, contrast 1.05",
+   "why": "The hero prop glows without blooming out and the dusk does not wash to pink haze."
+  },
+  {
+   "what": "Crew fill 6 (High/Medium)",
+   "why": "Low sun back-lights the crew on the north side of the spiral."
+  },
+  {
+   "what": "Sky glow wide 0.18 / core 0.22 (base 0.25 / 0.4)",
+   "why": "A 12-deg sun sits in view; the base glow washes the summit and the Starheart to pink haze."
+  }
+ ],
+ "approvals": [
+  {
+   "item": "CVD swatch deviations (every deviation starting \"Palette for CVD\")",
+   "status": "approved",
+   "by": "Chaz",
+   "date": "2026-11-14",
+   "levels": [
+    "L20-mirror-caves",
+    "L21-storm-orchard",
+    "L22-thaw-valley",
+    "L23-grand-garden",
+    "L24-starheart-summit"
+   ]
+  }
+ ],
+ "swatches": [
+  {
+   "name": "grass",
+   "hex": "#a2d6a2",
+   "role": "ring treads"
+  },
+  {
+   "name": "rock",
+   "hex": "#9889a8",
+   "role": "cliff faces"
+  },
+  {
+   "name": "starheart",
+   "hex": "#f0a030",
+   "role": "Starheart (gold body)"
+  },
+  {
+   "name": "crystal",
+   "hex": "#ffe08a",
+   "role": "star crystals"
+  },
+  {
+   "name": "arch",
+   "hex": "#f0a8c0",
+   "role": "celebration arch"
+  },
+  {
+   "name": "bell",
+   "hex": "#d8a850",
+   "role": "Master Bell"
+  },
+  {
+   "name": "fog",
+   "hex": "#f4c0b8",
+   "role": "dusk fog"
+  },
+  {
+   "name": "owl",
+   "hex": "#8a6a5a",
+   "role": "Great Owl"
+  },
+  {
+   "name": "bear",
+   "hex": "#a0683f",
+   "role": "crew bear"
+  },
+  {
+   "name": "raccoon",
+   "hex": "#8c8794",
+   "role": "crew raccoon"
+  },
+  {
+   "name": "bee",
+   "hex": "#ffd23f",
+   "role": "crew bee"
+  },
+  {
+   "name": "path",
+   "hex": "#b4a182",
+   "role": "ring path"
+  }
+ ],
+ "cvd_pairs": [
+  {
+   "a": "starheart",
+   "b": "rock",
+   "why": "hero vs cliff"
+  },
+  {
+   "a": "path",
+   "b": "grass",
+   "why": "path vs tread"
+  },
+  {
+   "a": "owl",
+   "b": "rock",
+   "why": "enemy vs cliff"
+  },
+  {
+   "a": "bear",
+   "b": "grass",
+   "why": "crew vs ground"
+  },
+  {
+   "a": "raccoon",
+   "b": "path",
+   "why": "crew vs path"
+  },
+  {
+   "a": "bee",
+   "b": "starheart",
+   "why": "bee vs Starheart (also shape)"
+  },
+  {
+   "a": "bell",
+   "b": "rock",
+   "why": "bell vs cliff"
+  }
+ ],
+ "cvd_method": "Machado 2009 severity 1.0 (protan, deutan, tritan) + grayscale (relative luminance); CIE76 in sRGB-D65 Lab; pass at dE >= 10.",
+ "qa_majors_addressed": {
+  "1": {
+   "major": "High that is not the real High",
+   "setting": "quality block: every level lists High/Medium/Low separately; phone \"High\" is labelled Medium-equivalent (pixelRatio 1.5, 2048 shadow, half-res bloom) and the budget is set per tier."
+  },
+  "2": {
+   "major": "Terraced, flat-shaded terrain",
+   "setting": "terrain block: smooth heightfield, flatShading false, rounded terrace shoulders / ledge lips; collision unchanged."
+  },
+  "4": {
+   "major": "Draw-call / triangle blowout on phones",
+   "setting": "budget block + instancing guide + fog far as draw distance."
+  },
+  "5": {
+   "major": "Underexposed night, black silhouettes",
+   "setting": "fills + hemi + exposure + crewFloor (median crew luminance checked on the frames)."
+  }
+ }
+}

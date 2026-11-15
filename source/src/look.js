@@ -8,6 +8,48 @@
 import * as THREE from 'three';
 import { PRESET_B as B, pastelize, createComposerB, cssOverlayB, sunDirectionB } from './preset-B.js';
 import { initPerf } from './perf.js';
+import LOOK_L20 from './look-targets/L20-mirror-caves.json';
+import LOOK_L21 from './look-targets/L21-storm-orchard.json';
+import LOOK_L22 from './look-targets/L22-thaw-valley.json';
+import LOOK_L23 from './look-targets/L23-grand-garden.json';
+import LOOK_L24 from './look-targets/L24-starheart-summit.json';
+
+const LOOK_BY_KEY = Object.fromEntries([LOOK_L20, LOOK_L21, LOOK_L22, LOOK_L23, LOOK_L24].map(v => [v.recipeKey, v]));
+function deepMerge(a, b) {
+  if (!b) return a;
+  const o = Array.isArray(a) ? a.slice() : { ...a };
+  for (const k of Object.keys(b)) {
+    const v = b[k], cur = o[k];
+    if (v && typeof v === 'object' && !Array.isArray(v) && cur && typeof cur === 'object' && !Array.isArray(cur)) o[k] = deepMerge(cur, v);
+    else o[k] = v;
+  }
+  return o;
+}
+const STATE_KEY = { A: 'A_winter_night', B: 'B_spring_day', C: 'C_summer_dusk' };
+function statePreset(look, letter) {
+  const base = deepMerge(structuredClone(B), look.presetB_override || {});
+  if (!letter || letter === 'A' || !look.extras?.states) return base;
+  const d = look.extras.states[STATE_KEY[letter]];
+  if (!d || typeof d !== 'object') return base;
+  const over = {};
+  if (d.sky) over.palette = { ...(base.palette || {}), sky: d.sky };
+  if (d.sun) over.sun = { ...base.sun, ...d.sun };
+  if (d.hemi) over.hemi = { ...base.hemi, ...d.hemi };
+  if (d.fog) over.fog = { ...base.fog, ...d.fog };
+  if (d.exposure != null) over.exposure = d.exposure;
+  return deepMerge(base, over);
+}
+function lerpPreset(a, b, t) {
+  const out = structuredClone(b), L = (x, y) => x + (y - x) * t, C = (x, y) => { const c = new THREE.Color(x).lerp(new THREE.Color(y), t); return '#' + c.getHexString(); };
+  out.sun = { ...b.sun, color: C(a.sun.color, b.sun.color), intensity: L(a.sun.intensity, b.sun.intensity), elevationDeg: L(a.sun.elevationDeg ?? 17, b.sun.elevationDeg ?? 17), azimuthDeg: L(a.sun.azimuthDeg ?? 72, b.sun.azimuthDeg ?? 72) };
+  out.hemi = { sky: C(a.hemi.sky, b.hemi.sky), ground: C(a.hemi.ground, b.hemi.ground), intensity: L(a.hemi.intensity, b.hemi.intensity) };
+  out.fog = { color: C(a.fog.color, b.fog.color), near: L(a.fog.near, b.fog.near), far: L(a.fog.far, b.fog.far) };
+  out.exposure = L(a.exposure, b.exposure);
+  if (a.palette?.sky && b.palette?.sky) out.palette = { ...b.palette, sky: { zenith: C(a.palette.sky.zenith, b.palette.sky.zenith), mid: C(a.palette.sky.mid, b.palette.sky.mid), horizon: C(a.palette.sky.horizon, b.palette.sky.horizon) } };
+  if (a.skyGlow && b.skyGlow) out.skyGlow = { ...b.skyGlow, wide: L(a.skyGlow.wide, b.skyGlow.wide), core: L(a.skyGlow.core, b.skyGlow.core), widePower: L(a.skyGlow.widePower, b.skyGlow.widePower), corePower: L(a.skyGlow.corePower, b.skyGlow.corePower) };
+  if (a.grade && b.grade) out.grade = { ...b.grade, haze: L(a.grade.haze ?? 0, b.grade.haze ?? 0), hazeColor: C(a.grade.hazeColor, b.grade.hazeColor) };
+  return out;
+}
 
 const C = h => new THREE.Color(h);
 const QMAP = { low: 'low', med: 'medium', high: 'medium', ultra: 'high' };
@@ -47,13 +89,14 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   // ---- sky dome (preset B gradient + sun glow, blended to night) ----
   const g = B.skyGlow;
   const skyU = { top: { value: C(B.palette.sky.zenith) }, mid: { value: C(B.palette.sky.mid) }, hor: { value: C(B.palette.sky.horizon) }, sunDir: { value: SUN_B.clone() }, sunC: { value: C(B.sun.color) },
-    nTop: { value: C('#070c26') }, nHor: { value: C('#1d2a58') }, night: { value: 0 }, grey: { value: 0 }, greyC: { value: C('#b9c2cc') }, tint: { value: C('#ffffff') }, hazeC: { value: C(B.grade.hazeColor) }, haze: { value: 0 } };
+    nTop: { value: C('#070c26') }, nHor: { value: C('#1d2a58') }, night: { value: 0 }, grey: { value: 0 }, greyC: { value: C('#b9c2cc') }, tint: { value: C('#ffffff') }, hazeC: { value: C(B.grade.hazeColor) }, haze: { value: 0 },
+    glowWide: { value: g.wide }, glowCore: { value: g.core }, glowWidePow: { value: g.widePower }, glowCorePow: { value: g.corePower } };
   const sky = new THREE.Mesh(new THREE.SphereGeometry(480, 32, 16), new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false, uniforms: skyU,
     vertexShader: 'varying vec3 vW; void main(){ vW = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-    fragmentShader: `uniform vec3 top, mid, hor, sunDir, sunC, nTop, nHor, greyC, tint, hazeC; uniform float night, grey, haze; varying vec3 vW;
+    fragmentShader: `uniform vec3 top, mid, hor, sunDir, sunC, nTop, nHor, greyC, tint, hazeC; uniform float night, grey, haze, glowWide, glowCore, glowWidePow, glowCorePow; varying vec3 vW;
       void main(){ float y = clamp(vW.y, -0.2, 1.0); vec3 c = mix(hor, mid, smoothstep(0.0, 0.18, y)); c = mix(c, top, smoothstep(0.18, 0.6, y));
-        float s = max(dot(normalize(vW), sunDir), 0.0); c += sunC * (pow(s, ${g.widePower.toFixed(1)}) * ${g.wide} + pow(s, ${g.corePower.toFixed(1)}) * ${g.core}) * (1.0 - night);
+        float s = max(dot(normalize(vW), sunDir), 0.0); c += sunC * (pow(s, glowWidePow) * glowWide + pow(s, glowCorePow) * glowCore) * (1.0 - night);
         c = c * tint; c = mix(c, hazeC, haze);
         vec3 n = mix(nHor, nTop, smoothstep(0.0, 0.5, y)); c = mix(c, n, night); c = mix(c, greyC * (1.0 - 0.8 * night), grey * 0.6);
         gl_FragColor = vec4(c, 1.0);
@@ -105,6 +148,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
       if (sun.shadow.mapSize.x !== L.shadow) { sun.shadow.mapSize.set(L.shadow, L.shadow); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } } }
     scene.traverse(o => { if (o.material) for (const m of (Array.isArray(o.material) ? o.material : [o.material])) if (m) m.needsUpdate = true; });
     buildComposer();
+    applyLookBloom();
   }
   function resize() {
     if (!composer) return; const sz = renderer.getSize(new THREE.Vector2()), pr = renderer.getPixelRatio();
@@ -133,23 +177,104 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   /** Style everything currently visible (call after a level or skin is built; cheap when nothing is new). */
   function styleScene(root = scene) { for (const c of root.children) if (c.visible && c.layers.isEnabled(0)) walk(c, 1, true); }
 
-  // ---- per-frame: blend the day share of the live lighting toward preset B ----
+  // ---- per-level look targets (values/<id>.json). Global High/Low presets stay as written above. ----
+  let patchLook = null, Pnow = B, masterLetter = null, lerpFromP = null, lerpToP = null, lerpU = 1, lastTuneT = 0;
+  const fills = [];
   const tc = new THREE.Color(), dirB = SUN_B.clone(), dirO = new THREE.Vector3(), LT = C(B.quality.low.bakeGrade.lightTint), ST = C(B.quality.low.bakeGrade.skyTint), HZ = C(B.grade.hazeColor);
   const cHS = C(B.hemi.sky), cHG = C(B.hemi.ground), cSun = C(B.sun.color), cFog = C(B.fog.color);
+  const qBucket = () => QMAP[tierName] || 'medium';
+  function applyLookBloom() {
+    if (!bloomPass) return;
+    const bq = patchLook && patchLook.bloom_per_quality && patchLook.bloom_per_quality[qBucket()];
+    if (bq && bq.enabled !== false) { bloomPass.strength = bq.strength; bloomPass.radius = bq.radius; bloomPass.threshold = bq.threshold; }
+    else { bloomPass.strength = B.bloom.strength; bloomPass.radius = B.bloom.radius; bloomPass.threshold = B.bloom.threshold; }
+  }
+  function adoptP(P) {
+    Pnow = P;
+    cHS.set(P.hemi.sky); cHG.set(P.hemi.ground); cSun.set(P.sun.color); cFog.set(P.fog.color);
+    renderer.toneMappingExposure = P.exposure;
+    skyU.top.value.set(P.palette.sky.zenith); skyU.mid.value.set(P.palette.sky.mid); skyU.hor.value.set(P.palette.sky.horizon);
+    skyU.sunC.value.set(P.sun.color); skyU.hazeC.value.set(P.grade.hazeColor);
+    const sg = P.skyGlow || B.skyGlow;
+    skyU.glowWide.value = sg.wide; skyU.glowCore.value = sg.core; skyU.glowWidePow.value = sg.widePower; skyU.glowCorePow.value = sg.corePower;
+    const bake = (P.quality && P.quality.low && P.quality.low.bakeGrade) || B.quality.low.bakeGrade;
+    LT.set(bake.lightTint); ST.set(bake.skyTint); HZ.set(P.grade.hazeColor);
+    applyLookBloom();
+  }
+  function clearFills() { for (const f of fills) { f.light.removeFromParent(); } fills.length = 0; }
+  function setupFills(look, opts = {}) {
+    clearFills();
+    if (!look || !look.extras || !look.extras.fills) return;
+    for (const spec of look.extras.fills) {
+      const l = new THREE.PointLight(spec.color, 0, spec.distance, spec.decay == null ? 2 : spec.decay);
+      l.castShadow = false; l.name = 'look-fill-' + spec.name; scene.add(l);
+      const at = opts.fills && opts.fills[spec.name]; if (at) l.position.set(at.x, at.y, at.z);
+      fills.push({ spec, light: l, follow: /active crew/.test(spec.follow || '') });
+    }
+  }
+  function fillOn(spec, letter) {
+    const q = qBucket();
+    if (spec.quality && !spec.quality.includes(q) && !(q === 'high' && spec.quality.includes('high'))) return false;
+    if (spec.states && letter && !spec.states.includes(letter)) {
+      // L22/L24: crewFill is listed for A; state C uses a dimmer fill described in extras.states
+      if (spec.name === 'crewFill' && letter === 'C') return true;
+      return false;
+    }
+    return true;
+  }
+  function fillIntensity(spec, letter) {
+    if (!fillOn(spec, letter)) return 0;
+    if (spec.name === 'crewFill' && letter === 'C') return 3;
+    return spec.intensity;
+  }
+  /** Apply (or clear) a level look-target. id is the recipe key (thaw_valley, …). */
+  function setPatch(id, opts = {}) {
+    patchLook = (id && LOOK_BY_KEY[id]) || null;
+    masterLetter = opts.state || null;
+    lerpU = 1; lerpFromP = lerpToP = null;
+    adoptP(patchLook ? statePreset(patchLook, masterLetter) : B);
+    setupFills(patchLook, opts);
+  }
+  /** Lerp Master Bell A/B/C look over 1.2 s (snap on init). */
+  function setMaster(letter, opts = {}) {
+    if (!patchLook) return;
+    const dest = statePreset(patchLook, letter);
+    masterLetter = letter;
+    if (opts.snap) { lerpU = 1; lerpFromP = lerpToP = null; adoptP(dest); return; }
+    lerpFromP = Pnow; lerpToP = dest; lerpU = 0;
+  }
+  function tickLookLerp(t) {
+    if (!lerpToP || lerpU >= 1) return;
+    const dt = lastTuneT ? Math.max(0, Math.min(0.1, t - lastTuneT)) : 0;
+    lerpU = Math.min(1, lerpU + dt / 1.2);
+    adoptP(lerpPreset(lerpFromP, lerpToP, lerpU));
+    if (lerpU >= 1) { lerpFromP = lerpToP = null; }
+  }
+
+  // ---- per-frame: blend the day share of the live lighting toward preset B (or the active look target) ----
   function tune({ n = 0, md = 0, grey = 0, mist = 0, t = 0, heightAt } = {}) {
-    const k = Math.max(0, (1 - n) * (1 - md) * (1 - 0.6 * grey) * (1 - 0.5 * mist)), lerp = THREE.MathUtils.lerp;
-    hemi.color.lerp(cHS, k); hemi.groundColor.lerp(cHG, k); hemi.intensity = lerp(hemi.intensity, B.hemi.intensity, k);
-    sun.color.lerp(cSun, k); sun.intensity = lerp(sun.intensity, B.sun.intensity, k);
-    scene.fog.color.lerp(cFog, k); scene.fog.near = lerp(scene.fog.near, B.fog.near + 8, k); scene.fog.far = lerp(scene.fog.far, L.fogFar, k);
-    if (L.bake) { sun.color.lerp(tc.copy(sun.color).multiply(LT), k); hemi.color.lerp(tc.copy(hemi.color).multiply(LT), k); hemi.groundColor.lerp(tc.copy(hemi.groundColor).multiply(LT), k); scene.fog.color.lerp(HZ, B.quality.low.bakeGrade.hazeMix * k); }
-    // sun: day direction from preset B (low, raking), night keeps the moon key from main.js
-    // preset B's sun is camera-relative (az 72 deg = from screen-right, el 17 deg); eased so a camera swing doesn't snap the light
-    dirB.lerp(sunDirectionB(camera), 0.06).normalize(); dirO.copy(sun.position).normalize().lerp(dirB, k).normalize();
+    tickLookLerp(t); lastTuneT = t;
+    const P = Pnow, owned = !!patchLook;
+    const k = owned ? 1 : Math.max(0, (1 - n) * (1 - md) * (1 - 0.6 * grey) * (1 - 0.5 * mist)), lerp = THREE.MathUtils.lerp;
+    hemi.color.lerp(cHS, k); hemi.groundColor.lerp(cHG, k); hemi.intensity = lerp(hemi.intensity, P.hemi.intensity, k);
+    sun.color.lerp(cSun, k); sun.intensity = lerp(sun.intensity, P.sun.intensity, k);
+    const fogFar = (tierName === 'low' && P.quality && P.quality.low && P.quality.low.fogFar) ? P.quality.low.fogFar : (owned && P.fog && P.fog.far) ? P.fog.far : L.fogFar;
+    const fogNear = owned && P.fog ? P.fog.near : B.fog.near + 8;
+    scene.fog.color.lerp(cFog, k); scene.fog.near = lerp(scene.fog.near, fogNear, k); scene.fog.far = lerp(scene.fog.far, fogFar, k);
+    if (L.bake) { sun.color.lerp(tc.copy(sun.color).multiply(LT), k); hemi.color.lerp(tc.copy(hemi.color).multiply(LT), k); hemi.groundColor.lerp(tc.copy(hemi.groundColor).multiply(LT), k); scene.fog.color.lerp(HZ, ((P.quality && P.quality.low && P.quality.low.bakeGrade && P.quality.low.bakeGrade.hazeMix) || B.quality.low.bakeGrade.hazeMix) * k); }
+    // sun: day direction from preset B (low, raking), night keeps the moon key from main.js — unless a look target owns the key (L22 A moon, L24 dusk)
+    dirB.lerp(sunDirectionB(camera, P), 0.06).normalize(); dirO.copy(sun.position).normalize().lerp(dirB, k).normalize();
     const p = getPlayer && getPlayer(), tg = sun.target.position; if (p) tg.set(p.x, p.y, p.z); else tg.set(0, 0, 0);
-    sun.position.copy(tg).addScaledVector(dirO, B.sun.distance);
-    skyU.sunDir.value.copy(dirO); skyU.night.value = Math.min(1, Math.max(n, md)); skyU.grey.value = Math.max(grey, mist * 0.8);
-    skyU.tint.value.set(1, 1, 1).lerp(ST, L.bake ? 1 : 0); skyU.haze.value = L.bake ? B.quality.low.bakeGrade.hazeMix : 0;
+    sun.position.copy(tg).addScaledVector(dirO, P.sun.distance || B.sun.distance);
+    skyU.sunDir.value.copy(dirO); skyU.sunC.value.copy(sun.color);
+    skyU.night.value = owned ? 0 : Math.min(1, Math.max(n, md)); // look-target skies already encode night/dusk
+    skyU.grey.value = owned ? 0 : Math.max(grey, mist * 0.8);
+    skyU.tint.value.set(1, 1, 1).lerp(ST, L.bake ? 1 : 0); skyU.haze.value = L.bake ? ((P.quality && P.quality.low && P.quality.low.bakeGrade && P.quality.low.bakeGrade.hazeMix) || B.quality.low.bakeGrade.hazeMix) : (owned ? (P.grade.haze || 0) : 0);
     sky.position.copy(camera.position);
+    for (const f of fills) {
+      f.light.intensity = fillIntensity(f.spec, masterLetter);
+      if (f.follow && p) f.light.position.set(p.x, p.y + 2.2, p.z + 1.6);
+    }
     motes.visible = k > 0.25 && motes.count > 0; moteMat.opacity = 0.9 * Math.min(1, k * 1.5); if (motes.visible) updateMotes(t, heightAt);
   }
   renderer.info.autoReset = false; // count every pass of a frame (composer + shadow), reset once per frame below
@@ -162,5 +287,5 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   }
   function start() { perf.resume(); probeT0 = performance.now(); }
   function status() { const s = perf.stats(); return { ...s, look: tierName, preset: QMAP[tierName], post: !!composer, shadows: renderer.shadowMap.enabled, motes: motes.count }; }
-  return { perf, tune, render, frame, start, resize, styleScene, status, sky, motes, get tier() { return tierName; }, get look() { return L; } };
+  return { perf, tune, render, frame, start, resize, styleScene, status, setPatch, setMaster, sky, motes, get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
 }

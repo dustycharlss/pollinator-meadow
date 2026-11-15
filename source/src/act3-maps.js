@@ -542,12 +542,12 @@ export const MAPS3 = {
       B.windZone(-6.5, 66, 6.5, 76, { push: 6, h: 3, lift: 0, alt: { down: [0, -1], up: [0, 1] } });
       // secret Starseed: east ice cave. 4 m wall seals the mouth except in winter, when a 2 m snow lip is a step
       const mouth = B.wall(14, 53.2, 3.4, 1.4, 8, { bot: 4, c: 0x9a968c });
-      const lip = B.wall(14, 54.6, 3.0, 1.6, 6, { bot: 4, c: 0xf4f8ff });
+      const lip = B.wall(14, 54.6, 3.0, 1.6, 6, { bot: 4, c: 0xf4f2fc });
       lip.m.visible = false; lip.s.off = true;
       B.onSig('winter', on => { mouth.s.off = !!on; mouth.m.visible = !on; lip.s.off = !on; lip.m.visible = !!on; });
       B.pickup('star', 14, 52, 0.9, { who: ['trickster'], whyNot: 'Too heavy for Bee — boost Raccoon, or come in winter when the snow lip is a step.', set: 'thawStar' });
       B.deco('act3/thaw-valley/kenney-nature-cliff-cave-rock', 14, 51.2, 3.2, { yaw: Math.PI });
-      B.deco('act3/thaw-valley/kenney-holiday-snow-pile', 14, 54.6, 1.6);
+      B.deco('act3/thaw-valley/kenney-holiday-snow-pile', 14, 54.6, 1.6).userData.winterScale = true;
       // Petals (26)
       const P = (x, z, y) => B.pickup('petal', x, z, y);
       for (let i = 0; i < 4; i++) P(-3 + i * 2, -8.2, 0.9); // behind the nest so start poses do not auto-collect them
@@ -562,7 +562,7 @@ export const MAPS3 = {
       // dressing (CC0 Kenney Holiday + Nature, built ice)
       const snow = (k, x, z, h, yaw) => B.deco('act3/thaw-valley/' + k, x, z, h, { yaw: yaw || 0 });
       [[-5, -7, 'kenney-platformer-tree-pine-snow', 4.4], [5.2, -8, 'kenney-holiday-tree-snow-a', 4.2], [11, 10, 'kenney-platformer-tree-snow', 4.6], [15, 14, 'kenney-holiday-tree-snow-b', 4.0], [-14, 38, 'kenney-holiday-tree-snow-c', 4.4], [-16, 52, 'kenney-platformer-tree-pine-snow-small', 3.2], [5.4, 62, 'kenney-holiday-tree-snow-a', 4.2], [-5.4, 88, 'kenney-platformer-tree-pine-snow', 4.6], [5.4, 88, 'kenney-holiday-tree-snow-b', 4.2]].forEach(([x, z, k, h], i) => snow(k, x, z, h, i * 1.3));
-      [[-5, 12, 'kenney-holiday-snow-pile', 1.1], [10, 22, 'built-melting-snow', 1.0], [-15, 44, 'kenney-holiday-snow-flat', 0.7], [5.2, 48, 'built-ice-chunk', 0.8], [-4, 74, 'kenney-holiday-snow-pile', 1.0]].forEach(([x, z, k, h], i) => snow(k, x, z, h, i * 0.8));
+      [[-5, 12, 'kenney-holiday-snow-pile', 1.1], [10, 22, 'built-melting-snow', 1.0], [-15, 44, 'kenney-holiday-snow-flat', 0.7], [5.2, 48, 'built-ice-chunk', 0.8], [-4, 74, 'kenney-holiday-snow-pile', 1.0]].forEach(([x, z, k, h], i) => { const H = snow(k, x, z, h, i * 0.8); H.userData.winterScale = true; });
       B.puzzle('bell', 'Learn the Master Bell', ['scout', 'trickster', 'bruiser'], ['bellLearn'], { hint: 'Walk north around the first creek. The three icons on the post match the big hill bell — A is winter, night, and a north wind.', track: [['bellLearn', 'any', 'walk north around the creek', 0, 4]] });
       B.puzzle('fox', 'Fox lure', ['trickster'], ['foxPl'], { hint: '🐾 Stay in state A (snow hides your smell). Stand by the plate and ping the Echo Whistle so the fox walks onto it.', track: [['foxPl', 'trickster', 'ping the whistle by the fox plate', 8, 16]] });
       B.puzzle('melt', 'Melt flood', ['trickster', 'scout'], ['grown:sV', 'lvV'], { hint: 'Ring the bell to B (spring and day). 🐾 plant the seed, 🪽 water it, then climb the vine and pull the lever.', track: [['planted:sV', 'trickster', 'plant the vine seed in spring', -12, 46], ['grown:sV', 'scout', 'water the seed from the drip or with the pouch', -12, 46], ['lvV', 'trickster', 'climb the vine and pull the lever', -8, 56]] });

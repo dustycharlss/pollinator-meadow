@@ -1,0 +1,377 @@
+{
+ "id": "L20-mirror-caves",
+ "level": 20,
+ "recipeKey": "mirror_caves",
+ "name": "Mirror Caves",
+ "setting": "Crystal cave under the meadow: mirror crystals, a lamp beam, ghost bridge over a chasm, spider webs. Always dark underground, moody, no wind or seasons (Fern act3-levels-17-21.md \u00a75). Baby: bat pup (dark only). Enemy: Grumpy Spider.",
+ "state": "always dark (treat as night for lantern/glow)",
+ "setpiece": "Crystal lamp A beams onto the far mirror crystal and lights the ghost bridge across chasm 1; webbed side tunnel, crystal clusters on the walls, stalactite ceiling.",
+ "how_to_apply": "import PRESET_B from preset-B.json; const P = deepMerge(structuredClone(PRESET_B), presetB_override); const fx = applyPresetB(scene, renderer, { quality, camera, target, sky: true }, P); const composer = createComposerB(renderer, scene, camera, fx, P); then add extras.fills, materials from extras.emissive / water / ice.",
+ "presetB_override": {
+  "palette": {
+   "sky": {
+    "zenith": "#2b2550",
+    "mid": "#3f3568",
+    "horizon": "#5c4c80"
+   },
+   "water": {
+    "shallow": "#9fd6e8",
+    "deep": "#6fa8cc",
+    "opacity": 0.85,
+    "roughness": 0.12
+   },
+   "rock": {
+    "stone": "#9c8cc6",
+    "moss": "#7fc8a4"
+   }
+  },
+  "sun": {
+   "color": "#ffdcae",
+   "intensity": 1.5,
+   "azimuthDeg": 40,
+   "elevationDeg": 62,
+   "distance": 40
+  },
+  "hemi": {
+   "sky": "#9a8fe0",
+   "ground": "#8a7aa8",
+   "intensity": 1.9
+  },
+  "fog": {
+   "color": "#3c3466",
+   "near": 10,
+   "far": 42
+  },
+  "exposure": 1.18,
+  "bloom": {
+   "strength": 0.55,
+   "radius": 0.6,
+   "threshold": 0.72
+  },
+  "grade": {
+   "vignette": 0.26,
+   "vignetteColor": "#6a4a8a",
+   "haze": 0.02,
+   "hazeColor": "#8a7cc0",
+   "lift": "#22183a"
+  },
+  "shadow": {
+   "camera": {
+    "left": -16,
+    "right": 16,
+    "top": 14,
+    "bottom": -14,
+    "near": 1,
+    "far": 90
+   }
+  },
+  "quality": {
+   "high": {
+    "pollen": 24
+   },
+   "medium": {
+    "pollen": 16
+   },
+   "low": {
+    "fogFar": 34,
+    "pollen": 8,
+    "bakeGrade": {
+     "lightTint": "#f4e6ff",
+     "skyTint": "#d8ccff",
+     "hazeMix": 0.12
+    }
+   }
+  }
+ },
+ "bloom_per_quality": {
+  "high": {
+   "strength": 0.55,
+   "radius": 0.6,
+   "threshold": 0.72,
+   "resolutionScale": 1.0
+  },
+  "medium": {
+   "strength": 0.468,
+   "radius": 0.6,
+   "threshold": 0.72,
+   "resolutionScale": 0.5,
+   "note": "game phone \"High\""
+  },
+  "low": {
+   "enabled": false,
+   "note": "no post; grade baked into lights (quality.low.bakeGrade); vignette via cssOverlayB"
+  }
+ },
+ "extras": {
+  "background": "#3c3466 (= fog colour; the sky dome is never visible inside the shell)",
+  "enclosure": "Cave shell: walls at the lane edges plus a ceiling 7-9 m up with stalactites, smooth normals, vertex-coloured lavender stone (#9c8cc6 -> #5e5288). Every gameplay camera must have ceiling or wall in the top 25% of the frame (QA major 6).",
+  "fills": [
+   {
+    "name": "crewFill",
+    "type": "PointLight",
+    "follow": "active crew member, offset [0, 2.2, 1.6]",
+    "color": "#ffe6cc",
+    "intensity": 12,
+    "distance": 10,
+    "decay": 1.5,
+    "castShadow": false,
+    "quality": [
+     "high",
+     "medium",
+     "low"
+    ]
+   },
+   {
+    "name": "shaftKey",
+    "type": "DirectionalLight (the preset sun)",
+    "note": "reads as a light shaft from a crack in the ceiling; keeps contact shadows under the crew"
+   }
+  ],
+  "emissive": {
+   "crystalCyan": {
+    "color": "#88eff8",
+    "emissive": "#3fb8c8",
+    "intensity": 0.6
+   },
+   "crystalPink": {
+    "color": "#f4a6d0",
+    "emissive": "#d06aa0",
+    "intensity": 0.55
+   },
+   "crystalGold": {
+    "color": "#ffd27a",
+    "emissive": "#e0a040",
+    "intensity": 0.7
+   },
+   "lampBeam": {
+    "color": "#fff1c4",
+    "opacity": 0.32,
+    "blending": "Additive",
+    "depthWrite": false
+   },
+   "ghostBridge": {
+    "color": "#cfe8ff",
+    "emissive": "#8fc0f0",
+    "intensity": 0.45,
+    "opacity": 0.72
+   },
+   "rule": "Emissive intensity <= 0.7 and emissive colour <= 75% value so bloom (threshold 0.72) only catches crystal tips and the beam, never the crew or the floor."
+  },
+  "water": "Chasm floor is a soft leaf net, not water. Optional drip pools: shallow #9fd6e8, deep #6fa8cc, opacity 0.85, emissive 0.",
+  "terrain": "Single floor at y 0 with gentle 0.3 m undulation; chasm lips rounded with a 1 m smoothstep fillet. MeshStandardMaterial({ vertexColors: true, flatShading: false }) + computeVertexNormals(); SEG >= 1 vertex per metre.",
+  "crewFloor": {
+   "minMedianY": {
+    "bear": 0.046,
+    "raccoon": 0.04,
+    "bee": 0.32
+   },
+   "reference": "80% of each animal's median relative luminance in the base-B daylight frame (L23: bear 0.058, raccoon 0.050, bee 0.396)",
+   "note": "measured at 1x from the id-masks; night/cave/dusk must keep the crew as readable as daylight B (QA 5)"
+  },
+  "budget": {
+   "high": {
+    "calls": 320,
+    "tris": 160000
+   },
+   "medium": {
+    "calls": 240,
+    "tris": 110000
+   },
+   "low": {
+    "calls": 160,
+    "tris": 70000
+   },
+   "shadowMap": {
+    "high": 2048,
+    "medium": 1024,
+    "low": 1024
+   }
+  }
+ },
+ "budget_note": "Counts are renderer.info.render per frame INCLUDING the shadow pass, at 390x844 portrait gameplay framing. Game \"High\" on phones = preset medium (QA diff 1), so phone High uses the Medium column; desktop Ultra may use preset high.",
+ "instancing": [
+  "One InstancedMesh per (geometry, material) pair for every repeated deco: trees, flowers, grass tufts, rocks, crystals, fence/hedge segments, snow piles, pickups (petals). Never one Mesh per placement.",
+  "Merge static, non-interactive level geometry (terrain chunk + lane walls + backdrop) per 16 m z-chunk and per material with BufferGeometryUtils.mergeGeometries; keep interactables (levers, plates, mirrors, gates, bell) as their own meshes.",
+  "Atlas / share materials: <= 12 distinct materials per level on Low, <= 20 on High; reuse one pastelized MeshStandardMaterial per colour (cache by hex), and use vertex colours for terrain and rocks.",
+  "Shadows: only crew, babies, enemies and props taller than 1.5 m cast. Terrain, walls, small deco and pickups receive only. Low: 1024 PCF on, caster list = crew + babies + enemies only.",
+  "Cull: fog far is a hard draw distance. Hide (visible=false) any chunk whose nearest edge is beyond fog far + 5 m; never draw the full corridor.",
+  "World-space badges / rings / halos: one shared sprite material + InstancedMesh or a single Points cloud; cap screen size (QA minor 9).",
+  "Pollen motes stay the single InstancedMesh from makePollenMotesB."
+ ],
+ "deviations": [
+  {
+   "what": "Hemi ground #8a7aa8; ceiling vertex colour >= 65% stone, stalactites #8a7cb8",
+   "why": "Down-facing ceiling is lit only by the hemi ground colour; darker values crushed the top of frame to near-black purple (QA 5)."
+  },
+  {
+   "what": "Hemi ground #8a7aa8; ceiling vertex colour >= 65% stone, stalactites #8a7cb8",
+   "why": "The down-facing ceiling is lit only by the hemi ground colour; darker values crushed the top of frame to near-black purple (QA 5)."
+  },
+  {
+   "what": "Palette for CVD: crystalCyan #88eff8, caveStone #9c8cc6 (lighter)",
+   "why": "Cyan vs pink crystals and bear vs cave floor were < 10 dE in grayscale/CVD; the lighter floor also lifts the cave.",
+   "approved": "Approved by Chaz, 14 Nov 2026 (CVD swatch deviations)"
+  },
+  {
+   "what": "Crew fill 12",
+   "why": "Keeps the bear at the daylight crew floor."
+  },
+  {
+   "what": "Sun -> ceiling-shaft key",
+   "why": "Elevation 62 deg, intensity 1.5, warm: an underground scene has no golden-hour sun, but the crew still needs a key + contact shadow."
+  },
+  {
+   "what": "Hemi raised to 1.9 with a lilac ground",
+   "why": "Prevents the Night Market black-silhouette failure (QA 5) while keeping the cool cave mood."
+  },
+  {
+   "what": "Exposure 1.18 + crew fill point light",
+   "why": "Crew must clear the luminance floor without lifting the whole cave."
+  },
+  {
+   "what": "Fog 10-42 m, violet",
+   "why": "Hides the far tunnel, keeps draw calls down, and makes the space read enclosed."
+  },
+  {
+   "what": "Bloom threshold 0.72, strength 0.55",
+   "why": "Crystals and the lamp beam are the set-piece; capped emissives keep the bloom off the crew."
+  }
+ ],
+ "approvals": [
+  {
+   "item": "CVD swatch deviations (every deviation starting \"Palette for CVD\")",
+   "status": "approved",
+   "by": "Chaz",
+   "date": "2026-11-14",
+   "levels": [
+    "L20-mirror-caves",
+    "L21-storm-orchard",
+    "L22-thaw-valley",
+    "L23-grand-garden",
+    "L24-starheart-summit"
+   ]
+  }
+ ],
+ "swatches": [
+  {
+   "name": "caveStone",
+   "hex": "#9c8cc6",
+   "role": "walls/floor"
+  },
+  {
+   "name": "caveShadow",
+   "hex": "#5e5288",
+   "role": "wall base"
+  },
+  {
+   "name": "fog",
+   "hex": "#3c3466",
+   "role": "fog/background"
+  },
+  {
+   "name": "crystalCyan",
+   "hex": "#88eff8",
+   "role": "mirror crystal"
+  },
+  {
+   "name": "crystalPink",
+   "hex": "#f4a6d0",
+   "role": "dummy crystal"
+  },
+  {
+   "name": "crystalGold",
+   "hex": "#ffd27a",
+   "role": "lamp / beam"
+  },
+  {
+   "name": "ghostBridge",
+   "hex": "#cfe8ff",
+   "role": "ghost bridge"
+  },
+  {
+   "name": "web",
+   "hex": "#eef0ff",
+   "role": "spider web"
+  },
+  {
+   "name": "leafNet",
+   "hex": "#b9c98a",
+   "role": "chasm net"
+  },
+  {
+   "name": "bear",
+   "hex": "#a0683f",
+   "role": "crew bear"
+  },
+  {
+   "name": "raccoon",
+   "hex": "#8c8794",
+   "role": "crew raccoon"
+  },
+  {
+   "name": "bee",
+   "hex": "#ffd23f",
+   "role": "crew bee"
+  }
+ ],
+ "cvd_pairs": [
+  {
+   "a": "crystalCyan",
+   "b": "crystalPink",
+   "why": "real vs dummy crystal (also shape/ping)"
+  },
+  {
+   "a": "ghostBridge",
+   "b": "caveShadow",
+   "why": "bridge vs chasm"
+  },
+  {
+   "a": "bear",
+   "b": "caveStone",
+   "why": "crew vs floor"
+  },
+  {
+   "a": "raccoon",
+   "b": "caveShadow",
+   "why": "crew vs wall"
+  },
+  {
+   "a": "bee",
+   "b": "caveStone",
+   "why": "crew vs floor"
+  },
+  {
+   "a": "web",
+   "b": "caveStone",
+   "why": "web vs wall"
+  },
+  {
+   "a": "leafNet",
+   "b": "caveShadow",
+   "why": "net vs pit"
+  }
+ ],
+ "cvd_method": "Machado 2009 severity 1.0 (protan, deutan, tritan) + grayscale (relative luminance); CIE76 in sRGB-D65 Lab; pass at dE >= 10.",
+ "qa_majors_addressed": {
+  "1": {
+   "major": "High that is not the real High",
+   "setting": "quality block: every level lists High/Medium/Low separately; phone \"High\" is labelled Medium-equivalent (pixelRatio 1.5, 2048 shadow, half-res bloom) and the budget is set per tier."
+  },
+  "3": {
+   "major": "Emissive saturated water hiding gameplay",
+   "setting": "water/ice blocks: preset water colours, emissive 0, opacity <= 0.88 (0.6 spray), underwater-camera rule."
+  },
+  "4": {
+   "major": "Draw-call / triangle blowout on phones",
+   "setting": "budget block + instancing guide + fog far as draw distance."
+  },
+  "5": {
+   "major": "Underexposed night, black silhouettes",
+   "setting": "fills + hemi + exposure + crewFloor (median crew luminance checked on the frames)."
+  },
+  "6": {
+   "major": "Interiors that do not read as enclosed",
+   "setting": "enclosure block (L20): ceiling/walls in the top 25% of every cave camera, cave fog as background."
+  }
+ }
+}

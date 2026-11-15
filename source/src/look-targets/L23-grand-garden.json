@@ -1,0 +1,318 @@
+{
+ "id": "L23-grand-garden",
+ "level": 23,
+ "recipeKey": "grand_garden",
+ "name": "Grand Garden",
+ "setting": "A big human garden at bug height: sprinklers, a greenhouse, wasp nests, a gnome statue climb, a push mower; full gear set (Fern act3-levels-22-24.md \u00a73). Day, golden hour. Baby: snail. Enemy: wasps.",
+ "state": "day (golden hour, base B)",
+ "setpiece": "Bug-height crew in the flower bed, the giant garden gnome and the greenhouse behind, a sprinkler arc with soft (non-glowing) water, a wasp nest hanging off the fence.",
+ "how_to_apply": "import PRESET_B from preset-B.json; const P = deepMerge(structuredClone(PRESET_B), presetB_override); const fx = applyPresetB(scene, renderer, { quality, camera, target, sky: true }, P); const composer = createComposerB(renderer, scene, camera, fx, P); then add extras.fills, materials from extras.emissive / water / ice.",
+ "presetB_override": {
+  "sun": {
+   "intensity": 3.0,
+   "elevationDeg": 24
+  },
+  "hemi": {
+   "intensity": 2.1
+  },
+  "palette": {
+   "water": {
+    "shallow": "#b8ecf4",
+    "deep": "#8fc8e8",
+    "opacity": 0.6,
+    "roughness": 0.1
+   }
+  },
+  "fog": {
+   "near": 32,
+   "far": 95
+  },
+  "quality": {
+   "low": {
+    "fogFar": 70
+   }
+  }
+ },
+ "bloom_per_quality": {
+  "high": {
+   "strength": 0.45,
+   "radius": 0.7,
+   "threshold": 0.78,
+   "resolutionScale": 1.0
+  },
+  "medium": {
+   "strength": 0.383,
+   "radius": 0.7,
+   "threshold": 0.78,
+   "resolutionScale": 0.5,
+   "note": "game phone \"High\""
+  },
+  "low": {
+   "enabled": false,
+   "note": "no post; grade baked into lights (quality.low.bakeGrade); vignette via cssOverlayB"
+  }
+ },
+ "extras": {
+  "background": "sky dome (base B)",
+  "fills": [
+   {
+    "name": "none",
+    "note": "day; base B lights"
+   }
+  ],
+  "emissive": {
+   "rule": "None on gameplay surfaces. Wasp-nest warning is shape/colour, not glow.",
+   "flowerPetalsAndBushes": {
+    "emissive": "= own base colour",
+    "intensity": 0.3,
+    "side": "DoubleSide",
+    "note": "Kenney petals face sideways and go brown/black against the backlit sky; a 0.3 self-colour lift keeps them flower-coloured. Decor only, never on paths."
+   }
+  },
+  "water": {
+   "sprayParticles": {
+    "color": "#e8f8ff",
+    "opacity": 0.55,
+    "size": 0.06,
+    "emissive": 0,
+    "count": {
+     "high": 160,
+     "medium": 96,
+     "low": 48
+    },
+    "note": "one Points/InstancedMesh per sprinkler"
+   },
+   "puddle": {
+    "shallow": "#b8ecf4",
+    "deep": "#8fc8e8",
+    "opacity": 0.6,
+    "emissive": 0
+   }
+  },
+  "glass": {
+   "greenhouse": {
+    "color": "#dff4f0",
+    "opacity": 0.35,
+    "roughness": 0.1,
+    "metalness": 0,
+    "depthWrite": false,
+    "note": "transparent, so keep it out of the shadow caster list"
+   }
+  },
+  "scale": "Bug height: the crew is 1:12 to the props. Gnome ~6 m, greenhouse ~9 m, flowers 1.5-3 m. Keep crew-scale stepping props (leaves, pots) at 0.5-1 m so paths read.",
+  "terrain": "Lawn and flower-bed soil as one smooth heightfield (0.25 m noise), flatShading false; soil #d8b48e, lawn base B grass.",
+  "crewFloor": {
+   "minMedianY": {
+    "bear": 0.046,
+    "raccoon": 0.04,
+    "bee": 0.32
+   },
+   "reference": "80% of each animal's median relative luminance in the base-B daylight frame (L23: bear 0.058, raccoon 0.050, bee 0.396)",
+   "note": "measured at 1x from the id-masks; night/cave/dusk must keep the crew as readable as daylight B (QA 5)"
+  },
+  "budget": {
+   "high": {
+    "calls": 420,
+    "tris": 200000
+   },
+   "medium": {
+    "calls": 300,
+    "tris": 130000
+   },
+   "low": {
+    "calls": 210,
+    "tris": 85000
+   },
+   "shadowMap": {
+    "high": 2048,
+    "medium": 2048,
+    "low": 1024
+   }
+  }
+ },
+ "budget_note": "Counts are renderer.info.render per frame INCLUDING the shadow pass, at 390x844 portrait gameplay framing. Game \"High\" on phones = preset medium (QA diff 1), so phone High uses the Medium column; desktop Ultra may use preset high.",
+ "instancing": [
+  "One InstancedMesh per (geometry, material) pair for every repeated deco: trees, flowers, grass tufts, rocks, crystals, fence/hedge segments, snow piles, pickups (petals). Never one Mesh per placement.",
+  "Merge static, non-interactive level geometry (terrain chunk + lane walls + backdrop) per 16 m z-chunk and per material with BufferGeometryUtils.mergeGeometries; keep interactables (levers, plates, mirrors, gates, bell) as their own meshes.",
+  "Atlas / share materials: <= 12 distinct materials per level on Low, <= 20 on High; reuse one pastelized MeshStandardMaterial per colour (cache by hex), and use vertex colours for terrain and rocks.",
+  "Shadows: only crew, babies, enemies and props taller than 1.5 m cast. Terrain, walls, small deco and pickups receive only. Low: 1024 PCF on, caster list = crew + babies + enemies only.",
+  "Cull: fog far is a hard draw distance. Hide (visible=false) any chunk whose nearest edge is beyond fog far + 5 m; never draw the full corridor.",
+  "World-space badges / rings / halos: one shared sprite material + InstancedMesh or a single Points cloud; cap screen size (QA minor 9).",
+  "Pollen motes stay the single InstancedMesh from makePollenMotesB."
+ ],
+ "deviations": [
+  {
+   "what": "Wasp tint x #ff9a60 (warning orange, swatch #e07a30)",
+   "why": "Wasp vs lawn and bee vs wasp were < 10 dE in grayscale; the warning orange keeps the enemy readable in Golden Hour Pastel (min dE 23.1 vs lawn, 24.2 vs bee).",
+   "approved": "Approved by Chaz, 14 Nov 2026 (wasp warning-orange tint; keep it readable in Golden Hour Pastel)"
+  },
+  {
+   "what": "Palette for CVD: waspNest #beac87, flowerPink #e99fbf, soil #d8b48e",
+   "why": "Nest vs lawn and bee vs flowers were < 10 dE in grayscale; the lighter soil separates the bear from the bed path.",
+   "approved": "Approved by Chaz, 14 Nov 2026 (CVD swatch deviations)"
+  },
+  {
+   "what": "Sun elevation 24 deg (base 17)",
+   "why": "Giant props at bug scale would throw 3.3 m-per-metre shadows over the whole path; 24 deg (2.2 m/m) keeps the crew in light."
+  },
+  {
+   "what": "Hemi 2.1",
+   "why": "Slight lift under the big canopies of flowers."
+  },
+  {
+   "what": "Flower petals self-colour emissive 0.3, DoubleSide",
+   "why": "Giant petals read as black silhouettes against the bright sky without it."
+  },
+  {
+   "what": "Water opacity 0.6, no emissive",
+   "why": "Sprinkler spray and puddles must never hide the path (QA 3)."
+  },
+  {
+   "what": "Everything else is base B",
+   "why": "The garden is the meadow in daylight; it should match frame B."
+  }
+ ],
+ "approvals": [
+  {
+   "item": "CVD swatch deviations (every deviation starting \"Palette for CVD\")",
+   "status": "approved",
+   "by": "Chaz",
+   "date": "2026-11-14",
+   "levels": [
+    "L20-mirror-caves",
+    "L21-storm-orchard",
+    "L22-thaw-valley",
+    "L23-grand-garden",
+    "L24-starheart-summit"
+   ]
+  },
+  {
+   "item": "L23 wasp warning-orange tint (material colour x #ff9a60, swatch #e07a30)",
+   "status": "approved",
+   "by": "Chaz",
+   "date": "2026-11-14",
+   "condition": "keep it readable in Golden Hour Pastel (preset B): CVD min dE 23.1 vs lawn, 24.2 vs bee; in the L23 frames the wasp reads at dE about 20.6 against its surroundings at 1x",
+   "levels": [
+    "L23-grand-garden"
+   ]
+  }
+ ],
+ "swatches": [
+  {
+   "name": "lawn",
+   "hex": "#a8e2a6",
+   "role": "lawn"
+  },
+  {
+   "name": "soil",
+   "hex": "#d8b48e",
+   "role": "flower-bed soil"
+  },
+  {
+   "name": "flowerPink",
+   "hex": "#e99fbf",
+   "role": "flowers"
+  },
+  {
+   "name": "flowerYellow",
+   "hex": "#ffe08a",
+   "role": "flowers"
+  },
+  {
+   "name": "gnomeRed",
+   "hex": "#e0606a",
+   "role": "gnome hat"
+  },
+  {
+   "name": "glass",
+   "hex": "#dff4f0",
+   "role": "greenhouse"
+  },
+  {
+   "name": "spray",
+   "hex": "#e8f8ff",
+   "role": "sprinkler water"
+  },
+  {
+   "name": "waspNest",
+   "hex": "#beac87",
+   "role": "wasp nest"
+  },
+  {
+   "name": "wasp",
+   "hex": "#e07a30",
+   "role": "wasp (tinted warning orange)"
+  },
+  {
+   "name": "bear",
+   "hex": "#a0683f",
+   "role": "crew bear"
+  },
+  {
+   "name": "raccoon",
+   "hex": "#8c8794",
+   "role": "crew raccoon"
+  },
+  {
+   "name": "bee",
+   "hex": "#ffd23f",
+   "role": "crew bee"
+  }
+ ],
+ "cvd_pairs": [
+  {
+   "a": "wasp",
+   "b": "lawn",
+   "why": "enemy vs lawn"
+  },
+  {
+   "a": "waspNest",
+   "b": "lawn",
+   "why": "nest vs lawn"
+  },
+  {
+   "a": "spray",
+   "b": "soil",
+   "why": "water vs soil path"
+  },
+  {
+   "a": "bee",
+   "b": "flowerPink",
+   "why": "crew vs flowers"
+  },
+  {
+   "a": "bee",
+   "b": "wasp",
+   "why": "bee vs wasp (also shape/size)"
+  },
+  {
+   "a": "bear",
+   "b": "soil",
+   "why": "crew vs soil"
+  },
+  {
+   "a": "raccoon",
+   "b": "lawn",
+   "why": "crew vs lawn"
+  }
+ ],
+ "cvd_method": "Machado 2009 severity 1.0 (protan, deutan, tritan) + grayscale (relative luminance); CIE76 in sRGB-D65 Lab; pass at dE >= 10.",
+ "qa_majors_addressed": {
+  "1": {
+   "major": "High that is not the real High",
+   "setting": "quality block: every level lists High/Medium/Low separately; phone \"High\" is labelled Medium-equivalent (pixelRatio 1.5, 2048 shadow, half-res bloom) and the budget is set per tier."
+  },
+  "2": {
+   "major": "Terraced, flat-shaded terrain",
+   "setting": "terrain block: smooth heightfield, flatShading false, rounded terrace shoulders / ledge lips; collision unchanged."
+  },
+  "3": {
+   "major": "Emissive saturated water hiding gameplay",
+   "setting": "water/ice blocks: preset water colours, emissive 0, opacity <= 0.88 (0.6 spray), underwater-camera rule."
+  },
+  "4": {
+   "major": "Draw-call / triangle blowout on phones",
+   "setting": "budget block + instancing guide + fog far as draw distance."
+  }
+ }
+}

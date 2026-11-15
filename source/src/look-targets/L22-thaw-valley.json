@@ -1,0 +1,421 @@
+{
+ "id": "L22-thaw-valley",
+ "level": 22,
+ "recipeKey": "thaw_valley",
+ "name": "Thaw Valley",
+ "setting": "Snowy valley that melts into floods: a fox family den, seed spots, frozen creeks, and the Master Bell on a hill (Fern act3-levels-22-24.md \u00a72). Starts in Master Bell state A (winter, night, north wind). Baby: fawn. Enemy: Prowling Fox.",
+ "state": "Master Bell A: winter / night / north wind (start state). B and C deltas below.",
+ "setpiece": "Frozen creek 1 with ice sheets, snow piles and snowy pines, the fox den on the far bank, the Master Bell on its hill under a big lavender moon glow.",
+ "how_to_apply": "import PRESET_B from preset-B.json; const P = deepMerge(structuredClone(PRESET_B), presetB_override); const fx = applyPresetB(scene, renderer, { quality, camera, target, sky: true }, P); const composer = createComposerB(renderer, scene, camera, fx, P); then add extras.fills, materials from extras.emissive / water / ice.",
+ "presetB_override": {
+  "palette": {
+   "sky": {
+    "zenith": "#2e3c7c",
+    "mid": "#5c5ea0",
+    "horizon": "#a08ec0"
+   },
+   "water": {
+    "shallow": "#b8ecf4",
+    "deep": "#8fc8e8",
+    "opacity": 0.8,
+    "roughness": 0.12
+   },
+   "terrain": {
+    "grass": [
+     "#eef0fb",
+     "#e6e8f8",
+     "#f4f2fc",
+     "#dfe2f4"
+    ],
+    "bank": "#d8d0e4"
+   }
+  },
+  "sun": {
+   "color": "#c9d4ff",
+   "intensity": 1.7,
+   "azimuthDeg": 72,
+   "elevationDeg": 32
+  },
+  "hemi": {
+   "sky": "#a8b2ff",
+   "ground": "#e0d4ee",
+   "intensity": 1.6
+  },
+  "fog": {
+   "color": "#4c528c",
+   "near": 22,
+   "far": 78
+  },
+  "exposure": 1.12,
+  "bloom": {
+   "strength": 0.4,
+   "radius": 0.6,
+   "threshold": 0.88
+  },
+  "grade": {
+   "vignette": 0.24,
+   "vignetteColor": "#5a5a9a",
+   "haze": 0.03,
+   "hazeColor": "#9aa0d8",
+   "lift": "#141638",
+   "gain": "#f4f0ff"
+  },
+  "skyGlow": {
+   "wide": 0.35,
+   "widePower": 4,
+   "core": 0.25,
+   "corePower": 40
+  },
+  "quality": {
+   "low": {
+    "fogFar": 56,
+    "bakeGrade": {
+     "lightTint": "#eef0ff",
+     "skyTint": "#d8dcff",
+     "hazeMix": 0.1
+    }
+   }
+  }
+ },
+ "bloom_per_quality": {
+  "high": {
+   "strength": 0.4,
+   "radius": 0.6,
+   "threshold": 0.88,
+   "resolutionScale": 1.0
+  },
+  "medium": {
+   "strength": 0.34,
+   "radius": 0.6,
+   "threshold": 0.88,
+   "resolutionScale": 0.5,
+   "note": "game phone \"High\""
+  },
+  "low": {
+   "enabled": false,
+   "note": "no post; grade baked into lights (quality.low.bakeGrade); vignette via cssOverlayB"
+  }
+ },
+ "extras": {
+  "background": "sky dome (night A); the \"sun\" is the moon key",
+  "fills": [
+   {
+    "name": "crewFill",
+    "type": "PointLight",
+    "follow": "active crew member, offset [0, 2.2, 1.6]",
+    "color": "#ffe2c4",
+    "intensity": 6,
+    "distance": 9,
+    "decay": 1.5,
+    "castShadow": false,
+    "quality": [
+     "high",
+     "medium",
+     "low"
+    ],
+    "states": [
+     "A"
+    ]
+   },
+   {
+    "name": "denGlow",
+    "type": "PointLight",
+    "at": "fox den mouth",
+    "color": "#ffb070",
+    "intensity": 3,
+    "distance": 6,
+    "decay": 2,
+    "quality": [
+     "high",
+     "medium"
+    ]
+   }
+  ],
+  "emissive": {
+   "moonGlow": "sky only (skyGlow)",
+   "bellLantern": {
+    "color": "#ffd27a",
+    "emissive": "#ffb040",
+    "intensity": 0.6
+   },
+   "rule": "Snow and ice have NO emissive; snow albedo <= #f4f2fc so it stays under the 0.88 bloom threshold."
+  },
+  "ice": {
+   "color": "#bbd0dd",
+   "roughness": 0.18,
+   "metalness": 0,
+   "opacity": 0.92,
+   "emissive": "#000000",
+   "crackLines": "#9ec4e2",
+   "note": "Ice must read as solid and walkable-looking-but-slick; never glowing (QA 3)."
+  },
+  "water": {
+   "melt_high_B": {
+    "shallow": "#b8ecf4",
+    "deep": "#8fc8e8",
+    "opacity": 0.8,
+    "emissive": 0,
+    "foam": "#fff6ea"
+   },
+   "mid_C": {
+    "opacity": 0.75
+   },
+   "rule": "Underwater/flooded camera: drop opacity to 0.55 and add fog #8fc8e8 near 2 far 18 so the ford stones stay visible."
+  },
+  "states": {
+   "A_winter_night": "this file (start state)",
+   "B_spring_day": {
+    "sky": {
+     "zenith": "#a8b8f0",
+     "mid": "#f6c4d8",
+     "horizon": "#ffe1b4"
+    },
+    "sun": {
+     "color": "#ffd0a8",
+     "intensity": 2.8,
+     "elevationDeg": 28
+    },
+    "hemi": {
+     "sky": "#cdbfff",
+     "ground": "#d8ecc8",
+     "intensity": 2.0
+    },
+    "fog": {
+     "color": "#f4dcd0",
+     "near": 30,
+     "far": 95
+    },
+    "exposure": 1.0,
+    "snow": "patchy melt #e8eef4 over grass #a8e2a6"
+   },
+   "C_summer_dusk": {
+    "sky": {
+     "zenith": "#7c84d0",
+     "mid": "#f0a8c0",
+     "horizon": "#ffc89a"
+    },
+    "sun": {
+     "color": "#ffb08a",
+     "intensity": 2.6,
+     "elevationDeg": 12
+    },
+    "hemi": {
+     "sky": "#b8a8f0",
+     "ground": "#ffc8a8",
+     "intensity": 2.2
+    },
+    "fog": {
+     "color": "#f4c0b8",
+     "near": 30,
+     "far": 95
+    },
+    "exposure": 1.0,
+    "fill": "crewFill at 3 (dusk)"
+   },
+   "transition": "Lerp all values over 1.2 s on master:A/B/C; snow piles scale out over the same time."
+  },
+  "terrain": "Smooth rolling snowfield: 0.6 m low-frequency noise, rounded creek banks (1.5 m fillet), ramps as smooth slopes. flatShading false; snow vertex colours #eef0fb..#dfe2f4 with lilac in the hollows.",
+  "crewFloor": {
+   "minMedianY": {
+    "bear": 0.046,
+    "raccoon": 0.04,
+    "bee": 0.32
+   },
+   "reference": "80% of each animal's median relative luminance in the base-B daylight frame (L23: bear 0.058, raccoon 0.050, bee 0.396)",
+   "note": "measured at 1x from the id-masks; night/cave/dusk must keep the crew as readable as daylight B (QA 5)"
+  },
+  "budget": {
+   "high": {
+    "calls": 360,
+    "tris": 170000
+   },
+   "medium": {
+    "calls": 260,
+    "tris": 115000
+   },
+   "low": {
+    "calls": 190,
+    "tris": 75000
+   },
+   "shadowMap": {
+    "high": 2048,
+    "medium": 1024,
+    "low": 1024
+   }
+  }
+ },
+ "budget_note": "Counts are renderer.info.render per frame INCLUDING the shadow pass, at 390x844 portrait gameplay framing. Game \"High\" on phones = preset medium (QA diff 1), so phone High uses the Medium column; desktop Ultra may use preset high.",
+ "instancing": [
+  "One InstancedMesh per (geometry, material) pair for every repeated deco: trees, flowers, grass tufts, rocks, crystals, fence/hedge segments, snow piles, pickups (petals). Never one Mesh per placement.",
+  "Merge static, non-interactive level geometry (terrain chunk + lane walls + backdrop) per 16 m z-chunk and per material with BufferGeometryUtils.mergeGeometries; keep interactables (levers, plates, mirrors, gates, bell) as their own meshes.",
+  "Atlas / share materials: <= 12 distinct materials per level on Low, <= 20 on High; reuse one pastelized MeshStandardMaterial per colour (cache by hex), and use vertex colours for terrain and rocks.",
+  "Shadows: only crew, babies, enemies and props taller than 1.5 m cast. Terrain, walls, small deco and pickups receive only. Low: 1024 PCF on, caster list = crew + babies + enemies only.",
+  "Cull: fog far is a hard draw distance. Hide (visible=false) any chunk whose nearest edge is beyond fog far + 5 m; never draw the full corridor.",
+  "World-space badges / rings / halos: one shared sprite material + InstancedMesh or a single Points cloud; cap screen size (QA minor 9).",
+  "Pollen motes stay the single InstancedMesh from makePollenMotesB."
+ ],
+ "deviations": [
+  {
+   "what": "Palette for CVD: ice #bbd0dd, snowShade #b3b2cd",
+   "why": "Ice vs snow and bee vs snow hollow were < 10 dE in grayscale; thin ice must read on every display.",
+   "approved": "Approved by Chaz, 14 Nov 2026 (CVD swatch deviations)"
+  },
+  {
+   "what": "Night moon key 1.7 at 32 deg, cool",
+   "why": "State A is night; the moon still gives the crew a key and readable contact shadows."
+  },
+  {
+   "what": "Snow-bounce hemi ground #e0d4ee, intensity 1.6 + warm crew fill",
+   "why": "Night readability: fixes the QA 5 failure mode (black silhouettes) without killing the night."
+  },
+  {
+   "what": "Bloom threshold 0.88",
+   "why": "Snow is the brightest surface; it must not bloom."
+  },
+  {
+   "what": "Ice/water with zero emissive, preset water colours",
+   "why": "Avoids QA 3; the creek states are gameplay and must stay readable."
+  },
+  {
+   "what": "Fog 22-78 m (Low 56), indigo",
+   "why": "Night depth and fewer far draws."
+  }
+ ],
+ "approvals": [
+  {
+   "item": "CVD swatch deviations (every deviation starting \"Palette for CVD\")",
+   "status": "approved",
+   "by": "Chaz",
+   "date": "2026-11-14",
+   "levels": [
+    "L20-mirror-caves",
+    "L21-storm-orchard",
+    "L22-thaw-valley",
+    "L23-grand-garden",
+    "L24-starheart-summit"
+   ]
+  }
+ ],
+ "swatches": [
+  {
+   "name": "snow",
+   "hex": "#eef0fb",
+   "role": "snowfield"
+  },
+  {
+   "name": "snowShade",
+   "hex": "#b3b2cd",
+   "role": "snow hollow"
+  },
+  {
+   "name": "ice",
+   "hex": "#bbd0dd",
+   "role": "frozen creek"
+  },
+  {
+   "name": "iceCrack",
+   "hex": "#9ec4e2",
+   "role": "ice cracks"
+  },
+  {
+   "name": "melt",
+   "hex": "#8fc8e8",
+   "role": "melt water (B/C)"
+  },
+  {
+   "name": "bank",
+   "hex": "#a08c78",
+   "role": "dirt bank path"
+  },
+  {
+   "name": "pine",
+   "hex": "#4f9a84",
+   "role": "snowy pines"
+  },
+  {
+   "name": "fog",
+   "hex": "#4c528c",
+   "role": "night fog"
+  },
+  {
+   "name": "fox",
+   "hex": "#e8762a",
+   "role": "fox"
+  },
+  {
+   "name": "bear",
+   "hex": "#a0683f",
+   "role": "crew bear"
+  },
+  {
+   "name": "raccoon",
+   "hex": "#8c8794",
+   "role": "crew raccoon"
+  },
+  {
+   "name": "bee",
+   "hex": "#ffd23f",
+   "role": "crew bee"
+  }
+ ],
+ "cvd_pairs": [
+  {
+   "a": "ice",
+   "b": "snow",
+   "why": "ice vs snow (fawn refuses ice)"
+  },
+  {
+   "a": "melt",
+   "b": "bank",
+   "why": "water vs walkable bank"
+  },
+  {
+   "a": "bank",
+   "b": "snow",
+   "why": "path vs snow"
+  },
+  {
+   "a": "fox",
+   "b": "snow",
+   "why": "enemy vs ground"
+  },
+  {
+   "a": "bear",
+   "b": "snow",
+   "why": "crew vs ground"
+  },
+  {
+   "a": "raccoon",
+   "b": "snow",
+   "why": "crew vs ground"
+  },
+  {
+   "a": "bee",
+   "b": "snowShade",
+   "why": "crew vs hollow"
+  }
+ ],
+ "cvd_method": "Machado 2009 severity 1.0 (protan, deutan, tritan) + grayscale (relative luminance); CIE76 in sRGB-D65 Lab; pass at dE >= 10.",
+ "qa_majors_addressed": {
+  "1": {
+   "major": "High that is not the real High",
+   "setting": "quality block: every level lists High/Medium/Low separately; phone \"High\" is labelled Medium-equivalent (pixelRatio 1.5, 2048 shadow, half-res bloom) and the budget is set per tier."
+  },
+  "2": {
+   "major": "Terraced, flat-shaded terrain",
+   "setting": "terrain block: smooth heightfield, flatShading false, rounded terrace shoulders / ledge lips; collision unchanged."
+  },
+  "3": {
+   "major": "Emissive saturated water hiding gameplay",
+   "setting": "water/ice blocks: preset water colours, emissive 0, opacity <= 0.88 (0.6 spray), underwater-camera rule."
+  },
+  "4": {
+   "major": "Draw-call / triangle blowout on phones",
+   "setting": "budget block + instancing guide + fog far as draw distance."
+  },
+  "5": {
+   "major": "Underexposed night, black silhouettes",
+   "setting": "fills + hemi + exposure + crewFloor (median crew luminance checked on the frames)."
+  }
+ }
+}

@@ -1,0 +1,315 @@
+{
+ "id": "L21-storm-orchard",
+ "level": 21,
+ "recipeKey": "storm_orchard",
+ "name": "Storm Orchard",
+ "setting": "Apple terraces in a windy storm: mushroom pads, a crow loop, two wind vanes, leaf-net gaps (Fern act3-levels-17-21.md \u00a76). Baby: robin chick (windblown). Enemy: Patrol Crow. New gear: Leaf Glider.",
+ "state": "day, storm (wind level-wide)",
+ "setpiece": "T0 orchard floor at the first glide gap: apple trees, the wind vane, a red mushroom pad, terrace T1 rising behind on a smooth bank, storm clouds with a warm break of light.",
+ "how_to_apply": "import PRESET_B from preset-B.json; const P = deepMerge(structuredClone(PRESET_B), presetB_override); const fx = applyPresetB(scene, renderer, { quality, camera, target, sky: true }, P); const composer = createComposerB(renderer, scene, camera, fx, P); then add extras.fills, materials from extras.emissive / water / ice.",
+ "presetB_override": {
+  "palette": {
+   "sky": {
+    "zenith": "#8f9acb",
+    "mid": "#cdb6cf",
+    "horizon": "#efd4bf"
+   },
+   "clouds": "#c9c0d8",
+   "cloudEmissive": 0.3,
+   "terrain": {
+    "grass": [
+     "#9fd29a",
+     "#b2dba2",
+     "#8fca94",
+     "#c0e2aa"
+    ]
+   }
+  },
+  "sun": {
+   "color": "#ffd4ac",
+   "intensity": 2.4,
+   "azimuthDeg": 72,
+   "elevationDeg": 24
+  },
+  "hemi": {
+   "sky": "#c2c0f0",
+   "ground": "#e6cdb2",
+   "intensity": 2.3
+  },
+  "fog": {
+   "color": "#d9cad0",
+   "near": 24,
+   "far": 82
+  },
+  "exposure": 1.0,
+  "bloom": {
+   "strength": 0.35,
+   "radius": 0.6,
+   "threshold": 0.82
+  },
+  "grade": {
+   "saturation": 0.95,
+   "vignette": 0.24,
+   "vignetteColor": "#9a7a9a",
+   "haze": 0.04,
+   "hazeColor": "#e8d4cc"
+  },
+  "quality": {
+   "low": {
+    "fogFar": 60,
+    "bakeGrade": {
+     "lightTint": "#f6e6d4",
+     "skyTint": "#eedad0",
+     "hazeMix": 0.2
+    }
+   }
+  }
+ },
+ "bloom_per_quality": {
+  "high": {
+   "strength": 0.35,
+   "radius": 0.6,
+   "threshold": 0.82,
+   "resolutionScale": 1.0
+  },
+  "medium": {
+   "strength": 0.297,
+   "radius": 0.6,
+   "threshold": 0.82,
+   "resolutionScale": 0.5,
+   "note": "game phone \"High\""
+  },
+  "low": {
+   "enabled": false,
+   "note": "no post; grade baked into lights (quality.low.bakeGrade); vignette via cssOverlayB"
+  }
+ },
+ "extras": {
+  "background": "sky dome",
+  "fills": [
+   {
+    "name": "crewFill",
+    "type": "PointLight",
+    "follow": "active crew member, offset [0, 2.4, 1.6]",
+    "color": "#ffe8d0",
+    "intensity": 3,
+    "distance": 8,
+    "decay": 1.5,
+    "castShadow": false,
+    "quality": [
+     "high",
+     "medium"
+    ],
+    "note": "storm shade drops the dark-brown bear under the crew floor; Low skips it (hemi already 2.3)"
+   }
+  ],
+  "emissive": {
+   "stormCloud": {
+    "color": "#c9c0d8",
+    "emissive": "#ffe9ef",
+    "intensity": 0.3
+   },
+   "cloudBreak": {
+    "note": "sky glow wide 0.3 so the warm break reads behind the clouds"
+   },
+   "rule": "No emissive on gameplay surfaces."
+  },
+  "wind": "Leaf / grass sway in the vertex shader (amplitude 0.06 m at 6 m/s), driven by S.wind; no per-object animation mixers.",
+  "water": "None on the path. Puddles (optional): shallow #b8ecf4 at opacity 0.7, emissive 0.",
+  "terrain": "Terraces T0 y0 -> T1 y2 -> T2 y4 -> crown y6 stay as collision. Render the shoulders with a 1.5-2 m smoothstep fillet and rolling 0.4 m noise on the treads; flatShading false, smooth vertex normals, grass vertex colours. Gaps are soft leaf-net dips, not vertical voxel cuts.",
+  "crewFloor": {
+   "minMedianY": {
+    "bear": 0.046,
+    "raccoon": 0.04,
+    "bee": 0.32
+   },
+   "reference": "80% of each animal's median relative luminance in the base-B daylight frame (L23: bear 0.058, raccoon 0.050, bee 0.396)",
+   "note": "measured at 1x from the id-masks; night/cave/dusk must keep the crew as readable as daylight B (QA 5)"
+  },
+  "budget": {
+   "high": {
+    "calls": 380,
+    "tris": 180000
+   },
+   "medium": {
+    "calls": 280,
+    "tris": 120000
+   },
+   "low": {
+    "calls": 200,
+    "tris": 80000
+   },
+   "shadowMap": {
+    "high": 2048,
+    "medium": 1024,
+    "low": 1024
+   }
+  }
+ },
+ "budget_note": "Counts are renderer.info.render per frame INCLUDING the shadow pass, at 390x844 portrait gameplay framing. Game \"High\" on phones = preset medium (QA diff 1), so phone High uses the Medium column; desktop Ultra may use preset high.",
+ "instancing": [
+  "One InstancedMesh per (geometry, material) pair for every repeated deco: trees, flowers, grass tufts, rocks, crystals, fence/hedge segments, snow piles, pickups (petals). Never one Mesh per placement.",
+  "Merge static, non-interactive level geometry (terrain chunk + lane walls + backdrop) per 16 m z-chunk and per material with BufferGeometryUtils.mergeGeometries; keep interactables (levers, plates, mirrors, gates, bell) as their own meshes.",
+  "Atlas / share materials: <= 12 distinct materials per level on Low, <= 20 on High; reuse one pastelized MeshStandardMaterial per colour (cache by hex), and use vertex colours for terrain and rocks.",
+  "Shadows: only crew, babies, enemies and props taller than 1.5 m cast. Terrain, walls, small deco and pickups receive only. Low: 1024 PCF on, caster list = crew + babies + enemies only.",
+  "Cull: fog far is a hard draw distance. Hide (visible=false) any chunk whose nearest edge is beyond fog far + 5 m; never draw the full corridor.",
+  "World-space badges / rings / halos: one shared sprite material + InstancedMesh or a single Points cloud; cap screen size (QA minor 9).",
+  "Pollen motes stay the single InstancedMesh from makePollenMotesB."
+ ],
+ "deviations": [
+  {
+   "what": "Palette for CVD: leafNet #b2a46a",
+   "why": "The gap net was < 10 dE from grass in grayscale.",
+   "approved": "Approved by Chaz, 14 Nov 2026 (CVD swatch deviations)"
+  },
+  {
+   "what": "Crew fill 3 (High/Medium)",
+   "why": "The storm shade dropped the bear under the crew floor."
+  },
+  {
+   "what": "Desaturated storm sky, sun 2.4 at 24 deg",
+   "why": "A storm needs cooler, lower-contrast light; a slightly higher sun keeps the terrace treads lit instead of in long 17-deg shadows."
+  },
+  {
+   "what": "Hemi 2.3 (base 2.0)",
+   "why": "Fills the overcast shade so the crew and the chick stay readable."
+  },
+  {
+   "what": "Fog 24-82 m (Low 60)",
+   "why": "Storm haze, and it hides the upper terraces until you climb."
+  },
+  {
+   "what": "Bloom 0.35 / threshold 0.82",
+   "why": "No sunny glow in a storm."
+  }
+ ],
+ "approvals": [
+  {
+   "item": "CVD swatch deviations (every deviation starting \"Palette for CVD\")",
+   "status": "approved",
+   "by": "Chaz",
+   "date": "2026-11-14",
+   "levels": [
+    "L20-mirror-caves",
+    "L21-storm-orchard",
+    "L22-thaw-valley",
+    "L23-grand-garden",
+    "L24-starheart-summit"
+   ]
+  }
+ ],
+ "swatches": [
+  {
+   "name": "grass",
+   "hex": "#9fd29a",
+   "role": "terrace tread"
+  },
+  {
+   "name": "bank",
+   "hex": "#e8cfa8",
+   "role": "terrace shoulder"
+  },
+  {
+   "name": "apple",
+   "hex": "#e05a4a",
+   "role": "apples"
+  },
+  {
+   "name": "leaves",
+   "hex": "#6fbf8a",
+   "role": "tree canopy"
+  },
+  {
+   "name": "mushroomPad",
+   "hex": "#e86a6a",
+   "role": "bounce pad"
+  },
+  {
+   "name": "leafNet",
+   "hex": "#b2a46a",
+   "role": "gap net"
+  },
+  {
+   "name": "stormCloud",
+   "hex": "#c9c0d8",
+   "role": "clouds"
+  },
+  {
+   "name": "fog",
+   "hex": "#d9cad0",
+   "role": "fog"
+  },
+  {
+   "name": "crow",
+   "hex": "#4a4458",
+   "role": "crow"
+  },
+  {
+   "name": "bear",
+   "hex": "#a0683f",
+   "role": "crew bear"
+  },
+  {
+   "name": "raccoon",
+   "hex": "#8c8794",
+   "role": "crew raccoon"
+  },
+  {
+   "name": "bee",
+   "hex": "#ffd23f",
+   "role": "crew bee"
+  }
+ ],
+ "cvd_pairs": [
+  {
+   "a": "mushroomPad",
+   "b": "grass",
+   "why": "pad vs tread"
+  },
+  {
+   "a": "leafNet",
+   "b": "grass",
+   "why": "gap vs tread"
+  },
+  {
+   "a": "crow",
+   "b": "stormCloud",
+   "why": "crow vs sky"
+  },
+  {
+   "a": "bear",
+   "b": "grass",
+   "why": "crew vs ground"
+  },
+  {
+   "a": "raccoon",
+   "b": "grass",
+   "why": "crew vs ground"
+  },
+  {
+   "a": "bee",
+   "b": "leaves",
+   "why": "crew vs canopy"
+  },
+  {
+   "a": "apple",
+   "b": "leaves",
+   "why": "apples vs leaves"
+  }
+ ],
+ "cvd_method": "Machado 2009 severity 1.0 (protan, deutan, tritan) + grayscale (relative luminance); CIE76 in sRGB-D65 Lab; pass at dE >= 10.",
+ "qa_majors_addressed": {
+  "1": {
+   "major": "High that is not the real High",
+   "setting": "quality block: every level lists High/Medium/Low separately; phone \"High\" is labelled Medium-equivalent (pixelRatio 1.5, 2048 shadow, half-res bloom) and the budget is set per tier."
+  },
+  "2": {
+   "major": "Terraced, flat-shaded terrain",
+   "setting": "terrain block: smooth heightfield, flatShading false, rounded terrace shoulders / ledge lips; collision unchanged."
+  },
+  "4": {
+   "major": "Draw-call / triangle blowout on phones",
+   "setting": "budget block + instancing guide + fog far as draw distance."
+  }
+ }
+}

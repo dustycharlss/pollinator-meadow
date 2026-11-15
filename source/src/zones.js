@@ -562,9 +562,27 @@ export function createZones(scene, host) {
       else { const n = 0.5 + 0.5 * Math.sin(lx * 0.23 + 1.7) * Math.cos(lz * 0.19), j = 1 + 0.025 * Math.sin(lx * 0.7) * Math.cos(lz * 0.6); // B grass tones #98d8a0..#cdeeb8 (linear), large-scale mix
         col[i * 3] = (0.31 + 0.3 * n * n) * j; col[i * 3 + 1] = (0.69 + 0.17 * n) * j; col[i * 3 + 2] = (0.35 + 0.12 * n) * j; }
     }
+    const lookId = recipe && recipe.id, snowLook = lookId === 'thaw_valley';
+    const hex = h => { const n = parseInt(String(h).replace('#', ''), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
+    const colA = snowLook ? new Float32Array(col.length) : null, colB = snowLook ? new Float32Array(col.length) : null, colC = snowLook ? new Float32Array(col.length) : null;
+    if (snowLook) {
+      const grasses = ['#eef0fb', '#e6e8f8', '#f4f2fc', '#dfe2f4'].map(hex), bank = hex('#d8d0e4'), hollow = hex('#b3b2cd');
+      const melt = hex('#e8eef4'), grassB = hex('#a8e2a6'), grassC = hex('#98d8a0'), bankC = hex('#e8b8a0');
+      for (let i = 0; i < pos.count; i++) {
+        const lx = pos.getX(i) + cx, lz = pos.getZ(i) + cz, rel = pos.getY(i);
+        const n = 0.5 + 0.5 * Math.sin(lx * 0.23 + 1.7) * Math.cos(lz * 0.19), gi = (Math.abs(Math.floor(lx * 3 + lz * 2)) % 4);
+        const snow = n < 0.35 ? hollow : grasses[gi], patch = n < 0.45 ? melt : grassB;
+        const put = (buf, rgb) => { buf[i * 3] = rgb[0]; buf[i * 3 + 1] = rgb[1]; buf[i * 3 + 2] = rgb[2]; };
+        if (rel < 0.05) { put(colA, bank); put(colB, bank); put(colC, bankC); }
+        else { put(colA, snow); put(colB, patch); put(colC, [grassC[0] * (0.95 + 0.05 * n), grassC[1], grassC[2] * (0.9 + 0.1 * n)]); }
+      }
+      col.set(colA);
+    }
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
-    const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
-    mesh.userData.terrain = true; mesh.position.set(A.x + cx, baseY, A.z + cz); group.add(mesh); terrMesh = mesh;
+    const smooth = !!(recipe && (recipe.id === 'thaw_valley' || recipe.id === 'grand_garden' || recipe.id === 'starheart_summit' || recipe.id === 'storm_orchard' || recipe.id === 'mirror_caves'));
+    const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !smooth }));
+    mesh.userData.terrain = true; mesh.userData.lookTerrain = snowLook; mesh.userData.colA = colA; mesh.userData.colB = colB; mesh.userData.colC = colC; mesh.userData.colT = 1; mesh.userData.wantSeason = recipe && recipe.masterStart === 'A' ? 'winter' : 'summer';
+    mesh.position.set(A.x + cx, baseY, A.z + cz); group.add(mesh); terrMesh = mesh;
     sampleH = (lx, lz) => {
       if (lx < x0 - 4 || lx > x1 + 4 || lz < z0 - 4 || lz > z1 + 4) return null;
       let rel = fn(lx, lz);
@@ -1388,7 +1406,9 @@ export function createZones(scene, host) {
     turtle(id, x, z, o = {}) { const e = enemy('turtle', id, x, z, { cone: [4.6, 0.95], ...o }); if (o.ride) e.ride = { high: o.ride.high ? L2W(o.ride.high[0], o.ride.high[1]) : e.home, low: o.ride.low ? L2W(o.ride.low[0], o.ride.low[1]) : e.home, mid: e.home }; if (o.leaf) { const [lx, lz] = o.leaf; this.lever('leaf:' + id, lx, lz, { label: 'Floating leaf' }); const pr = props[props.length - 1]; pr.act = 'leaf'; pr.re = true; pr.turtle = e; pr.leafAt = L2W(o.leafTo ? o.leafTo[0] : lx, o.leafTo ? o.leafTo[1] : lz); } return e; },
     spider(id, x, z, o = {}) { return enemy('spider', id, x, z, { cone: [4.8, 0.55], ...o }); },
     crow(id, cx, cz, R, h, o = {}) { const e = enemy('crow', id, cx + R, cz, { cone: [4.2, 0.6], cx, cz, R, h, speed: o.speed || 3.2, ...o }); e.ang = o.ang || 0; return e; },
-    wasps(id, x, z, o = {}) { return enemy('nest', id, x, z, { ring: o.r || 5, grace: 0.9, lift: o.lift || 0, ...o }); },
+    wasps(id, x, z, o = {}) { const e = enemy('nest', id, x, z, { ring: o.r || 5, grace: 0.9, lift: o.lift || 0, ...o });
+      if (recipe && recipe.id === 'grand_garden' && e && e.G && e.G.userData.wasps) { const tint = new THREE.Color(0xff9a60); e.G.userData.wasps.traverse(o => { if (o.material && o.material.color) o.material.color.multiply(tint); }); }
+      return e; },
     owl(id, x, z, o = {}) { const base = o.perch ?? 3.5; this.wall(x, z, 0.7, 0.7, base, { look: 'bark' }); return enemy('owl', id, x, z, { cone: [o.r || 11, o.half || 0.36], lift: base, ...o }); },
     fox(id, x, z, o = {}) { return enemy('fox', id, x, z, { cone: [3.6, 0.55], ring: o.ring || 5, ...o }); },
     // ---- S5 escort babies + S3 practice tools (Act 3 P2) ----
@@ -1490,6 +1510,10 @@ export function createZones(scene, host) {
       const S = AA(), w = L2W((x0 + x1) / 2, (z0 + z1) / 2), W2 = x1 - x0, D2 = z1 - z0;
       const mud = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2).rotateX(-Math.PI / 2), mat(0x6a5030)); mud.position.set(w.x, w.y + 0.04, w.z); group.add(mud);
       const wm = waterSurface(new THREE.PlaneGeometry(W2 + 0.4, D2 + 0.4).rotateX(-Math.PI / 2), { color: 0x1f8cff, repeat: [W2 / 6, D2 / 6] }); wm.position.set(w.x, w.y + 0.2, w.z); group.add(wm); waterMeshes.push(wm);
+      if (recipe && (recipe.id === 'thaw_valley' || recipe.id === 'grand_garden')) {
+        wm.material.color.set(recipe.id === 'thaw_valley' ? 0x8fc8e8 : 0x8fc8e8); wm.material.emissive.setHex(0x000000); wm.material.emissiveIntensity = 0; wm.material.opacity = recipe.id === 'grand_garden' ? 0.6 : 0.8;
+        if (wm.children[0] && wm.children[0].material) wm.children[0].material.opacity = 0.08;
+      }
       const rect = { x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1, off: false };
       deep.push(rect);
       const pd = { id, rect, wm, mud, gy: w.y, level: o.level || 'mid', wr: [], heights: o.heights || null };
@@ -1591,7 +1615,7 @@ export function createZones(scene, host) {
       (S.master.posts ||= []).push({ nowRow });
       return G;
     },
-    creek(id, x0, z0, x1, z1, o = {}) { const pd = this.pond(id, x0, z0, x1, z1, { level: 'mid' }); const ice = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.2, z1 - z0), new THREE.MeshLambertMaterial({ color: 0xe8f6ff, emissive: 0x8fb8d4, emissiveIntensity: 0.06, transparent: true, opacity: 0.92 })); ice.position.set(A.x + (x0 + x1) / 2, pd.gy + 0.22, A.z + (z0 + z1) / 2); ice.visible = false; group.add(ice); pd.ice = ice; pd.creek = true; pd.melt = !!o.melt; AA().creeks.push(pd); return pd; },
+    creek(id, x0, z0, x1, z1, o = {}) { const pd = this.pond(id, x0, z0, x1, z1, { level: 'mid' }); const ice = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.2, z1 - z0), new THREE.MeshLambertMaterial({ color: 0xbbd0dd, emissive: 0x000000, emissiveIntensity: 0, transparent: true, opacity: 0.92 })); ice.position.set(A.x + (x0 + x1) / 2, pd.gy + 0.22, A.z + (z0 + z1) / 2); ice.visible = false; group.add(ice); pd.ice = ice; pd.creek = true; pd.melt = !!o.melt; AA().creeks.push(pd); return pd; },
     snowPile(s, x, z, w, d, h) { this.cracked(s, x, z, w, d, h, { label: 'Snow pile' }); const pr = props[props.length - 1]; pr.m.material = mat(0xf4f8ff); pr.G.visible = false; pr.s.off = true; pr.m.visible = false; pr.snow = true; pr.need = 'winter'; pr.needWhy = 'Only in winter'; AA().seasonal.push({ pr, when: 'winter' }); },
     mudSlide(s, ax, az, ha, bx2, bz, hb, o = {}) { const a = L2W(ax, az, ha), b = L2W(bx2, bz, hb), L = Math.hypot(b.x - a.x, b.z - a.z), m = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.2, L), mat(0x6a4a28)); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.05, (a.z + b.z) / 2); m.rotation.y = Math.atan2(b.x - a.x, b.z - a.z); m.rotation.x = Math.atan2(a.y - b.y, L); group.add(m);
       props.push({ kind: 'slide', act: 'slide', cls: 'trickster', sig: s, x: a.x, y: a.y, z: a.z, b, r: 2.2, need: 'spring', needWhy: 'The chute is frozen or dry — ring the 🌱 Spring bell for mud', label: o.label || 'Mud chute', two: true, icon: badge('trickster', a.x, a.y + 2, a.z, 0.9) }); },
@@ -1675,7 +1699,13 @@ export function createZones(scene, host) {
     for (const k of ['summer', 'winter', 'spring']) setSig(k, k === s);
     for (const pd of S.creeks) { const lv = pd.melt ? (s === 'winter' ? 'ice' : s === 'spring' ? 'high' : 'mid') : (s === 'winter' ? 'ice' : 'mid'); setPond(pd, lv, true); }
     for (const it of S.seasonal) { const on = s === it.when && !it.pr.done; it.pr.s.off = !on; it.pr.m.visible = on; }
-    if (terrMesh) { const m = terrMesh.material; if (s === 'winter') { m.color.set(0xffffff); m.emissive = new THREE.Color(0x9ab0c8); m.emissiveIntensity = 0.75; } else if (s === 'spring') { m.color.set(0xdfffd0); m.emissive = new THREE.Color(0x203010); m.emissiveIntensity = 0.3; } else { m.color.set(0xffffff); m.emissive = new THREE.Color(0); m.emissiveIntensity = 0; } m.needsUpdate = true; }
+    if (terrMesh) {
+      const m = terrMesh.material, look = !!(recipe && terrMesh.userData.lookTerrain);
+      if (look) { m.emissive = new THREE.Color(0); m.emissiveIntensity = 0; m.color.set(0xffffff); m.needsUpdate = true; terrMesh.userData.wantSeason = s; terrMesh.userData.colT = 0; }
+      else if (s === 'winter') { m.color.set(0xffffff); m.emissive = new THREE.Color(0x9ab0c8); m.emissiveIntensity = 0.75; m.needsUpdate = true; }
+      else if (s === 'spring') { m.color.set(0xdfffd0); m.emissive = new THREE.Color(0x203010); m.emissiveIntensity = 0.3; m.needsUpdate = true; }
+      else { m.color.set(0xffffff); m.emissive = new THREE.Color(0); m.emissiveIntensity = 0; m.needsUpdate = true; }
+    }
     if (!quiet) tst({ summer: '☀️ Summer! The creek flows — logs can float.', winter: '❄️ Winter! The creek freezes, snow hides your scent.', spring: '🌱 Spring! Mud for sliding and vines can grow.' }[s], 2400);
   }
   // S4 Master Bell — shared A/B/C table (act3-integration.md, act3-levels-22-24.md §1.1). Writes only per-level S.season / S.time / S.wind.
@@ -1706,6 +1736,7 @@ export function createZones(scene, host) {
       if (st === 'A') ctx.audio?.sample?.('act3/ice-sheet', 0.55);
       if (st === 'B') ctx.audio?.sample?.('act3/ice-thaw', 0.55);
     }
+    ctx.look?.setMaster?.(st, { snap: !!opts.init });
     if (!opts.quiet) tst(M.line, 2400);
   }
   function paintMaster(pr) {
@@ -2409,6 +2440,7 @@ export function createZones(scene, host) {
     if (exitLabel) exitLabel.remove(); exitAt = null; exitOpen = false; exitMesh = null; exitLabel = null; starGot = false;
     kidClear(); a2Clear(); terrMesh = null;
     ctx.audio?.levelAmb?.(null);
+    ctx.look?.setPatch?.(null);
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
   function load(pid, anchor) {
@@ -2422,6 +2454,11 @@ export function createZones(scene, host) {
     buildLeafyBackdrop(recipe.bounds);
     decorateProps();
     if (recipe.act2) a2Init();
+    if (ctx.look?.setPatch) {
+      const fills = {};
+      if (pid === 'thaw_valley') fills.denGlow = { x: A.x + 11.2, y: gy(11.2, 20) + 1.2, z: A.z + 20 };
+      ctx.look.setPatch(pid, { state: (a2 && a2.master && a2.master.state) || recipe.masterStart || null, fills });
+    }
     // Bruiser "standing platform" (Olaf shield move): a solid on Bear's back while he's parked
     bearPad = addSolid({ type: 'cyl', x: 0, z: 0, r: 1.15, y0: -99, top: -98, kind: 'zone', off: true, pad: true });
     if (recipe.night) { nightOn = true; ctx.setNight(true); }
@@ -2753,6 +2790,19 @@ export function createZones(scene, host) {
     for (const mx of babyMixers) mx.update(dt);
     if (!recipe) return; t += dt;
     if (recipe.hub) { if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; const line = introQ.shift(); const say = typeof line === 'string' ? line : line.say; tst(say, 3000); const vid = typeof line === 'string' ? null : line.voice; if (vid) ctx.audio?.speak?.(vid); } updateHub(dt, cam); return; }
+    // look-target: lerp L22 snow-pile scale and terrain vertex colours over 1.2 s with the Master Bell
+    if (recipe.id === 'thaw_valley') {
+      const S = AA(), winter = S.season === 'winter';
+      S._snowK = Math.max(0, Math.min(1, (S._snowK == null ? (winter ? 1 : 0) : S._snowK) + (winter ? dt : -dt) / 1.2));
+      group.children.forEach(o => { if (o.userData && o.userData.winterScale) { o.visible = S._snowK > 0.02; o.scale.setScalar(Math.max(0.01, S._snowK)); } });
+      if (terrMesh && terrMesh.userData.lookTerrain && terrMesh.userData.colA) {
+        const want = S.season === 'winter' ? 'A' : S.season === 'spring' ? 'B' : 'C';
+        if (terrMesh.userData.colTo !== want) { terrMesh.userData.colFrom = terrMesh.userData.colTo || 'A'; terrMesh.userData.colTo = want; terrMesh.userData.colT = 0; }
+        terrMesh.userData.colT = Math.min(1, (terrMesh.userData.colT || 0) + dt / 1.2);
+        const a = terrMesh.userData['col' + (terrMesh.userData.colFrom || 'A')], b = terrMesh.userData['col' + want], u = terrMesh.userData.colT, attr = terrMesh.geometry.attributes.color;
+        if (a && b && attr) { for (let i = 0; i < attr.count * 3; i++) attr.array[i] = a[i] + (b[i] - a[i]) * u; attr.needsUpdate = true; }
+      }
+    }
     const view = host.cur(), p = host.getP(), cur = view, c = clsOfCur(), size = SIZE[cur] || 'medium', ids = ctx.crewIds();
     if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; const line = introQ.shift(); const say = typeof line === 'string' ? line : line.say; tst(say, 3000); const vid = typeof line === 'string' ? null : line.voice; if (vid) ctx.audio?.speak?.(vid); }
     else if (recipe.tutor && !keyDone) {
