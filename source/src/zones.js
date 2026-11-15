@@ -1591,7 +1591,7 @@ export function createZones(scene, host) {
       (S.master.posts ||= []).push({ nowRow });
       return G;
     },
-    creek(id, x0, z0, x1, z1, o = {}) { const pd = this.pond(id, x0, z0, x1, z1, { level: 'mid' }); const ice = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.2, z1 - z0), new THREE.MeshLambertMaterial({ color: 0xe8f6ff, emissive: 0x6aa8d0, emissiveIntensity: 0.25, transparent: true, opacity: 0.92 })); ice.position.set(A.x + (x0 + x1) / 2, pd.gy + 0.22, A.z + (z0 + z1) / 2); ice.visible = false; group.add(ice); pd.ice = ice; pd.creek = true; pd.melt = !!o.melt; AA().creeks.push(pd); return pd; },
+    creek(id, x0, z0, x1, z1, o = {}) { const pd = this.pond(id, x0, z0, x1, z1, { level: 'mid' }); const ice = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.2, z1 - z0), new THREE.MeshLambertMaterial({ color: 0xe8f6ff, emissive: 0x8fb8d4, emissiveIntensity: 0.06, transparent: true, opacity: 0.92 })); ice.position.set(A.x + (x0 + x1) / 2, pd.gy + 0.22, A.z + (z0 + z1) / 2); ice.visible = false; group.add(ice); pd.ice = ice; pd.creek = true; pd.melt = !!o.melt; AA().creeks.push(pd); return pd; },
     snowPile(s, x, z, w, d, h) { this.cracked(s, x, z, w, d, h, { label: 'Snow pile' }); const pr = props[props.length - 1]; pr.m.material = mat(0xf4f8ff); pr.G.visible = false; pr.s.off = true; pr.m.visible = false; pr.snow = true; pr.need = 'winter'; pr.needWhy = 'Only in winter'; AA().seasonal.push({ pr, when: 'winter' }); },
     mudSlide(s, ax, az, ha, bx2, bz, hb, o = {}) { const a = L2W(ax, az, ha), b = L2W(bx2, bz, hb), L = Math.hypot(b.x - a.x, b.z - a.z), m = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.2, L), mat(0x6a4a28)); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2 + 0.05, (a.z + b.z) / 2); m.rotation.y = Math.atan2(b.x - a.x, b.z - a.z); m.rotation.x = Math.atan2(a.y - b.y, L); group.add(m);
       props.push({ kind: 'slide', act: 'slide', cls: 'trickster', sig: s, x: a.x, y: a.y, z: a.z, b, r: 2.2, need: 'spring', needWhy: 'The chute is frozen or dry — ring the 🌱 Spring bell for mud', label: o.label || 'Mud chute', two: true, icon: badge('trickster', a.x, a.y + 2, a.z, 0.9) }); },
@@ -1716,7 +1716,13 @@ export function createZones(scene, host) {
   }
   function ringMaster(pr) {
     const S = AA(); if (!S.master) return true;
-    if (t < (S.master.coolUntil || 0)) { if (t - msgT > 1.6) ctx.audio?.speak?.('master_bell.pip.settle'); say('🔔 Wait for the bell to settle.', 1600); return true; }
+    if (t < (S.master.coolUntil || 0)) {
+      S.master.queued = true; // apply as soon as the clapper settles (a ring during cool should not be lost)
+      if (t - msgT > 1.6) ctx.audio?.speak?.('master_bell.pip.settle');
+      say('🔔 Wait for the bell to settle.', 1600);
+      return true;
+    }
+    S.master.queued = false;
     const to = S.master.next;
     applyMaster(to);
     S.master.coolUntil = t + 2;
@@ -1727,6 +1733,7 @@ export function createZones(scene, host) {
   }
   function updateMasterViz(pr) {
     const S = AA(); if (!S.master) return;
+    if (S.master.queued && t >= (S.master.coolUntil || 0)) ringMaster(pr);
     paintMaster(pr);
     const ringing = pr.ringT != null && t - pr.ringT < 1.0, cool = t < (S.master.coolUntil || 0);
     if (ringing) { const k = 1 - (t - pr.ringT) / 1.0; pr.bellG.rotation.z = Math.sin((t - pr.ringT) * 20) * 0.28 * k; if (pr.clap) pr.clap.position.x = Math.sin((t - pr.ringT) * 20) * 0.12 * k; }
@@ -3399,7 +3406,7 @@ export function createZones(scene, host) {
     toggleSneak(v) { if (!a2 || !recipe?.act2) return false; sneak = v == null ? !sneak : !!v; const bp = ctx.getP(); if (bp) bp.sneak = sneak; ctx.onSneak?.(sneak); tst(sneak ? '🐾 Sneaking: slow, quiet paws' : '🏃 Walking normally', 1200); return sneak; }, sneakOn: () => { const bp = ctx.getP(); return !!(a2 && (bp && bp.sneak || sneak)); }, isAct2: () => !!(a2 && recipe && recipe.act2),
     setAct2Night: v => { if (a2) setNightA2(!!v); },
     flagBack, callEscort, throwToolAt: (kind, lx, lz) => throwTool(kind, A.x + lx, A.z + lz),
-    placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
+    placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); b.hide = false; b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
     escort: () => a2 ? a2.escorts.map(b => ({ kind: b.kind, glb: b.G.userData.babyGlb || null, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), y: +b.y.toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })) : [], heldTool: () => a2 ? a2.heldTool : null,
     moody() { return !!(a2 && recipe && recipe.moody) ? !!AA().night : null; },
     timeLocked: () => !!(a2 && a2.master), // S4: Master Bell owns clock.t (dusk/night/day) until clear()

@@ -507,7 +507,7 @@ export const MAPS3 = {
       // A · fox valley: first creek (ice in A, mid otherwise — not a melt flood). Banks stay open for the crew.
       B.creek('cA', -6.5, 4, 0.2, 10);
       B.creek('cA2', 3.6, 4, 6.5, 10); // dirt ford at x 0.2..3.6 so the crew and fawn walk the middle, not the ice
-      B.fox('fxA', 8, 17.5, { yaw: Math.PI, ring: 5, path: [[8, 17.5], [10, 17.5]], speed: 2.5 }); // just off the plate (r=1.3) so it does not auto-hold; a short whistle from (8,14) still lures it on
+      B.fox('fxA', 12, 20, { yaw: Math.PI, ring: 5, path: [[12, 20], [12, 22]], speed: 2.5 }); // den pocket, ≥8 m off the valley path so the fawn does not hide unprompted; still just off the plate and in whistle range from (8,14)
       B.plate('foxPl', 8, 16, { label: 'Fox plate' });
       B.gearStump(-4, 12, { label: 'Echo Whistle stump' });
       B.hide('log', -3, 14, 1.4, 1.4);
