@@ -35,6 +35,7 @@ export function createInput(canvas) {
     hooks,
     keyboard: { all: keyboardAll, left: keyboardLeft, right: keyboardRight, hub: getKeyHub(hooksRef) },
     touch, gamepad,
+    id: 'kb-all+touch+gamepad',
     sources: { keyboardAll, keyboardLeft, keyboardRight, touch, gamepad, solo },
     getCamYaw: null,
     getSneak: null,
