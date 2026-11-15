@@ -403,9 +403,14 @@ export function createNet(hooks = {}) {
       lastAcked = lastEncoded;
       return;
     }
-    // Guest gameplay events (sig / pick / act results) — host applies and echoes.
+    // Client act/interact intents: the host checks and applies them (bell, levers, pads, gear).
     const fromClient = data.from === 'client';
-    if (role === 'host' && fromClient && typ && typ !== 'in' && typ !== 'pose' && typ !== 'join' && typ !== 'hello' && typ !== 'ack') {
+    if (role === 'host' && fromClient && (typ === 'intent' || data.intent)) {
+      hooks.applyRemoteIntent?.(data);
+      return;
+    }
+    // Guest gameplay events (sig / pick / act results) — host applies and echoes.
+    if (role === 'host' && fromClient && typ && typ !== 'in' && typ !== 'pose' && typ !== 'join' && typ !== 'hello' && typ !== 'ack' && typ !== 'intent') {
       const zones = hooks.getZones?.();
       if (zones?.applyNetEvent) zones.applyNetEvent(data);
       sendEvt({ ...data, type: typ, kind: data.kind || typ, from: 'host' });
@@ -426,10 +431,16 @@ export function createNet(hooks = {}) {
 
   function onIn(data) {
     if (role !== 'host') return;
-    let frame = data;
-    if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) frame = decodeInput(data);
+    let frame = data, body = null;
+    if (data && typeof data === 'object' && !ArrayBuffer.isView(data) && !(data instanceof ArrayBuffer)) {
+      body = data.body || data.id || null;
+      const raw = data.bin || data.frame || data.data;
+      if (raw) frame = decodeInput(raw);
+    } else if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
+      frame = decodeInput(data);
+    }
     if (!frame) return;
-    hooks.applyRemoteFrame?.(frame, data && data.body);
+    hooks.applyRemoteFrame?.(frame, body);
   }
 
   function handle(chan, data) {
@@ -485,12 +496,7 @@ export function createNet(hooks = {}) {
     if (!active || !role) return;
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
     if (role === 'host') {
-      const hz = snapRate();
-      const period = 1000 / Math.max(1, hz);
-      if (!lastSnapAt) lastSnapAt = now;
-      // Catch up so a slow rAF (two WebGL tabs) still hits ~20 Hz on the wall clock.
-      let n = 0;
-      while (now - lastSnapAt >= period - 2 && n < 8) { sendSnap(false); n++; }
+      // Snapshots are sent from armSnapClock's fixed timestep, not from rAF/tickNet.
       if (now - lastHelloAt > 4000) sendHello();
     } else if (role === 'client') {
       // Always harvest poses before applyClientView so a T.tp in the same
@@ -501,7 +507,7 @@ export function createNet(hooks = {}) {
       if (now - lastInAt >= 50) {
         lastInAt = now;
         const frame = hooks.pollLocalFrame?.();
-        if (frame) broadcast('in', encodeInput(frame));
+        if (frame) broadcast('in', { bin: encodeInput(frame), body: hooks.localBody?.() || null });
       }
       applyClientView();
       tryApplyPending();
@@ -532,18 +538,28 @@ export function createNet(hooks = {}) {
     }
   }
 
-  let snapClock = null;
+  let snapClock = null, nextSnapAt = 0;
   function armSnapClock() {
     if (snapClock) { try { clearInterval(snapClock); } catch (e) {} snapClock = null; }
     if (role !== 'host' || typeof setInterval === 'undefined') return;
+    // Fixed timestep: advance nextSnapAt by 1/hz, independent of rAF / worldTick.
+    // A short setInterval is only the scheduler; missed ticks catch up by period, not "now".
+    nextSnapAt = (typeof performance !== 'undefined' ? performance.now() : Date.now());
     snapClock = setInterval(() => {
       try {
         const hz = snapRate();
         const period = 1000 / Math.max(1, hz);
         const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-        if (!lastSnapAt || now - lastSnapAt >= period - 2) sendSnap(false);
+        if (nextSnapAt <= 0) nextSnapAt = now;
+        if (now - nextSnapAt > period * 4) nextSnapAt = now; // skip a long stall, keep phase
+        let n = 0;
+        while (now >= nextSnapAt && n < 4) {
+          sendSnap(false);
+          nextSnapAt += period;
+          n++;
+        }
       } catch (e) {}
-    }, 16);
+    }, 10);
   }
 
   // Activate

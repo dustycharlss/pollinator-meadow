@@ -1784,6 +1784,14 @@ function updateBuildUi(dt, t) {
 }
 
 // ---- game flow helpers
+function withCur(id, fn) {
+  const prev = cur;
+  if (id && P[id] && id !== cur) {
+    const old = cur; cur = id;
+    try { return fn(); } finally { cur = old; }
+  }
+  return fn();
+}
 function worldTick(dt, st) {
   try { net?.tick?.(0); } catch (e) {}
   if (net && net.isClient) {
@@ -2069,7 +2077,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => slots.driven(), crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => slots.driven(), crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, isNetClient: () => !!(net && net.isClient), swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
   critters = createCritters(scene, { heightAt, tier: () => look.tier });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
@@ -2260,7 +2268,23 @@ async function boot() {
       startValleyPatch(id);
     },
     pollLocalFrame: () => input && input.pollFrame ? input.pollFrame() : null,
+    localBody: () => cur,
     pulseWorld: (() => { let last = 0; return () => { const n = performance.now(); if (n - last < 45) return; last = n; try { if (zones && zones.update) zones.update(0, camera); } catch (e) {} }; })(),
+    applyRemoteFrame: (frame, body) => {
+      if (!zones || !frame) return;
+      const id = (body && P[body]) ? body : cur;
+      if (frame.actPressed) zones.actAs ? zones.actAs(id) : withCur(id, () => zones.act());
+      if (frame.gearPressed) zones.useGearAs ? zones.useGearAs(id) : zones.useGear?.(P[id]);
+      if (frame.callPressed) zones.callAs ? zones.callAs(id) : zones.callEscort?.();
+    },
+    applyRemoteIntent: (ev) => {
+      if (!zones || !ev) return;
+      const id = (ev.body && P[ev.body]) ? ev.body : cur;
+      const intent = ev.intent || ev.do || 'act';
+      if (intent === 'gear') return zones.useGearAs ? zones.useGearAs(id) : zones.useGear?.(P[id]);
+      if (intent === 'call') return zones.callAs ? zones.callAs(id) : zones.callEscort?.();
+      return zones.actAs ? zones.actAs(id) : withCur(id, () => zones.act());
+    },
   });
   lobby = isOnlineDev() ? createLobby({
     audio, toast,

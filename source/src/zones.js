@@ -1770,6 +1770,7 @@ export function createZones(scene, host) {
   }
   /** Interact with nothing in reach: use the slotted gear (🫧 bubble shot, 🪨 sling pebble) */
   function useGear(p) {
+    if (ctx.isNetClient?.()) { emitNet('intent', { intent: 'gear', body: ctx.cur() }); return true; }
     const S = a2, c = clsOfCur(); if (!S || tw) return false;
     if (c === 'scout' && gearOn('pouch')) {
       if (!S.pouch.full) { say('🫧 The Bubble Pouch is empty — fly low over a creek or pond to fill it', 2200); return true; }
@@ -1948,6 +1949,7 @@ export function createZones(scene, host) {
     return S.escorts.every(b => Math.hypot(b.x - exitAt.x, b.z - exitAt.z) < exitAt.r + 0.6 && Math.abs((b.y || exitAt.y) - exitAt.y) < 3);
   }
   function callEscort() {
+    if (ctx.isNetClient?.()) { emitNet('intent', { intent: 'call', body: ctx.cur() }); return true; }
     const S = a2; if (!S || !S.escorts.length) return false;
     for (const b of S.escorts) { b.called = true; b.following = true; b.hide = false; }
     setSig('called'); tst('📣 Come on, little one! The baby follows you', 2200); ctx.audio?.sample?.('act3/baby-call-chirp', 0.5); setTimeout(() => ctx.audio?.sample?.('act3/baby-follow-happy', 0.45), 420);
@@ -2464,6 +2466,7 @@ export function createZones(scene, host) {
   function tween(p, to, dur, arc, done) { tw = { p, a: { x: p.x, y: p.y, z: p.z }, b: to, t: 0, d: dur, arc, done }; }
   function fx(x, y, z) { ctx.fx?.(x, y, z); }
   function doAct(pr, p) {
+    if (ctx.isNetClient?.()) { emitNet('intent', { intent: 'act', body: ctx.cur() }); return true; }
     if (pr.act === 'gear') return stumpSwap(pr);
     const c = clsOfCur(), C = CLASSES[pr.cls];
     if (pr.cls && pr.cls !== c) { say(`${C.em} Only a ${C.name} can ${ACTS[pr.act].verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
@@ -2520,6 +2523,7 @@ export function createZones(scene, host) {
   }
   /** Interact / Act button: returns true if a puzzle prop handled it */
   function act() {
+    if (ctx.isNetClient?.()) { emitNet('intent', { intent: 'act', body: ctx.cur() }); return true; }
     if (!recipe || tw) return false;
     const p = ctx.getP(), pr = nearest(p);
     if (a2 && a2.escorts.some(b => !b.called && flatD(b, p) < 3.2) && !pr) return callEscort();
@@ -3343,7 +3347,8 @@ export function createZones(scene, host) {
   return {
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
-    act, wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status, kidState,
+    act, actAs: id => withFocus(id, () => act()), useGearAs: id => withFocus(id, () => useGear(ctx.getP())), callAs: id => withFocus(id, () => callEscort()),
+    wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status, kidState,
     /** test hook: finish the level as if the exit was reached (used by the POLISH result tests) */
     debugComplete(why = 'Test finish') { if (!recipe || keyDone) return null; complete(why); return result; },
     skipKid() { if (!recipe || !recipe.kid || !recipe.act2 || keyDone) return false; complete('Trail skipped'); return true; },
