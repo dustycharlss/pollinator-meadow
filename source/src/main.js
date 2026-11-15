@@ -1372,9 +1372,11 @@ function startNew(len) {
     toast('🌼 Meadow still waking — starting in a moment…', 2000);
     return;
   }
-  // NEWFLAG means this tab just reloaded to start a patch. Don't reload again if
-  // another tab (N1 client) wrote a shared localStorage save in the meantime.
+  // NEWFLAG is a one-shot: after a pm-auto reload, skip one startNew so a
+  // client tab's shared save cannot loop us. Consume it immediately so a
+  // later startNew (Hub lab pad, next patch) can still reload when dirty.
   if (!NEWFLAG && (dirty || savedRound())) { try { sessionStorage.setItem('pm-auto', JSON.stringify({ len, lead: settings.lead, mode: settings.mode, patch: valleySession ? valleySession.patchId : null })); } catch (e) {} clearRound(); noSave = true; location.reload(); return; }
+  NEWFLAG = null;
   round.reset(len); round.mode = settings.mode === 'relaxed' ? 'relaxed' : 'challenge'; setLead(settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', true); selectSpecies(lead, true); if (!valleySession) unifyHomes(null, null, lead); if (hazards) hazards.resetRound(); if (rivals) rivals.resetRound(lead); tech.reset(); if (tiers) tiers.reset(); for (const k in convAcc) delete convAcc[k]; if (crew) crew.arcade = !valleySession; if (valleySession) { updateHealUi(); } else { document.body.classList.remove('packReady'); } beginRound();
 }
 function toTitle() { persist(); saveRound(); noSave = true; try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }
