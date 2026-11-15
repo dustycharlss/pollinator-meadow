@@ -15,6 +15,12 @@ export function loadGLB(key) {
   }
   return cache.get(key);
 }
+const urlCache = new Map();
+/** load a GLB by repo-relative path (phone LOD files); null on failure */
+export function loadURL(path) {
+  if (!urlCache.has(path)) urlCache.set(path, loader.loadAsync(BASE + path).catch(e => { console.warn('lod model failed', path, e); return null; }));
+  return urlCache.get(path);
+}
 export async function loadMany(keys, onProgress) {
   let n = 0;
   await Promise.all(keys.map(k => loadGLB(k).then(() => onProgress && onProgress(++n / keys.length))));
@@ -51,7 +57,7 @@ export function lambertFrom(m, { emissive } = {}) {
  * Bake a GLB into normalised parts: [{geometry, material}], rotated by rot, scaled so that
  * mode ('height'|'max'|'length'|'span') == size, grounded (min y = 0, centred xz) or centred.
  */
-export function bakeParts(gltf, { size = 1, mode = 'height', rot = [0, 0, 0], ground = true } = {}) {
+export function bakeParts(gltf, { size = 1, mode = 'height', rot = [0, 0, 0], ground = true, M: M0 = null } = {}) { // M0: reuse another bake's normalisation (phone LODs share LOD0's)
   const root = gltf.scene; root.updateMatrixWorld(true);
   const R = new THREE.Matrix4();
   if (rot && rot.seq) { for (const [ax, an] of rot.seq) R.premultiply(new THREE.Matrix4()['makeRotation' + ax.toUpperCase()](an)); }
@@ -64,14 +70,17 @@ export function bakeParts(gltf, { size = 1, mode = 'height', rot = [0, 0, 0], gr
     g.computeBoundingBox(); box.union(g.boundingBox);
     parts.push({ geometry: g, material: o.material });
   });
-  const sz = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
-  const dim = mode === 'height' ? sz.y : mode === 'length' ? sz.z : mode === 'span' ? sz.x : Math.max(sz.x, sz.y, sz.z);
-  const s = size / Math.max(dim, 1e-5);
-  const T = new THREE.Matrix4().makeTranslation(-c.x * s, ground ? -box.min.y * s : -c.y * s, -c.z * s);
-  const M = T.multiply(new THREE.Matrix4().makeScale(s, s, s));
+  let M = M0;
+  if (!M) {
+    const sz = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+    const dim = mode === 'height' ? sz.y : mode === 'length' ? sz.z : mode === 'span' ? sz.x : Math.max(sz.x, sz.y, sz.z);
+    const s = size / Math.max(dim, 1e-5);
+    const T = new THREE.Matrix4().makeTranslation(-c.x * s, ground ? -box.min.y * s : -c.y * s, -c.z * s);
+    M = T.multiply(new THREE.Matrix4().makeScale(s, s, s));
+  }
   for (const p of parts) { p.geometry.applyMatrix4(M); p.geometry.computeBoundingSphere(); p.geometry.computeBoundingBox(); }
   const b2 = new THREE.Box3(); parts.forEach(p => b2.union(p.geometry.boundingBox));
-  return { parts, box: b2 };
+  return { parts, box: b2, M };
 }
 
 // Wing-flap vertex shader: lateral verts beyond `body` beat. `style` picks a phone-readable flying look.

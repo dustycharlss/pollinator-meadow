@@ -56,6 +56,7 @@ import { createAdmin } from './admin.js';
 import { ARCH, priceFor, barsHtml, SIZE_NAME, statBars } from './species.js';
 import { createTech, TREES, TIER, nodeOf } from './tech.js';
 import { mapWhenReady } from './tex.js';
+import { lodTick, lodSummary } from './lod.js';
 
 const $ = id => document.getElementById(id);
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && innerWidth < 1100);
@@ -722,6 +723,7 @@ function declutterOn(r) {
   for (let i = DCL.W[0]; i < DCL.W[1] && i < C.length; i++) {
     const o = C[i];
     if (ADVENTURE) { if (o !== world.ground) dclLayer(o); continue; } // art pass / perf fix 1: campaign levels draw none of the free-roam meadow but its ground
+    if (o.isInstancedMesh && o.userData.lodBucket) continue; // polish3: LOD buckets declutter below
     if (o.isInstancedMesh) {
       const a = o.instanceMatrix.array, idx = [], save = [];
       if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
@@ -734,6 +736,7 @@ function declutterOn(r) {
       if (idx.length) { DCL.inst.push({ o, idx, save }); for (const k of idx) a.set(_M0.elements, k * 16); o.instanceMatrix.needsUpdate = true; }
     } else if (o.isPoints || o.isSprite) dclLayer(o);
   }
+  for (const b of world.lodBuckets || []) b.hideWhere((x, z, big) => inR(x, z, big > 2.5 ? M + 14 : M));
   if (ADVENTURE) { const rs = new Set([...Object.values(riders), ...Object.values(baseRiders)]); for (let i = DCL.W[1]; i < DCL.AMB[0] && i < C.length; i++) if (!rs.has(C[i])) dclLayer(C[i]); } // meadow swarms between riders and ambient
   for (const [a, b] of [DCL.NEST, DCL.TERR, DCL.HELP, ...(ADVENTURE ? [DCL.AMB] : [])]) for (let i = a; i < b && i < C.length; i++) dclLayer(C[i]); // art pass: the meadow's big ambient animals stay out of campaign levels (critters.js adds small ones)
   for (const so of world.solids) if (so.kind !== 'zone' && so.kind !== 'pond' && !so.off && inR(so.x, so.z, 2)) { so.off = true; DCL.solids.push(so); }
@@ -747,6 +750,7 @@ function declutterOff() {
   DCL.on = false; CLIP.on = false;
   for (const o of DCL.layered) o.traverse(q => { if (q.userData._dl != null) { q.layers.mask = q.userData._dl; delete q.userData._dl; } });
   for (const e of DCL.inst) { const a = e.o.instanceMatrix.array; e.idx.forEach((k, j) => a.set(e.save[j], k * 16)); e.o.instanceMatrix.needsUpdate = true; }
+  for (const b of world.lodBuckets || []) b.unhide();
   for (const so of DCL.solids) so.off = false;
   if (DCL.ground && world.ground) { const pa = world.ground.geometry.attributes.position; for (const [i, y] of DCL.ground) pa.setY(i, y); pa.needsUpdate = true; world.ground.geometry.computeBoundingSphere(); DCL.ground = null; }
   DCL.layered = []; DCL.inst = []; DCL.solids = [];
@@ -2331,6 +2335,7 @@ function loop(now) {
   if (playing && !paused) updateArrow(dt, t); else if (!playing && homeInd) homeInd.hide();
   world.water.position.y = -1.6 + Math.sin(t * 0.8) * 0.03;
   declutterTick();
+  lodTick(camera);
   state.styT = (state.styT || 0) - rdt; if (state.styT <= 0) { state.styT = 1.5; look.styleScene(); }
   if (critters) critters.update(rdt, t, night, camera.position);
   // art pass: the title art covers the whole screen, so skip drawing the 3D world behind it (one frame every ~2 s keeps shaders warm)

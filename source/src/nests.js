@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SPECIES, STAGE_AT } from './data.js';
 import { loadGLB, bakeParts, lambertFrom } from './models.js';
+import { bakeLevels, makeLOD } from './lod.js';
 import { heightAt } from './world.js';
 
 const L = (c, e = 0, o = {}) => new THREE.MeshLambertMaterial({ color: c, emissive: e, ...o });
@@ -8,8 +9,10 @@ const wood = L(0x8a5a35), wax = L(0xf3b73a, 0x5a3a05), dark = L(0x2a2438), silk 
 
 async function glb(key, { h, w, rot = [0, 0, 0], x = 0, y = 0, z = 0, yaw = 0, tilt = 0 }) {
   const g = await loadGLB(key); const grp = new THREE.Group(); if (!g) return grp;
-  const { parts } = bakeParts(g, { size: h || w, mode: h ? 'height' : 'max', rot });
-  for (const p of parts) grp.add(new THREE.Mesh(p.geometry, lambertFrom(p.material)));
+  const { parts, M } = bakeParts(g, { size: h || w, mode: h ? 'height' : 'max', rot });
+  const lv = await bakeLevels(key, parts, M, rot); // polish3: phone LODs (hysteresis + hold) for nest props
+  if (lv) grp.add(makeLOD(lv, ps => { const o = new THREE.Group(); for (const p of ps) o.add(new THREE.Mesh(p.geometry, lambertFrom(p.material))); return o; }));
+  else for (const p of parts) grp.add(new THREE.Mesh(p.geometry, lambertFrom(p.material)));
   grp.position.set(x, y, z); grp.rotation.set(tilt, yaw, 0); return grp;
 }
 /** blocky species-home centerpiece with lv1/lv2/lv3 nodes: one common scale (lv3 = h), shows lv by home stage (1..3) */

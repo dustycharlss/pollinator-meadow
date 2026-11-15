@@ -8,6 +8,7 @@ import { loadGLB, bakeParts, lambertFrom } from './models.js';
 import { patchSeason } from './seasons.js';
 import { SITES, siteDist } from './sites.js';
 import { initKTX2, loadKtx } from './tex.js';
+import { bakeLevels, LodBuckets } from './lod.js';
 
 const BASE = import.meta.env.BASE_URL;
 export const POLS = ['bee', 'butterfly', 'hummingbird', 'moth', 'bat', 'raccoon', 'robin', 'opossum', 'bear'];
@@ -161,20 +162,24 @@ export async function buildWorld(scene, { quality = 1, nests = [], renderer, lit
   let drawCalls = 0, tris = 0;
   for (const g of groups) {
     const gltf = await loadGLB(g.key); if (!gltf || !g.list.length) continue;
-    const { parts, box } = bakeParts(gltf, { size: g.def.h, mode: 'height' });
+    const { parts, box, M: bakeM } = bakeParts(gltf, { size: g.def.h, mode: 'height' });
     const isPlant = !!(FLOWERS[g.key] || BLOOMING[g.key]);
+    const lodLv = await bakeLevels(g.key, parts, bakeM); // polish3: phone LODs for instanced plants / trees
+    let lodM = null, lodC = null;
     for (const p of parts) {
-      const im = new THREE.InstancedMesh(p.geometry, patchSeason(lambertFrom(p.material), 'prop'), g.list.length);
+      const im = lodLv ? null : new THREE.InstancedMesh(p.geometry, patchSeason(lambertFrom(p.material), 'prop'), g.list.length);
+      const pm = [], pc = [];
       g.list.forEach((it, i) => {
         dummy.position.set(it.x, it.y, it.z); dummy.rotation.set((R() - 0.5) * 0.14, it.yaw, (R() - 0.5) * 0.14); dummy.scale.setScalar(it.s); dummy.updateMatrix();
-        im.setMatrixAt(i, dummy.matrix);
         if (isPlant && !g.def.tree) c.setHSL(R(), 0.18 * R(), 0.9 + R() * 0.1); else c.setScalar(0.88 + R() * 0.12);
-        im.setColorAt(i, c);
+        if (im) { im.setMatrixAt(i, dummy.matrix); im.setColorAt(i, c); } else { pm.push(dummy.matrix.clone()); pc.push(c.clone()); }
       });
+      if (!im) { if (!lodM) { lodM = pm; lodC = pc; } continue; } // same RNG draws as before; LOD instances share part 0's transform + tint
       im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true;
       im.computeBoundingSphere();
       scene.add(im); drawCalls++; tris += (p.geometry.index ? p.geometry.index.count / 3 : p.geometry.attributes.position.count / 3) * g.list.length;
     }
+    if (lodLv && lodM) { const lb = new LodBuckets(scene, lodLv, lodM, lodC, m => patchSeason(lambertFrom(m), 'prop')); world.lodBuckets = (world.lodBuckets || []).concat(lb); drawCalls += lb.meshes.length; tris += parts.reduce((a, p) => a + (p.geometry.index ? p.geometry.index.count / 3 : p.geometry.attributes.position.count / 3), 0) * g.list.length; }
     const sd = SOLID_DECOR[g.key], bw = box.max.x - box.min.x, bd = box.max.z - box.min.z;
     for (const it of g.list) {
       if (g.key === 'bushBerries' || g.key === 'raspberry' || g.key === 'blueberry') berryBushes.push({ x: it.x, z: it.z });

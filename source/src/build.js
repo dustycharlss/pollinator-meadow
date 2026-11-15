@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import { WORLD_R, POND, WATER_Y, SPECIES_ORDER, inWater } from './data.js';
 import { SITES, siteDist } from './sites.js';
 import { FEATURES } from './features.js';
-import { loadGLB, bakeParts, lambertFrom } from './models.js';
+import { loadGLB, bakeParts, lambertFrom, loadURL } from './models.js';
+import { lodFor, makeLOD } from './lod.js';
 import { patchSeason } from './seasons.js';
 import { badge } from './coop.js';
 
@@ -137,6 +138,7 @@ export async function createBuild(scene, ctx) {
     woodpile: () => loadGLB('x/buildings/species/opossum-woodpile-hollow-blocky'), wormfarm: () => loadGLB('x/buildings/species/robin-nest-grove-blocky'),
     roost: () => loadGLB('x/buildings/species/bat-roost-blocky'), stashden: () => loadGLB('x/buildings/species/raccoon-stash-den-blocky'),
   };
+  const SPEC_KEY = { apiary: 'x/buildings/species/bee-apiary-lv-blocky', honeycave: 'x/buildings/species/bear-honey-cave-blocky', woodpile: 'x/buildings/species/opossum-woodpile-hollow-blocky', wormfarm: 'x/buildings/species/robin-nest-grove-blocky', roost: 'x/buildings/species/bat-roost-blocky', stashden: 'x/buildings/species/raccoon-stash-den-blocky' };
   const specCache = {};
   function specLevels(t) {
     if (!SPEC[t]) return Promise.resolve(null);
@@ -144,8 +146,13 @@ export async function createBuild(scene, ctx) {
       if (!gl) return null; const sc = gl.scene; sc.updateMatrixWorld(true);
       const lv = [1, 2, 3].map(i => sc.getObjectByName('lv' + i)); if (!lv[2]) return null;
       const h3 = new THREE.Box3().setFromObject(lv[2]).getSize(new THREE.Vector3()).y || 1, k = 4.6 / h3;
-      return lv.map(n => { if (!n) return null; const h = new THREE.Box3().setFromObject(n).getSize(new THREE.Vector3()).y || h3;
-        return bakeParts({ scene: n }, { size: h * k, mode: 'height' }).parts.map(p => ({ geometry: p.geometry, material: patchSeason(lambertFrom(p.material), 'prop') })); });
+      const key = SPEC_KEY[t], r = lodFor(key), mat = ps => ps.map(p => ({ geometry: p.geometry, material: patchSeason(lambertFrom(p.material), 'prop') }));
+      const extra = r ? [[r.l1, r.d1], [r.l2, r.d2]].filter(([p, d]) => p && d != null) : [];
+      return Promise.all(extra.map(([p]) => loadURL(p))).then(G => lv.map((n, li) => { if (!n) return null; const h = new THREE.Box3().setFromObject(n).getSize(new THREE.Vector3()).y || h3;
+        const b0 = bakeParts({ scene: n }, { size: h * k, mode: 'height' }), out = [{ d: 0, parts: mat(b0.parts) }];
+        // polish3: phone LODs keep the lv1/lv2/lv3 node names, so each stage gets its own LOD chain at LOD0's scale
+        G.forEach((gl2, j) => { const n2 = gl2 && (gl2.scene.updateMatrixWorld(true), gl2.scene.getObjectByName('lv' + (li + 1))); if (n2) out.push({ d: extra[j][1], parts: mat(bakeParts({ scene: n2 }, { M: b0.M }).parts) }); });
+        return out; }));
     }).catch(e => { console.warn('species building', t, e); return null; }));
   }
   function modelProd(t) {
@@ -155,7 +162,7 @@ export async function createBuild(scene, ctx) {
       const tmp = new THREE.Group(); g.add(tmp); let want = 1, lvG = null;
       bx(tmp, mk === 'roost' ? M.wood2 : M.wood, 2.2, 2.2, 2.2, 0, 1.1, 0);
       g.userData.setLv = l => { want = Math.max(1, Math.min(3, l || 1)); if (lvG) lvG.forEach((o, i) => { if (o) o.visible = i === (lvG[want - 1] ? want - 1 : lvG.findLastIndex((x, j) => x && j < want)); }); };
-      specLevels(mk).then(L => { if (!L) return; lvG = L.map(ps => { if (!ps) return null; const o = new THREE.Group(); for (const p of ps) o.add(new THREE.Mesh(p.geometry, g.userData.ghost || p.material)); g.add(o); return o; }); g.remove(tmp); g.userData.setLv(want); });
+      specLevels(mk).then(L => { if (!L) return; const mkG = ps => { const o = new THREE.Group(); for (const p of ps) o.add(new THREE.Mesh(p.geometry, g.userData.ghost || p.material)); return o; }; lvG = L.map(ch => { if (!ch) return null; const o = ch.length > 1 ? makeLOD(ch, mkG) : mkG(ch[0].parts); g.add(o); return o; }); g.remove(tmp); g.userData.setLv(want); });
     }
     else if (mk === 'apiary') { for (let i = 0; i < 3; i++) { const b = bx(g, i % 2 ? M.cream : M.plank, 1.8, 0.8, 1.8, 0, 0.45 + i * 0.85, 0, i * 0.12); } bx(g, M.wood2, 2.2, 0.2, 2.2, 0, 2.95, 0); put(g, 'honeycomb', 1.6, 0, 0.4, 0.5, 1); }
     else if (mk === 'honeycave') { put(g, 'rockMedium', 0, -0.1, 0, 0, 3.0); put(g, 'rockMedium', 1.8, -0.1, 0.8, 1.2, 1.8); put(g, 'honeycomb', -1.2, 0.2, 1.6, 0.4, 1.2); const gl = glow(3, 0xffc040); gl.position.set(-1.2, 1, 1.6); g.add(gl); }
