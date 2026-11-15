@@ -483,8 +483,8 @@ export const MAPS3 = {
     windYaw: { down: Math.PI, up: 0 },
     windText: { up: '🌬️ The wind turns — it blows NORTH, up the valley', down: '🌬️ The wind turns — it blows SOUTH, down the valley' },
     banter: {
-      start: ['🐝 Bee: That big bell up the hill changes everything at once!', '🦝 Raccoon: Season, time, and wind. I can ping the fox in the snow.', '🐻 Bear: And the little fawn will not walk on ice. We plan the path.'],
-      end: ['🦌 Fawn: The Closet in the Hub is open now. Thank you!', '🐝 Bee: Three rings, three weathers, one valley.', '🦝 Raccoon: And a fox kit, if we were kind.'],
+      start: ['🐝 Bee: One big Master Bell! Season, time, and wind!', '🦝 Raccoon: I\'ll whistle if a fox looks our way.', '🐻 Bear: We\'re here for the fawn. Soft steps, team.', '🐝 Bee: And a fox kit in the den, if we want to help!'],
+      end: ['🦌 Fawn: You thawed the valley. I\'ll come to the Hub.', '🐝 Bee: The Closet will be so pretty with you there!', '🦝 Raccoon: Master Bell, I still want to ring it again.', '🐻 Bear: I am bear-y proud. And a little soggy.', '🦊 Fox kit: I dug a tunnel! Tag — you\'re it, later! {if: foxkit_rescued}'],
     },
     pip: [
       ['start', 'That big bell changes season, time, and wind together.'],

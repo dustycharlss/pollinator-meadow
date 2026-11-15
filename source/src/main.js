@@ -1095,6 +1095,8 @@ function followSlot(id) { const f = followerIds(), k = f.indexOf(id); return k <
 function placeFollowers(snap) { const L = P[cur]; if (!L) return; const F = snap ? crewOthers() : followerIds(); for (const id of F) { const k = F.indexOf(id), s = { side: k ? 1 : -1, back: 3.2 + k * 1.6 }, p = P[id]; const tx = L.x - Math.sin(L.yaw) * s.back + Math.cos(L.yaw) * s.side * 2.4, tz = L.z - Math.cos(L.yaw) * s.back - Math.sin(L.yaw) * s.side * 2.4; if (snap || Math.hypot(p.x - L.x, p.z - L.z) > 45) { p.x = tx; p.z = tz; p.y = Math.max(heightAt(tx, tz), L.y) + 0.5; p.vy = 0; p.grounded = false; p.goto = null; } } }
 function startValleyPatch(patchId) {
   if (!valley || !crew) return;
+  // Never load an unbuilt valley id (nextPlayable, ensureMap, or a direct call) as an empty map.
+  if (zones && !zones.MAPS?.[patchId]) { toast('🗺️ That trail is not ready yet', 2600); return; }
   const gate = valley.canStart(patchId, crew.tags());
   if (!gate.ok) { toast('🔒 ' + gate.why, 2600); return; }
   const def = valley.def(patchId);
@@ -1837,6 +1839,9 @@ function worldTick(dt, st) {
       } else if (res) {
         const st = res.stars; lines.push(`🌸 Petals ${res.petals}/${res.petalsTotal} ${st.petals ? '⭐' : '☆'} · ⭐ Starseed ${st.star ? '⭐' : '☆'} · ⏱ ${fmtT(res.time)}${res.par ? ' / par ' + fmtT(res.par) : ''} ${res.easy ? '· 🌱 Easy mode — time star not used' : st.par ? '⭐' : '☆'}`);
         lines.push(...res.end.map(skinText));
+        (res.endVoice || res.end.map((_, i) => `${res.id}.end.${String(i + 1).padStart(2, '0')}`)).forEach((vid, i) => {
+          if (vid) setTimeout(() => audio.speak(vid), 2600 + (i + 1) * 2600);
+        });
         const S = (valley.data.stars = valley.data.stars || {}), old = S[res.id] || { n: 0 };
         S[res.id] = { n: Math.max(old.n || 0, res.n), petals: !!(old.petals || st.petals), star: !!(old.star || st.star), seed: !!(old.seed || (res.hasStar && res.star)), par: !!(old.par || st.par), best: Math.min(old.best || 1e9, res.time) }; valley.save();
       }

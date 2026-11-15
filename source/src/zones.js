@@ -1694,6 +1694,7 @@ export function createZones(scene, host) {
   }
   function applyMaster(state, opts = {}) {
     const S = AA(), st = MASTER[state] ? state : 'A', M = MASTER[st];
+    const prev = S.master && S.master.state;
     S.master = S.master || { start: st, coolUntil: 0 };
     S.master.state = st; S.master.next = masterNext(st);
     for (const k of MASTER_ORDER) setSig('master:' + k, k === st);
@@ -1701,6 +1702,10 @@ export function createZones(scene, host) {
     setTimeA2(M.time, true);
     setMasterWind(M.wind, true, { flip: st === 'B' && !opts.init }); // wasps blow 6 s only when B is entered, not on load
     if (S.master.pr) paintMaster(S.master.pr);
+    if (!opts.init && prev && prev !== st) {
+      if (st === 'A') ctx.audio?.sample?.('act3/ice-sheet', 0.55);
+      if (st === 'B') ctx.audio?.sample?.('act3/ice-thaw', 0.55);
+    }
     if (!opts.quiet) tst(M.line, 2400);
   }
   function paintMaster(pr) {
@@ -1767,7 +1772,7 @@ export function createZones(scene, host) {
       case 'pluck': { const sp = pr.spider; if (sp) sp.look = { x: pr.x, z: pr.z, until: t + 8 }; tst('🎸 Twang! The spider turns to look…', 1600); return true; }
       case 'leaf': { const tu = pr.turtle; if (tu) tu.look = { x: pr.leafAt.x, z: pr.leafAt.z, until: t + 9 }; tst('🍃 The leaf floats by — the turtle watches it', 1800); return true; }
       case 'master': return ringMaster(pr);
-      case 'crank': { applyWind(-S.wind); return true; }
+      case 'crank': { applyWind(-S.wind); ctx.audio?.sample?.('act3/vane-crank', 0.5); return true; }
       case 'slide': { const to = pr._atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.3, z: to.z }, 0.7, 0.2); setSig(pr.sig); tst('🛷 Wheee! Belly-slide!', 1200); return true; }
       case 'stomp': { const until = t + pr.dur * EZ('puff'); S.smokes.push({ x: pr.x, z: pr.z, r: pr.smokeR, until, m: smokeCloud(pr.x, pr.y, pr.z, pr.smokeR) }); setSig(pr.sig); a2Burst(pr.x, pr.z, 6); tst('🍄 Poof! A calm smoke cloud — walk through it', 2000); return true; }
       case 'pick': { const ac = S.acorns.find(a => a.rings.some(r => r.pr === pr)); const R = ac && ac.rings.find(r => r.pr === pr); if (ac) S.acorn = ac; if (!R || ac.at !== R.i || ac.by) return true; ac.by = ctx.cur(); ac.at = -1; ac.last = R.i; tst(`${ac.em || '🌰'} Got the ${ac.noun || 'Golden Acorn'}! Carry it to the next ring`, 1600); return true; }
@@ -2421,7 +2426,11 @@ export function createZones(scene, host) {
     bearPad = addSolid({ type: 'cyl', x: 0, z: 0, r: 1.15, y0: -99, top: -98, kind: 'zone', off: true, pad: true });
     if (recipe.night) { nightOn = true; ctx.setNight(true); }
     else if (recipe.nightCycle) { nightOn = false; ctx.setNight(false); }
-    introQ = recipe.kid ? [] : [...((banterOf(pid) || recipe.banter)?.start || []), ...(recipe.intro || [])]; // the goal lives in the objective tracker now
+    const startBanter = (banterOf(pid) || recipe.banter)?.start || [];
+    introQ = recipe.kid ? [] : [
+      ...startBanter.map((s, i) => ({ say: s, voice: `${pid}.start.${String(i + 1).padStart(2, '0')}` })),
+      ...(recipe.intro || []),
+    ]; // the goal lives in the objective tracker now
   }
   function applyLoan() {
     const S = a2; if (!S || !recipe || S.borrow) return;
@@ -2488,7 +2497,9 @@ export function createZones(scene, host) {
     const pets = picks.filter(k => k.tier === 'petal' && !k.nightOnly), vsum = L => L.reduce((a, k) => a + (k.value || 1), 0), got = vsum(pets.filter(k => k.got));
     const hasStar = picks.some(k => k.tier === 'star'), easyOn = !!ctx.easy?.();
     result = { id, petals: got, petalsTotal: vsum(pets), petalPicks: pets.filter(k => k.got).length, petalPicksTotal: pets.length, star: starGot, hasStar, time: Math.round(t), par: recipe.par || 0,
-      stars: { petals: pets.every(k => k.got), star: !hasStar || starGot, par: !recipe.par || (!easyOn && t <= recipe.par) }, end: (banterOf(id) || recipe.banter)?.end || [] };
+      stars: { petals: pets.every(k => k.got), star: !hasStar || starGot, par: !recipe.par || (!easyOn && t <= recipe.par) },
+      end: ((banterOf(id) || recipe.banter)?.end || []).filter((s, i, a) => !/\{if:\s*foxkit_rescued\}/.test(s) || sig['friend:foxkit']).map(s => s.replace(/\s*\{if:[^}]+\}\s*$/, '')),
+      endVoice: ((banterOf(id) || recipe.banter)?.end || []).map((s, i) => ((/\{if:\s*foxkit_rescued\}/.test(s) && !sig['friend:foxkit']) ? null : `${id}.end.${String(i + 1).padStart(2, '0')}`)).filter(Boolean) };
     if (easyOn) { result.easy = true; if (recipe.par) result.easyPar = true; }
     if (recipe.noStars) result.noStars = true;
     if (a2) { result.bonks = a2.bonks; result.hidEver = !!a2.hidEver; if (a2.borrow) { a2.borrow = null; ctx.onGear?.(); } }
@@ -2741,9 +2752,9 @@ export function createZones(scene, host) {
   function updateWorld(dt, cam) {
     for (const mx of babyMixers) mx.update(dt);
     if (!recipe) return; t += dt;
-    if (recipe.hub) { if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; tst(introQ.shift(), 3000); } updateHub(dt, cam); return; }
+    if (recipe.hub) { if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; const line = introQ.shift(); const say = typeof line === 'string' ? line : line.say; tst(say, 3000); const vid = typeof line === 'string' ? null : line.voice; if (vid) ctx.audio?.speak?.(vid); } updateHub(dt, cam); return; }
     const view = host.cur(), p = host.getP(), cur = view, c = clsOfCur(), size = SIZE[cur] || 'medium', ids = ctx.crewIds();
-    if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; tst(introQ.shift(), 3000); }
+    if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; const line = introQ.shift(); const say = typeof line === 'string' ? line : line.say; tst(say, 3000); const vid = typeof line === 'string' ? null : line.voice; if (vid) ctx.audio?.speak?.(vid); }
     else if (recipe.tutor && !keyDone) {
       while (tutorI < recipe.tutor.length && sig[recipe.tutor[tutorI].until]) { tutorI++; tutorT = -99; }
       const st = recipe.tutor[tutorI];
