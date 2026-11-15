@@ -1319,7 +1319,7 @@ export function createZones(scene, host) {
       if (see) e.sus += dt; else e.sus = Math.max(0, e.sus - dt * 0.8);
       if (e.peek) e.sus = Math.min(e.sus, grace * 0.9); // Trailhead peeks never catch anyone
       let st = asleep ? 'sleep' : e.sus > 0.02 ? 'sus' : 'idle';
-      const bump = see && e.kind === 'fox' && seeId && flatD(e, posOfId(seeId) || { x: e.x, z: e.z }) < 2.2;
+      const bump = see && e.kind === 'fox' && seeId && !e.calm && !e.pingLure && flatD(e, posOfId(seeId) || { x: e.x, z: e.z }) < 1.6;
       if (t - e.alertT < 1.3) st = 'alert';
       else if (bump || e.sus >= grace) { withFocus(seeId || cur, () => bonk(e)); st = 'alert'; }
       if (e.kind === 'mower' && e.warn) st = 'sus';
@@ -2164,7 +2164,7 @@ export function createZones(scene, host) {
       const zlim = A.z + recipe.bellLearnZ;
       if (p.z > zlim || ctx.crewIds().some(id => { const q = posOfId(id); return q && q.z > zlim; })) setSig('bellLearn');
     }
-    for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; const onPad = flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3; const standOn = flatD(cp, p) < 1.15 && Math.abs(p.y - cp.y) < 3; if (standOn && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; } if (onPad && !cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); emitNet('checkpoint', { x: +(cp.x - A.x).toFixed(2), z: +(cp.z - A.z).toFixed(2) }); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
+    for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; const ad = flatD(cp, p); const onPad = ad < 2.2 && Math.abs(p.y - cp.y) < 3; const standOn = ad < 1.85 && Math.abs(p.y - cp.y) < 3; const approaching = ad < 0.45 || ((cp.x - p.x) * Math.sin(p.yaw || 0) + (cp.z - p.z) * Math.cos(p.yaw || 0)) > 0; if (standOn && approaching && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; } if (onPad && !cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); emitNet('checkpoint', { x: +(cp.x - A.x).toFixed(2), z: +(cp.z - A.z).toFixed(2) }); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
     if (cur === host.cur()) flagBackUpd(S, p, cur);
     if (S.stuck) { if (t > S.stuck.until || !ctx.driven().includes(S.stuck.who)) S.stuck = null; else if (S.stuck.who === cur) { p.x = S.stuck.x; p.z = S.stuck.z; p.y = S.stuck.y; p.vx = p.vz = p.vy = 0; } }
     for (const d of S.drips) { if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
@@ -2180,7 +2180,9 @@ export function createZones(scene, host) {
       if (inZ && p.grounded && recipe && recipe.windWalk && S.wind) { p.x += wv.dx * w.push * 0.28 * dt; p.z += wv.dz * w.push * 0.28 * dt; }
     }
     if (S.cp && S.safeT && t < S.safeT) { // settle on the flag after a poof; a held walk key must not run off it
-      p.vx = p.vz = p.vy = 0; p.x = S.cp.x + 0.6; p.z = S.cp.z - 0.6; p.y = S.cp.y + 0.8; p.grounded = true;
+      p.vx = p.vz = p.vy = 0; p.grounded = true;
+      const pin = { x: S.cp.x + 0.6, z: S.cp.z - 0.6 };
+      if (flatD(p, pin) < 4.5) { p.x = pin.x; p.z = pin.z; p.y = S.cp.y + 0.8; } // a teleport farther away must stick
     }
     for (const gf of S.gifts) { if (gf.got) continue; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; const GI = GEAR_INFO[gf.kind], gc = GI.cls; gear[gf.kind] = true; gear[eqK(gf.kind)] = true; (gear.slot ||= {})[gc] = gf.kind; if (S.borrow && S.borrow.slot) S.borrow.slot[gc] = gf.kind; gearSave(); if (gf.kind === 'whistle') S.pingNext = t; setSig('gift:' + gf.kind); if (ALIAS_OF[gf.kind]) setSig('gift:' + ALIAS_OF[gf.kind]); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GI.em} You found the ${GI.name}! Tap ${GI.em} on the ${CLASSES[gc].name}'s picture (or G) to switch it on/off${GEAR_BY_CLS[gc].length > 1 ? ' · swap gear at a 🧰 gear stump' : ''}`, 4200); } }
     for (const pr of props) if (pr.kind === 'web' && !pr.done && c === 'scout' && !S.stuck && t > S.safeT && Math.abs(p.x - pr.x) < pr.ww / 2 + 0.6 && Math.abs(p.z - pr.z) < 1.3 && p.y - pr.y < pr.wh) { S.stuck = { who: cur, x: p.x, y: p.y, z: p.z, until: t + 3 }; if (pr.spider) pr.spider.look = { x: pr.x, z: pr.z, until: t + 3.5 }; tst('🕸️ Stuck in the web for 3 seconds!', 1800); }
