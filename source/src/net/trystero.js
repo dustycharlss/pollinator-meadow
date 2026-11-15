@@ -15,6 +15,7 @@
  */
 import { joinRoom, getRelaySockets } from 'trystero';
 import { devIceConfig } from './ice.js';
+import { isOnlineDev } from './flags.js';
 
 export const TRYSTERO_STUB = false;
 
@@ -22,6 +23,9 @@ const APP_ID = 'dustycharlss.github.io/pollinator-meadow';
 const NOTE = 'Trystero public signalling (Nostr) + public STUN, no TURN. Cloudflare SignalRoom / TURN not configured.';
 
 export function createTrysteroTransport({ room, password, appId, maxUsers = 4, rtcConfig } = {}) {
+  if (!isOnlineDev()) {
+    throw new Error('Trystero / Nostr signalling is only allowed under ?online=dev. The public build uses Cloudflare SignalRoom only and will not fall back to a public relay.');
+  }
   const roomId = room || 'pm-dev';
   const cfg = {
     appId: appId || APP_ID,

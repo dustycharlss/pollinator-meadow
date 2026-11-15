@@ -10,8 +10,8 @@ export function isDebugFlag(search = typeof location !== 'undefined' ? location.
 
 export function onlineDefaults(raw) {
   const o = raw && raw.online;
-  if (!o || typeof o !== 'object') return { allow: true, direct: false };
-  return { allow: o.allow !== false, direct: !!o.direct };
+  if (!o || typeof o !== 'object') return { allow: false, direct: false };
+  return { allow: o.allow === true, direct: !!o.direct };
 }
 
 /** Station + lobby entry: N2 is behind ?online=dev, and never when Allow is off. */

@@ -20,7 +20,7 @@ export function createOnlineSettings(hooks = {}) {
   }
   function write(next) {
     const s = hooks.getSettings?.() || {};
-    s.online = { allow: next.allow !== false, direct: !!next.direct };
+    s.online = { allow: next.allow === true, direct: !!next.direct };
     hooks.saveSettings?.(s);
     hooks.onChange?.(s.online);
     sync();
@@ -75,7 +75,12 @@ export function createOnlineSettings(hooks = {}) {
     const direct = document.getElementById('sDirect');
     const directRow = document.getElementById('sDirectRow');
     const hint = document.getElementById('sOnlineHint');
-    if (allow) allow.checked = o.allow;
+    const allowRow = document.getElementById('sAllowRow');
+    if (allow) {
+      allow.checked = o.allow;
+      allow.disabled = !o.allow && !unlocked;
+    }
+    if (allowRow) allowRow.hidden = !(unlocked || o.allow);
     if (direct) direct.checked = o.direct;
     if (directRow) directRow.hidden = !(unlocked || o.direct);
     if (hint) hint.hidden = unlocked;
@@ -115,7 +120,7 @@ export function createOnlineSettings(hooks = {}) {
         <span class="olGateRing" id="sOnlineGateRing"></span>
       </button>
       <p class="ksNote" id="sOnlineHint">More online settings appear after the hold.</p>
-      <label class="ksChk"><input type="checkbox" id="sAllow"><span>Allow playing with friends (online)</span></label>
+      <label class="ksChk" id="sAllowRow" hidden><input type="checkbox" id="sAllow"><span>Allow playing with friends (online)</span></label>
       <div id="sDirectRow" hidden>
         <label class="ksChk"><input type="checkbox" id="sDirect"><span>${DIRECT_LABEL}</span></label>
         <p class="ksNote">${DIRECT_NOTE}</p>
@@ -172,5 +177,6 @@ export function createOnlineSettings(hooks = {}) {
     sync();
   }
 
-  return { mount, sync, lock, current, onSettingsClosed };
+  function apply(next) { write({ ...current(), ...next }); }
+  return { mount, sync, lock, current, apply, onSettingsClosed };
 }

@@ -4,6 +4,7 @@
  *  are hung on g.net (n1.mjs would then take the isolated-context path).
  */
 import { createTrysteroTransport } from './trystero.js';
+import { createSignalRoomTransport } from './signalroom.js';
 import { createChannel } from './channel.js';
 import {
   TABS, EMOJI, PIN_WORDS, parseCode, formatCode, formatSpoken, randomCode, randomPin,
@@ -192,14 +193,18 @@ export function createLobby(hooks = {}) {
     detach();
     code = words;
     const room = roomChannelId(words);
-    transport = createTrysteroTransport({
-      room,
-      password: formatCode(words, '-') + ':pollinator-meadow',
-      appId: 'dustycharlss.github.io/pollinator-meadow',
-      // One extra signalling seat so a 4th friend can receive "Room is full"
-      // (Trystero maxUsers otherwise rejects them before hello arrives).
-      maxUsers: MAX_PLAYERS + 1,
-    });
+    // Public builds must use Cloudflare SignalRoom only — never Nostr / Trystero,
+    // even if the Worker is not set up yet (no public-relay fallback).
+    transport = isOnlineDev()
+      ? createTrysteroTransport({
+          room,
+          password: formatCode(words, '-') + ':pollinator-meadow',
+          appId: 'dustycharlss.github.io/pollinator-meadow',
+          // One extra signalling seat so a 4th friend can receive "Room is full"
+          // (Trystero maxUsers otherwise rejects them before hello arrives).
+          maxUsers: MAX_PLAYERS + 1,
+        })
+      : createSignalRoomTransport({ room });
     channel = createChannel(transport);
     channel.onMessage(msg => {
       if (!msg || msg.ch !== 'lobby') return;
@@ -593,7 +598,10 @@ export function createLobby(hooks = {}) {
       );
       body.append(row);
       const fold = el('details', 'olHint');
-      fold.innerHTML = `<summary>For grown-ups</summary><p>Playing with friends online. Your child can play with up to 2 friends using a secret 4-picture code (and, if the host wants, a secret picture PIN) that only you share. There's no chat. Players can only tap friendly emoji buttons like 👋 and 🎉. There are no accounts, names, or ads, and we don't store anything about your child. To connect the games, your device's internet address (IP) goes to Cloudflare, the connection service. Other players' devices never see it, unless a grown-up turns on <b>Direct mode</b> in Settings (off by default) on both devices. Only share the code with people you know. The host can say no to anyone and can lock the room. If the game can't reach Cloudflare's relay, it shows an error. It never switches to a direct connection on its own.</p>`;
+      const foldBody = isOnlineDev()
+        ? `Playing with friends online. Your child can play with up to 2 friends using a secret 4-picture code (and, if the host wants, a secret picture PIN) that only you share. There's no chat. Players can only tap friendly emoji buttons like 👋 and 🎉. There are no accounts, names, or ads, and we don't store anything about your child. This is a test connection through public signalling servers. It does not use Cloudflare until TURN is set up. Only share the code with people you know. The host can say no to anyone and can lock the room.`
+        : `Playing with friends online. Your child can play with up to 2 friends using a secret 4-picture code (and, if the host wants, a secret picture PIN) that only you share. There's no chat. Players can only tap friendly emoji buttons like 👋 and 🎉. There are no accounts, names, or ads, and we don't store anything about your child. To connect the games, your device's internet address (IP) goes to Cloudflare, the connection service. Other players' devices never see it, unless a grown-up turns on <b>Direct mode</b> in Settings (off by default) on both devices. Only share the code with people you know. The host can say no to anyone and can lock the room. If the game can't reach Cloudflare's relay, it shows an error. It never switches to a direct connection on its own.`;
+      fold.innerHTML = `<summary>For grown-ups</summary><p>${foldBody}</p>`;
       body.append(fold);
       return;
     }
