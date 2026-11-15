@@ -1796,6 +1796,8 @@ export function createZones(scene, host) {
     const S = a2, c = clsOfCur(); if (!S || tw) return false;
     if (c === 'scout' && gearOn('pouch')) {
       if (!S.pouch.full) { say('🫧 The Bubble Pouch is empty — fly low over a creek or pond to fill it', 2200); return true; }
+      const near = S.seeds.find(q => q.planted && !q.grown && flatD(q, p) < 2.6 && Math.abs((p.y || 0) - q.y) < 3.5);
+      if (near) { S.pouch.full = false; ctx.onGear?.(); ctx.audio?.sample?.('act3/bubble-pop', 0.5); tst('🫧 The bubble waters the seed!', 1600); growSeed(near); return true; }
       const tg = gearTarget(p, 'pouch'); S.pouch.full = false; ctx.onGear?.(); ctx.audio?.sample?.('act3/bubble-pop', 0.5);
       const yaw = p.yaw || 0, to = tg || { x: p.x + Math.sin(yaw) * 9, z: p.z + Math.cos(yaw) * 9 };
       return throwTool('bubble', to.x, to.z, p, { src: 'pouch', ty: tg && tg.ty, msg: tg ? `🫧 Bubble shot at the ${tg.label}!` : '🫧 Bubble shot!' });
@@ -2064,6 +2066,7 @@ export function createZones(scene, host) {
       // Baited owl is staring at the lantern. Hide radius (≈6) should not freeze a cub
       // on the far lane; contact range (~1.7) still bonks if they walk under it.
       if (e.kind === 'owl' && e.bait && r > 2) continue;
+      if (e.kind === 'fox' && S.season === 'winter') continue; // snow hides scent: the fawn will not hide in Master Bell state A
       if (flatD(e, b) < r) return e;
     }
     return null;
