@@ -1,8 +1,8 @@
 {
   "counts": {
     "required": 70,
-    "other": 105,
-    "total": 175
+    "other": 108,
+    "total": 178
   },
   "source": "assets-incoming CREDITS-ALL.md + credits.json (14 Nov 2026 refresh; Alba is required entry #70, shipping, with the full CC BY 4.0 attribution line)",
   "entries": [
@@ -1575,6 +1575,33 @@
     {
       "title": "Thaw Valley ice and melt primitives",
       "author": "Built for Pollinator Meadow (Act 3 L22)",
+      "license": "CC0 1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceUrl": "",
+      "requiredAttribution": false,
+      "section": "3d-models"
+    },
+    {
+      "title": "Garden gnome (Grand Garden)",
+      "author": "Built for Pollinator Meadow (Act 3 L23)",
+      "license": "CC0 1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceUrl": "",
+      "requiredAttribution": false,
+      "section": "3d-models"
+    },
+    {
+      "title": "Push mower (Grand Garden)",
+      "author": "Built for Pollinator Meadow (Act 3 L23)",
+      "license": "CC0 1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "sourceUrl": "",
+      "requiredAttribution": false,
+      "section": "3d-models"
+    },
+    {
+      "title": "Wasp nest (Grand Garden)",
+      "author": "Built for Pollinator Meadow (Act 3 L23)",
       "license": "CC0 1.0",
       "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
       "sourceUrl": "",

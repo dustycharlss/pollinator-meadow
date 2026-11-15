@@ -1261,7 +1261,7 @@ export function createZones(scene, host) {
         if (!tiny || p.sneak || sneak || S.season === 'winter') return false; // sneaking + winter snow hide scent
         return flatD(e, q) < e.o.ring;
       }
-      case 'sprinkler': if (e.paused) return false; return q.y - e.gy < (e.o.high || 3) && inCone(e, q, e.o.r, e.o.beam, e.sweepYaw);
+      case 'sprinkler': if (e.paused) return false; if (q.y - e.gy < (e.o.high || 3) && flatD(e, q) < 1.7) return true; return q.y - e.gy < (e.o.high || 3) && inCone(e, q, e.o.r, e.o.beam, e.sweepYaw);
       case 'mower': return e.live && Math.abs(q.x - e.x) < 1.5 && Math.abs(q.z - e.z) < 1.3 && q.y - e.gy < 1.6;
     }
     return false;
@@ -1355,7 +1355,7 @@ export function createZones(scene, host) {
         const blown = S.windFlipT && t - S.windFlipT < 6 * TK();
         e.calm = blown || S.smokes.some(s => t < s.until && flatD(s, e) < s.r + 1.5);
         const W = e.G.userData.wasps, push = blown ? (S.wind > 0 ? 1 : -1) * 5 * Math.min(1, (t - S.windFlipT) / 1.1) : 0;
-        W.position.z = push;
+        if (recipe && recipe.waspBlow === 'east') { W.position.x = Math.abs(push); W.position.z = 0; } else W.position.z = push;
         W.children.forEach((w, i) => { const a = w.userData.a + t * (e.calm ? 0.4 : 2.2), rr = e.calm ? 1.1 : (e.st === 'alert' ? 2.6 : 1.7); w.position.set(Math.cos(a) * rr, 1.2 + Math.sin(t * 3 + i) * 0.4 - (e.calm ? 0.8 : 0), Math.sin(a) * rr); });
       } else if (e.kind === 'owl') {
         const awake = owlAwake(S), dusk = S.time === 'dusk', bait = awake && gearOn('lantern') && posOfId(idOfCls('scout'));
@@ -1383,8 +1383,19 @@ export function createZones(scene, host) {
         e.paused = !!(e.o.pause && isOn(e.o.pause)); if (!e.paused) e.ph = (e.ph || 0) + dt * (e.o.speed || 0.8) * EZ('spin');
         e.sweepYaw = e.baseYaw + Math.sin(e.ph || 0) * (e.o.sweep || 1.2); e.G.userData.head.rotation.y = e.sweepYaw - e.baseYaw; if (e.cone) { e.cone.rotation.y = e.sweepYaw - e.baseYaw; e.cone.visible = !e.paused; }
       } else if (e.kind === 'mower') {
-        const o = e.o, per = o.period * EZ('mower'), ph = (t + (o.off || 0)) % per, run = per - o.dur; e.live = ph > run; const k = e.live ? (ph - run) / o.dur : 0;
-        e.x = A.x + o.x0 + (o.x1 - o.x0) * k; e.G.position.x = e.x; e.warn = !e.live && ph > run - 1.6;
+        const o = e.o, per = o.period * EZ('mower'), paused = !!(o.pause && isOn(o.pause));
+        e.paused = paused;
+        if (paused) { e.live = false; e.warn = false; }
+        else {
+          if (e._ph == null) e._ph = (o.off || 0);
+          e._ph += dt;
+          const ph = e._ph % per, run = per - o.dur, live = ph > run, warn = !live && ph > run - 1.6;
+          if (warn && !e.warn) ctx.audio?.sample?.('act3/mower-warn', 0.55);
+          if (live && !e.live) ctx.audio?.sample?.('act3/mower-pass', 0.55);
+          e.live = live; e.warn = warn;
+          const k = e.live ? (ph - run) / o.dur : 0;
+          e.x = A.x + o.x0 + (o.x1 - o.x0) * k; e.G.position.x = e.x;
+        }
       }
       if (e.kind !== 'crow' && e.kind !== 'mower') { e.G.position.x = e.x; e.G.position.z = e.z; e.F.position.x = e.x; e.F.position.z = e.z; }
       if (e.kind !== 'sprinkler') e.G.rotation.y = e.yaw; else e.G.rotation.y = e.baseYaw;
@@ -1539,7 +1550,9 @@ export function createZones(scene, host) {
       const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.75), mat(o.col || 0x9fe8ff, 0.45)); G.add(gem);
       const tg = emojiSprite('🎯', 0.9); tg.position.y = 1.4; G.add(tg);
       const q = { sig: s, x: w.x, y: w.y, z: w.z, G, gem, tg, done: false, label: o.label || 'Far crystal', onHit: o.onHit };
-      S.targets.push(q); return q;
+      S.targets.push(q);
+      props.push({ kind: 'target', act: 'sling', cls: 'bruiser', sig: s, x: w.x, y: w.y, z: w.z, r: 2.8, label: q.label, target: q });
+      return q;
     },
     /** ravine too wide to hop: a Trickster gliding with the 🍃 Leaf Glider crosses (about 4 tiles); Scouts fly it */
     glideGap(x0, z0, x1, z1, o = {}) {
@@ -1747,7 +1760,7 @@ export function createZones(scene, host) {
     const S = AA();
     const v = mag === 0 ? 0 : (dz > 0 ? 1 : dz < 0 ? -1 : (dx >= 0 ? 1 : -1));
     const flip = o.flip !== false;
-    if (flip && S.wind !== v) S.windFlipT = t;
+    if (flip && S.wind !== v) { S.windFlipT = t; if (recipe && recipe.waspClearOnFlip) setSig('waspClear'); }
     S.wind = v; S.windMag = mag; S.windDx = dx; S.windDz = dz;
     setSig('wind:up', v > 0); setSig('wind:down', v < 0);
     setSig('wind:north', mag > 0 && v > 0); setSig('wind:south', mag > 0 && v < 0); setSig('wind:calm', mag === 0 || v === 0);
@@ -1912,6 +1925,8 @@ export function createZones(scene, host) {
       if (!S.pouch.full) { say('🫧 The Bubble Pouch is empty — fly low over a creek or pond to fill it', 2200); return true; }
       const near = S.seeds.find(q => q.planted && !q.grown && flatD(q, p) < 2.6 && Math.abs((p.y || 0) - q.y) < 3.5);
       if (near) { S.pouch.full = false; ctx.onGear?.(); ctx.audio?.sample?.('act3/bubble-pop', 0.5); tst('🫧 The bubble waters the seed!', 1600); growSeed(near); return true; }
+      const nearCup = S.cups.find(q => !q.on && flatD(q, p) < 2.0 && Math.abs((p.y || 0) - q.y) < 3.5);
+      if (nearCup) { S.pouch.full = false; ctx.onGear?.(); ctx.audio?.sample?.('act3/bubble-pop', 0.5); nearCup.amt = nearCup.fill; tst('🫧 Splash! The bubble fills the cup', 1600); return true; }
       const tg = gearTarget(p, 'pouch'); S.pouch.full = false; ctx.onGear?.(); ctx.audio?.sample?.('act3/bubble-pop', 0.5);
       const yaw = p.yaw || 0, to = tg || { x: p.x + Math.sin(yaw) * 9, z: p.z + Math.cos(yaw) * 9 };
       return throwTool('bubble', to.x, to.z, p, { src: 'pouch', ty: tg && tg.ty, msg: tg ? `🫧 Bubble shot at the ${tg.label}!` : '🫧 Bubble shot!' });
@@ -1919,7 +1934,7 @@ export function createZones(scene, host) {
     if (c === 'bruiser' && gearOn('sling')) {
       if (t - S.slingT < 0.9) return true; S.slingT = t; ctx.audio?.sample?.('act3/sling-twang', 0.5);
       const tg = gearTarget(p, 'sling'), yaw = p.yaw || 0, to = tg || { x: p.x + Math.sin(yaw) * 11, z: p.z + Math.cos(yaw) * 11 };
-      return throwTool('pebble', to.x, to.z, p, { src: 'sling', ty: tg && tg.ty, msg: tg ? `🪨 Sling! A shiny pebble flies at the ${tg.label}` : '🪨 Sling! A shiny pebble flies' });
+      return throwTool('pebble', to.x, to.z, p, { src: 'sling', ty: tg && tg.ty, dur: 0.25, msg: tg ? `🪨 Sling! A shiny pebble flies at the ${tg.label}` : '🪨 Sling! A shiny pebble flies' });
     }
     return false;
   }
@@ -2035,7 +2050,7 @@ export function createZones(scene, host) {
       : new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.28), mat(0xffe680, 0.7));
     m.position.set(p.x, p.y + 1.1, p.z); group.add(m);
     if (o.ty != null) by = o.ty;
-    S.shots.push({ kind: k, m, ax: p.x, ay: p.y + 1.1, az: p.z, bx: bx2, by, bz, x: p.x, y: p.y + 1.1, z: p.z, t: 0, t0: t, landed: false, dead: false, src: o.src || 'tool' });
+    S.shots.push({ kind: k, m, ax: p.x, ay: p.y + 1.1, az: p.z, bx: bx2, by, bz, x: p.x, y: p.y + 1.1, z: p.z, t: 0, t0: t, dur: o.dur || 0.55, landed: false, dead: false, src: o.src || 'tool' });
     if (!o.src) S.heldTool = null; tst(o.msg || (k === 'bubble' ? '🫧 Bubble shot!' : '✨ Shiny pebble thrown!'), 1200); ctx.audio?.blip?.(3);
     return true;
   }
@@ -2050,11 +2065,12 @@ export function createZones(scene, host) {
     for (const sh of S.shots) {
       sh.t += dt;
       if (!sh.landed) {
-        const k = Math.min(1, sh.t / 0.55);
+        const k = Math.min(1, sh.t / (sh.dur || 0.55));
         sh.x = sh.ax + (sh.bx - sh.ax) * k; sh.z = sh.az + (sh.bz - sh.az) * k;
         sh.y = sh.ay + (sh.by - sh.ay) * k + Math.sin(k * Math.PI) * 1.8;
         sh.m.position.set(sh.x, sh.y, sh.z);
         if (sh.kind === 'bubble' && cutWebAt(sh.x, sh.z)) { sh.dead = true; continue; }
+        if (sh.kind === 'shiny' && sh.src === 'sling' && k > 0.45 && shotLand(sh)) { sh.dead = true; continue; }
         if (k >= 1) { sh.landed = true; sh.t = 0; sh.y = sh.by; sh.m.position.y = sh.y; if (sh.kind === 'bubble') cutWebAt(sh.x, sh.z); if (shotLand(sh)) { sh.dead = true; continue; } }
       } else if (sh.t > 7) sh.dead = true;
     }
@@ -2182,6 +2198,15 @@ export function createZones(scene, host) {
       if (e.kind === 'owl' && e.bait && r > 2) continue;
       if (e.kind === 'fox' && S.season === 'winter') continue; // snow hides scent: the fawn will not hide in Master Bell state A
       if (e.kind === 'fox' && r > 2 && (b.x - A.x) < 6.5) continue; // fox scent stays in the east den; the valley path does not make the fawn hide unprompted
+      if (e.kind === 'mower') {
+        if (e.paused) continue;
+        const mo = e.o, x0 = A.x + Math.min(mo.x0, mo.x1) - 1, x1 = A.x + Math.max(mo.x0, mo.x1) + 1;
+        // Lane scare is hide-only (r > 2), not a contact bonk. The parked body sits at x0.
+        // Once the baby is north of the blades, the hazard has been passed (holders may leave).
+        const past = b.z > e.z + 1.6;
+        if (!past && r > 2 && b.x >= x0 && b.x <= x1 && Math.abs(b.z - e.z) < 3.2) return e;
+        if (!e.live) continue;
+      }
       if (flatD(e, b) < r) return e;
     }
     return null;
@@ -2190,8 +2215,10 @@ export function createZones(scene, host) {
     const S = a2; if (!S || !S.escorts.length) return;
     const leadYg = ctx.heightAt(p.x, p.z), leadAir = (p.y - leadYg) > 1.4;
     const lantern = gearOn('lantern');
+    const goal = recipe && recipe.escortGoal;
     for (let i = 0; i < S.escorts.length; i++) {
       const b = S.escorts[i], lead = (i > 0 && S.escorts[i - 1].kind === b.kind && S.escorts[i - 1].following) ? S.escorts[i - 1] : p;
+      if (goal && goal.z != null && (b.z - A.z) >= goal.z) b.atGoal = true;
       const threat = enemyNearBaby(b, 6.2);
       const inCover = hidden(b, 'log') || hidden(b, 'trunk') || hidden(b, 'canopy');
       if (b.following && threat && !inCover) { if (!b.hide) a2.hidEver = true; if (!b.hide) tst(`${b.info.em} The ${b.info.name} hides!`, 1600); b.hide = true; }
@@ -2202,12 +2229,14 @@ export function createZones(scene, host) {
         const mates = S.escorts.filter(q => q.kind === b.kind), slot = Math.max(0, mates.indexOf(b));
         const spread = (slot - (mates.length - 1) / 2) * 0.9;
         let tx = p.x + spread, tz = p.z;
-        const goal = recipe && recipe.escortGoal;
         const wet = S.ponds.some(pd => pd.level === 'mid' || pd.level === 'high');
         if (goal && goal.z != null && wet && p.z < A.z + goal.z - 0.5) {
           const cap = (S.grates || []).reduce((m, gtr) => Math.min(m, gtr.z0 - 0.2), A.z + goal.z - 0.4);
           tz = Math.min(cap, p.z + 2.4);
         }
+        // Once the baby has reached the escort goal, don't follow the lead back
+        // through hazards behind it (holders may leave; collect-all teleports the crew).
+        if (b.atGoal && goal && goal.z != null) tz = Math.max(tz, A.z + goal.z);
         const d = Math.hypot(tx - b.x, tz - b.z);
         if (d > 0.12) {
           // Walk each frame and honor hazards. Do not teleport onto the lead when d > 4
@@ -2259,8 +2288,8 @@ export function createZones(scene, host) {
       b.el.style.display = on ? 'block' : 'none';
       if (on) { b.el.textContent = mk; b.el.className = 'a2Mark q'; b.el.style.left = ((_v.x + 1) / 2 * innerWidth) + 'px'; b.el.style.top = ((1 - _v.y) / 2 * innerHeight) + 'px'; }
     }
-    const g = recipe && recipe.escortGoal;
-    if (g && S.escorts.every(b => g.z == null || (b.z - A.z) >= g.z)) setSig(g.sig || 'escort:goal');
+    const g = goal || (recipe && recipe.escortGoal);
+    if (g && S.escorts.every(b => g.z == null || b.atGoal || (b.z - A.z) >= g.z)) setSig(g.sig || 'escort:goal');
   }
   function a2UpdateBody(dt, cam, p, cur) {
     const S = a2; if (!S) return; const c = CLASS_OF[cur];
@@ -2551,6 +2580,7 @@ export function createZones(scene, host) {
     if (S.escorts.length) document.body.classList.add('hasEscort');
     for (const k of ['summer', 'winter', 'spring']) setSig(k, k === S.season);
     setSig('day', true); setSig('night', false); setSig('wind:down', S.wind < 0); setSig('wind:up', S.wind > 0);
+    if (recipe && recipe.windStart != null) setMasterWind({ dz: recipe.windStart, mag: 6 }, true, { flip: false });
     for (const it of S.seasonal) { const on = S.season === it.when; it.pr.s.off = !on; it.pr.m.visible = on; }
     if (S.master) { ctx.holdClock?.(true); applyMaster(S.master.start || recipe.masterStart || S.master.state || 'A', { quiet: true, init: true }); }
     else if (recipe.night) setNightA2(true);

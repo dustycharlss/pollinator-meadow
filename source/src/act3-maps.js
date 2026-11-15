@@ -573,4 +573,117 @@ export const MAPS3 = {
     },
   },
 
+  grand_garden: {
+    ambience: 'grand-garden', // Beans CC0 loop, already in audio/ambient/act3/
+    goal: 'Grand Garden', act2: true, key: 'puzzles', ceil: 16, exit: [0, 88], par: 660,
+    bounds: { x0: -16, x1: 16, z0: -10, z1: 94 },
+    crew: 'Bee · Raccoon · Bear', friend: 'snail', loanGear: 'all',
+    escortGoal: { z: 87, sig: 'snail' },
+    windStart: 1, waspBlow: 'east', waspClearOnFlip: true,
+    windYaw: { down: Math.PI / 2, up: 0 },
+    windText: { up: '🌬️ The wind turns — it blows NORTH, up the path', down: '🌬️ The wind turns — it blows EAST, off the path' },
+    banter: {
+      start: ['🦝 Raccoon: Every bit of gear we found. I\'ll swap as we go.', '🐝 Bee: Sprinklers, wasps, a gnome to climb! Watch this!', '🐻 Bear: The snail is slow. We leave it till the path is safe.', '🦝 Raccoon: Lucky I packed a patience snack.'],
+      end: ['🐻 Bear: The snail made it. Slow and steady wins the bed.', '🦝 Raccoon: Greenhouse, gnome, and not one damp whisker.', '🐝 Bee: All our gear, all our tricks, all our friends!', '🐻 Bear: After that, I want a garden nap in the shade.'],
+    },
+    pip: [
+      ['start', 'The snail is slow. Leave it here until the path is safe.'],
+      ['z:12', 'Time the sprinkler to fill both cups. The pouch can help.'],
+      ['z:44', 'Crank the vane. Blow the buzz off the path, then walk.'],
+      ['z:62', 'Each job wants different gear. Swap at the stumps.'],
+      [['sig:lvG', 'sig:gnBell'], 'Hold the plates so the spray and mower stay still.'],
+      ['stuck:snail', 'Someone has to keep standing on each plate.'],
+    ],
+    build(B) {
+      B.home(0, -5); B.lane(-16, 16, -10, 94, { look: 'hedge' });
+      const hedge = (x, z0, z1) => B.hedgeRun(x, z0, z1, { look: 'hedge' });
+      // west corridor; greenhouse is wider (x ±8). east gaps: cup lawn, wasp basin, gnome garden
+      hedge(-6.5, -10, 24); hedge(-8, 24, 44); hedge(-6.5, 44, 94);
+      hedge(6.5, -10, 12); hedge(8, 24, 44); hedge(6.5, 44, 50); hedge(6.5, 60, 66); hedge(6.5, 76, 94);
+      B.checkpoint(0, -1);
+      B.escort('snail', 3, -2);
+      // A · cup lawn
+      B.pond('puddle', 10, 8, 15, 13, { level: 'mid' });
+      B.sprinkler('skA', 8, 16, { yaw: -Math.PI / 2, r: 7, speed: 0.55, sweep: 1.1, beam: 0.26, high: 8, pause: 'plA' });
+      B.plate('plA', -5, 16, { label: 'Tap plate' });
+      B.cup('cup1', 2, 16, { fill: 1.4 });
+      B.cup('cup2', 2, 20, { fill: 1.4 });
+      B.deco('act3/grand-garden/built-sprinkler', 8, 16, 1.6, { yaw: -Math.PI / 2 });
+      B.deco('act3/grand-garden/j-toastie-hose-reel-blocky', 11, 18, 1.4, { yaw: Math.PI });
+      B.hide('rock', 4, 8, 1.2, 1.2);
+      B.checkpoint(0, 22);
+      B.door(['cup1', 'cup2'], 24, -6.5, 6.5, { w: 3.2, label: 'Greenhouse door' });
+      // B · greenhouse
+      B.gearStump(-5, 28, { label: 'Lantern stump' });
+      B.deco('act3/grand-garden/pixor-greenhouse', 0, 34, 7.5, { yaw: 0 });
+      B.wall(0, 28, 2.2, 1.4, 3.6, { bot: 3.35, c: 0xc8e8a0 }); // vent lip
+      B.wall(0, 36, 2.2, 1.4, 3.6, { bot: 3.35, c: 0xc8e8a0 });
+      const ventA = B.wall(0, 28, 2.0, 1.2, 4.0, { bot: 3.55, c: 0x9aaa80 }), ventB = B.wall(0, 36, 2.0, 1.2, 4.0, { bot: 3.55, c: 0x9aaa80 });
+      B.onSig(['cup1', 'cup2'], on => { ventA.s.off = !!on; ventA.m.visible = !on; ventB.s.off = !!on; ventB.m.visible = !on; });
+      B.glowStep(0, 34, 2.2, 1.6, 0.9);
+      B.glowStep(0, 36, 2.2, 1.6, 1.8);
+      B.glowStep(0, 38, 2.2, 1.6, 2.6);
+      B.lever('lvB', 0, 38, { base: 2.6, label: 'Greenhouse lever' });
+      B.hide('log', -6, 30, 1.3, 1.2);
+      B.door('lvB', 46, -6.5, 6.5, { label: 'Door C' }); // just north of CP-C at z=44 so the flag stays clear of the leaf
+      B.checkpoint(0, 44);
+      // C · wasp hedge
+      B.vane('vC', -5, 48, { label: 'Garden vane' });
+      B.puffShroom('mC', 4, 46);
+      B.windZone(-6.5, 50, 6.5, 58, { push: 6, h: 3, lift: 0, alt: { down: [1, 0], up: [0, 1] } });
+      B.wasps('w1', 0, 52, { r: 4.5 });
+      B.wasps('w2', 2, 56, { r: 4.0 });
+      B.deco('act3/grand-garden/built-wasp-nest', 0, 52, 1.8);
+      B.deco('act3/grand-garden/built-wasp-nest', 2, 56, 1.6);
+      B.door('waspClear', 64.5, -6.5, 6.5, { label: 'Door D' }); // north of CP-D so armCp can walk in from z-2.2
+      B.checkpoint(0, 62);
+      // D · gear garden
+      B.gearStump(-8, 63, { label: 'Leaf Glider stump' });
+      B.gearStump(0, 63, { label: 'Pebble Sling stump' });
+      B.gearStump(8, 63, { label: 'Bubble Pouch stump' });
+      B.hide('rock', 4, 63, 1.3, 1.2);
+      // pit covers the center path so playB (x=0) cannot walk past z=72 without the glider
+      B.glideGap(-6.5, 66, 6.5, 71);
+      B.lever('lvG', -4, 73, { label: 'Glider lever' });
+      B.slingTarget('gnBell', 12, 72, 7.2, { label: 'Gnome cap bell' });
+      B.web('wGnome', 10, 70, 5, 3.2);
+      B.deco('act3/grand-garden/built-garden-gnome', 12, 72, 6.4);
+      // gnome stair after the web (optional secret route)
+      B.wall(12, 68, 2.2, 1.6, 2.0, { look: 'stone' });
+      B.wall(12, 70, 2.2, 1.6, 4.0, { look: 'stone' });
+      B.wall(12, 72, 2.2, 1.6, 6.0, { look: 'stone' });
+      B.wall(12, 74, 2.2, 1.6, 6.0, { look: 'stone' });
+      B.door(['lvG', 'gnBell'], 78, -6.5, 6.5, { label: 'Door E' }); // north of CP-E so armCp can walk in from z-2.2
+      B.checkpoint(0, 76);
+      // E · snail lane
+      B.sprinkler('skE', 8, 80, { yaw: -Math.PI / 2, r: 7, speed: 0.45, beam: 0.26, high: 8, pause: 'plE1' });
+      B.deco('act3/grand-garden/built-sprinkler', 8, 80, 1.6, { yaw: -Math.PI / 2 });
+      B.plate('plE1', -5, 80, { label: 'Sprinkler plate' });
+      B.mower('mwE', -6.5, 6.5, 84, { period: 9, dur: 3.2, pause: 'plE2' });
+      B.deco('act3/grand-garden/built-push-mower', 0, 84, 1.8);
+      B.plate('plE2', -5, 83, { heavy: true, label: 'Mower plate' });
+      B.hide('log', -4, 78, 1.3, 1.2);
+      B.exit(0, 88, 3);
+      // Petals (28) + Scout-only starseed in the gnome cap
+      const P = (x, z, y) => B.pickup('petal', x, z, y);
+      [[-4, -3], [-2, -0.75], [0, 1.5], [2, 3.75], [4, 6]].forEach(([x, z]) => P(x, z, 0.9));
+      [[-4, 14], [-1.3, 16], [1.3, 18], [4, 20]].forEach(([x, z]) => P(x, z, 0.9));
+      P(-4, 28, 0.9); P(-1.3, 31.3, 0.9); P(1.3, 34.6, 0.9); P(0, 36, 3.5);
+      [[-4, 48], [0, 53], [4, 58]].forEach(([x, z]) => P(x, z, 0.9));
+      [[-8, 63], [0, 63], [8, 63]].forEach(([x, z]) => P(x, z, 0.9));
+      P(12, 70, 6.9); P(12, 74, 6.9);
+      P(-4, 67, 2.5); P(-4, 71, 2.5);
+      [[-4, 78], [0, 82], [4, 86]].forEach(([x, z]) => P(x, z, 0.9));
+      P(-3, 90, 0.9); P(3, 90, 0.9);
+      B.pickup('star', 12, 74, 8.5, { who: ['scout'], whyNot: 'Only Bee fits in the gnome\'s cap.', set: 'gardenStar' });
+      // dressing (CC0 Kenney Nature / Fantasy Town / Platformer + built props)
+      const g = (k, x, z, h, yaw) => B.deco('act3/grand-garden/' + k, x, z, h, { yaw: yaw || 0 });
+      [['kenney-platformer-hedge', -5, -8, 2.2], ['kenney-nature-plant-bush', 5.2, -7, 1.8], ['kenney-nature-flower-yellow-a', -4, 10, 1.0], ['kenney-nature-flower-red-a', 4, 12, 1.0], ['kenney-nature-crop-carrot', 12, 14, 1.0], ['kenney-nature-crops-dirt-row', 13, 20, 1.6], ['kenney-fantasytown-fence', -10, 32, 1.8], ['kenney-nature-flower-purple-a', 5, 40, 1.0], ['kenney-nature-plant-bush-small', -5, 50, 1.2], ['kenney-platformer-flowers-tall', 10, 64, 1.6], ['kenney-nature-flower-yellow-b', 5, 78, 1.0], ['kenney-platformer-hedge', -5, 90, 2.2], ['kenney-platformer-hedge', 5, 90, 2.2]].forEach(([k, x, z, h], i) => g(k, x, z, h, i * 0.7));
+      B.puzzle('cups', 'Sprinkler cups', ['scout', 'trickster'], ['cup1', 'cup2'], { hint: 'Time the sprinkler to fill both cups, or hold the plate and use the Bubble Pouch.', track: [['cup1', 'scout', 'fill the first cup', 2, 16], ['cup2', 'scout', 'fill the second cup', 2, 20]] });
+      B.puzzle('wasps', 'Wasp wind', ['trickster', 'scout'], ['waspClear'], { hint: 'Light the glow steps, pull the lever, then crank the vane so the buzz blows east.', track: [['lvB', 'trickster', 'climb the glow steps and pull the lever', 0, 38], ['waspClear', 'trickster', 'crank the vane and blow the wasps off the path', -5, 48]] });
+      B.puzzle('gear', 'Gear swap', ['trickster', 'bruiser'], ['lvG', 'gnBell'], { hint: 'Swap at the stumps. Glide to the west lever, and sling the gnome\'s cap bell.', track: [['lvG', 'trickster', 'glide the pit and pull the lever', -4, 73], ['gnBell', 'bruiser', 'sling the gnome cap bell', 12, 72]] });
+      B.puzzle('snail', 'Snail escort', ['scout', 'trickster', 'bruiser'], ['snail'], { hint: 'Hold the plates so the spray and mower stay still, then walk the snail to the flag.', track: [['plE1', 'trickster', 'hold the sprinkler plate', -5, 80], ['plE2', 'bruiser', 'hold the mower plate', -5, 83], ['snail', 'any', 'walk the snail past the mower', 0, 87]] });
+    },
+  },
+
 };
