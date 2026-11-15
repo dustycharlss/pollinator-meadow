@@ -194,7 +194,7 @@ const MAPS = {
       // 2 · Scout blossom lowers the water · Bear shoves a boulder into the ford
       B.reed(13, 18, 4.2); B.bell('low', 13, 18, 4.9, { label: 'Blossom switch' });
       B.boulder('ford', 8, 2.5, 13, 9.5, { kind: 'boulder', w: 3.2, d: 3.6, h: 1.8, slotH: 0.55, need: ['low'], needWhy: 'The water is too high — ring the blossom switch with a Scout first', cross: [11.2, 6.4, 14.8, 12.6], label: 'Ford boulder' });
-      // 3 · Hold-and-go: Trickster holds the dam plate, Bear climbs, smashes the branch cage, Scout rings the willow bell
+      // 3 · Hold-and-go: Trickster holds the dam plate, Bear hops the steps, smashes the branch cage, Scout rings the willow bell
       B.wall(3, 19, 12, 7, 5.2, { look: 'cliff' });
       [[-6.4, 1.3], [-5.3, 2.6], [-4.2, 3.9]].forEach(([x, h]) => B.wall(x, 19, 1.1, 2.6, h, { look: 'wood' }));
       B.wall(-5.2, 17.45, 4.4, 0.5, 5.2, { look: 'cliff' }); B.wall(-5.2, 20.55, 4.4, 0.5, 5.2, { look: 'cliff' });
@@ -210,7 +210,7 @@ const MAPS = {
       [[0, 17.5], [2, 21], [8.5, 17]].forEach(([x, z]) => B.pickup('petal', x, z, 6.0));
       B.puzzle('plank', 'Plank Bridge', ['trickster'], ['plank'], { hint: '🐾 Swap to your Trickster and build the Plank Bridge at the narrow creek (west).' });
       B.puzzle('ford', 'Ford stones', ['scout', 'bruiser'], ['ford'], { hint: '🪽 Ring the blossom switch across the creek, then 🐻 shove the boulder into the ford.' });
-      B.puzzle('willow', 'Willow Lookout', ['trickster', 'bruiser', 'scout'], ['willow'], { hint: '🐾 Park your Trickster on the dam plate · 🐻 Bear climbs and smashes the branches · 🪽 Scout rings the willow bell.' });
+      B.puzzle('willow', 'Willow Lookout', ['trickster', 'bruiser', 'scout'], ['willow'], { hint: '🐾 Park your Trickster on the dam plate · 🐻 Bear hops up the steps and smashes the branches · 🪽 Scout rings the willow bell.' });
       B.puzzle('creekStar', 'Secret Starseed', ['bruiser', 'trickster'], ['creekStar'], { req: false, hint: '🐻 Park Bear by the tall east rock, then boost your Trickster up.' });
     },
   },

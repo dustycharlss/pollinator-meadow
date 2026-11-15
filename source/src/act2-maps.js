@@ -404,7 +404,7 @@ export const MAPS2 = {
       B.puffShroom('mB', -3.5, 19.5, { r: 6, dur: 7 });
       B.lever('lvB', 3.5, 30.5, { label: 'Gate lever' });
       B.door('lvB', 32, -8, 8);
-      // C · combo relay (timed: catch the acorn within 5 s): Raccoon climbs it up, Bee flies it high over the nest, Bear carries it home
+      // C · combo relay (timed: catch the acorn within 8 s): Raccoon climbs it up, Bee flies it high over the nest, Bear carries it home
       B.checkpoint(0, 34);
       B.wall(-5, 40.5, 3, 3, 4.4, { look: 'stone' });
       B.vine(-5, 38.6, 0, -5, 39.4, 4.4, { label: 'Vine' });
@@ -428,7 +428,7 @@ export const MAPS2 = {
       B.puzzle('HiveStar', 'Secret Starseed', ['scout'], ['HiveStar'], { req: false, hint: '🪽 Fly east from the first stone instead of down…' });
       B.puzzle('relay', 'Acorn relay', ['scout', 'bruiser'], ['acA:home'], { hint: '🪽 Grab the Golden Acorn off the high shelf, drop it in the hand-off ring · 🐻 carry it home.', track: [['acA:r1', 'scout', 'fetch the acorn from the high shelf, drop it in the ring', -5, 4, 4.6], ['acA:home', 'bruiser', 'pick up the acorn and carry it home', 1.5, 7]] });
       B.puzzle('wasps', 'Buzz zone', ['bruiser', 'trickster'], ['lvB'], { hint: '🐻 Stomp the puff-mushroom · everyone walks through the calm smoke · 🐾 pull the lever.', track: [['smoke:mB', 'bruiser', 'stomp the puff-mushroom for calm smoke', -3.5, 19.5], ['lvB', 'trickster', 'hurry through the smoke, pull the lever', 3.5, 30.5]] });
-      B.puzzle('chain', 'Hornet relay', ['trickster', 'scout', 'bruiser'], ['acC:home'], { hint: '🐻 Smoke + walk to the far ring · 🐾 climb the acorn up the vine · 🪽 fly it high over the nest · 🐻 carry it home. Hand-offs must be caught within 5 s!', track: [['acC:r1', 'trickster', 'carry the acorn up the vine to the ledge ring', -3, 36], ['acC:r2', 'scout', 'fly the acorn high over the nest to the far ring', -5, 40.8, 4.4], ['acC:home', 'bruiser', 'catch it and carry it home', 4.5, 52]] });
+      B.puzzle('chain', 'Hornet relay', ['trickster', 'scout', 'bruiser'], ['acC:home'], { hint: '🐻 Smoke + walk to the far ring · 🐾 climb the acorn up the vine · 🪽 fly it high over the nest · 🐻 carry it home. Hand-offs must be caught within 8 s!', track: [['acC:r1', 'trickster', 'carry the acorn up the vine to the ledge ring', -3, 36], ['acC:r2', 'scout', 'fly the acorn high over the nest to the far ring', -5, 40.8, 4.4], ['acC:home', 'bruiser', 'catch it and carry it home', 4.5, 52]] });
     },
   },
   // ===== 14 · Owl Wood — M6 Day/Night + E6 Night Owl, and the night gear (Glow Lantern + Echo Whistle) =====
@@ -442,7 +442,7 @@ export const MAPS2 = {
       [['near:owl:12', 'sig:night'], "The owl wakes at night. Hide behind trunks."],
       ['z:37.5', "The Echo Whistle sits on the quiet side."],
       ['sig:gift:whistle', "Ping to find hidden steps. It can wake a badger."],
-      ['stuck:echo', "Ping the path at night, then ring day."],
+      ['stuck:echo', "Ping the hidden steps. Bear, sneak to the plate."],
     ],
     banter: { start: ['🐝 Bee: Something shiny on that stump… a lantern?!', '🦝 Raccoon: The old owl only wakes at night. Stay behind the big trunks!'], end: ['🐝 Bee: My lantern makes glowing steps!', '🦝 Raccoon: And my whistle finds secret switches. Best. Gear. Ever.'] },
     build(B) {
@@ -498,7 +498,7 @@ export const MAPS2 = {
     crew: 'Bee · Raccoon · Bear',
     pip: [ // Pip kid tips (Fern act2-kid-tips.md)
       ['start', "Three bells: summer, winter, and spring. Bee can ring them."],
-      ['z:3', "Ring winter. The creek freezes. Bear, shove that log!"],
+      ['z:3', "Ring winter. The creek freezes. Walk the ice!"],
       ['z:17.5', "Ring spring, then belly-slide down the mud chute!"],
       ['near:fox', "Tap Sneak. Hide in the hollow log, Bee."],
       ['near:fox:5', "Winter snow hides Bee's smell from the fox."],

@@ -41,7 +41,9 @@ body #valley.ov{padding:0;background:rgba(59,38,20,.45);backdrop-filter:blur(3px
 /* ---------- frame (portrait default) ---------- */
 .msFrame{position:relative;width:min(100%,560px);height:100%;max-height:1100px;margin:auto;display:grid;
   grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:8px;padding:8px}
-.msFrame{background:var(--map-cream);border-radius:28px;box-shadow:0 0 0 var(--map-line-frame) var(--map-ink),0 5px 0 var(--map-line-frame) var(--map-ink)}
+.msFrame{background:none;border-radius:28px;isolation:isolate}
+/* QA diff 8: Squid's painted frame (chrome/frame, 9-slice 40) instead of a CSS box-shadow; stroke + lip sit just outside the box as before */
+.msFrame::before{content:"";position:absolute;inset:-5px -5px -8px;z-index:-1;pointer-events:none;border:40px solid transparent;border-image:var(--ms-frame-1x) 40 fill / 40px stretch}
 .msHead{display:grid;grid-template-columns:56px minmax(0,1fr) auto auto;grid-template-areas:"back title petals stars" "tabs tabs tabs tabs";align-items:center;gap:8px 6px}
 .msBack{grid-area:back;width:56px;height:56px;border:0;padding:0;background:none}
 .msBack img,.msArrow img{width:100%;height:100%}
@@ -49,7 +51,7 @@ body #valley.ov{padding:0;background:rgba(59,38,20,.45);backdrop-filter:blur(3px
 .msChip{min-width:76px;height:48px;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 10px;font:800 14px system-ui;
   background:var(--ms-chip-1x) center/100% 100% no-repeat;background-image:var(--ms-chip)}
 #msPetals{grid-area:petals}#msStars{grid-area:stars}
-.msChipIc{font-size:17px}
+.msChipIc{width:20px;height:20px;object-fit:contain;flex:none}
 .msTabs{grid-area:tabs;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
 .msTab{height:52px;border:0;padding:0 6px 4px;display:flex;align-items:center;justify-content:center;gap:4px;font:800 14px system-ui;
   background:center/100% 100% no-repeat;background-image:var(--ms-tab)}
@@ -106,14 +108,14 @@ body #valley.ov{padding:0;background:rgba(59,38,20,.45);backdrop-filter:blur(3px
 .msWorldBg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;border-radius:18px}
 .msNode{position:absolute;width:var(--map-node);height:var(--map-node);transform:translate(-50%,-50%);border:0;padding:0;background:none;z-index:2}
 .msNodeImg,.msNodeRing{position:absolute;inset:0;width:100%;height:100%}
-.msNode[data-kind="hub"] .msNodeRing{inset:-14%;width:128%;height:128%}
+.msNode[data-kind="hub"] .msNodeRing{inset:-12%;width:auto;height:auto;border-radius:50%;pointer-events:none;box-shadow:0 0 0 1px var(--map-ink),inset 0 0 0 4px #ffd23f,inset 0 0 0 5px var(--map-ink)} /* QA diff 2: ring only, the house stays visible */
 .msNodeTx{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:2px;white-space:nowrap;font:800 13px system-ui;color:var(--map-ink);
   text-shadow:0 0 3px #fff3d8,0 0 3px #fff3d8,0 0 6px #fff3d8}
 .msNode[data-kind="hub"] .msNodeTx{top:auto;bottom:100%;margin:0 0 4px}
 
 /* ---------- selected-level panel (portrait: under the well) ---------- */
 .msPanel{display:grid;grid-template-columns:148px minmax(0,1fr) 120px;grid-template-rows:auto auto 56px;
-  grid-template-areas:"thumb info info" "thumb stars stars" "play play timed";gap:6px 8px;padding:12px;position:relative}
+  grid-template-areas:"thumb info info" "thumb stars stars" "play play timed";gap:6px 8px;padding:12px 18px 10px 12px;position:relative} /* QA diff 6: Play 200 + Timed at x 236 like layout.json */
 .msPanel::before{content:"";position:absolute;inset:0;z-index:-1;border:28px solid transparent;border-image:var(--ms-select-panel-1x) 28 fill / 28px stretch}
 .msPanel{z-index:0}
 .msThumb{grid-area:thumb;position:relative;width:148px;height:84px;padding:7px 8px;border-radius:14px;
@@ -160,9 +162,10 @@ body.adv #mapScreen #vGo{display:flex!important} /* index.html hides the old #vG
 }
 /* ---------- short landscape (height ≤ 500, phones): 5 cols × 96, pad 8 ---------- */
 @media (orientation:landscape) and (max-height:500px){
-  #mapScreen{--map-cols:5;--map-tile:96px;--map-pad:8px;--map-node:52px}
-  #mapScreen{padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
-  .msFrame{gap:6px;padding:6px;border-radius:22px}
+  #mapScreen{--map-cols:5;--map-tile:96px;--map-pad:8px} /* QA diffs 4, 5, 9: layout.json 8 px inset, 56 px nodes, lip stays on canvas */
+  #mapScreen{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+  .msFrame{gap:8px;padding:8px;border-radius:22px}
+  .msFrame::before{inset:-4px -4px -6px}
   .msPanel{padding:8px 10px;gap:4px 8px}
   .msThumb{max-height:118px}
   .msName{font-size:16px}

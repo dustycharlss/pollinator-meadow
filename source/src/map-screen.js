@@ -48,8 +48,8 @@ export function createMapScreen(root, ctx) {
    <div class="msTabs" role="tablist">
     ${['act1', 'act2', 'act3'].map((k, i) => `<button type="button" role="tab" class="msTab vAct" id="vAct${i + 1}" data-view="${k}">${img2x('chrome/icon-' + k, 'msTabIc')}<span>${TAB_LABEL[k]}</span></button>`).join('')}
    </div>
-   <div class="msChip" id="msPetals" title="Petals"><span class="msChipIc">🌸</span><b>0</b></div>
-   <div class="msChip" id="msStars" title="Stars"><span class="msChipIc">⭐</span><b>0</b></div>
+   <div class="msChip" id="msPetals" title="Petals"><img class="msChipIc" src="./ui/icons/glyph/petal.webp" alt="" draggable="false"><b>0</b></div>
+   <div class="msChip" id="msStars" title="Stars"><img class="msChipIc" src="${UI}chrome/icon-star.png" srcset="${UI}chrome/icon-star.png 1x, ${UI}chrome/icon-star@2x.png 2x" alt="" draggable="false"><b>0</b></div>
    <button type="button" class="msArrow" id="msPrev" aria-label="Previous act">${img2x('chrome/btn-arrow-prev')}</button>
    <button type="button" class="msArrow" id="msNext" aria-label="Next act">${img2x('chrome/btn-arrow-next')}</button>
   </div>
@@ -74,7 +74,7 @@ export function createMapScreen(root, ctx) {
   if (/[?&]mapart=css\b/.test(location.search)) el.classList.add('msCssTiles');
   // chrome art as inline custom properties with absolute URLs (keeps the PNGs out of the CSS bundle and
   // lets Squid's revised chrome drop into ui/map/ without a rebuild)
-  for (const n of ['chrome/chip', 'chrome/tab', 'chrome/tab-selected', 'chrome/card-thumb-frame', 'chrome/toggle-timed-off', 'chrome/toggle-timed-on', 'chrome/btn-play-normal', 'chrome/btn-play-pressed', 'chrome/btn-play-disabled', 'chrome/map-well', 'chrome/select-panel']) {
+  for (const n of ['chrome/chip', 'chrome/tab', 'chrome/tab-selected', 'chrome/card-thumb-frame', 'chrome/toggle-timed-off', 'chrome/toggle-timed-on', 'chrome/btn-play-normal', 'chrome/btn-play-pressed', 'chrome/btn-play-disabled', 'chrome/map-well', 'chrome/select-panel', 'chrome/frame']) {
     const a1 = abs(UI + n + '.png'), a2 = abs(UI + n + '@2x.png'), k = '--ms-' + n.split('/')[1];
     el.style.setProperty(k, `image-set(url("${a1}") 1x, url("${a2}") 2x)`);
     el.style.setProperty(k + '-1x', `url("${a1}")`);
@@ -125,13 +125,21 @@ ${s.seed ? img2x('nodes/marker-starseed', 'tSeed') : ''}</span>
     // centres it in the well; the cover-scaled backdrop underneath fills any letterbox.
     const L = LAYOUT[o].map_inner, ar = L[2] / L[3], wr = world.parentElement.getBoundingClientRect(), pad = 8;
     if (wr.width < 20) { requestAnimationFrame(() => { if (S.view === 'world' && world.parentElement.getBoundingClientRect().width >= 20) renderWorld(); }); }
-    const W0 = wr.width - pad * 2, H0 = wr.height - pad * 2, w = Math.min(W0, H0 * ar), h = w / ar;
-    Object.assign(world.style, { left: (pad + (W0 - w) / 2) + 'px', top: (pad + (H0 - h) / 2) + 'px', width: w + 'px', height: h + 'px', right: 'auto', bottom: 'auto' });
-    world.innerHTML = `<img class="msWorldBg" src="${backdrop()}" alt="" draggable="false">` + GRID.overview.nodes.map(n => {
-      const p = n[o], isSel = sel === n.id;
+    const W0 = wr.width - pad * 2, H0 = wr.height - pad * 2;
+    // short landscape / portrait: contain + centre (matches the artboard). Tall landscape (height > 500): fill the well —
+    // crop the art's sides a little (every node stays ≥ 10% inside) and stretch the rest vertically, instead of letterboxing.
+    let w, h, aw, ah, ox = 0, oy = 0;
+    if (o === 'landscape' && orient() === 'landscape' && H0 > W0 / ar + 24) {
+      const us = GRID.overview.nodes.map(n => n[o].u), minU = Math.min(...us, 1 - Math.max(...us)), vis = Math.max(0.55, 1 - 2 * Math.max(0, minU - 0.06));
+      w = W0; h = H0; aw = Math.min(H0 * ar, W0 / vis); ah = Math.max(H0, aw / ar); ox = (W0 - aw) / 2; oy = (H0 - ah) / 2;
+    } else { w = Math.min(W0, H0 * ar); h = w / ar; aw = w; ah = h; }
+    Object.assign(world.style, { left: (pad + (W0 - w) / 2) + 'px', top: (pad + (H0 - h) / 2) + 'px', width: w + 'px', height: h + 'px', right: 'auto', bottom: 'auto', overflow: 'hidden' });
+    const fit = aw !== w || ah !== h;
+    world.innerHTML = `<img class="msWorldBg" src="${backdrop()}" alt="" draggable="false"${fit ? ` style="inset:auto;left:${ox}px;top:${oy}px;width:${aw}px;height:${ah}px"` : ''}>` + GRID.overview.nodes.map(n => {
+      const p0 = n[o], p = fit ? { u: (ox + p0.u * aw) / w, v: (oy + p0.v * ah) / h } : p0, isSel = sel === n.id;
       const src = n.kind === 'hub' ? 'nodes/node-hub' : isSel ? 'nodes/node-current' : 'nodes/node-region';
       const c = n.opens ? ctx.actCounts(n.opens) : null;
-      return `<button type="button" class="msNode vt${isSel ? ' sel' : ''}" data-id="${n.id}" data-kind="${n.kind}"${n.opens ? ` data-opens="${n.opens}"` : ''} style="left:${p.u * 100}%;top:${p.v * 100}%" aria-label="${esc(n.name)}${c ? ` · ${c.done} of ${c.of} cleared` : ''}">${img2x(src, 'msNodeImg')}${n.kind === 'hub' && isSel ? img2x('nodes/node-current', 'msNodeRing') : ''}<span class="msNodeTx">${esc(n.name)}</span></button>`;
+      return `<button type="button" class="msNode vt${isSel ? ' sel' : ''}" data-id="${n.id}" data-kind="${n.kind}"${n.opens ? ` data-opens="${n.opens}"` : ''} style="left:${p.u * 100}%;top:${p.v * 100}%" aria-label="${esc(n.name)}${c ? ` · ${c.done} of ${c.of} cleared` : ''}">${img2x(src, 'msNodeImg')}${n.kind === 'hub' && isSel ? '<span class="msNodeRing msHubRing" aria-hidden="true"></span>' : ''}<span class="msNodeTx">${esc(n.name)}</span></button>`;
     }).join('');
   }
 
@@ -149,7 +157,7 @@ ${s.seed ? img2x('nodes/marker-starseed', 'tSeed') : ''}</span>
       const t = GRID.acts[key].tiles.find(q => q.id === id);
       if (t) {
         const s = tileState(t), d = ctx.def(t.id);
-        name = (t.n ? t.n + ' · ' : '') + t.name; thumbId = t.id; emoji = hasThumb(t.id) ? '' : d?.emoji || '';
+        name = t.name; /* mockup copy: level name only (the number is on the tile) */ thumbId = t.id; emoji = hasThumb(t.id) ? '' : d?.emoji || '';
         sub = !s.built ? 'Being built — opens in a new update' : !s.locked ? (d?.teach || d?.blurb || '') : '🔒 ' + (s.why || 'Locked');
         if (t.kind !== 'tutorial') stars = img2x('nodes/stars-' + Math.min(3, s.n), 'pStars', `${s.n} of 3 stars`) + (s.challenge ? img2x('nodes/badge-challenge', 'pBadge', 'Challenge star') : '') + (s.seed ? img2x('nodes/marker-starseed', 'pSeed', 'Starseed found') : '');
         else stars = (ctx.beaten(t.id) ? img2x('nodes/badge-trail', 'pBadge', 'Trail badge') + '<span class="pTx">Trail badge</span>' : '<span class="pTx">Practice · no stars</span>');
@@ -229,7 +237,7 @@ ${s.seed ? img2x('nodes/marker-starseed', 'tSeed') : ''}</span>
     show, render,
     get view() { return S.view; },
     get selected() { return S.sel[S.view] || null; },
-    select(id) { const k = actOf(id); if (k) { S.sel[k] = id; if (S.view !== k && S.view !== 'world') S.view = k; } },
+    select(id) { const k = actOf(id); if (k && (k === 'world' || tilesFor(k).some(t => t.id === id))) { /* QA diff 1: never point the panel at a hidden tile */ S.sel[k] = id; if (S.view !== k && S.view !== 'world') S.view = k; } },
     /** 'hide' (default, Fern GATE-03 / polish rule: no listed level may be unplayable): only built levels get tiles.
      *  'show': every level in grid.json gets a tile; unbuilt ones use the locked face and Play is off. */
     setUnbuilt(mode) { S.unbuilt = mode === 'hide' ? 'hide' : 'show'; },
