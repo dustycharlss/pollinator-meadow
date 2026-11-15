@@ -1,6 +1,7 @@
 // Adaptive, lazily-streamed music: one <audio> element per playing track routed through Web Audio gains (so fades also work on iOS),
 // crossfaded between moods and from the end of a track into the next (so "loops with fade" tracks loop without a seam).
 // Nothing is downloaded until its mood is first needed. g = per-track loudness trim (measured mean volume -> about -20 dB).
+import { EXT, withFallback } from './audio-fmt.js';
 const BASE = import.meta.env.BASE_URL + 'audio/music/';
 export const TRACKS = {
   // Beans' round set (CC-BY Matthew Pablo except results, CC0 KiluaBoy); loop:true = file wraps seamlessly, so no end crossfade
@@ -18,11 +19,14 @@ export const TRACKS = {
   morning: [{ f: 'sudocolon_sunrise', g: 1.03 }],
   dusk: [{ f: 'kiluaboy_sunset-walk', g: 0.81 }],
   puzzle: [{ f: 'mintodog_cozy-puzzle-in-game-1', g: 1.03 }],
+  // Beans' act / hub cues (audio/music/act/, Opus + AAC, loop-safe). Registered so a level or the hub can ask for them via music.mood(); g 1 = their -18 LUFS master
+  act1: [{ f: 'act/act1-meadow', g: 1, loop: true }], act2: [{ f: 'act/act2-trails', g: 1, loop: true }], act3: [{ f: 'act/act3-adventure', g: 1, loop: true }],
+  hub: [{ f: 'act/meadow-hub-theme', g: 1, loop: true }], cave: [{ f: 'act/night-cave', g: 1, loop: true }], finale: [{ f: 'act/finale-celebration', g: 1, loop: true }],
 };
 // normalized (-18 LUFS) jingles from Beans' game_use column; gains kept conservative (not yet listened to)
 export const JINGLES = { clear: { f: 'jingles/norm/mintodog_cozy-puzzle-clear-n18', g: 0.75, len: 5.7 }, stage: { f: 'jingles/norm/kenney_pizzi03-n18', g: 0.75, len: 1.2 },
-  win: { f: 'rounds/win-theme', g: 0.85, len: 7.5 }, goal: { f: 'jingles/norm/kenney_pizzi07-n18', g: 0.7, len: 1.4 }, unlock: { f: 'jingles/norm/kenney_nes00-n18', g: 0.7, len: 1.8 } };
-const EXT = (() => { try { return document.createElement('audio').canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'm4a'; } catch (e) { return 'ogg'; } })();
+  win: { f: 'rounds/win-theme', g: 0.85, len: 7.5 }, goal: { f: 'jingles/norm/kenney_pizzi07-n18', g: 0.7, len: 1.4 }, unlock: { f: 'jingles/norm/kenney_nes00-n18', g: 0.7, len: 1.8 }, stinger: { f: 'act/level-complete-stinger', g: 0.75, len: 3 } };
+
 let LEVEL = 0.4;
 
 export function createMusic() {
@@ -30,7 +34,7 @@ export function createMusic() {
   const rot = {}, jcache = {};
   const pick = m => { const L = TRACKS[m]; if (!L || !L.length) return null; rot[m] = (rot[m] ?? -1) + 1; return L[rot[m] % L.length]; };
   function voice(tr, fadeS) {
-    const el = new Audio(); el.preload = 'auto'; el.crossOrigin = 'anonymous'; el.src = BASE + tr.f + '.' + EXT;
+    const el = withFallback(new Audio()); el.preload = 'auto'; el.crossOrigin = 'anonymous'; el.src = BASE + tr.f + '.' + EXT;
     const g = ctx.createGain(); g.gain.value = 0; let src; try { src = ctx.createMediaElementSource(el); src.connect(g); g.connect(master); } catch (e) { return null; }
     if (tr.loop) el.loop = true; const v = { el, g, src, tr, dead: false, next: false };
     el.addEventListener('playing', () => { if (v.dead) return; const t = ctx.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(tr.g, t + fadeS); }, { once: true });
@@ -54,7 +58,7 @@ export function createMusic() {
     duck(sec) { if (!master || muted) return; const t = ctx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setTargetAtTime(LEVEL * 0.28, t, 0.1); master.gain.setTargetAtTime(LEVEL, t + sec, 0.6); },
     jingle(name) {
       const J = JINGLES[name]; if (!ctx || muted || !J) return; let o = jcache[name];
-      if (!o) { const el = new Audio(); el.preload = 'auto'; el.crossOrigin = 'anonymous'; el.src = BASE + J.f + '.' + EXT; const g = ctx.createGain(); g.gain.value = J.g; try { ctx.createMediaElementSource(el).connect(g); g.connect(jbus); } catch (e) { return; } o = jcache[name] = { el }; }
+      if (!o) { const el = withFallback(new Audio()); el.preload = 'auto'; el.crossOrigin = 'anonymous'; el.src = BASE + J.f + '.' + EXT; const g = ctx.createGain(); g.gain.value = J.g; try { ctx.createMediaElementSource(el).connect(g); g.connect(jbus); } catch (e) { return; } o = jcache[name] = { el }; }
       try { o.el.currentTime = 0; } catch (e) {} o.el.play().catch(() => {}); api.duck(J.len);
     },
     warm() { for (const k in JINGLES) fetch(BASE + JINGLES[k].f + '.' + EXT).catch(() => {}); },

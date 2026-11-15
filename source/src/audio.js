@@ -1,4 +1,5 @@
 import { createMusic } from './music.js';
+import { EXT, EXT_SFX, withFallback } from './audio-fmt.js';
 const BASE = import.meta.env.BASE_URL;
 // Mixer (t22u): master -> destination, with buses music / sfx (gameplay) / amb (ambience) / rain. Slider values 0..1 map linearly
 // to bus gain. Master 70% (the old default) = unity gain.
@@ -14,7 +15,6 @@ export function createAudio() {
   // gain = base * condition; levels kept conservative (not listened to yet). creek is driven by distance to water.
   const AMB = { wind: { f: 'wind-grass-loop', b: 0.3 }, birds: { f: 'daytime-birdsong-loop', b: 0.42 }, insects: { f: 'insect-hum-loop', b: 0.22 },
     creek: { f: 'creek-trickle-loop', b: 0.5 }, night: { f: 'night-crickets-frogs-loop', b: 0.4 } };
-  const EXT = (() => { try { return document.createElement('audio').canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'm4a'; } catch (e) { return 'ogg'; } })();
   const lvlAmb = { name: null, el: null, g: null, vol: 0.55 };
   let creek = 0, winter = false, hidden = false, rainEl = null, rainNoise = false, rainNoiseOn = false;
   const want = k => { const d = 1 - night, c = 1 - 0.75 * calm;
@@ -22,7 +22,7 @@ export function createAudio() {
   const ambLevel = k => Math.max(0, AMB[k].b * want(k));
   function ambEl(k) {
     const A = AMB[k]; if (A.el) return A;
-    const el = A.el = new Audio(BASE + 'audio/ambient/' + A.f + '.' + EXT); el.loop = true; el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.muted = muted;
+    const el = A.el = withFallback(new Audio(BASE + 'audio/ambient/' + A.f + '.' + EXT)); el.loop = true; el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.muted = muted;
     if (ctx) { try { const src = ctx.createMediaElementSource(el); A.g = ctx.createGain(); A.g.gain.value = 0; src.connect(A.g); A.g.connect(bus.amb); } catch (e) { A.g = null; } }
     if (!A.g) el.volume = 0;
     return A;
@@ -75,7 +75,7 @@ export function createAudio() {
       if (!rainN && !rainNoise) {
         if (v <= 0.001) return;
         rainN = ctx.createGain(); rainN.gain.value = 0; rainN.connect(bus.rain);
-        try { rainEl = new Audio(BASE + 'audio/ambient/rain-light-loop.' + EXT); rainEl.loop = true; rainEl.crossOrigin = 'anonymous'; rainEl.preload = 'auto'; rainEl.muted = muted; ctx.createMediaElementSource(rainEl).connect(rainN); rainEl.addEventListener('error', () => { rainEl = null; rainNoise = true; }); }
+        try { rainEl = withFallback(new Audio(BASE + 'audio/ambient/rain-light-loop.' + EXT)); rainEl.loop = true; rainEl.crossOrigin = 'anonymous'; rainEl.preload = 'auto'; rainEl.muted = muted; ctx.createMediaElementSource(rainEl).connect(rainN); rainEl.addEventListener('error', () => { rainEl = null; rainNoise = true; }); }
         catch (e) { rainEl = null; rainNoise = true; }
       }
       if (rainNoise && !rainNoiseOn) { rainNoiseOn = true;
@@ -94,7 +94,7 @@ export function createAudio() {
       if (lvlAmb.name === name) return; lvlAmb.name = name || null;
       if (lvlAmb.el) { const el = lvlAmb.el, g = lvlAmb.g; lvlAmb.el = null; lvlAmb.g = null; if (g && ctx) { g.gain.setTargetAtTime(0, ctx.currentTime, 0.3); setTimeout(() => { el.pause(); try { g.disconnect(); } catch (e) {} }, 1500); } else el.pause(); }
       if (!name) return;
-      const el = new Audio(BASE + 'audio/ambient/act3/' + name + '.' + EXT); el.loop = true; el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.muted = muted; lvlAmb.el = el; lvlAmb.vol = vol;
+      const el = withFallback(new Audio(BASE + 'audio/ambient/act3/' + name + '.' + EXT)); el.loop = true; el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.muted = muted; lvlAmb.el = el; lvlAmb.vol = vol;
       if (ctx) { try { const src = ctx.createMediaElementSource(el), g = ctx.createGain(); g.gain.value = 0; src.connect(g); g.connect(sfxOut()); lvlAmb.g = g; g.gain.setTargetAtTime(vol, ctx.currentTime, 0.8); } catch (e) { lvlAmb.g = null; } }
       if (!lvlAmb.g) el.volume = Math.min(1, vol * gainOf('sfx') * gainOf('master'));
       if (!hidden && !muted) el.play().catch(() => {});
@@ -104,7 +104,7 @@ export function createAudio() {
     sample(name, vol = 0.5, rate = 1) {
       if (!ctx || muted) return;
       let e = samples.get(name);
-      if (!e) { e = { buf: null }; samples.set(name, e); fetch(import.meta.env.BASE_URL + 'audio/sfx/' + name + '.' + EXT).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && ctx.decodeAudioData(a)).then(b => { e.buf = b; if (b && e.want && ctx.currentTime - e.want < 0.25) api.sample(name, vol, rate); }).catch(() => {}); }
+      if (!e) { e = { buf: null }; samples.set(name, e); fetch(import.meta.env.BASE_URL + 'audio/sfx/' + name + '.' + EXT_SFX).then(r => r.ok ? r.arrayBuffer() : null).then(a => a && ctx.decodeAudioData(a)).then(b => { e.buf = b; if (b && e.want && ctx.currentTime - e.want < 0.25) api.sample(name, vol, rate); }).catch(() => {}); }
       if (!e.buf) { e.want = ctx.currentTime; return; }
       const s = ctx.createBufferSource(), g = ctx.createGain(); s.buffer = e.buf; s.playbackRate.value = rate; g.gain.value = vol; s.connect(g); g.connect(/^ui2?\//.test(name) && bus.ui ? bus.ui : sfxOut()); s.start();
     },
