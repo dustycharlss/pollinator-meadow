@@ -1100,7 +1100,7 @@ async function applySkins() {
   if (!riders) return;
   for (const c of CLASS_ORDER) {
     const base = SKIN_BASE[c], sk = skinOfCls(c);
-    const R = sk === base ? baseRiders[base] : await getSkinRider(base, sk); if (R) R.userData.isAnimal = true;
+    const R = sk === base ? baseRiders[base] : await getSkinRider(base, sk); if (R) { R.userData.isAnimal = true; R.userData.pastel = 0.15; }
     const old = riders[base]; if (!R || old === R) continue;
     R.position.copy(old.position); R.rotation.order = 'YXZ'; R.rotation.copy(old.rotation); R.visible = old.visible; old.visible = false;
     riders[base] = R; if (looks && base === cur) looks.apply(R);
@@ -1930,7 +1930,7 @@ async function boot() {
     const sh = new THREE.Mesh(new THREE.CircleGeometry(1, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })); sh.rotation.x = -Math.PI / 2; scene.add(sh); shadows[id] = sh;
     const mk = badge(SPECIES[id].emoji, 3.0); mk.visible = false; scene.add(mk); marks[id] = mk;
   }
-  for (const id of SPECIES_ORDER) { baseRiders[id] = riders[id]; riders[id].userData.isAnimal = true; }
+  for (const id of SPECIES_ORDER) { baseRiders[id] = riders[id]; riders[id].userData.isAnimal = true; riders[id].userData.pastel = 0.15; }
   await applySkins();
   round = createRound(); round.reset(settings.len); round.onEnd = showResults;
   DCL.TERR[0] = scene.children.length; terr = await createTerritory(scene, { heightAt, nestPts: nestInfo.map(n => [n.x, n.z]), quality: QUALITY });

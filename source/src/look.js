@@ -12,7 +12,7 @@ import { initPerf } from './perf.js';
 const C = h => new THREE.Color(h);
 const QMAP = { low: 'low', med: 'medium', high: 'medium', ultra: 'high' };
 const LOOKS = {
-  low:   { post: false, bloom: false, bloomScale: 0, grade: false, msaa: 0, shadow: 0, motes: 12, fogFar: 85, vignette: true, bake: true },
+  low:   { post: false, bloom: false, bloomScale: 0, grade: false, msaa: 0, shadow: 0, motes: 12, fogFar: 100, vignette: true, bake: true },
   med:   { post: true, bloom: false, bloomScale: 0, grade: true, msaa: 0, shadow: 0, motes: 24, fogFar: 110 },
   high:  { post: true, bloom: true, bloomScale: 0.5, grade: true, msaa: 0, shadow: 1024, motes: 24, fogFar: 120 },
   ultra: { post: true, bloom: true, bloomScale: 1, grade: true, msaa: 4, shadow: 2048, motes: 46, fogFar: 130 },
@@ -124,6 +124,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   function walk(o, s, shadows) {
     if (o.userData.noPastel || o.isSprite || o.isPoints || o.name === 'presetB-sky' || o.name === 'presetB-pollen') return;
     if (o.userData.isAnimal) s = Math.min(s, B.materialAdjust.animalStrength);
+    if (o.userData.pastel != null) s = Math.min(s, o.userData.pastel); // playable crew: barely lifted so the bee keeps its stripes
     if (o.userData.terrain) s = 0; // STYLE-GUIDE: terrain and water get no lift (level terrain is authored in B grass tones)
     if (o.isMesh && o.material) { if (s > 0) for (const m of (Array.isArray(o.material) ? o.material : [o.material])) styleMat(m, s);
       if (shadows && !o.userData._sh) { o.userData._sh = 1; const solid = OK(Array.isArray(o.material) ? o.material[0] : o.material); o.receiveShadow = solid; o.castShadow = solid && !o.userData.terrain && !o.isInstancedMesh; } }
@@ -139,7 +140,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     const k = Math.max(0, (1 - n) * (1 - md) * (1 - 0.6 * grey) * (1 - 0.5 * mist)), lerp = THREE.MathUtils.lerp;
     hemi.color.lerp(cHS, k); hemi.groundColor.lerp(cHG, k); hemi.intensity = lerp(hemi.intensity, B.hemi.intensity, k);
     sun.color.lerp(cSun, k); sun.intensity = lerp(sun.intensity, B.sun.intensity, k);
-    scene.fog.color.lerp(cFog, k); scene.fog.near = lerp(scene.fog.near, B.fog.near + 4, k); scene.fog.far = lerp(scene.fog.far, L.fogFar, k);
+    scene.fog.color.lerp(cFog, k); scene.fog.near = lerp(scene.fog.near, B.fog.near + 8, k); scene.fog.far = lerp(scene.fog.far, L.fogFar, k);
     if (L.bake) { sun.color.lerp(tc.copy(sun.color).multiply(LT), k); hemi.color.lerp(tc.copy(hemi.color).multiply(LT), k); hemi.groundColor.lerp(tc.copy(hemi.groundColor).multiply(LT), k); scene.fog.color.lerp(HZ, B.quality.low.bakeGrade.hazeMix * k); }
     // sun: day direction from preset B (low, raking), night keeps the moon key from main.js
     // preset B's sun is camera-relative (az 72 deg = from screen-right, el 17 deg); eased so a camera swing doesn't snap the light
