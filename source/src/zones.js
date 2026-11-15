@@ -2422,7 +2422,7 @@ export function createZones(scene, host) {
           if (!pr.done && c === 'scout' && dFlat(p, pr) < 2.4 && p.y > pr.y - 1.2 && p.y < pr.y + 6.5) ringBell(pr);
         }
       }
-      { const pr = nearest(p); if (pr && pr.cls !== c && !pr.done && t - (pr._hintT ?? -99) > 10) { pr._hintT = t; say(`${CLASSES[pr.cls].em} Needs a ${CLASSES[pr.cls].name}`, 1600); } if (id === host.cur()) nearOwn = pr && pr.cls === c && !(pr.done && !pr.two) ? pr : nearOwn; }
+      { const pr = nearest(p); if (pr && pr.cls !== c && !pr.done && t - (pr._hintT ?? -99) > 10) { pr._hintT = t; say(`${CLASSES[pr.cls].em} Needs a ${CLASSES[pr.cls].name}`, 1600); } if (id === host.cur()) nearOwn = pr && pr.cls === c && !(pr.done && !pr.two) ? pr : null; }
       for (const h of hoops) if (!h.got && Math.hypot(p.x - h.m.position.x, p.z - h.m.position.z) < 1.8 && Math.abs(p.y + 0.5 - h.m.position.y) < 1.8) {
         if (h.prev && !sig[h.prev]) { say('💫 Start with the first hoop!', 1200); continue; }
         h.got = true; h.m.material = mat(0x8be07a, 0.6); setSig(h.sig); tst('💫 Hoop!', 900);
