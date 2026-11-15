@@ -3,7 +3,7 @@
 // To swap voices (Alba, Jenny, American, …): drop the new pack at
 // audio/voice/<name>/ with the same lines.json ids and <fileStem>.ogg|.m4a
 // files, then change this one constant. No other code changes.
-export const VOICE_BASE = 'audio/voice/cori/';
+export const VOICE_BASE = 'audio/voice/alba/';
 
 let catalog = null, loading = null;
 

@@ -321,7 +321,7 @@ $('spChip').onclick = () => swapOK() ? openMenu() : openHub('animals'); $('menuC
 $('bNight').onclick = () => setNight(!curNight);
 const escH = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 async function showCredits() {
-  // polish2: kid-friendly scrolling Credits (Squid kit) — 69 required CC-BY entries first (CREDITS-ALL.md order), then CC0, then the game's earlier credits.json
+  // polish2: kid-friendly scrolling Credits (Squid kit) — 70 required CC-BY entries first (CREDITS-ALL.md order), then CC0, then the game's earlier credits.json
   const body = $('crBody'); if (!body.dataset.done) { try {
     const B = import.meta.env.BASE_URL, [L, c] = await Promise.all([fetch(B + 'credits-list.json').then(r => r.json()), fetch(B + 'credits.json').then(r => r.json()).catch(() => null)]);
     const row = e => `<div class="crRow"><span class="crT"><b>${escH(e.title)}</b><span class="crA">${escH(e.author)}</span><span class="crL">${e.licenseUrl ? `<a href="${escH(e.licenseUrl)}" target="_blank" rel="noopener">${escH(e.license)}</a>` : escH(e.license)}${e.sourceUrl ? ` · <a href="${escH(e.sourceUrl)}" target="_blank" rel="noopener">source</a>` : ''}</span></span><i class="crSeal ${e.requiredAttribution ? 'by' : 'c0'}" role="img" aria-label="${e.requiredAttribution ? 'CC-BY' : 'CC0'}"></i></div>`;
