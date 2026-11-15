@@ -128,6 +128,14 @@ export const MAPS2 = {
     goal: 'Sunbeam Grove', act2: true, key: 'puzzles', ceil: 8.5, exit: [0, 61], par: 420,
     bounds: { x0: -9, x1: 9, z0: -8, z1: 65 },
     crew: 'Bee · Raccoon · Bear',
+    pip: [ // Pip kid tips (Fern act2-kid-tips.md)
+      ['start', "Sunbeams make ghost steps solid. Let's try!"],
+      ['z:2', "Bee, turn the mirror toward the ghost stair."],
+      ['z:30', "Park Bear in the beam. His shadow is a bridge!"],
+      ['near:badger', "Tap Sneak. Tiptoe past the sleepy badger."],
+      ['stuck:beam', "Open the shutter, then aim both mirrors."],
+      ['stuck:badger', "Throw an acorn so he looks the other way."],
+    ],
     banter: { start: ['🐝 Bee: Sunbeams make the ghost steps solid!', '🦝 Raccoon: And a sleepy badger… tiptoe with 🐾 Sneak.'], end: ['🐻 Bear: My shadow made a bridge!', '🐝 Bee: And nobody woke the badgers.'] },
     build(B) {
       B.home(0, -5); B.lane(-8, 8, -7, 64);
@@ -177,6 +185,14 @@ export const MAPS2 = {
     goal: 'Mill Pond', act2: true, key: 'puzzles', ceil: 8.5, exit: [0, 55], par: 420,
     bounds: { x0: -9, x1: 9, z0: -8, z1: 59 },
     crew: 'Bee · Raccoon · Bear',
+    pip: [ // Pip kid tips (Fern act2-kid-tips.md)
+      ['start', "Sluice levers set the water low, middle, or high."],
+      ['z:2', "Pull the water-down sluice. Walk the dry bed."],
+      [['z:33', 'sig:pC:high'], "Raise the water and ride the log, Bear!"],
+      ['near:turtle', "The turtle snaps in front. Sneak around behind."],
+      ['stuck:ford', "Flick the floating leaf so it looks away."],
+      ['stuck:mill', "Raise water so it naps, then lower it again."],
+    ],
     banter: { start: ['🦝 Raccoon: Sluice levers set the water low, middle or high!', '🐝 Bee: Watch the turtle — it snaps at anyone in front.'], end: ['🐻 Bear: I rode a log! Like a boat!', '🦝 Raccoon: And the turtle never even woke up.'] },
     build(B) {
       B.home(0, -5); B.lane(-8, 8, -7, 58);
@@ -215,6 +231,14 @@ export const MAPS2 = {
     goal: 'Bramble Patch', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 65], par: 480,
     bounds: { x0: -9, x1: 9, z0: -8, z1: 69 },
     crew: 'Bee · Raccoon · Bear',
+    pip: [ // Pip kid tips (Fern act2-kid-tips.md)
+      ['start', "Raccoon plants. Bee brings a dewdrop. Then it grows!"],
+      ['z:2', "Fly to the drip leaf, then water the seed."],
+      ['z:16', "Bear, bounce on the mushroom. You go the highest!"],
+      [['near:spider', 'near:web'], "Pluck the far strand, then snip the web."],
+      ['stuck:web', "Wait until the spider turns away."],
+      ['stuck:nest', "Clear the web first, then water the far seed."],
+    ],
     banter: { start: ['🦝 Raccoon: I plant the seeds…', '🐝 Bee: …I bring the dewdrops! And mind the spider webs.'], end: ['🐻 Bear: BOING! Best mushroom ever.', '🦝 Raccoon: Snip snip — the spider never saw me.'] },
     build(B) {
       B.home(0, -5); B.lane(-8, 8, -7, 68);
@@ -263,6 +287,14 @@ export const MAPS2 = {
     goal: 'Weathervane Hill', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 57], par: 480,
     bounds: { x0: -9, x1: 9, z0: -8, z1: 61 },
     crew: 'Bee · Raccoon · Bear',
+    pip: [ // Pip kid tips (Fern act2-kid-tips.md)
+      ['start', "Crank a vane and the wind flips for the whole hill."],
+      ['z:2', "Turn the wind up the hill, then fly with it."],
+      ['z:5.5', "Bear holds the raft. Raccoon hops on. Then let go!"],
+      ['near:crow', "Hide under the leaves until its back is turned."],
+      ['stuck:crow', "Bear's shadow is a safe spot on the ridge."],
+      ['stuck:ridge', "Flip the wind, then glide from canopy to canopy."],
+    ],
     banter: { start: ['🦝 Raccoon: Crank a vane and the wind flips for the whole hill!', '🐻 Bear: I’m too heavy for wind. I’ll hold the dandelion rafts.'], end: ['🐝 Bee: The crow never spotted me under the leaves!', '🦝 Raccoon: Raft rides are the best rides.'] },
     build(B) {
       B.home(0, -5); B.lane(-8, 8, -7, 60);
@@ -304,6 +336,14 @@ export const MAPS2 = {
     goal: 'Hornet Hedge', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 61], par: 480,
     bounds: { x0: -9, x1: 9, z0: -8, z1: 65 },
     crew: 'Bee · Raccoon · Bear',
+    pip: [ // Pip kid tips (Fern act2-kid-tips.md)
+      ['start', "Pass the Golden Acorn from friend to friend."],
+      ['z:2', "Bee drops it in the glowing ring for Bear."],
+      ['z:34', "The ring only glows for a little while. Hurry, gently!"],
+      ['near:nest', "Stomp the puff-mushroom, Bear. Walk through the smoke."],
+      ['stuck:chain', "Plan the smoke, then pass the acorn."],
+      ['carry:nest', "Don't carry the acorn through a buzz zone."],
+    ],
     banter: { start: ['🐻 Bear: The Golden Acorn is heavy — we pass it ring to ring.', '🐝 Bee: And stay out of the buzz zones! Bear’s mushrooms calm the wasps.'], end: ['🦝 Raccoon: Teamwork relay!', '🐻 Bear: The wasps didn’t even notice.'] },
     build(B) {
       B.home(0, -5); B.lane(-8, 8, -7, 64);
@@ -340,6 +380,14 @@ export const MAPS2 = {
     goal: 'Owl Wood', act2: true, moody: true, key: 'puzzles', ceil: 9.5, exit: [0, 61], par: 480,
     bounds: { x0: -9, x1: 9, z0: -8, z1: 65 },
     crew: 'Bee · Raccoon · Bear',
+    pip: [ // Pip kid tips (Fern act2-kid-tips.md)
+      ['start', "Something shiny is on that stump. Fly up, Bee!"],
+      ['sig:gift:lantern', "That's the Glow Lantern! Tap G to switch it."],
+      [['near:owl:12', 'sig:night'], "The owl wakes at night. Hide behind trunks."],
+      ['z:37.5', "The Echo Whistle sits on the quiet side."],
+      ['sig:gift:whistle', "Ping to find hidden steps. It can wake a badger."],
+      ['stuck:echo', "Ping the path at night, then ring day."],
+    ],
     banter: { start: ['🐝 Bee: Something shiny on that stump… a lantern?!', '🦝 Raccoon: The old owl only wakes at night. Stay behind the big trunks!'], end: ['🐝 Bee: My lantern makes glowing steps!', '🦝 Raccoon: And my whistle finds secret switches. Best. Gear. Ever.'] },
     build(B) {
       B.home(0, -5); B.lane(-8, 8, -7, 64);
@@ -381,6 +429,14 @@ export const MAPS2 = {
     goal: 'Frost Hollow', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 61], par: 480,
     bounds: { x0: -9, x1: 9, z0: -8, z1: 65 },
     crew: 'Bee · Raccoon · Bear',
+    pip: [ // Pip kid tips (Fern act2-kid-tips.md)
+      ['start', "Three bells: summer, winter, and spring. Bee can ring them."],
+      ['z:3', "Ring winter. The creek freezes. Bear, shove that log!"],
+      ['z:17.5', "Ring spring, then belly-slide down the mud chute!"],
+      ['near:fox', "Tap Sneak. Hide in the hollow log, Bee."],
+      ['near:fox:5', "Winter snow hides Bee's smell from the fox."],
+      ['stuck:fox', "Ring winter, slide the log, then sneak to the bell."],
+    ],
     banter: { start: ['🐝 Bee: Three bells — summer, winter, spring! I’ll ring them.', '🦝 Raccoon: Winter freezes the creek, spring makes mud for sliding…', '🐻 Bear: …and snow hides Bee’s scent from the fox.'], end: ['🦝 Raccoon: That mud chute was the best!', '🐝 Bee: The fox never sniffed me out.'] },
     build(B) {
       B.home(0, -5); B.lane(-8, 8, -7, 64);
@@ -420,6 +476,14 @@ export const MAPS2 = {
     goal: 'Backyard Split', act2: true, key: 'puzzles', ceil: 9.5, exit: [0, 58], par: 480,
     bounds: { x0: -9, x1: 9, z0: -8, z1: 62 },
     crew: 'Bee · Raccoon · Bear',
+    pip: [ // Pip kid tips (Fern act2-kid-tips.md)
+      ['start', "You're split up! Switches here open gates over there."],
+      ['z:4', "Raccoon, pull the lever. It opens Bear's gate."],
+      [['near:sprinkler:9', 'sig:plL'], "Stand on the tap plate to pause the sprinkler."],
+      ['near:mower', "Wait for the mower to rest, then dash across."],
+      [['stuck:tap', 'stuck:mower'], "Each friend opens a door for another."],
+      [['sig:blR', 'stuck:home'], "Everyone meet at the flag. Timing is everything!"],
+    ],
     banter: { start: ['🦝 Raccoon: A hedge splits the yard! I’m on the left…', '🐻 Bear: …Bee and I are on the right. Switches on one side open gates on the other!'], end: ['🐝 Bee: Back together again!', '🦝 Raccoon: I timed that mower perfectly.'] },
     build(B) {
       B.home(0, -5); B.lane(-8, 8, -7, 61);

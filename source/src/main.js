@@ -1207,6 +1207,7 @@ function endValleyPatchWild() {
   if (newAct2) { valley.data.act2Seen = true; valley.save(); vActPage = 2; vSelPatch = 'trailhead_trials'; openTrailSign('unlock'); return; }
   if (trailDone) { valley.data.trailBadge = true; valley.save(); vActPage = 2; vSelPatch = 'sunbeam_grove'; openTrailSign('badge'); return; }
   if (id === 'backyard_split' && !valley.data.act3Seen) { valley.data.act3Seen = true; valley.save(); try { sessionStorage.setItem('pm-hubcut', '1'); } catch (e) {} vActPage = 3; enterHub(); return; }
+  { const fr = zones?.MAPS?.[id]?.friend; if (fr && HUB_FRIENDS) { const added = [].concat(fr).filter(f => valley.addFriend(f)); if (added.length) { try { sessionStorage.setItem('pm-friendcut', added.join(',')); } catch (e) {} vActPage = 3; enterHub(); return; } } } // S1: the rescued friend moves into the hub
   if (valley.checkFestival() && !valley.data.festivalSeen) {
     valley.data.festivalSeen = true; valley.save();
     openFestival();
@@ -1225,7 +1226,7 @@ function enterHub() {
 function onHubStation(k) {
   if (!inHub() || !playing) return; audio.blip?.(2);
   if (k === 'map') { vActPage = vActPage || 1; openValleyMap(); }
-  else if (k === 'crew') openSkinPick(() => {});
+  else if (k === 'crew') openCrewTent(() => {});
   else if (k === 'dock') { toast('🐥 Pond Dock · replay any level, stars shown on every tile', 2400); openValleyMap(); }
   else if (k === 'bench') { const L = zones && zones.gearList ? zones.gearList() : [], got = L.filter(g => g.has); toast(`🔧 Badger Bramble: ${got.length ? 'Your gear: ' + got.map(g => g.em + ' ' + g.name).join(' · ') + '.' : 'No gear yet!'} ${L.filter(g => !g.has).map(g => g.em + ' ' + g.name + ' is in ' + g.where).join(' · ')}${L.some(g => !g.has) ? '.' : ''} One gear slot each — swap at 🧰 gear stumps. Try them all in the 🧪 Practice Yard!`, 6000); }
   else if (k === 'closet') { toast('👗 Costume Closet · looks are just for fun', 2200); openSkinPick(() => {}); }
@@ -1236,6 +1237,16 @@ function hubArrived() {
   if (noSave) return; // startNew is reloading the page — the fresh page runs this again
   let cut = false; try { cut = sessionStorage.getItem('pm-hubcut') === '1'; sessionStorage.removeItem('pm-hubcut'); } catch (e) {}
   if (cut) openHubCut();
+  let fc = ''; try { fc = sessionStorage.getItem('pm-friendcut') || ''; sessionStorage.removeItem('pm-friendcut'); } catch (e) {}
+  if (fc && !cut) openFriendCut(fc.split(','));
+}
+function openFriendCut(list) {
+  const fs = list.map(k => HUB_FRIENDS[k]).filter(Boolean); if (!fs.length) return;
+  const OPENS = { bench: '🔧 the Gear Bench', dock: '🛶 the Pond Dock', stars: '⭐ the Star Board', closet: '👗 the Costume Closet' };
+  $('tsH').textContent = `${fs.map(f => f.em).join(' ')} ${fs.map(f => f.name).join(' & ')} moved in!`;
+  $('tsTx').textContent = fs.map(f => `${f.name} lives in the Meadow Hub now${f.opens ? ' and opened ' + OPENS[f.opens] + ' — walk over to see it' : ''}.`).join(' ');
+  $('tsIcons').innerHTML = fs.map(f => `<span title="${f.name}">${f.em}</span>`).join('');
+  $('trailSign').dataset.mode = 'hub'; openOv('trailSign'); audio.music?.jingle?.('win');
 }
 function openHubCut() {
   $('tsH').textContent = '🏡 Welcome home to the Meadow Hub!';

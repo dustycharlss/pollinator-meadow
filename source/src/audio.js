@@ -15,6 +15,7 @@ export function createAudio() {
   const AMB = { wind: { f: 'wind-grass-loop', b: 0.3 }, birds: { f: 'daytime-birdsong-loop', b: 0.42 }, insects: { f: 'insect-hum-loop', b: 0.22 },
     creek: { f: 'creek-trickle-loop', b: 0.5 }, night: { f: 'night-crickets-frogs-loop', b: 0.4 } };
   const EXT = (() => { try { return document.createElement('audio').canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'm4a'; } catch (e) { return 'ogg'; } })();
+  const lvlAmb = { name: null, el: null, g: null, vol: 0.55 };
   let creek = 0, winter = false, hidden = false, rainEl = null, rainNoise = false, rainNoiseOn = false;
   const want = k => { const d = 1 - night, c = 1 - 0.75 * calm;
     return k === 'wind' ? 0.6 + 0.4 * calm : k === 'birds' ? d * c * (winter ? 0.4 : 1) : k === 'insects' ? d * c * (winter ? 0 : 1) : k === 'creek' ? creek : night * (winter ? 0.3 : 1) * (1 - 0.5 * calm); };
@@ -57,12 +58,13 @@ export function createAudio() {
         try { const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0); } catch (e) {}
       }
       applyAmb(true);
+      if (lvlAmb.name && !lvlAmb.g) { const n = lvlAmb.name; lvlAmb.name = null; api.levelAmb(n, lvlAmb.vol); }
     },
     /** set one bus level 0..1: master | music | sfx | amb | rain */
     set(k, v) { if (!(k in lv)) return; lv[k] = Math.max(0, Math.min(1, +v || 0)); apply(k); },
     levels: () => ({ ...lv }),
     volume(v) { api.set('master', v); },
-    setMute(m) { muted = !!m; for (const k in AMB) if (AMB[k].el) AMB[k].el.muted = muted; if (rainEl) rainEl.muted = muted; music.mute(muted); apply('master'); applyAmb(true); return !muted; },
+    setMute(m) { muted = !!m; for (const k in AMB) if (AMB[k].el) AMB[k].el.muted = muted; if (rainEl) rainEl.muted = muted; if (lvlAmb.el) { lvlAmb.el.muted = muted; if (!muted && !hidden) lvlAmb.el.play().catch(() => {}); } music.mute(muted); apply('master'); applyAmb(true); return !muted; },
     toggle() { return api.setMute(!muted); },
     night(v, c = 0) { night = v; calm = c; applyAmb(); },
     /** ambience context: w = 0..1 closeness to water (creek bed), win = winter (no insects) */
@@ -87,6 +89,17 @@ export function createAudio() {
       rainN.gain.setTargetAtTime(v * RAIN_BASE, ctx.currentTime, 0.6);
       if (rainEl) { if (v > 0.002 && !hidden && rainEl.paused) rainEl.play().catch(() => {}); else if (v <= 0.002 && rainN.gain.value < 0.002 && !rainEl.paused) rainEl.pause(); }
     },
+    /** Act 3 per-level ambience bed: audio/ambient/act3/<name>.ogg looped on the SFX (gameplay) bus; null stops it. */
+    levelAmb(name, vol = 0.55) {
+      if (lvlAmb.name === name) return; lvlAmb.name = name || null;
+      if (lvlAmb.el) { const el = lvlAmb.el, g = lvlAmb.g; lvlAmb.el = null; lvlAmb.g = null; if (g && ctx) { g.gain.setTargetAtTime(0, ctx.currentTime, 0.3); setTimeout(() => { el.pause(); try { g.disconnect(); } catch (e) {} }, 1500); } else el.pause(); }
+      if (!name) return;
+      const el = new Audio(BASE + 'audio/ambient/act3/' + name + '.' + EXT); el.loop = true; el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.muted = muted; lvlAmb.el = el; lvlAmb.vol = vol;
+      if (ctx) { try { const src = ctx.createMediaElementSource(el), g = ctx.createGain(); g.gain.value = 0; src.connect(g); g.connect(sfxOut()); lvlAmb.g = g; g.gain.setTargetAtTime(vol, ctx.currentTime, 0.8); } catch (e) { lvlAmb.g = null; } }
+      if (!lvlAmb.g) el.volume = Math.min(1, vol * gainOf('sfx') * gainOf('master'));
+      if (!hidden && !muted) el.play().catch(() => {});
+    },
+    levelAmbInfo: () => ({ name: lvlAmb.name, playing: !!lvlAmb.el && !lvlAmb.el.paused, src: lvlAmb.el ? lvlAmb.el.src : null, bus: lvlAmb.g ? 'sfx' : lvlAmb.el ? 'element' : null, gain: lvlAmb.g ? +lvlAmb.g.gain.value.toFixed(3) : null }),
     /** t31+: recorded one-shot from public/audio/sfx/<cat>/<name>.ogg (Beans, -18 LUFS). Missing file = silent. vol kept modest. */
     sample(name, vol = 0.5, rate = 1) {
       if (!ctx || muted) return;
@@ -103,6 +116,6 @@ export function createAudio() {
       return { rainSrc: rainEl ? (rainEl.paused ? 'loop-paused' : 'loop') : rainNoise ? 'noise' : 'none', started, ctxState: ctx && ctx.state, levels: { ...lv }, muted, bus: Object.fromEntries(Object.entries(bus).map(([k, b]) => [k, r(b.gain.value)])), busTarget: Object.fromEntries(Object.keys(bus).map(k => [k, r(gainOf(k))])), rainBase: RAIN_BASE, rainNode: rainN && r(rainN.gain.value), amb: Object.fromEntries(Object.entries(AMB).map(([k, A]) => [k, { loaded: !!A.el, playing: !!A.el && !A.el.paused, gain: A.g ? r(A.g.gain.value) : A.el ? r(A.el.volume) : 0, want: r(ambLevel(k)) }])) };
     },
   };
-  document.addEventListener('visibilitychange', () => { if (!started) return; music.hide(document.hidden); hidden = document.hidden; if (hidden) { for (const k in AMB) AMB[k].el && AMB[k].el.pause(); rainEl && rainEl.pause(); } else if (!muted) { ctx && ctx.resume && ctx.resume(); applyAmb(true); } });
+  document.addEventListener('visibilitychange', () => { if (!started) return; music.hide(document.hidden); hidden = document.hidden; if (hidden) { for (const k in AMB) AMB[k].el && AMB[k].el.pause(); rainEl && rainEl.pause(); lvlAmb.el && lvlAmb.el.pause(); } else if (!muted) { ctx && ctx.resume && ctx.resume(); applyAmb(true); lvlAmb.el && lvlAmb.el.play().catch(() => {}); } });
   return api;
 }
