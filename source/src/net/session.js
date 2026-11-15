@@ -58,6 +58,7 @@ export function createNet(hooks = {}) {
   let recvBuf = []; // { tHost, wall, state }
   let lastApplied = null;
   let lastPoseSent = {};
+  let pendingPoses = {};
   let poseSeeded = false;
   let lastInAt = 0;
   const evq = [];
@@ -228,22 +229,22 @@ export function createNet(hooks = {}) {
     if (st.id && hooks.ensureMap) hooks.ensureMap(st.id);
     let toApply = st;
     if (respectLocal && st.bodies) {
-      // Keep a local T.tp / pending pose until the host snap echoes it.
-      // Otherwise applyClientView (and net.tick inside T.step) rewinds the
-      // guest off a plate before the pose reaches the host (N1-SIG).
+      // Keep only bodies we recently sent as a client pose (T.tp / input)
+      // until the host snap echoes them. Do not freeze mid-interpolation —
+      // that left the guest 1.2 m behind a host teleport (N1-POS).
       const local = zones.netState?.();
       const locBodies = local && local.bodies;
-      if (locBodies) {
-        const kept = { ...st.bodies };
-        for (const id of Object.keys(kept)) {
-          const loc = locBodies[id], snap = kept[id], prev = lastApplied?.bodies?.[id];
-          if (!loc || !snap) continue;
-          if (bodyDist(loc, snap) > 0.3 && prev && bodyDist(loc, prev) > 0.3) delete kept[id];
-        }
-        toApply = { ...st, bodies: kept, sigFull: false };
-      } else {
-        toApply = { ...st, sigFull: false };
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const kept = { ...st.bodies };
+      for (const id of Object.keys(kept)) {
+        const pend = pendingPoses[id];
+        if (!pend) continue;
+        if (now - pend.at > 2000) { delete pendingPoses[id]; continue; }
+        const loc = locBodies && locBodies[id], snap = kept[id];
+        if (snap && bodyDist(pend, snap) <= 0.3) { delete pendingPoses[id]; continue; }
+        if (loc && snap && bodyDist(loc, snap) > 0.3) delete kept[id];
       }
+      toApply = { ...st, bodies: kept, sigFull: false };
     }
     if (typeof zones.applyNetState === 'function') zones.applyNetState(toApply);
     lastApplied = st;
@@ -341,8 +342,22 @@ export function createNet(hooks = {}) {
     return { ...b.state, bodies: lerpBodies(a.state.bodies, b.state.bodies, k), enemies: b.state.enemies, escorts: b.state.escorts, movers: b.state.movers };
   }
 
+  function latestState() {
+    return recvBuf.length ? recvBuf[recvBuf.length - 1].state : lastApplied;
+  }
   function applyClientView() {
-    const st = interpolatedState();
+    // Apply the latest snap so a host teleport lands immediately. Interpolate
+    // only when the latest pose is already close (smoothness, not catch-up).
+    const latest = latestState();
+    const interp = interpolatedState();
+    let st = latest;
+    if (latest && interp && latest.bodies && interp.bodies) {
+      let far = false;
+      for (const id of Object.keys(latest.bodies)) {
+        if (bodyDist(latest.bodies[id], interp.bodies[id]) > 0.3) { far = true; break; }
+      }
+      if (!far) st = interp;
+    }
     if (st) applyState(st, { respectLocal: true });
   }
 
@@ -453,6 +468,7 @@ export function createNet(hooks = {}) {
         || Math.abs((b.yaw || 0) - (prev.yaw || 0)) > 0.05) {
         changed[id] = b;
         lastPoseSent[id] = { x: b.x, y: b.y, z: b.z, yaw: b.yaw };
+        pendingPoses[id] = { x: b.x, y: b.y, z: b.z, yaw: b.yaw, at: typeof performance !== 'undefined' ? performance.now() : Date.now() };
         n++;
       }
     }
