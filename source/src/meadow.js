@@ -6,6 +6,7 @@ import { loadGLB, bakeParts, lambertFrom } from './models.js';
 import { patchSeason } from './seasons.js';
 import { heightAt } from './world.js';
 import { SITES, siteDist } from './sites.js';
+import { mapWhenReady } from './tex.js';
 
 // [glb, height]  - shared instanced flowers; each home picks a theme of three
 const TYPES = [['daisyG', 2.3], ['tulip', 3.0], ['poppies', 2.4], ['iris', 3.2], ['redflower', 2.7], ['purpleLong', 3.4], ['flowerSingle', 2.5], ['flower9d', 2.6], ['mushroom1', 1.5], ['sunflowerJ', 4.2], ['bell', 2.6]];
@@ -72,9 +73,9 @@ export async function buildMeadow(scene, nests, save) {
   // ---- fireflies around grown homes (night only)
   const FF = 14, ffN = SPECIES_ORDER.length * FF, ffPos = new Float32Array(ffN * 3).fill(-9999), ffGeo = new THREE.BufferGeometry();
   ffGeo.setAttribute('position', new THREE.BufferAttribute(ffPos, 3)); ffGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e5);
-  const ffTex = new THREE.TextureLoader().load(import.meta.env.BASE_URL + 'img/star.png');
+  const ffTex = null; // polish2: shared KTX2 star (WebP fallback) set via mapWhenReady
   const ffMat = new THREE.PointsMaterial({ map: ffTex, size: 0.9, color: 0xd6ff7a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-  const ffPts = new THREE.Points(ffGeo, ffMat); ffPts.frustumCulled = false; scene.add(ffPts);
+  mapWhenReady(ffMat, 'star'); const ffPts = new THREE.Points(ffGeo, ffMat); ffPts.frustumCulled = false; scene.add(ffPts);
   // ---- drifting petals / leaves / snow (camera-anchored)
   const DN = 260, dPos = new Float32Array(DN * 3), dPh = new Float32Array(DN), R = 46;
   for (let i = 0; i < DN; i++) { dPos[i * 3] = (Math.random() * 2 - 1) * R; dPos[i * 3 + 1] = Math.random() * 26; dPos[i * 3 + 2] = (Math.random() * 2 - 1) * R; dPh[i] = Math.random() * 6.28; }

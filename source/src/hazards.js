@@ -143,7 +143,7 @@ export async function createHazards(scene, ctx) {
   function showChip(label, statusKey) {
     const id = STATUS_CSS[statusKey];
     chip.style.display = 'flex';
-    chip.innerHTML = (id ? `<img src="./textures/fx/status/${id}-still.png" width="36" height="36" alt="" style="image-rendering:pixelated">` : '') + `<span>${label}</span>`;
+    chip.innerHTML = (id ? `<img src="./textures/fx/status/${id}-still.webp" width="36" height="36" alt="" style="image-rendering:pixelated">` : '') + `<span>${label}</span>`;
   }
   function hideChip() { chip.style.display = 'none'; chip.innerHTML = ''; }
 

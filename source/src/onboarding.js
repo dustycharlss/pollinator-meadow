@@ -1,3 +1,4 @@
+import { at1x } from './tex.js';
 import { skinText } from './skins.js';
 // Pip tips (Fern onboarding.json) — progressive unlocks + tip card.
 const ADV = () => document.body.classList.contains('adv');
@@ -25,7 +26,7 @@ const BEATS_ADV = [
   { id: 'done', pip: 'Have fun!', portrait: 'unlock', after: 3 },
 ];
 const BEATS = new Proxy([], { get: (t, k) => { const B = ADV() ? BEATS_ADV : BEATS_OLD; const v = B[k]; return typeof v === 'function' ? v.bind(B) : v; } });
-const PORTRAIT = { hello: 'guide-happy-blocky.png', unlock: 'guide-cheering-blocky.png', hint: 'guide-thinking-blocky.png' };
+const PORTRAIT = { hello: 'guide-happy-blocky.webp', unlock: 'guide-cheering-blocky.webp', hint: 'guide-thinking-blocky.webp' };
 
 export function createOnboarding(ctx) {
   const save = ctx.save;
@@ -62,7 +63,7 @@ export function createOnboarding(ctx) {
     const relaxed = ctx.round?.()?.mode === 'relaxed';
     card.style.display = 'flex';
     card.querySelector('#pipTxt').textContent = skinText(relaxed && b.relaxed ? b.relaxed : b.pip);
-    card.querySelector('#pipImg').src = `./ui/portraits/${PORTRAIT[b.portrait] || PORTRAIT.hello}`;
+    card.querySelector('#pipImg').src = at1x(`./ui/portraits/${PORTRAIT[b.portrait] || PORTRAIT.hello}`);
     if (b.id === 'hello') ctx.audio?.sample?.('ui2/toad-ribbit-hello', 0.5);
     if (b.unlock) ctx.audio?.sample?.('ui2/control-unlock-tada', 0.45);
     applyLocks();

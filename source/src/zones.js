@@ -1,3 +1,4 @@
+import { at1x } from './tex.js';
 // Valley zones — eight hand-built three-class maps (Scout / Trickster / Bruiser).
 // Lost Vikings loop: each level needs all three classes; idle crew keep holding plates while you swap.
 // Fern Nov 9 beats (three-class-levels.md). Blocking walls are solids (terrain is cosmetic + water).
@@ -930,9 +931,9 @@ export function createZones(scene, ctx) {
   const GEAR_INFO = {
     lantern: { em: '🏮', name: 'Glow Lantern', cls: 'scout', where: 'Owl Wood' },
     whistle: { em: '🎶', name: 'Echo Whistle', cls: 'trickster', where: 'Owl Wood' },
-    pouch: { em: '🫧', name: 'Bubble Pouch', cls: 'scout', where: 'Ember Ridge (level 17)', icon: 'ui/icons/act3/gear-bubble-pouch.png', glb: 'act3/gear/bubble-pouch', size: 0.62 },
-    glider: { em: '🍃', name: 'Leaf Glider', cls: 'trickster', where: 'Storm Orchard (level 21)', icon: 'ui/icons/act3/gear-leaf-glider.png', glb: 'act3/gear/leaf-glider', size: 2.6 },
-    sling: { em: '🪨', name: 'Pebble Sling', cls: 'bruiser', where: 'Mirror Caves (level 20)', icon: 'ui/icons/act3/gear-pebble-sling.png', glb: 'act3/gear/pebble-sling', size: 0.85 },
+    pouch: { em: '🫧', name: 'Bubble Pouch', cls: 'scout', where: 'Ember Ridge (level 17)', icon: 'ui/icons/act3/gear-bubble-pouch.webp', glb: 'act3/gear/bubble-pouch', size: 0.62 },
+    glider: { em: '🍃', name: 'Leaf Glider', cls: 'trickster', where: 'Storm Orchard (level 21)', icon: 'ui/icons/act3/gear-leaf-glider.webp', glb: 'act3/gear/leaf-glider', size: 2.6 },
+    sling: { em: '🪨', name: 'Pebble Sling', cls: 'bruiser', where: 'Mirror Caves (level 20)', icon: 'ui/icons/act3/gear-pebble-sling.webp', glb: 'act3/gear/pebble-sling', size: 0.85 },
   };
   const ICON_TX = new Map();
   function gearSprite(k, s) { // Squid's gear badge (falls back to the emoji)
@@ -2586,7 +2587,7 @@ export function createZones(scene, ctx) {
   function kidDom() {
     if (kid.dom) return kid.dom;
     const C = document.createElement('div'); C.id = 'kidCard';
-    C.innerHTML = '<img id="kidPip" alt="" src="./ui/portraits/guide-happy-blocky.png"><div class="kcB"><div id="kidIc"></div><div id="kidW"></div><div id="kidNudge" style="display:none"></div><div id="kidDots"></div></div>';
+    C.innerHTML = '<img id="kidPip" alt="" src="' + at1x('./ui/portraits/guide-happy-blocky.webp') + '"><div class="kcB"><div id="kidIc"></div><div id="kidW"></div><div id="kidNudge" style="display:none"></div><div id="kidDots"></div></div>';
     const H = document.createElement('div'); H.id = 'kidHand'; H.innerHTML = '<i></i><b>Hold</b>';
     const F = document.createElement('div'); F.id = 'kidFx';
     document.body.append(C, H, F);

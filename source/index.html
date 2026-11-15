@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#1c3b2a">
+<meta name="theme-color" content="#f6c4d8">
 <title>Pollinator Meadow</title>
 <meta name="description" content="Grow your meadow as a cute blocky bee, bat, bear and friends. Gather, build and bloom in a short round.">
-<link rel="icon" href="./ui/brand/favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="./ui/brand/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./ui/brand/favicon-16.png">
-<link rel="apple-touch-icon" href="./ui/brand/apple-touch-icon.png">
+<!-- Squid app icon + launch set (assets-incoming/app-icon); site lives at /pollinator-meadow/, so paths are BASE-relative -->
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Meadow">
+<link rel="icon" href="./favicon/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="./favicon/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Pollinator"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Pollinator Meadow"><meta property="og:title" content="Pollinator Meadow">
 <meta property="og:description" content="Grow your meadow. Gather, build and bloom.">
 <meta property="og:url" content="https://dustycharlss.github.io/pollinator-meadow/">
-<meta property="og:image" content="https://dustycharlss.github.io/pollinator-meadow/ui/brand/og-image.png"><meta property="og:image:type" content="image/png">
-<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Pollinator Meadow: blocky animals in a sunny meadow">
+<meta property="og:image" content="https://dustycharlss.github.io/pollinator-meadow/og/og-image-1200x630-en.png"><meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="A blocky bee hovering over a pastel meadow at golden hour, with the title Pollinator Meadow">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Pollinator Meadow">
-<meta name="twitter:description" content="Grow your meadow. Gather, build and bloom."><meta name="twitter:image" content="https://dustycharlss.github.io/pollinator-meadow/ui/brand/og-image.png">
+<meta name="twitter:description" content="Grow your meadow. Gather, build and bloom."><meta name="twitter:image" content="https://dustycharlss.github.io/pollinator-meadow/og/og-image-1200x630-en.png">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#1c3b2a;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#fff;touch-action:none;overscroll-behavior:none}
@@ -371,13 +371,6 @@ img.ico{width:1.15em;height:1.15em;object-fit:contain;vertical-align:middle;poin
 .fd .fdBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none;z-index:0;display:block}
 .fd picture{position:absolute;inset:0;z-index:0}
 .fd [data-slot]{position:absolute;z-index:1;margin:0}
-#load.fd{display:block;background:#7fc6e8}
-#load .fdLogo{object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.3));left:13%;top:27%;width:74%;height:16%}
-#load .fdTrack{background:url(./ui/screens/progress-track.png) center/100% 100% no-repeat;left:17%;top:65%;width:67%;height:5%}
-#load .fdIn{position:absolute;left:3.333%;top:22.917%;width:93.333%;height:54.167%}
-#load #loadBar{display:block;position:relative;height:100%;width:5%;min-width:var(--fh,10px);box-sizing:border-box;border-style:solid;border-width:0 var(--cap,8px);border-image:url(./ui/screens/progress-fill.png) 0 26 fill / 0 var(--cap,8px) stretch;background:none;transition:width .25s}
-#load .fdCap{position:absolute;width:calc(var(--fh,16px)*2.46);height:calc(var(--fh,16px)*2.46);right:calc(var(--fh,16px)*-1.23 - var(--cap,8px));top:calc(var(--fh,16px)*-.73);background:url(./ui/screens/progress-cap-glow.png) center/contain no-repeat;pointer-events:none;mix-blend-mode:screen}
-#load #loadTxt{left:22%;top:71%;width:56%;height:4%;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;color:#fff3d8;text-shadow:0 2px 0 #3b2614,0 0 6px rgba(59,38,20,.8);font-size:15px;white-space:nowrap}
 #title.fd{padding:0;background:#7fc6e8;display:none}#title.fd.on{display:block}
 #title.fd .logo{display:flex;align-items:center;justify-content:center;text-shadow:none}
 #title.fd .logo small{display:none}
@@ -385,8 +378,8 @@ img.ico{width:1.15em;height:1.15em;object-fit:contain;vertical-align:middle;poin
 /* Arcade Play visible on fancy title (t135u+) */
 .fdBtn{border:0;padding:0;background:center/contain no-repeat;cursor:pointer;filter:drop-shadow(0 4px 6px rgba(59,38,20,.35));transition:transform .08s}
 .fdBtn:active,.fdBtn.dn{transform:translateY(2px)}
-#tChallenge{background-image:url(./ui/screens/btn-challenge-idle.png)}#tChallenge:active,#tChallenge.dn{background-image:url(./ui/screens/btn-challenge-pressed.png)}
-#tRelaxed{background-image:url(./ui/screens/btn-relaxed-idle.png)}#tRelaxed:active,#tRelaxed.dn{background-image:url(./ui/screens/btn-relaxed-pressed.png)}
+#tChallenge{background-image:url(./ui/screens/btn-challenge-idle.webp)}#tChallenge:active,#tChallenge.dn{background-image:url(./ui/screens/btn-challenge-pressed.webp)}
+#tRelaxed{background-image:url(./ui/screens/btn-relaxed-idle.webp)}#tRelaxed:active,#tRelaxed.dn{background-image:url(./ui/screens/btn-relaxed-pressed.webp)}
 .fdBtn:focus-visible{outline:3px solid #ffd23f;outline-offset:2px;border-radius:24px}
 #title.fd .menu{position:absolute;z-index:2;gap:7px;overflow:auto}
 #title.fd .menu .pill{background:rgba(59,38,20,.55)}
@@ -581,11 +574,11 @@ body.wheelOn #goalWrap,body.wheelOn #pipCard{opacity:.2}
 /* —— Valley · Crew · Neighbors overhaul (Squid P0 art) —— */
 #healMeter{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;display:none;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
 #healMeter .hmStack{position:relative;width:128px;height:144px}
-#healMeter #healStage{position:absolute;inset:0;background:url(./ui/valley/heal/heal-meter-stages-strip.png) 0 0/1408px 144px no-repeat;image-rendering:auto;filter:drop-shadow(0 2px 0 #3b2614)}
+#healMeter #healStage{position:absolute;inset:0;background:url(./ui/valley/heal/heal-meter-stages-strip.webp) 0 0/1408px 144px no-repeat;background-image:-webkit-image-set(url(./ui/valley/heal/heal-meter-stages-strip@1x.webp) 1x,url(./ui/valley/heal/heal-meter-stages-strip.webp) 2x);background-image:image-set(url(./ui/valley/heal/heal-meter-stages-strip@1x.webp) 1x,url(./ui/valley/heal/heal-meter-stages-strip.webp) 2x);image-rendering:auto;filter:drop-shadow(0 2px 0 #3b2614)}
 #healMeter .hmTrackImg,#healMeter .hmFillWrap{position:absolute;inset:0;pointer-events:none}
 #healMeter .hmTrackImg{width:128px;height:144px;display:none}
 #healMeter .hmFillWrap{display:none;overflow:hidden}
-#healMeter .hmPill{width:88px;height:32px;background:url(./ui/valley/heal/heal-meter-pill.png) center/contain no-repeat;display:flex;align-items:center;justify-content:center;color:#3b2614;font:700 14px system-ui;text-shadow:0 1px 0 #fff3d8}
+#healMeter .hmPill{width:88px;height:32px;background:url(./ui/valley/heal/heal-meter-pill.webp) center/contain no-repeat;display:flex;align-items:center;justify-content:center;color:#3b2614;font:700 14px system-ui;text-shadow:0 1px 0 #fff3d8}
 #healMeter.packTick .hmPill{filter:drop-shadow(0 0 4px #ffd23f)}
 /* t140: dock sits above the action cluster (#btns ~200px tall incl. Build) so it never covers Build/Jump */
 #crewDock{position:fixed;right:max(8px,env(safe-area-inset-right));bottom:calc(max(12px,env(safe-area-inset-bottom)) + 216px);max-height:calc(100vh - 340px);overflow-y:auto;overflow-x:hidden;padding:4px;z-index:7;display:none;flex-direction:column;gap:6px}
@@ -629,7 +622,7 @@ body.wheelOn #goalWrap,body.wheelOn #pipCard{opacity:.2}
 #contestUi .cvMove{border:2px solid #3b2614;border-radius:12px;background:#ffe08a;font:800 12px system-ui;padding:8px;cursor:pointer}
 #contestUi .cvHint{text-align:center;font-weight:700;margin:6px 0 0}
 #vTent{margin-top:4px;text-align:center}
-.packFx{position:fixed;width:96px;height:96px;z-index:45;pointer-events:none;background:url(./textures/fx/packup/fx-packup-petal-burst-strip.png) 0 0/960px 96px no-repeat;image-rendering:auto}
+.packFx{position:fixed;width:96px;height:96px;z-index:45;pointer-events:none;background:url(./textures/fx/packup/fx-packup-petal-burst-strip.webp) 0 0/960px 96px no-repeat;background-image:-webkit-image-set(url(./textures/fx/packup/fx-packup-petal-burst-strip@1x.webp) 1x,url(./textures/fx/packup/fx-packup-petal-burst-strip.webp) 2x);background-image:image-set(url(./textures/fx/packup/fx-packup-petal-burst-strip@1x.webp) 1x,url(./textures/fx/packup/fx-packup-petal-burst-strip.webp) 2x);image-rendering:auto}
 .packRefund{position:fixed;z-index:46;pointer-events:none;background:#fff3d8;border:2px solid #3b2614;border-radius:12px;padding:4px 8px;font:800 12px system-ui;color:#3b2614;animation:packPop .9s ease-out forwards;box-shadow:0 3px 0 #3b2614}
 @keyframes packPop{0%{transform:translate(-50%,0) scale(.6);opacity:0}20%{transform:translate(-50%,-12px) scale(1.05);opacity:1}100%{transform:translate(-50%,-40px) scale(1);opacity:0}}
 body.inValley #title{display:none}
@@ -810,11 +803,84 @@ body:not(.inRound) #bFlag{display:none!important}
 #settings .acc .note{font-size:12px;opacity:.75;margin:-6px 0 6px 32px}
 #pAccess{margin-top:8px}
 .a2soon{grid-column:1/-1;padding:10px 12px;border:2px dashed rgba(59,38,20,.4);border-radius:14px;font-weight:800;opacity:.8;text-align:center}
+
+/* polish2: Squid textless launch splash (app-icon/splash) + 9-slice progress bar; laid out over the cover art by main.js layoutSplash() */
+#load.ls{display:block;background:#ffe1b4;overflow:hidden}
+#load .lsBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+#load picture{position:absolute;inset:0}
+#load .lsTitle,#load .lsTxt{position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:nowrap;font-weight:800;color:#3b2614;text-align:center;line-height:1}
+#load .lsTitle{font-size:32px;color:#fff3d8;text-shadow:0 2px 0 #3b2614,0 0 8px rgba(59,38,20,.45);letter-spacing:.01em}
+#load .lsTxt{font-size:15px;font-weight:700}
+#load .lsBar{position:absolute;left:0;top:0;width:240px;height:28px;transform-origin:0 0}
+#load .lsBar i{position:absolute;display:block}
+#load .lsTrack{left:4px;top:4px;width:232px;height:18px;background:url(./splash/components/progress-track@2x.png);background-image:-webkit-image-set(url(./splash/components/progress-track.png) 1x,url(./splash/components/progress-track@2x.png) 2x,url(./splash/components/progress-track@3x.png) 3x);background-image:image-set(url(./splash/components/progress-track.png) 1x,url(./splash/components/progress-track@2x.png) 2x,url(./splash/components/progress-track@3x.png) 3x);background-size:100% 100%}
+#load .lsFill{left:4px;top:4px;height:18px;width:18px;min-width:18px;box-sizing:border-box;border:0 solid transparent;border-width:0 9px;border-image:url(./splash/components/progress-fill@3x.png) 0 27 fill / 0 9px stretch;transition:width .2s linear}
+#load .lsFrame{inset:0;background:url(./splash/components/progress-frame@2x.png);background-image:-webkit-image-set(url(./splash/components/progress-frame.png) 1x,url(./splash/components/progress-frame@2x.png) 2x,url(./splash/components/progress-frame@3x.png) 3x);background-image:image-set(url(./splash/components/progress-frame.png) 1x,url(./splash/components/progress-frame@2x.png) 2x,url(./splash/components/progress-frame@3x.png) 3x);background-size:100% 100%}
+
+/* polish2: Squid settings kit (assets-incoming/ui-settings) — Settings hub, Accessibility, Credits, parent gate, For parents */
+.ov.ks{background:rgba(59,38,20,.45);backdrop-filter:blur(3px);padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));z-index:11;color:#3b2614;font-size:calc(15px * var(--text,1))}
+#parentGate.ks,#confirm{z-index:12}
+.ks .ksWrap{display:flex;flex-direction:column;width:min(560px,100%);height:min(820px,100%);gap:6px}
+.ks .ksHead{position:relative;flex:none;min-height:64px;display:flex;align-items:center;justify-content:center;border-style:solid;border-width:3px;border-image:url(./ui/settings/chrome/header@2x.png) 40 56 40 56 fill / 20px 28px 20px 28px stretch;box-sizing:border-box}
+.ks .ksHead h2{margin:0;font-size:calc(19px * var(--text,1));font-weight:800;color:#3b2614;padding:0 44px;text-align:center}
+.ks .ksIco{position:absolute;left:-2px;top:50%;transform:translateY(-50%);width:56px;height:56px;border:0;padding:0;background:center/contain no-repeat;cursor:pointer}
+.ks .ksClose{background-image:url(./ui/settings/chrome/btn-close@2x.png)}.ks .ksBack{background-image:url(./ui/settings/chrome/btn-back@2x.png)}
+@media (orientation:landscape) and (max-height:500px){.ks .ksHead{min-height:52px}.ks .ksIco{width:50px;height:50px}.ks .ksWrap{gap:4px}}
+.ks .ksIco:active{transform:translateY(-46%)}
+.ks .ksPanel{flex:1;min-height:0;display:flex;border-style:solid;border-width:3px;border-image:url(./ui/settings/chrome/panel@2x.png) 56 56 56 56 fill / 28px 28px 28px 28px stretch;box-sizing:border-box;position:relative;padding:12px 8px 12px 12px}
+.ks .ksScroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;margin:0;padding:2px 10px 18px 4px;touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#ffd23f #eedcb8;-webkit-mask-image:linear-gradient(#000 calc(100% - 22px),transparent);mask-image:linear-gradient(#000 calc(100% - 22px),transparent)}
+.ks .ksScroll::-webkit-scrollbar{width:8px}.ks .ksScroll::-webkit-scrollbar-track{background:#eedcb8;border-radius:4px}.ks .ksScroll::-webkit-scrollbar-thumb{background:#ffd23f;border:1px solid #3b2614;border-radius:4px}
+.ks .ksSec{font-weight:800;color:#7a5530;font-size:calc(13.5px * var(--text,1));margin:10px 0 4px}
+.ks .ksLbl{font-weight:700;margin:8px 0 4px;font-size:calc(14px * var(--text,1))}
+.ks .ksNote,.ks small{display:block;font-size:calc(12.5px * var(--text,1));font-weight:500;opacity:.85;line-height:1.3;margin:4px 0 0}
+.ks .ksDiv{border:0;height:4px;background:url(./ui/settings/chrome/divider@2x.png) center/100% 100% no-repeat;margin:12px 0}
+.ks .ksCols{display:block}
+@media (orientation:landscape) and (min-width:700px){.ks .ksCols{display:grid;grid-template-columns:1fr 1fr;gap:18px}.ks#settings .ksWrap{width:min(860px,100%)}}
+.ks .ksI{flex:none;width:44px;height:44px;background:var(--i) center/contain no-repeat}
+.ks .ksSl{display:grid;grid-template-columns:44px 1fr auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;margin:2px 0 6px}
+.ks .ksSl .ksI{grid-row:1/3}.ks .ksSl .ksL{font-weight:800;font-size:calc(15px * var(--text,1))}
+.ks .ksSl .ksN{grid-row:1;grid-column:3;font-weight:700;font-size:calc(12px * var(--text,1));opacity:.75;min-width:2.2em;text-align:right}
+.ks .ksSl input[type=range]{grid-column:2/4;-webkit-appearance:none;appearance:none;width:100%;height:48px;margin:0;background:transparent;touch-action:none;--p:70%}
+.ks input[type=range]::-webkit-slider-runnable-track{height:16px;border-radius:8px;background:url(./ui/settings/controls/slider-fill@2x.png) left/var(--p) 100% no-repeat,url(./ui/settings/controls/slider-track@2x.png) center/100% 100% no-repeat,#d2b07a;background-clip:padding-box}
+.ks input[type=range]::-moz-range-track{height:16px;border-radius:8px;background:#d2b07a url(./ui/settings/controls/slider-track@2x.png) center/100% 100% no-repeat}
+.ks input[type=range]::-moz-range-progress{height:16px;border-radius:8px;background:url(./ui/settings/controls/slider-fill@2x.png) center/100% 100% no-repeat}
+.ks input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:48px;height:48px;margin-top:-16px;border:0;background:url(./ui/settings/controls/slider-thumb@2x.png) center/contain no-repeat}
+.ks input[type=range]::-moz-range-thumb{width:48px;height:48px;border:0;background:url(./ui/settings/controls/slider-thumb@2x.png) center/contain no-repeat}
+.ks input[type=range]:disabled::-webkit-slider-thumb{background-image:url(./ui/settings/controls/slider-thumb-disabled@2x.png)}
+.ks .ksMute,.ks .ksChk{display:flex;align-items:center;gap:10px;min-height:48px;font-weight:800;margin:6px 0;cursor:pointer}
+.ks .ksChk span{flex:1}
+.ks .ksMute input,.ks .ksChk input{-webkit-appearance:none;appearance:none;flex:none;width:48px;height:48px;margin:0;border:0;background:url(./ui/settings/controls/check-off@2x.png) center/contain no-repeat;cursor:pointer}
+.ks .ksChk input:checked{background-image:url(./ui/settings/controls/check-on@2x.png)}
+.ks .ksMute input{background-image:url(./ui/settings/controls/btn-mute-off@2x.png)}.ks .ksMute input:checked{background-image:url(./ui/settings/controls/btn-mute-on@2x.png)}
+.ks .lens,.ks .ksSeg{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:2px 0 6px}
+.ks .ksSeg{flex-wrap:nowrap}
+.ks .lens button,.ks .ksSeg button{min-height:48px;min-width:48px;flex:0 1 auto;padding:4px 16px 8px;font:inherit;font-weight:800;font-size:calc(13.5px * var(--text,1));color:#3b2614;background:none;border-style:solid;border-width:3px;border-image:url(./ui/settings/controls/segment-off@2x.png) 40 48 48 48 fill / 20px 24px 24px 24px stretch;box-sizing:border-box;line-height:1.1}
+.ks .ksSeg button{flex:1 1 0;padding:4px 6px 8px}
+.ks .lens button.on,.ks .ksSeg button.on{border-image-source:url(./ui/settings/controls/segment-on@2x.png)}
+.ks .ksRow{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;margin:6px 0;font:inherit;font-weight:800;color:#3b2614;text-align:left;background:none;border-style:solid;border-width:3px;border-image:url(./ui/settings/chrome/row@2x.png) 32 40 32 40 fill / 16px 20px 16px 20px stretch;box-sizing:border-box;padding:0;cursor:pointer}
+.ks .ksRow{padding:0 14px 0 16px}.ks .ksRow span{flex:1}.ks .ksRow .ksI{width:40px;height:40px}
+.ks .ksChev{flex:none;width:24px;height:24px;background:url(./ui/settings/chrome/chevron@2x.png) center/contain no-repeat}
+.ks .ksBtn{min-height:56px;min-width:88px;font:inherit;font-weight:800;color:#3b2614;background:none;border-style:solid;border-width:3px;border-image:url(./ui/settings/chrome/btn-secondary@2x.png) 40 56 48 56 fill / 20px 28px 24px 28px stretch;box-sizing:border-box;padding:2px 22px 6px;cursor:pointer}
+.ks .ksCoral{border-image-source:url(./ui/settings/chrome/btn-coral@2x.png);color:#fff3d8;text-shadow:0 1px 0 #3b2614}
+.ks .ksWide{display:block;width:100%;margin-top:14px}
+.ks .ksCard{width:min(340px,100%);border-style:solid;border-width:3px;border-image:url(./ui/settings/chrome/card@2x.png) 48 48 48 48 fill / 24px 24px 24px 24px stretch;box-sizing:border-box;padding:20px 18px 22px;text-align:center}
+.ks .ksCard h3{margin:0 0 6px;font-size:calc(18px * var(--text,1))}.ks .ksCard p{margin:0 0 12px;font-weight:700}
+.ks .ksAns{display:flex;gap:8px;justify-content:center}.ks .ksAns .ksBtn{flex:1;min-width:0;font-size:calc(18px * var(--text,1))}
+.ks .ksText p{margin:0 0 8px;line-height:1.4}
+.ks .crRow{display:flex;align-items:center;gap:8px;margin:6px 0;border-style:solid;border-width:3px;border-image:url(./ui/settings/chrome/credit-row@2x.png) 32 40 32 40 fill / 16px 20px 16px 20px stretch;box-sizing:border-box;min-height:80px;padding:8px 14px 8px 16px}
+.ks .crRow .crT{flex:1;min-width:0;line-height:1.25;padding:0 2px}
+.ks .crRow b{display:block;font-size:calc(14.5px * var(--text,1));overflow-wrap:anywhere}
+.ks .crRow .crA{display:block;font-size:calc(12.5px * var(--text,1));color:#7a5530;overflow-wrap:anywhere}
+.ks .crRow .crL{display:block;font-size:calc(12px * var(--text,1));font-weight:700}
+.ks .crRow .crL a{color:#3b2614}
+.ks .crSeal{flex:none;width:40px;height:40px;background:center/contain no-repeat}
+.ks .crSeal.by{background-image:url(./ui/settings/chips/licence-ccby@2x.png)}.ks .crSeal.c0{background-image:url(./ui/settings/chips/licence-cc0@2x.png)}
+.ks .crMore li{margin:3px 0;font-size:calc(12.5px * var(--text,1));overflow-wrap:anywhere}.ks .crMore a{color:#3b2614}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="load" class="fd"><picture><source media="(orientation:landscape)" srcset="./ui/screens/splash-bg-landscape.webp"><img class="fdBg" src="./ui/screens/splash-bg-portrait.webp" alt=""></picture><img class="fdLogo" data-slot="logo" src="./img/logo.png" alt="Pollinator Meadow"><div class="fdTrack" data-slot="progress-bar"><div class="fdIn"><i id="loadBar"><b class="fdCap"></b></i></div></div><div id="loadTxt" data-slot="loading-text">Planting flowers…</div></div>
+<div id="load" class="ls"><picture><source media="(orientation:landscape)" srcset="./splash/splash-landscape-844x390.webp 1x, ./splash/splash-landscape-844x390@2x.webp 2x, ./splash/splash-landscape-844x390@3x.webp 3x"><img class="lsBg" src="./splash/splash-portrait-390x844@2x.webp" srcset="./splash/splash-portrait-390x844.webp 1x, ./splash/splash-portrait-390x844@2x.webp 2x, ./splash/splash-portrait-390x844@3x.webp 3x" alt=""></picture><div class="lsTitle">Pollinator Meadow</div><div id="loadTxt" class="lsTxt">Planting flowers…</div><div class="lsBar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="lsTrack"></i><i id="loadBar" class="lsFill"></i><i class="lsFrame"></i></div></div>
 
 <div class="hud" id="tl">
   <div class="chip" id="spChip"><span class="em" id="spEm">🐝</span><span><span id="spName">Honeybee</span><span class="dd"> ▾</span><br><span style="font-weight:400;font-size:11px;opacity:.9" id="carryTxt">0 / 8 pollen</span></span></div>
@@ -865,14 +931,14 @@ body:not(.inRound) #bFlag{display:none!important}
   <div class="festBadge" style="font-size:28px;margin:8px 0">🏅 Festival Badge</div>
   <button class="big" id="festOk">Back to Valley</button>
 </div></div>
-<div id="healMeter" aria-label="Heal meter"><div class="hmStack"><div id="healStage"></div><img class="hmTrackImg" src="./ui/valley/heal/heal-meter-track.png" alt=""><div class="hmFillWrap" id="healFillWrap"><img src="./ui/valley/heal/heal-meter-fill.png" alt="" width="128" height="144"></div></div><div class="hmPill"><span id="healPct">0%</span></div></div>
+<div id="healMeter" aria-label="Heal meter"><div class="hmStack"><div id="healStage"></div><img class="hmTrackImg" src="./ui/valley/heal/heal-meter-track.webp" alt=""><div class="hmFillWrap" id="healFillWrap"><img src="./ui/valley/heal/heal-meter-fill.webp" alt="" width="128" height="144"></div></div><div class="hmPill"><span id="healPct">0%</span></div></div>
 <div class="ov" id="skinPick"><div class="panel"><h2>🎨 Pick your looks</h2><p class="spSub">Every animal in a row has the same powers — it's just a new look!</p><div id="spRows"></div><button class="big" id="spDone">✓ Done</button></div></div>
 <div id="crewDock" aria-label="Crew swap"></div>
 <button id="packBtn" type="button">📦 Pack Up</button>
 <button id="bHubMap" type="button" aria-label="Level menu">🗺️ Levels</button>
 <div id="hubTools"><div class="htRow"><button id="bHubCrew" type="button">⛺ Crew</button><button id="bHubSkins" type="button">🎨 Skins</button></div><div id="hubNote">▶ Play: no timer, swap animals any time · ⏱ Timed: race the clock for stars · progress always saves</div></div>
 
-<div id="title" class="on fd"><picture><source media="(orientation:landscape)" srcset="./ui/screens/title-bg-landscape.webp"><img class="fdBg" src="./ui/screens/title-bg-portrait.webp" alt=""></picture><div class="logo" data-slot="logo"><img id="logoImg" src="./img/logo.png" alt="Pollinator Meadow" onerror="this.remove();document.getElementById('logoTxt').hidden=false"><div id="logoTxt" hidden><span class="fl">🌼</span><h1>Pollinator Meadow</h1></div><small>Grow your meadow. Gather, build and bloom.</small></div>
+<div id="title" class="on fd"><picture><source media="(orientation:landscape)" srcset="./ui/screens/title-bg-landscape.webp"><img class="fdBg" src="./ui/screens/title-bg-portrait.webp" alt=""></picture><div class="logo" data-slot="logo"><img id="logoImg" src="./img/logo.webp" srcset="./img/logo@1x.webp 1x, ./img/logo.webp 2x" alt="Pollinator Meadow" onerror="this.remove();document.getElementById('logoTxt').hidden=false"><div id="logoTxt" hidden><span class="fl">🌼</span><h1>Pollinator Meadow</h1></div><small>Grow your meadow. Gather, build and bloom.</small></div>
 <button class="fdBtn" id="tChallenge" hidden style="display:none"></button><button class="fdBtn" id="tRelaxed" hidden style="display:none"></button>
 <div class="menu">
   <button class="big" id="tValley">▶ Play Adventure</button>
@@ -902,9 +968,9 @@ body:not(.inRound) #bFlag{display:none!important}
   <h2>How to play</h2>
   <p>🐾 Pollinator Meadow is a cozy puzzle adventure, like The Lost Vikings. Three friends — a bee, a raccoon and a bear — each have one special skill, and no one can finish a level alone. Nobody gets hurt: a wrong move just means trying again.</p>
   <div class="howCls">
-  <div class="hc" style="--cc:#4aa8ff"><img src="./ui/icons/class/class-tiny-scout.png" alt=""><div><b>🐝 Scout — Honeybee</b>: flies over gaps and deep water, slips through knotholes, rings high bells and lanterns. Too small to push heavy things.</div></div>
-  <div class="hc" style="--cc:#7dc85a"><img src="./ui/icons/class/class-medium-trickster.png" alt=""><div><b>🦝 Trickster — Raccoon</b>: pulls levers, climbs vines, digs tunnels, throws acorns at far targets and lays Plank Bridges. Only short hops.</div></div>
-  <div class="hc" style="--cc:#ff8a1f"><img src="./ui/icons/class/class-large-bruiser.png" alt=""><div><b>🐻 Bruiser — Black Bear</b>: shoves logs and boulders, smashes cracked walls, holds heavy plates, and gives friends a boost up to high ledges.</div></div>
+  <div class="hc" style="--cc:#4aa8ff"><img src="./ui/icons/class/class-tiny-scout.webp" alt=""><div><b>🐝 Scout — Honeybee</b>: flies over gaps and deep water, slips through knotholes, rings high bells and lanterns. Too small to push heavy things.</div></div>
+  <div class="hc" style="--cc:#7dc85a"><img src="./ui/icons/class/class-medium-trickster.webp" alt=""><div><b>🦝 Trickster — Raccoon</b>: pulls levers, climbs vines, digs tunnels, throws acorns at far targets and lays Plank Bridges. Only short hops.</div></div>
+  <div class="hc" style="--cc:#ff8a1f"><img src="./ui/icons/class/class-large-bruiser.webp" alt=""><div><b>🐻 Bruiser — Black Bear</b>: shoves logs and boulders, smashes cracked walls, holds heavy plates, and gives friends a boost up to high ledges.</div></div>
   <p>🔁 <b>Swap</b> by tapping a portrait (or 1/2/3). Friends you swap away from <b>stay put</b> — leave one on a pressure plate or lever and it stays held while another goes through. Look for the class badge over each puzzle, then tap <b>🤝 Interact</b> next to it.</p></div>
   <p>🏁 A level is done when <b>all three friends reach the exit</b>. 🌸 <b>Petals</b> are your score, and each level hides one secret <b>⭐ Starseed</b>.</p>
   <p style="font-size:12.5px;opacity:.75"><b>Touch:</b> drag on the left to move · Jump (tap twice for a double jump, hold to flutter) · action button · drag on the right to turn the camera.<br><b>Keys:</b> WASD/arrows · Space jump · E action · Q/R camera · Tab / 1–3 swap friend · J journal · Esc pause.</p>
@@ -922,32 +988,59 @@ body:not(.inRound) #bFlag{display:none!important}
   <div class="tp" id="tpInv"></div>
   <button class="big" id="hubResume" style="margin-top:10px">▶ Back to the meadow</button>
 </div></div>
-<div class="ov" id="settings"><div class="panel">
-  <h2>⚙ Settings</h2>
+<div class="ov ks" id="settings"><div class="ksWrap" role="dialog" aria-label="Settings">
+  <div class="ksHead"><button class="ksIco ksClose" id="sClose" type="button" aria-label="Close settings"></button><h2>Settings</h2></div>
+  <div class="ksPanel"><div class="ksScroll">
+  <div class="ksCols"><div class="ksCol">
+  <div class="ksSec">Sound</div>
   <div class="mix" id="mix">
-    <label>🔊 Master <input type="range" id="sVol" data-k="master" min="0" max="100" value="70"><span id="sVolN">70</span></label>
-    <label>🎵 Music <input type="range" data-k="music" min="0" max="100" value="100"><span>100</span></label>
-    <label>✨ Gameplay <input type="range" data-k="sfx" min="0" max="100" value="100"><span>100</span></label>
-    <label>🐦 Ambience <input type="range" data-k="amb" min="0" max="100" value="100"><span>100</span></label>
-    <label>🌧️ Rain <input type="range" data-k="rain" min="0" max="100" value="50"><span>50</span></label>
+    <label class="ksSl"><i class="ksI" style="--i:url(./ui/settings/icons/master@2x.png)"></i><span class="ksL">Master</span><input type="range" id="sVol" data-k="master" min="0" max="100" value="70" aria-label="Master volume"><span class="ksN" id="sVolN">70</span></label>
+    <label class="ksSl"><i class="ksI" style="--i:url(./ui/settings/icons/music@2x.png)"></i><span class="ksL">Music</span><input type="range" data-k="music" min="0" max="100" value="100" aria-label="Music volume"><span class="ksN">100</span></label>
+    <label class="ksSl"><i class="ksI" style="--i:url(./ui/settings/icons/sfx@2x.png)"></i><span class="ksL">Gameplay</span><input type="range" data-k="sfx" min="0" max="100" value="100" aria-label="Gameplay volume"><span class="ksN">100</span></label>
+    <label class="ksSl"><i class="ksI" style="--i:url(./ui/settings/icons/ambience@2x.png)"></i><span class="ksL">Ambience</span><input type="range" data-k="amb" min="0" max="100" value="100" aria-label="Ambience volume"><span class="ksN">100</span></label>
+    <label class="ksSl"><i class="ksI" style="--i:url(./ui/settings/icons/rain@2x.png)"></i><span class="ksL">Rain</span><input type="range" data-k="rain" min="0" max="100" value="50" aria-label="Rain volume"><span class="ksN">50</span></label>
   </div>
-  <label><input type="checkbox" id="sMute"> Mute all sound</label>
-  <div style="font-size:13px;margin-top:10px">Home pointer</div><div class="lens" id="indOpt" style="justify-content:flex-start;margin-top:6px"><button data-v="ring">◯ Ring</button><button data-v="arrow">➤ Arrow</button></div>
-  <div style="font-size:13px;margin-top:10px">Round length (next round)</div><div class="lens" id="lens2" style="justify-content:flex-start;margin-top:6px"></div>
-  <div class="acc" id="sAccess"><h3>🧸 Kids &amp; access</h3>
-    <div style="font-size:13px">🔠 Text size</div><div class="lens" id="sText" style="justify-content:flex-start;margin-top:6px;flex-wrap:wrap"><button data-v="s">Small</button><button data-v="m">Medium</button><button data-v="l">Large</button><button data-v="xl">Extra large</button></div>
-    <label><input type="checkbox" id="sReduce"> Reduce motion</label><div class="note" id="sReduceH">Uses your device setting until you change it.</div>
-    <label><input type="checkbox" id="sEasy"> 🌱 Easy mode</label><div class="note">Slower sneak-critters, more time on timers. Stars still count, except the time star.</div>
-    <label><input type="checkbox" id="sCB"> 🎨 Color-blind class colors and shapes</label><div class="note">Class shapes (◯ Bee · ◇ Raccoon · ⬡ Bear) always show; this swaps the glow colors too.</div>
-  </div>
-  <button class="big sec danger" id="sWipe" style="margin-top:18px">🗑 Full reset save…</button>
-  <p style="font-size:12px;opacity:.7">Wipes your valley progress, rescued friends, gear, outfits, journal, best stars and settings.</p>
-  <button class="big" id="sClose">Done</button>
+  <label class="ksMute"><input type="checkbox" id="sMute"><span>Mute all</span></label>
+  </div><div class="ksCol">
+  <div class="ksSec">Play</div>
+  <div class="ksLbl">Home pointer</div><div class="lens" id="indOpt"><button data-v="ring">◯ Ring</button><button data-v="arrow">➤ Arrow</button></div>
+  <div class="ksLbl">Round length (next round)</div><div class="lens" id="lens2"></div>
+  <hr class="ksDiv">
+  <button class="ksRow" id="sAccRow" type="button"><i class="ksI" style="--i:url(./ui/settings/icons/access@2x.png)"></i><span>Accessibility</span><i class="ksChev"></i></button>
+  <button class="ksRow" id="sCredRow" type="button"><i class="ksI" style="--i:url(./ui/settings/icons/credits@2x.png)"></i><span>Credits</span><i class="ksChev"></i></button>
+  <button class="ksRow" id="sParRow" type="button"><i class="ksI" style="--i:url(./ui/settings/icons/parents@2x.png)"></i><span>For parents</span><i class="ksChev"></i></button>
+  <button class="ksBtn ksCoral ksWide" id="sWipe" type="button">Full reset save…</button>
+  <p class="ksNote">Asks a grown-up first. Erases adventure progress, friends, gear, outfits, stars and settings on this device.</p>
+  </div></div>
+  </div></div>
+</div></div>
+<div class="ov ks" id="access"><div class="ksWrap" role="dialog" aria-label="Accessibility">
+  <div class="ksHead"><button class="ksIco ksBack" id="accBack" type="button" aria-label="Back to Settings"></button><h2>Accessibility</h2></div>
+  <div class="ksPanel"><div class="ksScroll" id="sAccess">
+    <div class="ksSec">Text size</div><div class="ksSeg" id="sText"><button data-v="s">Small</button><button data-v="m">Medium</button><button data-v="l">Large</button><button data-v="xl">Extra large</button></div>
+    <label class="ksChk"><input type="checkbox" id="sCB"><span>Color-blind class colors and shapes<small>Class shapes (◯ Bee · ◇ Raccoon · ⬡ Bear) always show; this swaps the glow colors too.</small></span></label>
+    <label class="ksChk"><input type="checkbox" id="sReduce"><span>Reduce motion<small id="sReduceH">Uses your device setting until you change it.</small></span></label>
+    <label class="ksChk"><input type="checkbox" id="sEasy"><span>Easy mode<small>Slower sneak-critters, more time on timers. Stars still count, except the time star.</small></span></label>
+  </div></div>
+</div></div>
+<div class="ov ks" id="parentGate"><div class="ksCard" role="dialog" aria-label="A quick check">
+  <h3>A quick check</h3><p>Which of these is 8 + 5?</p>
+  <div class="ksAns"><button class="ksBtn" type="button" data-a="11">11</button><button class="ksBtn" type="button" data-a="13">13</button><button class="ksBtn" type="button" data-a="15">15</button></div>
+</div></div>
+<div class="ov ks" id="parentInfo"><div class="ksWrap" role="dialog" aria-label="For parents">
+  <div class="ksHead"><button class="ksIco ksBack" id="parBack" type="button" aria-label="Back to Settings"></button><h2>For parents</h2></div>
+  <div class="ksPanel"><div class="ksScroll ksText">
+    <div class="ksSec">What it is</div><p>Pollinator Meadow is a three-animal puzzle adventure (Bee the Scout, Raccoon the Trickster, Bear the Bruiser). Kids swap friends, sneak past sleepy critters, and bring lost babies home. A good fit for about ages 8–12; younger kids can play with a grown-up.</p>
+    <div class="ksSec">No ads, no chat, no real-money purchases</div><p>The game has no ads, no chat or messaging, and nothing to buy with real money. The Costume Closet uses in-game Petals only.</p>
+    <div class="ksSec">What's saved</div><p>Everything stays on this device (browser storage). There is no account. Saved: adventure progress, settings, arcade rounds and best scores, found gear, chosen looks, stars, and the graphics quality level.</p>
+    <div class="ksSec">How to reset</div><p>Use <b>Full reset save…</b> at the bottom of Settings. It asks this same quick check, then clears all of the above.</p>
+    <div class="ksSec">How long it takes</div><p>Most levels take about 5–8 minutes at a kid's pace. Trailhead Trials and the finales (Festival Glade, Starheart Summit) can run about 10–15 minutes. (Estimates, not stopwatch times.)</p>
+  </div></div>
 </div></div>
 <div class="ov" id="confirm"><div class="panel" style="max-width:360px"><h2 id="cfT">Are you sure?</h2><p id="cfP"></p><div class="row2"><button class="big sec" id="cfNo">Cancel</button><button class="big" id="cfYes">Yes</button></div></div></div>
 <div class="ov fd" id="results"><picture><source media="(orientation:landscape)" srcset="./ui/screens/results-bg-landscape.webp"><img class="fdBg" src="./ui/screens/results-bg-portrait.webp" alt=""></picture>
   <div class="rsHead" data-slot="header"><h2>🌼 Round complete!</h2><div class="nb" id="rsLead"></div></div>
-  <img class="rk" data-slot="rank-1" src="./ui/screens/rank-1.png" alt="1st"><img class="rk" data-slot="rank-2" src="./ui/screens/rank-2.png" alt="2nd"><img class="rk" data-slot="rank-3" src="./ui/screens/rank-3.png" alt="3rd"><img class="rk" data-slot="rank-4" src="./ui/screens/rank-4.png" alt="4th">
+  <img class="rk" data-slot="rank-1" src="./ui/screens/rank-1.webp" alt="1st"><img class="rk" data-slot="rank-2" src="./ui/screens/rank-2.webp" alt="2nd"><img class="rk" data-slot="rank-3" src="./ui/screens/rank-3.webp" alt="3rd"><img class="rk" data-slot="rank-4" src="./ui/screens/rank-4.webp" alt="4th">
   <div class="rsMe" id="rsMe"></div>
   <div class="panel rsCard" id="rsCard"><div class="sc" id="rsScore">0</div><div class="nb" id="rsBest"></div><div class="brk" id="rsBrk"></div><div class="st" id="rsStats"></div></div>
   <div class="rsBtns" data-slot="panel"><button class="big" id="rsAgain">▶ Play again</button><button class="big sec" id="rsTitle">⌂ Title</button></div>
@@ -966,10 +1059,9 @@ body:not(.inRound) #bFlag{display:none!important}
   <button class="big sec" id="menuClose">Back to the meadow</button>
 </div></div>
 
-<div class="ov" id="credits"><div class="panel">
-  <h2>Credits</h2><p>Made with Three.js. Models, textures, sky and music are free assets; thank you to their creators.</p>
-  <div class="cr" id="crBody"></div>
-  <button class="big sec" id="crClose">Close</button>
+<div class="ov ks" id="credits"><div class="ksWrap" role="dialog" aria-label="Credits">
+  <div class="ksHead"><button class="ksIco ksBack" id="crClose" type="button" aria-label="Back"></button><h2>Credits</h2></div>
+  <div class="ksPanel"><div class="ksScroll" id="crBody"><p>Thanks to everyone whose work is in this game.</p></div></div>
 </div></div>
 <script type="module" src="/src/main.js"></script>
 </body>

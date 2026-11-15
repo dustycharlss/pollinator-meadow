@@ -146,10 +146,10 @@ export async function createRivals(scene, ctx) {
 
   function showToast(kind, text, sp) {
     ensureUi();
-    const img = kind === 'dismantled' ? 'toast-dismantled.png' : 'toast-claimed.png';
-    const badge = kind === 'dismantled' ? 'toast-badge-dismantled.png' : 'toast-badge-claimed.png';
+    const img = kind === 'dismantled' ? 'toast-dismantled.webp' : 'toast-claimed.webp';
+    const badge = kind === 'dismantled' ? 'toast-badge-dismantled.webp' : 'toast-badge-claimed.webp';
     R.toastEl.style.display = 'flex';
-    R.toastEl.innerHTML = `<img src="./ui/rivals/toasts/${img}" height="56" alt=""><img src="./ui/rivals/badges/rival-badge-${sp}.png" width="40" height="40" alt="" style="margin-left:-18px;margin-top:-8px"><span style="margin-left:6px;padding:8px 14px;background:#fff3d8;border:3px solid #3b2614;border-radius:16px;font:800 14px system-ui;color:#3b2614">${text}</span>`;
+    R.toastEl.innerHTML = `<img src="./ui/rivals/toasts/${img}" height="56" alt=""><img src="./ui/rivals/badges/rival-badge-${sp}.webp" width="40" height="40" alt="" style="margin-left:-18px;margin-top:-8px"><span style="margin-left:6px;padding:8px 14px;background:#fff3d8;border:3px solid #3b2614;border-radius:16px;font:800 14px system-ui;color:#3b2614">${text}</span>`;
     clearTimeout(R.toastT); R.toastT = setTimeout(() => { R.toastEl.style.display = 'none'; }, 2800);
   }
 

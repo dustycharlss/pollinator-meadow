@@ -1,3 +1,4 @@
+import { at1x } from './tex.js';
 // Squid P0 + Beans mapping (overhaul-123 §9). Paths under public/ui + textures/fx.
 const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || './';
 const U = (...p) => BASE + p.join('/');
@@ -5,7 +6,7 @@ const U = (...p) => BASE + p.join('/');
 /** rect = [x,y,w,h] art px; rect_norm = [x,y,w,h] / map size for letterboxed hit-test */
 export const MAP = {
   portrait: {
-    file: U('ui/valley/valley-map-portrait.png'), w: 1080, h: 1920,
+    file: at1x(U('ui/valley/valley-map-portrait.webp')), w: 1080, h: 1920,
     slots: [
       { patch: 'training_garden', rect: [648, 1652, 216, 216], rect_norm: [0.6, 0.8604, 0.2, 0.1125] },
       { patch: 'sunny_hollow', rect: [216, 1562, 216, 216], rect_norm: [0.2, 0.8135, 0.2, 0.1125] },
@@ -37,7 +38,7 @@ export const MAP = {
 export function thumbUrl(patchId, state) {
   // thumbs 256 art → ~128 CSS; in_progress → wilted + heal %
   const st = state === 'in_progress' ? 'wilted' : (state === 'blooming' || state === 'wild' ? state : 'wilted');
-  return U('ui/valley/thumbs', `${patchId}-${st}.png`);
+  return U('ui/valley/thumbs', `${patchId}-${st}.webp`);
 }
 
 export function isLandscape() {
@@ -157,10 +158,10 @@ export function playPackupBurst(sx, sy, cbs = {}) {
 }
 
 export const STAMPS = {
-  dance_off: U('ui/contest/stamp-dance_off.png'),
-  pollen_relay: U('ui/contest/stamp-pollen_relay.png'),
-  decorating: U('ui/contest/stamp-decorating.png'),
-  good_game: U('ui/contest/stamp-good_game.png'),
+  dance_off: U('ui/contest/stamp-dance_off.webp'),
+  pollen_relay: U('ui/contest/stamp-pollen_relay.webp'),
+  decorating: U('ui/contest/stamp-decorating.webp'),
+  good_game: U('ui/contest/stamp-good_game.webp'),
 };
 
 export function stampUrl(id) { return STAMPS[id] || STAMPS.good_game; }
@@ -168,7 +169,7 @@ export function stampUrl(id) { return STAMPS[id] || STAMPS.good_game; }
 /** Invite ring: 8 frames @ 10 fps, display 192 CSS; accept within trigger_radius_uv of center. */
 export const INVITE_RING = {
   strip: U('ui/contest/contest-invite-ring-strip.png'),
-  still: U('ui/contest/contest-invite-ring-still.png'),
+  still: U('ui/contest/contest-invite-ring-still.webp'),
   frameW: 192,
   frames: 8,
   fps: 10,

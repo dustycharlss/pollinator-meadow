@@ -6,7 +6,7 @@ export const CLASS_OF = {
   robin: 'trickster', raccoon: 'trickster', opossum: 'trickster', bat: 'trickster',
   bear: 'bruiser',
 };
-const ICON = k => import.meta.env.BASE_URL + 'ui/icons/class/' + k + '.png';
+const ICON = k => import.meta.env.BASE_URL + 'ui/icons/class/' + k + '.webp';
 export const CLASSES = {
   scout: {
     id: 'scout', size: 'tiny', name: 'Scout', short: 'Wing', color: '#4aa8ff', em: '🪽',

@@ -53,6 +53,7 @@ import { createRound, LENGTHS, CATS, loadSettings, saveSettings, bests, setBest,
 import { createAdmin } from './admin.js';
 import { ARCH, priceFor, barsHtml, SIZE_NAME, statBars } from './species.js';
 import { createTech, TREES, TIER, nodeOf } from './tech.js';
+import { mapWhenReady } from './tex.js';
 
 const $ = id => document.getElementById(id);
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && innerWidth < 1100);
@@ -84,12 +85,23 @@ let noSave = false;
 const savePos = () => { for (const id of SPECIES_ORDER) { const q = P[id]; if (q && isFinite(q.x + q.y + q.z)) save.pos[id] = [+q.x.toFixed(2), +q.y.toFixed(2), +q.z.toFixed(2), +q.yaw.toFixed(2)]; } };
 const persist = () => { if (noSave) return; savePos(); save.clock = clock.serialize(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
 
-// front door (Squid Job 14): splash slots + bar sizing, kept in step with resize / rotation
-fdTrack(document.getElementById('load'), 'splash', () => {
-  const L = document.getElementById('load'), r = L.querySelector('.fdIn').getBoundingClientRect(), t = fdSlot('splash', 'loading-text');
-  L.style.setProperty('--fh', r.height + 'px'); L.style.setProperty('--cap', r.height / 2 + 'px'); if (t) document.getElementById('loadTxt').style.fontSize = Math.max(11, Math.min(22, t.h * 0.62)) + 'px';
-});
-function setLoad(p, txt) { $('loadBar').style.width = (5 + p * 95) + '%'; if (txt) $('loadTxt').textContent = txt; }
+// polish2: Squid textless launch splash — title, "Loading…" text and the 9-slice bar placed over the cover art (README layout, CSS px of the 390x844 / 844x390 art)
+const LS = { portrait: { w: 390, h: 844, title: [195, 420, 32], txt: [195, 640], bar: [75, 656] }, landscape: { w: 844, h: 390, title: [422, 222, 30], txt: [422, 276], bar: [302, 292] } };
+function layoutSplash() {
+  const L = document.getElementById('load'); if (!L) return;
+  const W = innerWidth, H = innerHeight, m = W > H ? LS.landscape : LS.portrait, s = Math.max(W / m.w, H / m.h), ox = (W - m.w * s) / 2, oy = (H - m.h * s) / 2;
+  const at = (el, x, y) => { el.style.left = (ox + x * s) + 'px'; el.style.top = (oy + y * s) + 'px'; };
+  const t = L.querySelector('.lsTitle'), tx = L.querySelector('.lsTxt'), b = L.querySelector('.lsBar');
+  at(t, m.title[0], m.title[1]); t.style.fontSize = (m.title[2] * s) + 'px'; at(tx, m.txt[0], m.txt[1]); tx.style.fontSize = (15 * s) + 'px';
+  at(b, m.bar[0], m.bar[1]); b.style.transform = `scale(${s})`;
+}
+layoutSplash(); addEventListener('resize', layoutSplash);
+// real load progress: each boot stage owns a slice of the bar; inside a slice, the bar follows three's loading manager (models, textures, HDR)
+let ldP = 0, ldStage = 0, ldNext = 0.05;
+const ldShow = p => { ldP = Math.max(ldP, Math.min(1, p)); const b = $('loadBar'); if (!b) return; b.style.width = (18 + ldP * 214) + 'px'; b.parentNode.setAttribute('aria-valuenow', Math.round(ldP * 100)); };
+const LD_STAGES = [0, 0.05, 0.25, 0.3, 0.7, 0.85, 1];
+THREE.DefaultLoadingManager.onProgress = (url, done, total) => { if (total > 0) ldShow(ldStage + (ldNext - ldStage) * 0.9 * done / total); };
+function setLoad(p, txt) { ldStage = Math.max(ldStage, p); ldNext = LD_STAGES.find(v => v > ldStage + 1e-6) ?? 1; ldShow(p); if (txt) $('loadTxt').textContent = txt; }
 let shopBase = 0, shopT = 0, gearFx, shopOpen = false, shopPv = [0, 0, 0], shopSel = 0, world, riders, nests, ambient, groundAmb, stars, moon, shadow, fx, coop, meadow; const shadows = {}, marks = {};
 const state = {};
 const NEEDED = ['bee', 'bumblebee', 'butterflyB', 'hummingbird', 'moth', 'bat', 'beehive', 'honeycomb', 'twig', 'acorn', 'strawberry', 'raccoonQ', 'opossum', 'bearB', 'robinJ'];
@@ -268,10 +280,18 @@ $('bSwap').addEventListener('pointerdown', e => { e.preventDefault(); if (playin
 $('bSwap').oncontextmenu = e => e.preventDefault();
 $('spChip').onclick = () => swapOK() ? openMenu() : openHub('animals'); $('menuClose').onclick = closeMenu;
 $('bNight').onclick = () => setNight(!curNight);
+const escH = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 async function showCredits() {
-  const body = $('crBody'); if (!body.dataset.done) { try { const c = await (await fetch(import.meta.env.BASE_URL + 'credits.json')).json();
-    body.innerHTML = `<p><b>CC-BY 4.0 / attribution required</b></p><ul>${c.attribution.map(e => `<li>${e.credit}${e.url ? ` — <a href="${e.url}" target="_blank" rel="noopener">source</a>` : ''}<span class="tag">${e.license}</span>${e.note ? `<br><i>${e.note}</i>` : ''}</li>`).join('')}</ul><p><b>CC0 / public domain</b></p><ul>${c.cc0.map(e => `<li>${e}</li>`).join('')}</ul><p style="opacity:.7">${c.footer}</p>`; body.dataset.done = 1; } catch (e) { body.textContent = 'Credits unavailable.'; } }
-  openOv('credits');
+  // polish2: kid-friendly scrolling Credits (Squid kit) — 69 required CC-BY entries first (CREDITS-ALL.md order), then CC0, then the game's earlier credits.json
+  const body = $('crBody'); if (!body.dataset.done) { try {
+    const B = import.meta.env.BASE_URL, [L, c] = await Promise.all([fetch(B + 'credits-list.json').then(r => r.json()), fetch(B + 'credits.json').then(r => r.json()).catch(() => null)]);
+    const row = e => `<div class="crRow"><span class="crT"><b>${escH(e.title)}</b><span class="crA">${escH(e.author)}</span><span class="crL">${e.licenseUrl ? `<a href="${escH(e.licenseUrl)}" target="_blank" rel="noopener">${escH(e.license)}</a>` : escH(e.license)}${e.sourceUrl ? ` · <a href="${escH(e.sourceUrl)}" target="_blank" rel="noopener">source</a>` : ''}</span></span><i class="crSeal ${e.requiredAttribution ? 'by' : 'c0'}" role="img" aria-label="${e.requiredAttribution ? 'CC-BY' : 'CC0'}"></i></div>`;
+    const req = L.entries.filter(e => e.requiredAttribution), cc0 = L.entries.filter(e => !e.requiredAttribution);
+    body.innerHTML = `<p>Thanks to everyone whose work is in this game.</p><div class="ksSec">Required credits (CC-BY) · ${req.length}</div>${req.map(row).join('')}<div class="ksSec">Free to use (CC0) · ${cc0.length}</div>${cc0.map(row).join('')}`
+      + (c ? `<div class="ksSec">More thanks · models, sounds and textures from earlier updates</div><ul class="crMore">${c.attribution.map(e => `<li>${escH(e.credit)}${e.url ? ` — <a href="${escH(e.url)}" target="_blank" rel="noopener">source</a>` : ''} <b>${escH(e.license)}</b></li>`).join('')}${c.cc0.map(e => `<li>${escH(e)}</li>`).join('')}</ul><p class="ksNote">${escH(c.footer)}</p>` : '')
+      + `<p class="ksNote">Made with Three.js.</p>`;
+    body.dataset.done = 1; } catch (e) { body.textContent = 'Credits unavailable.'; } }
+  body.scrollTop = 0; openOv('credits');
 }
 $('bInfo').onclick = () => showCredits(); $('startCredits').onclick = showCredits;
 $('crClose').onclick = () => closeOv('credits');
@@ -287,8 +307,8 @@ function swapNext(d = 1) {
 function buildFx() {
   const N = 120, g = new THREE.BufferGeometry(); const pos = new Float32Array(N * 3).fill(-9999), vel = new Float32Array(N * 3), life = new Float32Array(N);
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e5);
-  const tex = new THREE.TextureLoader().load(import.meta.env.BASE_URL + 'img/star.png');
-  const m = new THREE.PointsMaterial({ map: tex, size: 1.6, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, color: 0xffd23f }); const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts);
+  const tex = null; // polish2: shared KTX2 star (WebP fallback) set via mapWhenReady
+  const m = new THREE.PointsMaterial({ map: tex, size: 1.6, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, color: 0xffd23f }); mapWhenReady(m, 'star'); const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts);
   let head = 0;
   return { m, burst(x, y, z, n = 14, spd = 5) { if (reduceOn()) n = Math.min(n, 2); for (let i = 0; i < n; i++) { const k = head++ % N; pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z; const a = Math.random() * 6.28, b = Math.random() * 2 - 0.5; vel[k * 3] = Math.cos(a) * spd * (0.4 + Math.random()); vel[k * 3 + 1] = b * spd; vel[k * 3 + 2] = Math.sin(a) * spd * (0.4 + Math.random()); life[k] = 0.8 + Math.random() * 0.5; } },
     update(dt) { let any = false; for (let k = 0; k < N; k++) { if (life[k] > 0) { life[k] -= dt; any = true; pos[k * 3] += vel[k * 3] * dt; pos[k * 3 + 1] += vel[k * 3 + 1] * dt; pos[k * 3 + 2] += vel[k * 3 + 2] * dt; vel[k * 3 + 1] -= 2 * dt; if (life[k] <= 0) pos[k * 3 + 1] = -9999; } } if (any) g.attributes.position.needsUpdate = true; } };
@@ -430,7 +450,7 @@ $('jClose').onclick = closeJournal; $('jPrev').onclick = () => { jPages[jTab] = 
 input.hooks.journal = () => playing && !shopOpen && ($('journal').classList.contains('on') ? closeJournal() : openJournal());
 input.hooks.esc = () => {
   const on = id => $(id).classList.contains('on');
-  if (shopOpen) closeShop(); else if (on('confirm')) closeOv('confirm'); else if (on('journal')) closeJournal(); else if (on('settings')) closeOv('settings'); else if (on('how')) closeOv('how'); else if (on('credits')) closeOv('credits'); else if (on('menu')) closeMenu();
+  if (shopOpen) closeShop(); else if (on('confirm')) closeOv('confirm'); else if (on('parentGate')) closeOv('parentGate'); else if (on('credits')) closeOv('credits'); else if (on('access')) closeOv('access'); else if (on('parentInfo')) closeOv('parentInfo'); else if (on('journal')) closeJournal(); else if (on('settings')) closeOv('settings'); else if (on('how')) closeOv('how'); else if (on('credits')) closeOv('credits'); else if (on('menu')) closeMenu();
   else if (on('results')) return; else if (build && build.active) setBuild(false); else if (on('pause')) closeOv('pause'); else if (playing && !paused) openPause();
 };
 function updateTip(dt, t) {
@@ -891,12 +911,12 @@ function onSeasonChange() {
 const adm = { allowSwap: false, speed: 1, game: 1, fly: false, stam: false, grow: 1, respawn: 1, showFps: false, helperSpeed: 1, playerEdge: 0.2, rivalReact: true };
 let round, terr, build, admin, simT = 1, dirty = false;
 const fmtT = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-const BLOCK = ['skinPick', 'pause', 'results', 'settings', 'how', 'confirm', 'credits', 'journal', 'menu'];
+const BLOCK = ['skinPick', 'pause', 'results', 'settings', 'access', 'parentGate', 'parentInfo', 'how', 'confirm', 'credits', 'journal', 'menu'];
 function syncPause() { const b = BLOCK.some(id => $(id).classList.contains('on')) || shopOpen; paused = !playing || b; input.active = playing && !b && !rts.on && !techOpen; }
 const openOv = id => { $(id).classList.add('on'); syncPause(); };
 const closeOv = id => { $(id).classList.remove('on'); syncPause(); };
 let cfYes = null;
-function confirmDlg(title, text, yes, fn) { $('cfT').textContent = title; $('cfP').textContent = text; $('cfYes').textContent = yes; cfYes = fn; openOv('confirm'); }
+function confirmDlg(title, text, yes, fn, no = 'Cancel') { $('cfT').textContent = title; $('cfP').textContent = text; $('cfYes').textContent = yes; $('cfNo').textContent = no; cfYes = fn; openOv('confirm'); }
 $('cfNo').onclick = () => closeOv('confirm'); $('cfYes').onclick = () => { const f = cfYes; cfYes = null; closeOv('confirm'); f && f(); };
 
 // round length chips (title + settings)
@@ -1338,15 +1358,23 @@ $('sClose').onclick = () => closeOv('settings');
 const MIX_DEF = { music: 1, sfx: 1, amb: 1, rain: 0.5 };
 function mixGet(k) { return k === 'master' ? settings.vol : (settings.mix && settings.mix[k] != null ? settings.mix[k] : MIX_DEF[k]); }
 function applyMix() { audio.set('master', settings.vol); for (const k in MIX_DEF) audio.set(k, mixGet(k)); }
-function syncMixUi() { for (const el of document.querySelectorAll('#mix input[data-k]')) { el.value = Math.round(mixGet(el.dataset.k) * 100); el.nextElementSibling.textContent = el.value; } }
+const paintRange = el => el.style.setProperty('--p', el.value + '%'); // kit slider: honey fill width over the toasted-sand track
+function syncMixUi() { for (const el of document.querySelectorAll('#mix input[data-k]')) { el.value = Math.round(mixGet(el.dataset.k) * 100); el.nextElementSibling.textContent = el.value; paintRange(el); } }
 let mixPrevT = 0;
-$('mix').addEventListener('input', e => { const el = e.target.closest('input[data-k]'); if (!el) return; const k = el.dataset.k, v = +el.value / 100; el.nextElementSibling.textContent = el.value;
+$('mix').addEventListener('input', e => { const el = e.target.closest('input[data-k]'); if (!el) return; const k = el.dataset.k, v = +el.value / 100; el.nextElementSibling.textContent = el.value; paintRange(el);
   if (k === 'master') settings.vol = v; else { settings.mix = Object.assign({}, MIX_DEF, settings.mix); settings.mix[k] = v; }
   audio.set(k, v); saveSettings(settings);
   const now = performance.now(); if (now - mixPrevT > 180 && (k === 'sfx' || k === 'master')) { mixPrevT = now; audio.blip(3); } });
 $('sMute').onchange = () => { settings.mute = $('sMute').checked; audio.setMute(settings.mute); saveSettings(settings); };
-function wipeSave() { confirmDlg('Full reset save?', 'This erases your valley progress, rescued friends, gear, outfits, journal, best stars, saved round and settings, then reloads the game.', 'Erase everything', () => { noSave = true; wipeAll(); try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }); }
-$('sWipe').onclick = wipeSave;
+function wipeSave() { confirmDlg("Erase this game's save?", 'This clears adventure progress, settings, and other saved data on this device. It cannot be undone.', 'Erase save', () => { noSave = true; wipeAll(); try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }, 'Keep it'); }
+// polish2: Squid settings kit — Accessibility / Credits / For parents rows; the parent gate (8 + 5) guards wipe and For parents (accessibility.md §8)
+let gateFn = null;
+function parentGate(fn) { gateFn = fn; openOv('parentGate'); }
+$('parentGate').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if (!b && e.target !== $('parentGate')) return; const fn = gateFn; gateFn = null; closeOv('parentGate'); if (b && b.dataset.a === '13' && fn) fn(); });
+$('sWipe').onclick = () => parentGate(wipeSave);
+$('sAccRow').onclick = () => openOv('access'); $('accBack').onclick = () => closeOv('access');
+$('sCredRow').onclick = () => showCredits();
+$('sParRow').onclick = () => parentGate(() => openOv('parentInfo')); $('parBack').onclick = () => closeOv('parentInfo');
 // ===== POLISH · Kids & access (Fern accessibility.md §1 text size, §3 class cues, §4 reduce motion, §7 easy mode) =====
 const TEXT_STEPS = { s: 0.85, m: 1, l: 1.15, xl: 1.3 };
 var mqReduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
@@ -1371,7 +1399,7 @@ $('sText')?.addEventListener('click', e => { const b = e.target.closest('button'
 $('sReduce') && ($('sReduce').onchange = () => { settings.reduceMotion = $('sReduce').checked; saveSettings(settings); applyAccess(); });
 $('sEasy') && ($('sEasy').onchange = () => { settings.easyMode = $('sEasy').checked; saveSettings(settings); applyAccess(); });
 $('sCB') && ($('sCB').onchange = () => { settings.colorBlind = $('sCB').checked; saveSettings(settings); applyAccess(); toast(settings.colorBlind ? '🎨 Color-blind class colors on (rings update on the next level)' : '🎨 Class colors back to normal', 2200); });
-$('pAccess') && ($('pAccess').onclick = () => openOv('settings'));
+$('pAccess') && ($('pAccess').onclick = () => { openOv('settings'); openOv('access'); });
 mqReduce?.addEventListener?.('change', () => { if (settings.reduceMotion == null) applyAccess(); });
 $('rsAgain').onclick = () => startNew(round.len); $('rsTitle').onclick = toTitle;
 for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => audio.start(), { once: true });

@@ -13,12 +13,13 @@ export function setBest(len, score) { const b = bests(); if (score > (b[len] || 
 export const savedRound = () => { const r = j(ROUND_KEY, null); return r && !r.over && r.left > 3 ? r : null; };
 export const clearRound = () => { try { localStorage.removeItem(ROUND_KEY); } catch (e) {} };
 /** Full reset: meadow save, round, bests, settings, valley, gear, skins, closet, hub talk, single-play bests/stars —
- *  plus any later pm-/pm_/pollinator-meadow key. Device perf tuning (pm-perf*) is kept: it is not a save. */
-export const WIPE_KEYS = ['pollinator-meadow-v1', ROUND_KEY, BEST_KEY, SET_KEY, 'pm-valley-v1', 'pm_gear_v1', 'pm_skins_v1', 'pm_closet_v1', 'pm_hub_talk_v1', 'pm-best-sp', 'pm-stars-sp', 'pm-goals-collapsed', 'pm-hubcut', 'pm_unlock_all'];
+ *  plus any later pm-/pm_/pollinator-meadow key. pm-perf (quality tier) is cleared too, per accessibility.md §8. */
+export const WIPE_KEYS = ['pollinator-meadow-v1', ROUND_KEY, BEST_KEY, SET_KEY, 'pm-valley-v1', 'pm_gear_v1', 'pm_skins_v1', 'pm_closet_v1', 'pm_hub_talk_v1', 'pm-best-sp', 'pm-stars-sp', 'pm-goals-collapsed', 'pm-hubcut', 'pm_unlock_all', 'pm-perf'];
 export function wipeAll() {
   try {
     WIPE_KEYS.forEach(k => localStorage.removeItem(k));
-    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && /^(pm[-_]|pollinator-meadow)/.test(k) && !/^pm-perf/.test(k)) localStorage.removeItem(k); }
+    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && /^(pm[-_]|pollinator-meadow)/.test(k)) localStorage.removeItem(k); }
+    for (let i = sessionStorage.length - 1; i >= 0; i--) { const k = sessionStorage.key(i); if (k && /^(pm[-_]|pollinator-meadow)/.test(k)) sessionStorage.removeItem(k); } // accessibility.md §8 key gap: valley, gear, skins, stars, perf, closet + session keys
   } catch (e) {}
 }
 

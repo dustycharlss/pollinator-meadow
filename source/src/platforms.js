@@ -1,6 +1,7 @@
 // Platformer world: solid colliders (stumps, rocks, logs, mushrooms, branches), jump routes, golden dewdrops, collision queries.
 import * as THREE from 'three';
 import { WORLD_R, POND, WATER_Y, SPECIES } from './data.js';
+import { mapWhenReady } from './tex.js';
 
 const CELL = 8;
 const TAU = Math.PI * 2;
@@ -166,9 +167,9 @@ export function buildPlatforms(scene, { solids, heightAt, R, nestPts, quality = 
   const dg = new THREE.OctahedronGeometry(0.55, 1); dg.scale(0.85, 1.35, 0.85);
   const dm = new THREE.MeshBasicMaterial({ color: 0xffd23f });
   const drops = new THREE.InstancedMesh(dg, dm, Math.max(1, dewdrops.length)); drops.frustumCulled = false; scene.add(drops);
-  const haloT = new THREE.TextureLoader().load(import.meta.env.BASE_URL + 'img/star.png');
+  const haloT = null; // polish2: shared KTX2 star (WebP fallback) set via mapWhenReady
   const halos = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ map: haloT, size: 4.2, color: 0xffe07a, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-  halos.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(dewdrops.length * 3), 3)); halos.frustumCulled = false; scene.add(halos);
+  mapWhenReady(halos.material, 'star'); halos.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(dewdrops.length * 3), 3)); halos.frustumCulled = false; scene.add(halos);
   // t161u: no tall dew sky-lasers — keep the drop + halo only
   const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 40, 6, 1, true), new THREE.MeshBasicMaterial({ color: 0xffe07a, transparent: true, opacity: 0, depthWrite: false, visible: false }));
   const rays = new THREE.InstancedMesh(ray.geometry, ray.material, Math.max(1, dewdrops.length)); rays.frustumCulled = false; rays.visible = false;

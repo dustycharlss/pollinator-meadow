@@ -7,6 +7,7 @@ import { buildFood } from './food.js';
 import { loadGLB, bakeParts, lambertFrom } from './models.js';
 import { patchSeason } from './seasons.js';
 import { SITES, siteDist } from './sites.js';
+import { initKTX2, loadKtx } from './tex.js';
 
 const BASE = import.meta.env.BASE_URL;
 export const POLS = ['bee', 'butterfly', 'hummingbird', 'moth', 'bat', 'raccoon', 'robin', 'opossum', 'bear'];
@@ -83,8 +84,9 @@ export async function buildWorld(scene, { quality = 1, nests = [], renderer }) {
   tg.setAttribute('color', new THREE.BufferAttribute(col, 3));
   tg.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(pa.count * 2).map((_, k) => { const i = k >> 1; return (k & 1 ? pa.getZ(i) : pa.getX(i)) / 12; }), 2));
   tg.computeVertexNormals();
-  const gtex = await new THREE.TextureLoader().loadAsync(BASE + 'img/grass.jpg');
-  gtex.wrapS = gtex.wrapT = THREE.RepeatWrapping; gtex.colorSpace = THREE.SRGBColorSpace; gtex.anisotropy = 4;
+  if (renderer) initKTX2(renderer);
+  const gtex = await loadKtx('grass');
+  gtex.wrapS = gtex.wrapT = THREE.RepeatWrapping; gtex.colorSpace = THREE.SRGBColorSpace; gtex.anisotropy = 4; gtex.needsUpdate = true;
   const ground = new THREE.Mesh(tg, patchSeason(new THREE.MeshLambertMaterial({ map: gtex, vertexColors: true }), 'ground'));
   scene.add(ground); world.ground = ground; // t159u: declutter dips it under level creeks so the water shows
 
@@ -256,7 +258,7 @@ export async function buildWorld(scene, { quality = 1, nests = [], renderer }) {
   sg.setAttribute('position', new THREE.BufferAttribute(spos, 3)); sg.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
   const onAttr = new THREE.BufferAttribute(on, 1); onAttr.setUsage(THREE.DynamicDrawUsage); sg.setAttribute('aOn', onAttr);
   sg.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 400);
-  const starTex = await new THREE.TextureLoader().loadAsync(BASE + 'img/star.png');
+  const starTex = await loadKtx('star');
   const sm = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     uniforms: { uTime: timeU, uMap: { value: starTex }, uColor: { value: new THREE.Color(1, 0.85, 0.3) }, uScale: { value: 600 }, uSize: { value: 2.2 }, uBoost: { value: 1 } },
