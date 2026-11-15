@@ -850,7 +850,7 @@ export function createZones(scene, host) {
     dig(s, ax, az, bx, bz, o = {}) {
       const a = { x: A.x + ax, z: A.z + az, y: gy(ax, az) + 0.2 }, b = { x: A.x + bx, z: A.z + bz, y: gy(bx, bz) + 0.3 };
       const m = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.3, 0.35, 10), mat(0x7a5a30)); m.position.set(a.x, a.y, a.z); group.add(m);
-      props.push({ kind: 'dig', act: 'dig', cls: 'trickster', sig: s, x: a.x, y: a.y, z: a.z, r: 2.0, b, label: o.label || 'Soft dirt', two: true, icon: badge('trickster', a.x, a.y + 2.0, a.z, 0.9) });
+      props.push({ kind: 'dig', act: 'dig', cls: 'trickster', sig: s, x: a.x, y: a.y, z: a.z, r: 2.0, b, friend: o.friend || null, label: o.label || 'Soft dirt', two: true, icon: badge('trickster', a.x, a.y + 2.0, a.z, 0.9) });
     },
     target(s, x, z, h, o = {}) {
       const g = gy(x, z), G = new THREE.Group();
@@ -1082,7 +1082,7 @@ export function createZones(scene, host) {
   };
   // ---------- enemies ----------
   // Beans' blocky baby GLBs (CC0, Y-up, origin at feet, facing +Z, `idle` clip). The primitive model stays as the fallback until the GLB loads.
-  const EN_GLB = { turtle: 'act3/enemies/turtle', owl: 'act3/enemies/owl', crow: 'act3/enemies/crow' };
+  const EN_GLB = { turtle: 'act3/enemies/turtle', owl: 'act3/enemies/owl', crow: 'act3/enemies/crow', fox: 'act3/fox' };
   function enemyModel(G, kind) {
     const key = EN_GLB[kind]; if (!key) return;
     const old = G.children.filter(c => c.isMesh || c.type === 'Group');
@@ -1119,7 +1119,7 @@ export function createZones(scene, host) {
     owlet: { em: '🦉', name: 'owlet', speed: 2.2, scale: 1, model: 'owlet' },
     batpup: { em: '🦇', name: 'bat pup', speed: 2.0, scale: 1, model: 'batpup', darkOnly: true },
     chick: { em: '🐦', name: 'robin chick', speed: 2.3, scale: 1, model: 'chick', windblown: true },
-    fawn: { em: '🦌', name: 'fawn', speed: 2.3, scale: 0.85, model: 'fawn' },
+    fawn: { em: '🦌', name: 'fawn', speed: 2.3, scale: 0.85, model: 'fawn', refuseIce: true, refuseHigh: true },
     snail: { em: '🐌', name: 'garden snail', speed: 0.7, scale: 1, model: 'snail' },
   };
   const EN_NAME = { badger: 'Sleepy Badger', turtle: 'Snapping Turtle', spider: 'Grumpy Spider', crow: 'Patrol Crow', nest: 'Wasp Nest', owl: 'Night Owl', fox: 'Prowling Fox', sprinkler: 'Sprinkler', mower: 'Lawnmower' };
@@ -1281,7 +1281,7 @@ export function createZones(scene, host) {
         if (e.o.friendSig && isOn(e.o.friendSig)) e.o.friendly = true;
         for (const m of e.G.userData.eyes) m.scale.y = owlAwake(S) ? (Math.sin(t * 0.9) > 0.97 ? 0.15 : 1) : 0.12;
       } else if (e.kind === 'fox') {
-        if (!e.peek && S.pingAt && t - S.pingAt.t < 0.3 && flatD(e, S.pingAt) < 18) e.pingLure = { x: S.pingAt.x, z: S.pingAt.z, phase: 'go' };
+        if (!e.peek && S.pingAt && t - S.pingAt.t < 0.3 && flatD(e, S.pingAt) < 18) { let tx = S.pingAt.x, tz = S.pingAt.z; const pl = plates.find(q => !q.heavy && Math.hypot(q.x - tx, q.z - tz) < 3.2); if (pl) { tx = pl.x; tz = pl.z; } e.pingLure = { x: tx, z: tz, phase: 'go' }; }
         if (e.pingLure) {
           const L = e.pingLure, d = flatD(e, L);
           if (L.phase === 'go') { if (d > 0.4) { const v = Math.min(d, 2.6 * dt); e.x += (L.x - e.x) / d * v; e.z += (L.z - e.z) / d * v; e.yaw = Math.atan2(L.x - e.x, L.z - e.z); } else { L.phase = 'sit'; L.until = t + 8; } }
@@ -1377,7 +1377,9 @@ export function createZones(scene, host) {
       if (kind === 'canopy') { const G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) G.add(bx(0.25, h, 0.25, 0x6b4a30, sx * r * 0.6, h / 2, sz * r * 0.6)); G.add(bx(r * 1.9, 0.35, r * 1.9, 0x4f9a3e, 0, h + 0.1, 0), bx(r * 1.4, 0.3, r * 1.4, 0x6ab84f, 0, h + 0.4, 0)); fades.push({ roots: [G], x0: w.x - r, x1: w.x + r, z0: w.z - r, z1: w.z + r, y0: w.y + h - 0.5, y1: w.y + h + 1, a: 1 }); }
       if (kind === 'trunk') { this.tree(x, z, r * 1.6); }
       if (kind === 'log') { const G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.0, 1.1, 2.6, 0x8b6a45, -0.55, 0.55, 0), bx(1.0, 1.1, 2.6, 0x8b6a45, 0.55, 0.55, 0), bx(2.1, 0.3, 2.6, 0x9c7850, 0, 1.2, 0), bx(1.2, 0.85, 0.05, 0x2a1a10, 0, 0.5, 1.31)); }
-      S.hides.push({ kind, x: w.x, z: w.z, y: w.y + h, r: kind === 'trunk' ? r * 0.7 : r });
+      if (kind === 'reed') { const G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); for (let i = 0; i < 5; i++) G.add(bx(0.18, h * (0.7 + (i % 3) * 0.15), 0.18, 0x5a9a3a, (i - 2) * 0.28, h * 0.4, (i % 2) * 0.2)); }
+      if (kind === 'rock') { const G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(r * 1.4, h * 0.7, r * 1.4, 0x9a968c, 0, h * 0.35, 0)); }
+      S.hides.push({ kind: kind === 'reed' || kind === 'rock' ? 'log' : kind, x: w.x, z: w.z, y: w.y + h, r: kind === 'trunk' ? r * 0.7 : r });
     },
     badger(id, x, z, o = {}) { const e = enemy('badger', id, x, z, { cone: [3.2, 0.6], ring: o.ring || 5.5, ...o }); if (o.lure) { const [lx, lz, lh = 1.2] = o.lure; this.target('lure:' + id, lx, lz, lh, { range: o.lureRange || 14, label: o.lureLabel || 'Far bush' }); const pr = props[props.length - 1]; pr.lureOf = e; e.lurePr = pr; e.lureAt = L2W(o.lurePt ? o.lurePt[0] : lx, o.lurePt ? o.lurePt[1] : lz); } return e; },
     turtle(id, x, z, o = {}) { const e = enemy('turtle', id, x, z, { cone: [4.6, 0.95], ...o }); if (o.ride) e.ride = { high: o.ride.high ? L2W(o.ride.high[0], o.ride.high[1]) : e.home, low: o.ride.low ? L2W(o.ride.low[0], o.ride.low[1]) : e.home, mid: e.home }; if (o.leaf) { const [lx, lz] = o.leaf; this.lever('leaf:' + id, lx, lz, { label: 'Floating leaf' }); const pr = props[props.length - 1]; pr.act = 'leaf'; pr.re = true; pr.turtle = e; pr.leafAt = L2W(o.leafTo ? o.leafTo[0] : lx, o.leafTo ? o.leafTo[1] : lz); } return e; },
@@ -1569,8 +1571,22 @@ export function createZones(scene, host) {
       const nextRow = masterIconRow(MASTER[masterNext(start)].em, 0.85); nextG.add(nextRow);
       const pr = { kind: 'master', act: 'master', cls: null, sig: 'masterBell', x: A.x + x, y: g + h + 0.8, z: A.z + z, r: 3.5, re: true, label: o.label || 'Master Bell', G, bellG, clap, nowRow, nextRow, nowEms: MASTER[start].em.join(''), nextEms: MASTER[masterNext(start)].em.join('') };
       props.push(pr);
-      const S = AA(); S.master = { state: start, next: masterNext(start), start, coolUntil: 0, pr };
+      const S = AA(); S.master = { state: start, next: masterNext(start), start, coolUntil: 0, pr, posts: (S.master && S.master.posts) || [] };
       return pr;
+    },
+    /** Trail post that mirrors the hill bell's current A/B/C icons (Thaw Valley teach plaque). */
+    masterPost(x, z, o = {}) {
+      const g = gy(x, z), G = new THREE.Group(); G.position.set(A.x + x, g, A.z + z); G.rotation.y = o.yaw || 0; group.add(G);
+      G.add(bx(0.22, 1.4, 0.22, 0x6b4a30, 0, 0.7, 0));
+      const nowG = new THREE.Group(); nowG.position.set(0, 1.55, 0.2); G.add(nowG);
+      nowG.add(bx(1.5, 0.7, 0.1, 0x5a3b22, 0, 0, 0));
+      decoInto(nowG, 'act3/teach-plaque', 1.0, { byLong: true });
+      const nowLbl = masterTextSprite('Now', 0.36); nowLbl.position.set(0, 0.36, 0.1); nowG.add(nowLbl);
+      const start = (AA().master && AA().master.state) || 'A';
+      const nowRow = masterIconRow(MASTER[start].em, 0.42); nowRow.position.set(0, -0.02, 0.1); nowG.add(nowRow);
+      const S = AA(); S.master = S.master || { state: start, next: masterNext(start), start, coolUntil: 0, posts: [] };
+      (S.master.posts ||= []).push({ nowRow });
+      return G;
     },
     creek(id, x0, z0, x1, z1, o = {}) { const pd = this.pond(id, x0, z0, x1, z1, { level: 'mid' }); const ice = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.2, z1 - z0), new THREE.MeshLambertMaterial({ color: 0xe8f6ff, emissive: 0x6aa8d0, emissiveIntensity: 0.25, transparent: true, opacity: 0.92 })); ice.position.set(A.x + (x0 + x1) / 2, pd.gy + 0.22, A.z + (z0 + z1) / 2); ice.visible = false; group.add(ice); pd.ice = ice; pd.creek = true; pd.melt = !!o.melt; AA().creeks.push(pd); return pd; },
     snowPile(s, x, z, w, d, h) { this.cracked(s, x, z, w, d, h, { label: 'Snow pile' }); const pr = props[props.length - 1]; pr.m.material = mat(0xf4f8ff); pr.G.visible = false; pr.s.off = true; pr.m.visible = false; pr.snow = true; pr.need = 'winter'; pr.needWhy = 'Only in winter'; AA().seasonal.push({ pr, when: 'winter' }); },
@@ -1601,7 +1617,9 @@ export function createZones(scene, host) {
       const r = o.r || 0.8, top = o.top ?? 0.15, w = L2W(x, z);
       const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.3, 12), mat(0x8a8578)); m.position.set(w.x, w.y + top, w.z); m.visible = false; group.add(m);
       const s = addSolid({ type: 'cyl', x: w.x, z: w.z, r, y0: w.y - 1, top: w.y + top + 0.15, kind: 'zone', off: true });
-      steps.push({ sig, fn: on => { m.visible = !!on; s.off = !on; } });
+      const cr = { x0: w.x - r, z0: w.z - r, x1: w.x + r, z1: w.z + r, on: false, thin: false };
+      crossings.push(cr);
+      steps.push({ sig, fn: on => { m.visible = !!on; s.off = !on; cr.on = !!on; } });
     },
     /** stepped bear ramp from (x, z0, y0) to (x, z1, y1). Slope is a run of flat landings (solids have flat tops). */
     ramp(x, z0, y0, z1, y1, o = {}) {
@@ -1683,11 +1701,15 @@ export function createZones(scene, host) {
     if (!opts.quiet) tst(M.line, 2400);
   }
   function paintMaster(pr) {
-    const S = AA(); if (!pr || !S.master) return;
+    const S = AA(); if (!S.master) return;
     const now = MASTER[S.master.state].em, nxt = MASTER[S.master.next].em, cool = t < (S.master.coolUntil || 0);
-    if (pr.nowEms !== now.join('')) { pr.nowRow.clear(); now.forEach((em, i) => { const sp = emojiSprite(em, 0.48); sp.position.x = (i - 1) * 0.43; pr.nowRow.add(sp); }); pr.nowEms = now.join(''); }
-    if (pr.nextEms !== nxt.join('')) { pr.nextRow.clear(); nxt.forEach((em, i) => { const sp = emojiSprite(em, 0.85); sp.position.x = (i - 1) * 0.76; pr.nextRow.add(sp); }); pr.nextEms = nxt.join(''); }
-    pr.nextRow.children.forEach(sp => { if (sp.material) sp.material.opacity = cool ? 0.28 : 1; });
+    const paintRow = (row, ems, gap, key, size) => { if (!row) return; if (row[key] !== ems.join('')) { row.clear(); ems.forEach((em, i) => { const sp = emojiSprite(em, size); sp.position.x = (i - 1) * gap; row.add(sp); }); row[key] = ems.join(''); } };
+    if (pr) {
+      paintRow(pr.nowRow, now, 0.43, 'nowEms', 0.48); pr.nowEms = now.join('');
+      paintRow(pr.nextRow, nxt, 0.76, 'nextEms', 0.85); pr.nextEms = nxt.join('');
+      pr.nextRow && pr.nextRow.children.forEach(sp => { if (sp.material) sp.material.opacity = cool ? 0.28 : 1; });
+    }
+    for (const post of S.master.posts || []) paintRow(post.nowRow, now, 0.43, 'nowEms', 0.48);
   }
   function ringMaster(pr) {
     const S = AA(); if (!S.master) return true;
@@ -1983,6 +2005,12 @@ export function createZones(scene, host) {
     return Math.max(0, d);
   }
   function babyCanStep(b, nx, nz) {
+    if (a2) {
+      const onCross = crossings.some(c => c.on && inRect(nx, nz, c));
+      const pd = a2.ponds.find(q => inRect(nx, nz, q.rect));
+      if (pd && !onCross && (b.info.refuseIce || b.kind === 'fawn') && pd.level === 'ice') { if (!sig.fawnRefuse) { setSig('fawnRefuse'); tst(`${b.info.em} The ${b.info.name} won't walk on ice — it needs a clear, unfrozen path`, 2200); } return false; }
+      if (pd && !onCross && (b.info.refuseHigh || b.kind === 'fawn') && pd.level === 'high' && !b.info.float) { if (!sig.fawnRefuse) { setSig('fawnRefuse'); tst(`${b.info.em} The ${b.info.name} won't wade a flood — wait for the water to drop`, 2200); } return false; }
+    }
     const y0 = ctx.heightAt(b.x, b.z), y1 = ctx.heightAt(nx, nz);
     if (y1 - y0 > 0.85) return false;
     if (y0 - y1 > 1.4) return false;
@@ -2118,6 +2146,10 @@ export function createZones(scene, host) {
   }
   function a2UpdateBody(dt, cam, p, cur) {
     const S = a2; if (!S) return; const c = CLASS_OF[cur];
+    if (recipe && recipe.bellLearnZ != null) {
+      const zlim = A.z + recipe.bellLearnZ;
+      if (p.z > zlim || ctx.crewIds().some(id => { const q = posOfId(id); return q && q.z > zlim; })) setSig('bellLearn');
+    }
     for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; if (flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3 && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; if (!cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); emitNet('checkpoint', { x: +(cp.x - A.x).toFixed(2), z: +(cp.z - A.z).toFixed(2) }); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
     if (cur === host.cur()) flagBackUpd(S, p, cur);
     if (S.stuck) { if (t > S.stuck.until || !ctx.driven().includes(S.stuck.who)) S.stuck = null; else if (S.stuck.who === cur) { p.x = S.stuck.x; p.z = S.stuck.z; p.y = S.stuck.y; p.vx = p.vz = p.vy = 0; } }
@@ -2483,7 +2515,7 @@ export function createZones(scene, host) {
         const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.55, 0.3); tst('🕳️ Slipped through!', 1000); break;
       }
       case 'vine': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.1, z: to.z }, 1.1, 0); tst(atB ? '🌿 Climbing down' : '🌿 Climbing up the vine!', 1200); break; }
-      case 'dig': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.9, -1.6); if (!pr.done) { pr.done = true; setSig(pr.sig); } tst('⛏️ Dug through the tunnel!', 1200); break; }
+      case 'dig': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.9, -1.6); if (!pr.done) { pr.done = true; setSig(pr.sig); if (pr.friend) { setSig('friend:' + pr.friend); ctx.valley?.addFriend?.(pr.friend); tst(pr.friend === 'foxkit' ? '🦊 A fox kit wriggles out — you can call it if you like!' : '⛏️ Dug through the tunnel!', 1800); } else tst('⛏️ Dug through the tunnel!', 1200); } break; }
       case 'throw': {
         if (pr.from && (dFlat(p, pr.from) > pr.from.r || p.y < pr.from.minY - 0.3)) { say('🌰 ' + (pr.fromWhy || 'Get to a better spot to throw from'), 2600); return true; }
         throwAcorn(p, pr); break;

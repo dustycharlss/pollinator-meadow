@@ -1,4 +1,4 @@
-// Act 3 maps (Fern act3-integration.md). Patch 1: Meadow Hub. Patch 2: S5 escort + S3 lures (Practice Yard sandbox). Patch 3: S2 gear yard (stump, pouch, sling, glider). S4: Master Bell kit + Bell Yard demo (act3_bell). Levels 22-24 ship later.
+// Act 3 maps (Fern act3-integration.md). Patch 1: Meadow Hub. Patch 2: S5 escort + S3 lures (Practice Yard sandbox). Patch 3: S2 gear yard (stump, pouch, sling, glider). S4: Master Bell kit + Bell Yard demo (act3_bell). Level 22 Thaw Valley; 23-24 ship later.
 // Levels 17-24 are added here one patch at a time; a level tile is playable as soon as its map exists.
 export const MAPS3 = {
   // ===== S1 Meadow Hub: walk to a station to open it. Rescued friends move in and open features. =====
@@ -469,6 +469,103 @@ export const MAPS3 = {
       B.snowPile('sn1', 6.5, 10, 3.2, 3.2, 1.4);
       B.windZone(-6, 12, 6, 22, { dx: 0, dz: 1, push: 7 });
       B.puzzle('bell', 'Learn the Master Bell', ['scout', 'trickster', 'bruiser'], ['master:C'], { hint: 'Ring the bell: A is winter night, B melts the creek, C is calm dusk. The pictures tell you what is next.' });
+    },
+  },
+
+  // ===== 22 · Thaw Valley (Fern act3-levels-22-24.md §2): Master Bell (S4) + Seasons + Fox + Seeds. Baby: fawn. Bonus: fox kit. =====
+  thaw_valley: {
+    ambience: 'thaw-valley', // Beans CC0 loop (maeve.linehan + Nox_Sound), already in audio/ambient/act3/
+    goal: 'Thaw Valley', act2: true, key: 'puzzles', ceil: 14, exit: [0, 86], par: 660,
+    bounds: { x0: -18, x1: 16, z0: -10, z1: 92 },
+    terraces: [[28, 36, 4], [58, 66, 4]], // floor 0 → melt shelf 4 → bell hill 8
+    crew: 'Bee · Raccoon · Bear', friend: 'fawn', loanGear: 'all', masterStart: 'A',
+    escortGoal: { z: 85, sig: 'fawn' }, bellLearnZ: 4,
+    windYaw: { down: Math.PI, up: 0 },
+    windText: { up: '🌬️ The wind turns — it blows NORTH, up the valley', down: '🌬️ The wind turns — it blows SOUTH, down the valley' },
+    banter: {
+      start: ['🐝 Bee: That big bell up the hill changes everything at once!', '🦝 Raccoon: Season, time, and wind. I can ping the fox in the snow.', '🐻 Bear: And the little fawn will not walk on ice. We plan the path.'],
+      end: ['🦌 Fawn: The Closet in the Hub is open now. Thank you!', '🐝 Bee: Three rings, three weathers, one valley.', '🦝 Raccoon: And a fox kit, if we were kind.'],
+    },
+    pip: [
+      ['start', 'That big bell changes season, time, and wind together.'],
+      ['near:fox', 'Ping the whistle by the plate. Snow hides your smell.'],
+      [['z:36', 'near:seed'], 'Ring spring and day. Then plant and water the vine.'],
+      ['sig:fawnRefuse', 'The fawn needs a clear, unfrozen path. Try summer dusk.'],
+      ['stuck:fawn', 'Ring until the three icons show summer, dusk, and calm.'],
+      ['sig:foxPl', 'A fox kit is in the den, if you want to help.'],
+    ],
+    build(B) {
+      B.home(0, -5); B.lane(-18, 16, -10, 92, { look: 'hedge' });
+      const hedge = (x, z0, z1) => { for (let z = z0; z < z1 - 0.01; z += 2) { const L = Math.min(2, z1 - z), zc = z + L / 2; B.wall(x, zc, 0.6, L + 0.05, 2.4, { look: 'hedge' }); B.wall(x, zc, 0.6, L + 0.05, 30, { bot: 2.3, hidden: true }).s.off = false; } };
+      // corridor hedges, with an east den gap (z 8–24) and a west seed-bank gap (z 40–56)
+      hedge(-6.5, -10, 28); hedge(-6.5, 28, 40); hedge(-6.5, 56, 92);
+      hedge(6.5, -10, 8); hedge(6.5, 24, 50); hedge(6.5, 58, 92);
+      B.checkpoint(0, -1);
+      B.escort('fawn', 2.5, -3);
+      B.masterPost(0, 0);
+      B.masterPost(0, 2, { yaw: 0 }); // smaller trail post that mirrors the hill bell's Now icons
+      // A · fox valley: first creek (ice in A, mid otherwise — not a melt flood). Banks stay open for the crew.
+      B.creek('cA', -6.5, 4, 6.5, 10);
+      B.fox('fxA', 2, 18, { yaw: Math.PI, ring: 5, path: [[-4, 18], [6, 18]], speed: 1.4 });
+      B.plate('foxPl', 8, 16, { label: 'Fox plate' });
+      B.gearStump(-4, 12, { label: 'Echo Whistle stump' });
+      B.hide('log', -3, 14, 1.4, 1.4);
+      B.deco('act3/fox-den', 13, 20, 2.4, { yaw: -Math.PI / 2 });
+      B.door('foxPl', 18, 10.4, 16, { x: 12, w: 3.2, label: 'Den gate' });
+      B.dig('digKit', 14, 21, 14, 24, { friend: 'foxkit', label: 'Soft dirt' });
+      B.door('foxPl', 28, -6.5, 6.5, { label: 'Door A' });
+      B.checkpoint(0, 26);
+      B.ramp(0, 28, 0, 36, 4, { w: 13, look: 'stone' });
+      B.windZone(-6.5, 2, 6.5, 26, { push: 6, h: 3, lift: 0, alt: { down: [0, -1], up: [0, 1] } });
+      // B · melt shelf
+      B.checkpoint(0, 36, 4);
+      B.creek('cMelt', -6.5, 44, 6.5, 52, { melt: true });
+      B.seed('sV', -12, 46, { need: 'spring', needWhy: 'The seed only takes in spring — ring the Master Bell to B', grow: 'vine', vine: [-12, 48, 0.3, -8, 56, 4], vineLabel: 'Spring vine', label: 'Vine seed' });
+      B.drip(-14, 42, 2.4);
+      B.lever('lvV', -8, 56, { base: 4, label: 'Ledge lever' }); // gy is 4 on the shelf; base 4 puts the lever at y = 8
+      B.hide('reed', -10, 48, 1.4, 1.6);
+      B.door('lvV', 58, -6.5, 6.5, { label: 'Door B' });
+      B.ramp(0, 58, 4, 66, 8, { w: 13, look: 'stone' });
+      B.windZone(-6.5, 36, 6.5, 56, { push: 6, h: 3, lift: 0, alt: { down: [0, -1], up: [0, 1] } });
+      // C · bell hill
+      B.checkpoint(0, 66, 8);
+      B.ramp(0, 66, 8, 70, 8, { w: 6, look: 'wood' });
+      B.masterBell(0, 72, 2, { start: 'A' });
+      B.gearStump(4, 68, { label: 'Gear stump' });
+      B.hide('rock', 4, 70, 1.4, 1.2);
+      B.creek('cFord', -4, 78, 4, 85, { melt: true }); // ice / high / mid with the states; banks at x ±4..±6.5 stay open
+      B.hopStone('master:C', 0, 80, { r: 1.6, top: 0.2 });
+      B.hopStone('master:C', 0, 82, { r: 1.6, top: 0.2 });
+      B.hopStone('master:C', 0, 84, { r: 1.6, top: 0.2 });
+      B.checkpoint(0, 85, 8);
+      B.windZone(-6.5, 66, 6.5, 76, { push: 6, h: 3, lift: 0, alt: { down: [0, -1], up: [0, 1] } });
+      // secret Starseed: east ice cave. 4 m wall seals the mouth except in winter, when a 2 m snow lip is a step
+      const mouth = B.wall(14, 53.2, 3.4, 1.4, 8, { bot: 4, c: 0x9a968c });
+      const lip = B.wall(14, 54.6, 3.0, 1.6, 6, { bot: 4, c: 0xf4f8ff });
+      lip.m.visible = false; lip.s.off = true;
+      B.onSig('winter', on => { mouth.s.off = !!on; mouth.m.visible = !on; lip.s.off = !on; lip.m.visible = !!on; });
+      B.pickup('star', 14, 52, 0.9, { who: ['trickster'], whyNot: 'Too heavy for Bee — boost Raccoon, or come in winter when the snow lip is a step.', set: 'thawStar' });
+      B.deco('act3/thaw-valley/kenney-nature-cliff-cave-rock', 14, 51.2, 3.2, { yaw: Math.PI });
+      B.deco('act3/thaw-valley/kenney-holiday-snow-pile', 14, 54.6, 1.6);
+      // Petals (26)
+      const P = (x, z, y) => B.pickup('petal', x, z, y);
+      for (let i = 0; i < 4; i++) P(-3 + i * 2, -3, 0.9);
+      for (let i = 0; i < 4; i++) P(-5 + i * 10 / 3, 2, 0.9);
+      for (let i = 0; i < 3; i++) P(-4 + i * 5, 16, 0.9);
+      P(12, 20, 0.9); P(14, 24, 0.9);
+      P(-2, 30, 0.9); P(-2, 34, 0.9);
+      P(-14, 42, 0.9); P(-13, 45, 0.9); P(-12, 48, 0.9);
+      P(-4, 42, 0.9); P(0, 48, 0.9); P(4, 54, 0.9);
+      P(-4, 70, 0.9); P(0, 73, 0.9); P(4, 76, 0.9);
+      P(-3, 82, 0.9); P(3, 82, 0.9);
+      // dressing (CC0 Kenney Holiday + Nature, built ice)
+      const snow = (k, x, z, h, yaw) => B.deco('act3/thaw-valley/' + k, x, z, h, { yaw: yaw || 0 });
+      [[-5, -7, 'kenney-platformer-tree-pine-snow', 4.4], [5.2, -8, 'kenney-holiday-tree-snow-a', 4.2], [11, 10, 'kenney-platformer-tree-snow', 4.6], [15, 14, 'kenney-holiday-tree-snow-b', 4.0], [-14, 38, 'kenney-holiday-tree-snow-c', 4.4], [-16, 52, 'kenney-platformer-tree-pine-snow-small', 3.2], [5.4, 62, 'kenney-holiday-tree-snow-a', 4.2], [-5.4, 88, 'kenney-platformer-tree-pine-snow', 4.6], [5.4, 88, 'kenney-holiday-tree-snow-b', 4.2]].forEach(([x, z, k, h], i) => snow(k, x, z, h, i * 1.3));
+      [[-5, 12, 'kenney-holiday-snow-pile', 1.1], [10, 22, 'built-melting-snow', 1.0], [-15, 44, 'kenney-holiday-snow-flat', 0.7], [5.2, 48, 'built-ice-chunk', 0.8], [-4, 74, 'kenney-holiday-snow-pile', 1.0]].forEach(([x, z, k, h], i) => snow(k, x, z, h, i * 0.8));
+      B.puzzle('bell', 'Learn the Master Bell', ['scout', 'trickster', 'bruiser'], ['bellLearn'], { hint: 'Walk north around the first creek. The three icons on the post match the big hill bell — A is winter, night, and a north wind.', track: [['bellLearn', 'any', 'walk north around the creek', 0, 4]] });
+      B.puzzle('fox', 'Fox lure', ['trickster'], ['foxPl'], { hint: '🐾 Stay in state A (snow hides your smell). Stand by the plate and ping the Echo Whistle so the fox walks onto it.', track: [['foxPl', 'trickster', 'ping the whistle by the fox plate', 8, 16]] });
+      B.puzzle('melt', 'Melt flood', ['trickster', 'scout'], ['grown:sV', 'lvV'], { hint: 'Ring the bell to B (spring and day). 🐾 plant the seed, 🪽 water it, then climb the vine and pull the lever.', track: [['planted:sV', 'trickster', 'plant the vine seed in spring', -12, 46], ['grown:sV', 'scout', 'water the seed from the drip or with the pouch', -12, 46], ['lvV', 'trickster', 'climb the vine and pull the lever', -8, 56]] });
+      B.puzzle('fawn', 'Fawn crossing', ['scout', 'trickster', 'bruiser'], ['fawn'], { hint: 'Ring the bell to C (summer, dusk, calm). Call the fawn and walk it over the unfrozen ford.', track: [['master:C', 'any', 'ring the Master Bell to C', 0, 72], ['fawn', 'any', 'walk the fawn across the ford', 0, 82]] });
     },
   },
 
