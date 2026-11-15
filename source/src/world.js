@@ -59,19 +59,23 @@ function zoneWeights(x, z, out) {
   out.multiplyScalar(1 / tot);
 }
 
-export async function buildWorld(scene, { quality = 1, nests = [], renderer }) {
+export async function buildWorld(scene, { quality = 1, nests = [], renderer, lite = false }) {
+  // art pass / perf fix 1 (lite = campaign): no HDR sky (look.js draws the preset-B shader dome), no free-roam plant/tree GLBs,
+  // a lighter terrain and a token grass field. The meadow is behind the title art and hidden inside levels, so none of it shows.
   const world = { heightAt, colliders: [], solids: [], canopies: [], blooms: null, update: null };
   const berryBushes = [];
   const R = rng(1337);
 
   // ---------- sky ----------
-  const hdr = await new HDRLoader().loadAsync(BASE + 'kloofendal_48d_partly_cloudy_puresky_1k.hdr');
-  hdr.mapping = THREE.EquirectangularReflectionMapping;
-  scene.background = hdr;
-  scene.backgroundIntensity = 1;
+  if (!lite) {
+    const hdr = await new HDRLoader().loadAsync(BASE + 'kloofendal_48d_partly_cloudy_puresky_1k.hdr');
+    hdr.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = hdr;
+    scene.backgroundIntensity = 1;
+  }
 
   // ---------- terrain ----------
-  const SEG = 150, SIZE = (WORLD_R + 20) * 2;
+  const SEG = lite ? 80 : 150, SIZE = (WORLD_R + 20) * 2;
   const tg = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG); tg.rotateX(-Math.PI / 2);
   const pa = tg.attributes.position, col = new Float32Array(pa.count * 3), tmp = new THREE.Color();
   for (let i = 0; i < pa.count; i++) {
@@ -149,6 +153,7 @@ export async function buildWorld(scene, { quality = 1, nests = [], renderer }) {
   }
   for (const k of ringKeys) groups.push({ key: k, def: DECOR[k], zone: 'ring', list: ring[k] });
 
+  if (lite) groups.length = 0;
   // ---------- instancing ----------
   await Promise.all([...new Set(groups.map(g => g.key))].map(k => loadGLB(k)));
   const dummy = new THREE.Object3D(), c = new THREE.Color();
@@ -224,7 +229,7 @@ export async function buildWorld(scene, { quality = 1, nests = [], renderer }) {
           transformed.x += sw * 0.22 * position.y; transformed.z += cos(uTime * 1.3 + ip.x * 0.13) * 0.14 * position.y;`);
     };
     patchSeason(gm, 'grass');
-    const N = Math.round(11000 * quality);
+    const N = Math.round((lite ? 1500 : 11000) * quality);
     const im = new THREE.InstancedMesh(gg, gm, N), cc = new THREE.Color();
     let n = 0;
     for (let tries = 0; n < N && tries < N * 3; tries++) {

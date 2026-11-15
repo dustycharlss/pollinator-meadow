@@ -938,7 +938,7 @@ body:not(.inRound) #bFlag{display:none!important}
 <button id="bHubMap" type="button" aria-label="Level menu">🗺️ Levels</button>
 <div id="hubTools"><div class="htRow"><button id="bHubCrew" type="button">⛺ Crew</button><button id="bHubSkins" type="button">🎨 Skins</button></div><div id="hubNote">▶ Play: no timer, swap animals any time · ⏱ Timed: race the clock for stars · progress always saves</div></div>
 
-<div id="title" class="on fd"><picture><source media="(orientation:landscape)" srcset="./ui/screens/title-bg-landscape.webp"><img class="fdBg" src="./ui/screens/title-bg-portrait.webp" alt=""></picture><div class="logo" data-slot="logo"><img id="logoImg" src="./img/logo.webp" srcset="./img/logo@1x.webp 1x, ./img/logo.webp 2x" alt="Pollinator Meadow" onerror="this.remove();document.getElementById('logoTxt').hidden=false"><div id="logoTxt" hidden><span class="fl">🌼</span><h1>Pollinator Meadow</h1></div><small>Grow your meadow. Gather, build and bloom.</small></div>
+<div id="title" class="on fd"><picture><source media="(orientation:landscape)" srcset="./ui/screens/title-bg-landscape-720.webp"><img class="fdBg" src="./ui/screens/title-bg-portrait-720.webp" alt=""></picture><div class="logo" data-slot="logo"><img id="logoImg" src="./img/logo.webp" srcset="./img/logo@1x.webp 1x, ./img/logo.webp 2x" alt="Pollinator Meadow" onerror="this.remove();document.getElementById('logoTxt').hidden=false"><div id="logoTxt" hidden><span class="fl">🌼</span><h1>Pollinator Meadow</h1></div><small>Grow your meadow. Gather, build and bloom.</small></div>
 <button class="fdBtn" id="tChallenge" hidden style="display:none"></button><button class="fdBtn" id="tRelaxed" hidden style="display:none"></button>
 <div class="menu">
   <button class="big" id="tValley">▶ Play Adventure</button>
@@ -1003,6 +1003,7 @@ body:not(.inRound) #bFlag{display:none!important}
   <label class="ksMute"><input type="checkbox" id="sMute"><span>Mute all</span></label>
   </div><div class="ksCol">
   <div class="ksSec">Play</div>
+  <div class="ksLbl">Graphics</div><div class="lens" id="gfxOpt"><button data-v="auto">✨ Auto</button><button data-v="low">Low</button><button data-v="med">Medium</button><button data-v="high">High</button><button data-v="ultra" class="deskOnly">Ultra</button></div><div id="gfxNow" class="ksNote"></div>
   <div class="ksLbl">Home pointer</div><div class="lens" id="indOpt"><button data-v="ring">◯ Ring</button><button data-v="arrow">➤ Arrow</button></div>
   <div class="ksLbl">Round length (next round)</div><div class="lens" id="lens2"></div>
   <hr class="ksDiv">
@@ -1038,7 +1039,7 @@ body:not(.inRound) #bFlag{display:none!important}
   </div></div>
 </div></div>
 <div class="ov" id="confirm"><div class="panel" style="max-width:360px"><h2 id="cfT">Are you sure?</h2><p id="cfP"></p><div class="row2"><button class="big sec" id="cfNo">Cancel</button><button class="big" id="cfYes">Yes</button></div></div></div>
-<div class="ov fd" id="results"><picture><source media="(orientation:landscape)" srcset="./ui/screens/results-bg-landscape.webp"><img class="fdBg" src="./ui/screens/results-bg-portrait.webp" alt=""></picture>
+<div class="ov fd" id="results"><picture><source media="(orientation:landscape)" data-srcset="./ui/screens/results-bg-landscape-720.webp"><img class="fdBg" data-src="./ui/screens/results-bg-portrait-720.webp" alt=""></picture>
   <div class="rsHead" data-slot="header"><h2>🌼 Round complete!</h2><div class="nb" id="rsLead"></div></div>
   <img class="rk" data-slot="rank-1" src="./ui/screens/rank-1.webp" alt="1st"><img class="rk" data-slot="rank-2" src="./ui/screens/rank-2.webp" alt="2nd"><img class="rk" data-slot="rank-3" src="./ui/screens/rank-3.webp" alt="3rd"><img class="rk" data-slot="rank-4" src="./ui/screens/rank-4.webp" alt="4th">
   <div class="rsMe" id="rsMe"></div>

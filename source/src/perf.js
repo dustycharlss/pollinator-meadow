@@ -20,7 +20,7 @@ export const STORAGE_KEY = 'pm-perf';
  *  lod:          [nearDist, midDist, farDist] and steps [near, mid, far, beyond] = update every N frames
  */
 export const TIERS = {
-  low:   { name: 'low',   pixelRatio: 0.85, shadows: false, shadowMapSize: 512,  foliage: 0.35, particles: 0.35, lodDist: [18, 40, 80], lodSteps: [1, 3, 6, 12] },
+  low:   { name: 'low',   pixelRatio: 1.0, shadows: false, shadowMapSize: 512,  foliage: 0.35, particles: 0.35, lodDist: [18, 40, 80], lodSteps: [1, 3, 6, 12] },
   med:   { name: 'med',   pixelRatio: 1.25, shadows: false, shadowMapSize: 1024, foliage: 0.6,  particles: 0.6,  lodDist: [25, 55, 100], lodSteps: [1, 2, 4, 8] },
   high:  { name: 'high',  pixelRatio: 1.75, shadows: true,  shadowMapSize: 1024, foliage: 0.85, particles: 0.85, lodDist: [35, 70, 130], lodSteps: [1, 1, 2, 4] },
   ultra: { name: 'ultra', pixelRatio: 2.0,  shadows: true,  shadowMapSize: 2048, foliage: 1.0,  particles: 1.0,  lodDist: [50, 100, 180], lodSteps: [1, 1, 1, 2] },
@@ -213,6 +213,8 @@ export function initPerf(renderer, scene, opts = {}) {
       if (!api.shouldUpdate(obj, camPos)) { lodState.set(obj, Math.min(acc, 0.5)); return 0; }
       lodState.set(obj, 0); return acc;
     },
+    /** Step one tier down now (boot probe); stays in auto mode. */
+    stepDown(reason = 'probe') { return step(-1, reason, now()); },
     /** Suspend / resume auto-detection (loading screens, cutscenes, menus with a frozen scene). Tier stays as is. */
     pause() { paused = true; resetSamples(); },
     resume() { if (paused) { paused = false; resetSamples(); } },

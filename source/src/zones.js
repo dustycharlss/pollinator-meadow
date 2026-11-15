@@ -31,7 +31,8 @@ const GLB = {
   bridge: 'three-class/bridge', tree: 'three-class/tree', stump: 'three-class/stump', hedge: 'three-class/hedge', basket: 'three-class/basket', rock: 'three-class/rock', tent: 'three-class/tent', stall: 'three-class/stall',
 };
 
-const COL = { hedge: 0x4f9a3e, hedgeTop: 0x5fae4a, wood: 0x8b6a45, bark: 0x6b4a30, stone: 0x9a968c, cliff: 0x8a8578, dirt: 0x8a6a3e, cream: 0xf3eee0, gold: 0xffd23f };
+// art pass (Golden Hour Pastel, STYLE-GUIDE §1): mint hedges, rose-brown wood, lavender stone, peach mud. was hedge 0x4f9a3e hedgeTop 0x5fae4a wood 0x8b6a45 bark 0x6b4a30 stone 0x9a968c cliff 0x8a8578 dirt 0x8a6a3e
+const COL = { hedge: 0x58b878, hedgeTop: 0x79cf8c, wood: 0xb07a5e, bark: 0xa06a5a, stone: 0xb4a4cc, cliff: 0xa898bc, dirt: 0xeec4a6, cream: 0xf3eee0, gold: 0xffd23f };
 
 // ---- cosmetic terrain spec → height fn (walls/ledges are solids, not terrain) ------------
 function terrainFrom(spec) {
@@ -516,7 +517,9 @@ export function createZones(scene, ctx) {
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
   let sig = {}, props = [], gates = [], plates = [], puzzles = [], deep = [], crossings = [], steps = [], tw = null, lastProg = 0, hintT = 0, bearPad = null, windT = 0, introQ = [];
   const mats = new Map();
-  const mat = (c, e = 0) => { const k = c + ':' + e; if (!mats.has(k)) mats.set(k, new THREE.MeshLambertMaterial({ color: c, emissive: e ? c : 0, emissiveIntensity: e, flatShading: true })); return mats.get(k); };
+  // art pass: the few hard-coded forest greens / dark browns used by B.tree, hedges and logs map onto Golden Hour Pastel swatches
+  const B_REMAP = { 0x3f8a35: 0x5cc48a, 0x4fa044: 0x6fd39a, 0x6b4a30: 0xa06a5a, 0x4f9a3e: 0x58b878, 0x5a3b22: 0x8a5a4a, 0x5fae4a: 0x79cf8c };
+  const mat = (c, e = 0) => { if (typeof c === 'number' && B_REMAP[c] != null) c = B_REMAP[c]; const k = c + ':' + e; if (!mats.has(k)) mats.set(k, new THREE.MeshLambertMaterial({ color: c, emissive: e ? c : 0, emissiveIntensity: e, flatShading: true })); return mats.get(k); };
   const gy = (x, z) => { if (sampleH) { const h = sampleH(x, z); if (h != null) return h; } return (ctx.meadowHeightAt || ctx.heightAt)(A.x + x, A.z + z); };
   const W = (x, z) => ({ x: A.x + x, z: A.z + z });
   const texL = new THREE.TextureLoader(), badgeMat = {};
@@ -524,7 +527,7 @@ export function createZones(scene, ctx) {
   // POLISH §3 second cue: class rings take the class shape (Scout circle · Trickster rounded square · Bruiser hex), not just its colour
   const SHAPE_SEG = { circle: 28, square: 4, hex: 6 };
   function shapeRingGeo(c, r0, r1) { const sh = CLASSES[c]?.shape || 'circle', g = new THREE.RingGeometry(sh === 'square' ? r0 * 1.2 : r0, sh === 'square' ? r1 * 1.2 : r1, SHAPE_SEG[sh] || 28); if (sh === 'square') g.rotateZ(Math.PI / 4); if (sh === 'hex') g.rotateZ(Math.PI / 6); return g.rotateX(-Math.PI / 2); }
-  const LOOK = { hedge: COL.hedge, stone: COL.stone, cliff: COL.cliff, wood: COL.wood, bark: 0x5a3b22, leaf: 0x3f7a35, dirt: COL.dirt, log: 0x8b6a45, cream: COL.cream, glass: 0xbfe8ff, gold: 0xffc94a };
+  const LOOK = { hedge: COL.hedge, stone: COL.stone, cliff: COL.cliff, wood: COL.wood, bark: 0x8a5a4a, leaf: 0x6fd39a, dirt: COL.dirt, log: 0xb08a6a, cream: COL.cream, glass: 0xbfe8ff, gold: 0xffc94a };
 
   function buildTerrainMesh(fn, bounds) {
     const { x0, x1, z0, z1 } = bounds;
@@ -537,12 +540,13 @@ export function createZones(scene, ctx) {
       let rel = fn(lx, lz); if (rel == null) rel = -4;
       pos.setY(i, rel);
       if (rel < -1.2) { col[i * 3] = lem ? 0.9 : 0.08; col[i * 3 + 1] = lem ? 0.75 : 0.32; col[i * 3 + 2] = lem ? 0.3 : 0.72; }
-      else if (rel < 0.05) { col[i * 3] = 0.42; col[i * 3 + 1] = 0.33; col[i * 3 + 2] = 0.2; } // darker muddy bank so the shore reads
-      else { const g = 0.5 + 0.06 * Math.sin(lx * 0.7) * Math.cos(lz * 0.6); col[i * 3] = 0.36; col[i * 3 + 1] = g; col[i * 3 + 2] = 0.28; }
+      else if (rel < 0.05) { col[i * 3] = 0.62; col[i * 3 + 1] = 0.36; col[i * 3 + 2] = 0.26; } // peach mud bank so the shore reads (art pass: B mud #e8b8a0, a touch darker)
+      else { const n = 0.5 + 0.5 * Math.sin(lx * 0.23 + 1.7) * Math.cos(lz * 0.19), j = 1 + 0.025 * Math.sin(lx * 0.7) * Math.cos(lz * 0.6); // B grass tones #98d8a0..#cdeeb8 (linear), large-scale mix
+        col[i * 3] = (0.31 + 0.3 * n * n) * j; col[i * 3 + 1] = (0.69 + 0.17 * n) * j; col[i * 3 + 2] = (0.35 + 0.12 * n) * j; }
     }
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
     const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
-    mesh.position.set(A.x + cx, baseY, A.z + cz); group.add(mesh); terrMesh = mesh;
+    mesh.userData.terrain = true; mesh.position.set(A.x + cx, baseY, A.z + cz); group.add(mesh); terrMesh = mesh;
     sampleH = (lx, lz) => {
       if (lx < x0 - 4 || lx > x1 + 4 || lz < z0 - 4 || lz > z1 + 4) return null;
       let rel = fn(lx, lz);

@@ -35,7 +35,7 @@ const put = (el, r) => Object.assign(el.style, { left: r.x + 'px', top: r.y + 'p
 export function layout(root, name) {
   if (!root || !root.isConnected) return null;
   const C = cover(), bg = root.querySelector(':scope > .fdBg');
-  if (bg) { const src = `./ui/screens/${BG[name]}-${C.o === 'l' ? 'landscape' : 'portrait'}.webp`; if (bg.getAttribute('src') !== src) bg.setAttribute('src', src); }
+  if (bg) { const src = `./ui/screens/${BG[name]}-${C.o === "l" ? "landscape" : "portrait"}-720.webp`; if (bg.getAttribute('src') !== src) bg.setAttribute('src', src); }
   for (const el of root.querySelectorAll('[data-slot]')) { const r = slotRect(name, el.dataset.slot); if (r) put(el, r); }
   root.dataset.o = C.o; return C;
 }

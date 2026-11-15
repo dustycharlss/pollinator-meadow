@@ -1139,7 +1139,9 @@
   "Act 3 baby animals (badger cub, duckling, owlet, bat pup, robin chick, fawn, snail): built from primitives for Pollinator Meadow, CC0",
   "Act 3 sounds: rubberduck (OpenGameArt) water/splash SFX, Kenney (https://kenney.nl) Impact Sounds, Mikes-MultiMedia, InMotionAudio (Freesound) — all CC0 · sling twang and baby peeps synthesized for Pollinator Meadow, CC0",
   "Ember Ridge ambience: \"Ambiance_Campfire_Loop_Stereo\" (https://freesound.org/people/Nox_Sound/sounds/558967/) and \"Ambiance_Wind_Forest_Calm_Loop_Stereo\" (https://freesound.org/people/Nox_Sound/sounds/506910/) by Nox_Sound (Freesound), CC0 1.0",
-  "Three-class props (hedge, lantern, rock, stall, stump, tent): Kenney (https://kenney.nl) Fantasy Town Kit hedge-large, lantern, stall-green and Nature Kit rock_smallE, stump_squareDetailed, tent_detailedOpen, CC0 · pastel recolours for Pollinator Meadow"
+  "Three-class props (hedge, lantern, rock, stall, stump, tent): Kenney (https://kenney.nl) Fantasy Town Kit hedge-large, lantern, stall-green and Nature Kit rock_smallE, stump_squareDetailed, tent_detailedOpen, CC0 · pastel recolours for Pollinator Meadow",
+  "Ambient critters (butterfly, firefly, small bird, frog, snail, ladybug, dragonfly, ember sprite, moth, fish, bat, snow hare): built from CC0 primitives for Pollinator Meadow",
+  "Golden Hour Pastel art direction (preset B) by Squid; 41 palette recolours of existing models are colour-only edits — original CC-BY credits above still apply (CC0 sources stay CC0)"
  ],
- "footer": "All models are scaled, merged into instanced meshes and compressed for mobile; the wing-flap animation is procedural. Music: \"Blue Meadow in Green Sky\" (OpenGameArt). Ambience: Freesound #484371. Sky: Kloofendal 48d Partly Cloudy (Poly Haven). Particles: Kenney. See CREDITS.md for the full list."
+ "footer": "All models are scaled, merged into instanced meshes and compressed for mobile; the wing-flap animation is procedural. Music: \"Blue Meadow in Green Sky\" (OpenGameArt). Ambience: Freesound #484371. Sky: Golden Hour Pastel shader dome (the Kloofendal 48d HDR from Poly Haven is kept for free roam). Particles: Kenney. See CREDITS.md for the full list."
 }
