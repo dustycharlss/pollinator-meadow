@@ -597,7 +597,7 @@ export function createZones(scene, host) {
   const isOn = (need) => !need || [].concat(need).every(k => sig[k]);
   let applyingNet = false;
   function emitNet(kind, payload) { if (applyingNet) return; ctx.onNetEvent?.({ kind, ...payload }); }
-  function setSig(k, v = true) { if (!k || !!sig[k] === !!v) return; sig[k] = !!v; if (v) lastProg = t; emitNet('sig', { sig: k, v: !!v }); }
+  function setSig(k, v = true) { if (!k || !!sig[k] === !!v) return; if (v) { sig[k] = true; lastProg = t; } else delete sig[k]; emitNet('sig', { sig: k, v: !!v }); }
   function clearWaterIn(x0, z0, x1, z1) { for (let i = WATER_RECTS.length - 1; i >= 0; i--) { const r = WATER_RECTS[i]; if (r.x > x0 - 0.4 && r.x < x1 + 0.4 && r.z > z0 - 0.4 && r.z < z1 + 0.4) WATER_RECTS.splice(i, 1); } }
   const addHeal = () => {}; // adventure refocus: no heal meter
   const nameOf = id => ctx.speciesName ? ctx.speciesName(id) : id;
@@ -3076,10 +3076,11 @@ export function createZones(scene, host) {
     try {
       if (state.sig) {
         for (const [k, v] of Object.entries(state.sig)) {
-          if (!!sig[k] !== !!v) { sig[k] = !!v; if (v) lastProg = t; }
+          if (!!sig[k] === !!v) continue;
+          if (v) { sig[k] = true; lastProg = t; } else delete sig[k];
         }
         if (state.sigFull) {
-          for (const k of Object.keys(sig)) if (!(k in state.sig)) sig[k] = false;
+          for (const k of Object.keys(sig)) if (!state.sig[k]) delete sig[k];
         }
       }
       if (state.bodies) {

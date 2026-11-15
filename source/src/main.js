@@ -2209,13 +2209,14 @@ async function boot() {
   net = createNet({
     getZones: () => zones,
     getCrew: () => crew ? crew.get() : ['bee', 'raccoon', 'bear'],
-    isPlaying: () => !!playing,
+    isPlaying: () => !!playing || !!(zones && zones.active?.()),
     isPaused: () => !!paused,
     isInLevel: () => {
       const id = zones && zones.status && zones.status()?.id;
-      if (!id || !zones.active?.()) return false;
+      if (!id) return false;
       const rec = zones.MAPS && zones.MAPS[id];
-      return !(rec && rec.hub) && id !== 'meadow_hub';
+      if ((rec && rec.hub) || id === 'meadow_hub') return false;
+      return !!(zones.active?.() || (rec && !rec.hub));
     },
     now: () => performance.now(),
     toast: (a, b) => toast(a, b),
@@ -2226,7 +2227,7 @@ async function boot() {
       startValleyPatch(id);
     },
     pollLocalFrame: () => input && input.pollFrame ? input.pollFrame() : null,
-    pulseWorld: () => { try { if (zones && zones.update) zones.update(0, camera); } catch (e) {} },
+    pulseWorld: (() => { let last = 0; return () => { const n = performance.now(); if (n - last < 45) return; last = n; try { if (zones && zones.update) zones.update(0, camera); } catch (e) {} }; })(),
   });
   if (NEWFLAG) {
     if (NEWFLAG.lead && SPECIES[NEWFLAG.lead]) settings.lead = NEWFLAG.lead;
