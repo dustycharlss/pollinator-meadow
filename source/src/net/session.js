@@ -217,11 +217,35 @@ export function createNet(hooks = {}) {
     for (const [id, b] of Object.entries(bodies)) lastPoseSent[id] = { x: b.x, y: b.y, z: b.z, yaw: b.yaw };
     poseSeeded = true;
   }
-  function applyState(st, { interpolate = false } = {}) {
+  function bodyDist(a, b) {
+    if (!a || !b) return 0;
+    return Math.hypot((a.x || 0) - (b.x || 0), (a.y || 0) - (b.y || 0), (a.z || 0) - (b.z || 0));
+  }
+
+  function applyState(st, { interpolate = false, respectLocal = false } = {}) {
     const zones = hooks.getZones?.();
     if (!st || !zones) return;
     if (st.id && hooks.ensureMap) hooks.ensureMap(st.id);
-    if (typeof zones.applyNetState === 'function') zones.applyNetState(st);
+    let toApply = st;
+    if (respectLocal && st.bodies) {
+      // Keep a local T.tp / pending pose until the host snap echoes it.
+      // Otherwise applyClientView (and net.tick inside T.step) rewinds the
+      // guest off a plate before the pose reaches the host (N1-SIG).
+      const local = zones.netState?.();
+      const locBodies = local && local.bodies;
+      if (locBodies) {
+        const kept = { ...st.bodies };
+        for (const id of Object.keys(kept)) {
+          const loc = locBodies[id], snap = kept[id], prev = lastApplied?.bodies?.[id];
+          if (!loc || !snap) continue;
+          if (bodyDist(loc, snap) > 0.3 && prev && bodyDist(loc, prev) > 0.3) delete kept[id];
+        }
+        toApply = { ...st, bodies: kept, sigFull: false };
+      } else {
+        toApply = { ...st, sigFull: false };
+      }
+    }
+    if (typeof zones.applyNetState === 'function') zones.applyNetState(toApply);
     lastApplied = st;
     if (!poseSeeded && st.bodies) seedPosesFrom(st);
   }
@@ -236,6 +260,8 @@ export function createNet(hooks = {}) {
     const prev = lastApplied || {};
     return {
       ...prev,
+      // Periodic snaps must not inherit welcome's sigFull or they wipe client sigs.
+      sigFull: false,
       bodies: { ...(prev.bodies || {}), ...bodies },
       enemies: decoded.enemies && decoded.enemies.length ? decoded.enemies : (prev.enemies || []),
       escorts: decoded.escorts && decoded.escorts.length ? decoded.escorts : (prev.escorts || []),
@@ -317,7 +343,7 @@ export function createNet(hooks = {}) {
 
   function applyClientView() {
     const st = interpolatedState();
-    if (st) applyState(st);
+    if (st) applyState(st, { respectLocal: true });
   }
 
   function onEvt(data) {
@@ -351,12 +377,23 @@ export function createNet(hooks = {}) {
       const zones = hooks.getZones?.();
       if (data.bodies && zones?.applyNetState) {
         zones.applyNetState({ bodies: data.bodies, poseOnly: true });
+        // Plate / hold checks live in zones.update, which may not run if the
+        // host tab's rAF is throttled. Pulse so setSig fires from a guest sit.
+        try { hooks.pulseWorld?.(); } catch (e) {}
       }
       return;
     }
     if (typ === 'ack' && role === 'host') {
       lastAckTick = data.tick || lastAckTick;
       lastAcked = lastEncoded;
+      return;
+    }
+    // Guest gameplay events (sig / pick / act results) — host applies and echoes.
+    const fromClient = data.from === 'client';
+    if (role === 'host' && fromClient && typ && typ !== 'in' && typ !== 'pose' && typ !== 'join' && typ !== 'hello' && typ !== 'ack') {
+      const zones = hooks.getZones?.();
+      if (zones?.applyNetEvent) zones.applyNetEvent(data);
+      sendEvt({ ...data, type: typ, kind: data.kind || typ, from: 'host' });
       return;
     }
     // world events: client applies
@@ -458,9 +495,15 @@ export function createNet(hooks = {}) {
   }
 
   function onHostEvent(ev) {
-    if (!active || role !== 'host' || !ev) return;
-    evq.push(ev);
-    sendEvt({ type: ev.kind || ev.type || 'evt', ...ev, from: 'host' });
+    if (!active || !ev) return;
+    const typ = ev.kind || ev.type || 'evt';
+    if (role === 'host') {
+      evq.push(ev);
+      sendEvt({ type: typ, ...ev, from: 'host' });
+    } else if (role === 'client') {
+      // Forward guest setSig / picks / acts so the host can authoritatively apply them.
+      sendEvt({ type: typ, ...ev, from: 'client' });
+    }
   }
 
   function onMapLoaded(id) {

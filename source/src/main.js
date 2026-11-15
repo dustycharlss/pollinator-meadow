@@ -2226,6 +2226,7 @@ async function boot() {
       startValleyPatch(id);
     },
     pollLocalFrame: () => input && input.pollFrame ? input.pollFrame() : null,
+    pulseWorld: () => { try { if (zones && zones.update) zones.update(0, camera); } catch (e) {} },
   });
   if (NEWFLAG) {
     if (NEWFLAG.lead && SPECIES[NEWFLAG.lead]) settings.lead = NEWFLAG.lead;
