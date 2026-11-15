@@ -2530,7 +2530,7 @@ export function createZones(scene, ctx) {
       const pets = picks.filter(k => k.tier === 'petal' && !k.nightOnly), got = pets.reduce((a, k) => a + (k.got ? k.value || 1 : 0), 0), totV = pets.reduce((a, k) => a + (k.value || 1), 0);
       const sub = [nearOwn ? `🤝 Tap Interact: ${ACTS[nearOwn.act].verb}` : '', pets.length ? `🌸 ${got}/${totV}` : '', starGot ? '⭐ found' : ''].filter(Boolean).join(' · ');
       const txt = objCache ? objCache.text : '', key = txt + '|' + sub + '|' + (objCache?.color || '');
-      if (key !== E.key) { E.key = key; E.tx.textContent = skinText(txt); E.sub.textContent = sub; E.T.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.Ar.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.T.dataset.shape = objCache?.cls ? CLASSES[objCache.cls].shape : ''; }
+      if (key !== E.key) { E.key = key; E.tx.textContent = skinText(txt); E.sub.textContent = sub; E.T.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.Ar.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.T.dataset.shape = CLASSES[objCache?.cls]?.shape || ''; }
       E.T.style.display = txt ? 'flex' : 'none'; E.T.classList.toggle('go', !!nearOwn);
       document.body.classList.toggle('intReady', !!nearOwn);
     }
