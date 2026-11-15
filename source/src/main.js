@@ -29,6 +29,7 @@ import { createValley, PATCHES, HEAL_PACKUP, ACT1_PATCHES, ACT2_PATCHES, ACT3_PA
 import { createZones, hasLevel } from './zones.js';
 import { createMapScreen } from './map-screen.js';
 import { showIntroCard, dismissIntroCard, preloadIntroCard, hasIntroCard, introCardId } from './intro-card.js';
+import { bindVoice, presentLevelTips, preloadTips, fillHowTips, dismissLevelTips } from './tips-ui.js';
 import { CLIP } from './declutter.js';
 import { createLook } from './look.js';
 import { createCritters } from './critters.js';
@@ -501,7 +502,8 @@ $('coopTip').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPr
 let moodOver = null, moodOverT = 0, inZone = false, resultsAt = 0, lastTick = 0;
 function updateMusic(t) {
   let m = 'title';
-  if (playing && !$('menu').classList.contains('on') && !$('results').classList.contains('on')) {
+  if ($('valley') && $('valley').classList.contains('on') && mapUI && mapUI.view === 'act3') m = 'act3map';
+  else if (playing && !$('menu').classList.contains('on') && !$('results').classList.contains('on')) {
     if (moodOver && t < moodOverT) m = moodOver;
     else {
       moodOver = null; let near = 1e9; const p = P[cur];
@@ -1134,7 +1136,9 @@ function startValleyPatch(patchId) {
   updateHealUi();
   onb?.note?.('valleyIn');
   if (patchId === HUB_ID) { toast('🏡 Meadow Hub · walk to a station! 🪧 Trail Board picks a level', 3200); hubArrived(); } else toast(ADVENTURE ? `${def.emoji} ${def.name} · solve it with your crew!` : `${def.emoji} ${def.name} · heal the meadow with your crew!`, 3200);
+  preloadTips(patchId);
   showIntroCard(patchId);
+  if (!hasIntroCard(patchId)) presentLevelTips(patchId);
 }
 // ---------- class skins (cosmetic only: physics/hitbox/abilities stay on bee · raccoon · bear) ----------
 const baseRiders = {}, skinRiderP = {}, skinThumbs = {};
@@ -1404,11 +1408,22 @@ $('bPause').onclick = openPause; $('pResume').onclick = () => closeOv('pause');
 $('pRestart').onclick = () => confirmDlg('Restart round?', 'Everything built or collected this round will be reset. Your gear and journal are kept.', 'Restart', () => startNew(round.len));
 $('pQuit').onclick = () => confirmDlg('Quit to title?', 'Your round is saved. You can pick it up again with “Continue round”.', 'Quit', toTitle);
 $('pJournal').onclick = () => openJournal(); $('pSettings').onclick = () => openOv('settings');
-$('tJournal').onclick = () => openJournal(); $('tSettings').onclick = () => openOv('settings'); $('tHow').onclick = () => openOv('how'); $('howClose').onclick = () => closeOv('how');
+$('tJournal').onclick = () => openJournal(); $('tSettings').onclick = () => openOv('settings');
+function openHow() {
+  const id = valleySession?.patchId || null;
+  fillHowTips(id).then(has => {
+    openOv('how');
+    if (!has && settings.readAloud) audio.speak('ui.how.intro');
+  });
+}
+$('tHow').onclick = () => openHow();
+$('pHow') && ($('pHow').onclick = () => openHow());
+$('howClose').onclick = () => { audio.stopVoice?.(); closeOv('how'); };
+
 $('pAdmin').onclick = () => { closeOv('pause'); admin.showButton(true); admin.open(); };
 $('sClose').onclick = () => closeOv('settings');
 // t22u mixer: master + music / gameplay / ambience / rain, live while dragging, saved in settings
-const MIX_DEF = { music: 1, sfx: 1, amb: 1, rain: 0.5 };
+const MIX_DEF = { music: 1, sfx: 1, amb: 1, rain: 0.5, voice: 1 };
 function mixGet(k) { return k === 'master' ? settings.vol : (settings.mix && settings.mix[k] != null ? settings.mix[k] : MIX_DEF[k]); }
 function applyMix() { audio.set('master', settings.vol); for (const k in MIX_DEF) audio.set(k, mixGet(k)); }
 const paintRange = el => el.style.setProperty('--p', el.value + '%'); // kit slider: honey fill width over the toasted-sand track
@@ -1419,6 +1434,8 @@ $('mix').addEventListener('input', e => { const el = e.target.closest('input[dat
   audio.set(k, v); saveSettings(settings);
   const now = performance.now(); if (now - mixPrevT > 180 && (k === 'sfx' || k === 'master')) { mixPrevT = now; audio.blip(3); } });
 $('sMute').onchange = () => { settings.mute = $('sMute').checked; audio.setMute(settings.mute); saveSettings(settings); };
+bindVoice({ speak: id => audio.speak(id), stop: () => audio.stopVoice(), enabled: () => !!settings.readAloud, preload: ids => audio.preloadVoice(ids) });
+
 function wipeSave() { confirmDlg("Erase this game's save?", 'This clears adventure progress, settings, and other saved data on this device. It cannot be undone.', 'Erase save', () => { noSave = true; wipeAll(); try { sessionStorage.removeItem('pm-auto'); } catch (e) {} location.reload(); }, 'Keep it'); }
 // polish2: Squid settings kit — Accessibility / Credits / For parents rows; the parent gate (8 + 5) guards wipe and For parents (accessibility.md §8)
 let gateFn = null;
@@ -1446,12 +1463,22 @@ function applyAccess() {
   if ($('sReduceH')) $('sReduceH').textContent = settings.reduceMotion == null ? 'Uses your device setting until you change it.' : 'Saved for this device.';
   if ($('sEasy')) $('sEasy').checked = easyOn();
   if ($('sCB')) $('sCB').checked = !!settings.colorBlind;
+  const readOn = !!settings.readAloud;
+  if ($('sRead')) $('sRead').checked = readOn;
+  if ($('sReadTest')) $('sReadTest').disabled = !readOn;
+  const vRow = $('sVoiceRow'), vSl = vRow && vRow.querySelector('input[data-k="voice"]');
+  if (vSl) vSl.disabled = !readOn;
+  if (vRow) vRow.classList.toggle('isOff', !readOn);
+  audio.setReadAloud(readOn);
   const chip = $('pAccess'); if (chip) chip.textContent = `${easyOn() ? '🌱 Easy on' : '🌱 Easy off'} · 🔠 ${({ s: 'Small', m: 'Medium', l: 'Large', xl: 'Extra large' })[settings.textSize]}`;
 }
 $('sText')?.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings.textSize = b.dataset.v; saveSettings(settings); applyAccess(); audio.blip(2); });
 $('sReduce') && ($('sReduce').onchange = () => { settings.reduceMotion = $('sReduce').checked; saveSettings(settings); applyAccess(); });
 $('sEasy') && ($('sEasy').onchange = () => { settings.easyMode = $('sEasy').checked; saveSettings(settings); applyAccess(); });
 $('sCB') && ($('sCB').onchange = () => { settings.colorBlind = $('sCB').checked; saveSettings(settings); applyAccess(); toast(settings.colorBlind ? '🎨 Color-blind class colors on (rings update on the next level)' : '🎨 Class colors back to normal', 2200); });
+$('sRead') && ($('sRead').onchange = () => { settings.readAloud = $('sRead').checked; saveSettings(settings); applyAccess(); if (!settings.readAloud) audio.stopVoice?.(); });
+$('sReadTest') && ($('sReadTest').onclick = () => { if (!settings.readAloud) return; audio.start(); audio.speak('settings.readAloud'); });
+
 $('pAccess') && ($('pAccess').onclick = () => { openOv('settings'); openOv('access'); });
 mqReduce?.addEventListener?.('change', () => { if (settings.reduceMotion == null) applyAccess(); });
 $('rsAgain').onclick = () => startNew(round.len); $('rsTitle').onclick = toTitle;
@@ -2184,7 +2211,7 @@ async function boot() {
   } else if (NEWFLAG && NEWFLAG.patch && valley) { const pid = NEWFLAG.patch; if (valley.get(pid)?.state === 'wilted') valley.setState(pid, 'in_progress'); startValleyPatch(pid); } else if (NEWFLAG) startNew(NEWFLAG.len || settings.len);
   else if (/[?&]lab=act3\b/.test(location.search) && valley) startValleyPatch('act3_lab');
   else if (/[?&](?:lab=bell|bell=1)\b/.test(location.search) && valley) startValleyPatch('act3_bell');
-  window.__game = { look, DCL, slots, stepPlayer, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
+  window.__game = { look, DCL, slots, stepPlayer, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, presentLevelTips, fillHowTips, openHow, dismissLevelTips, speak: id => audio.speak(id), openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
     tp: (x, z, up = 0) => { const p = P[cur]; p.x = x; p.z = z; p.y = world.phys.floor(x, z, 99, 99).y + up; p.vx = p.vz = p.vy = 0; },
     teleportNearFlower: () => { const B = world.blooms; const arr = B.byPol[polOf(cur)]; const i = arr[0]; const p = P[cur]; p.x = B.x[i] - 1; p.z = B.z[i]; p.y = Math.max(heightAt(p.x, p.z), B.y[i] - 0.5); p.vy = 0; } };
 }

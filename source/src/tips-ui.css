@@ -1,0 +1,64 @@
+/* Picture tips: level intro (under the card, then a non-blocking tray) and How to play. */
+.tipsRail{width:100%;max-width:720px;margin:0 auto;position:relative}
+.tipsTrack{
+  display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;padding:2px 2px 8px;scrollbar-width:thin
+}
+.tipCard{
+  flex:0 0 auto;width:min(100%, 420px);scroll-snap-align:start;margin:0;padding:0;border:0;
+  background:#1a1420;border-radius:14px;overflow:hidden;cursor:pointer;position:relative;
+  box-shadow:0 0 0 2px rgba(59,38,20,.85);color:inherit;-webkit-tap-highlight-color:transparent
+}
+.tipsTrack .tipCard{width:min(92%, 520px)}
+.tipCard.on{box-shadow:0 0 0 3px #ffd23f}
+.tipCard picture,.tipCard img{display:block;width:100%;height:auto;aspect-ratio:720/300;object-fit:contain;background:#1a1420;pointer-events:none}
+.tipNew{
+  position:absolute;top:6px;left:6px;font:800 11px/1 system-ui,sans-serif;letter-spacing:.04em;
+  text-transform:uppercase;background:#ffd23f;color:#2a2200;border-radius:999px;padding:3px 7px
+}
+.tipsDots{display:flex;justify-content:center;gap:5px;min-height:10px;margin-top:2px}
+.tipsDots button{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer}
+.tipsDots button.on{background:#ffd23f}
+.tipsX{
+  position:absolute;top:4px;right:4px;z-index:1;width:36px;height:36px;border:0;border-radius:50%;
+  background:rgba(16,10,24,.72);color:#fff;font:800 20px/36px system-ui,sans-serif;cursor:pointer
+}
+
+#tipsTray{
+  position:fixed;left:0;right:0;bottom:0;z-index:15;display:none;justify-content:center;
+  padding:10px 8px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent, rgba(16,10,24,.62) 45%);
+  pointer-events:none
+}
+#tipsTray.on{display:flex}
+#tipsTray[hidden]{display:none!important}
+#tipsTray .tipsInner{pointer-events:auto;width:min(100%, 640px);position:relative;max-height:min(38dvh, 220px)}
+#tipsTray .tipsTrack{max-height:min(32dvh, 180px)}
+#tipsTray .tipCard{width:min(88%, 520px)}
+
+#introCard.icHasTips{flex-direction:column;justify-content:center;gap:8px}
+#introCard.icHasTips .icHit{height:auto;width:100%;flex:0 1 auto;min-height:0}
+#introCard.icHasTips .icFrame{
+  width:min(100%, calc((100dvh - 148px) * 16 / 9));
+  max-height:calc(100dvh - 148px)
+}
+#introCard .icTips{width:min(100%, 640px);flex:none;max-height:128px}
+#introCard .icTips .tipsTrack{max-height:110px;padding-bottom:4px}
+@media (orientation:landscape){
+  #introCard.icHasTips .icFrame{
+    width:min(100%, calc((100dvh - 118px) * 16 / 9));
+    max-height:calc(100dvh - 118px)
+  }
+  #introCard .icTips{max-height:100px}
+  #introCard .icTips .tipsTrack{max-height:86px}
+}
+
+#how .howTips{margin:0 0 12px}
+#how .howTips .tipsTrack{max-height:none}
+#how .howTips .tipCard{width:min(100%, 560px)}
+#how .howTips .tipsDots{margin-bottom:6px}
+#how .panel{max-height:min(92dvh, 900px);overflow:auto}
+.ksRead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ksRead .ksChk{flex:1 1 200px}
+.ksRead .ksBtn{flex:none;min-height:48px;padding:0 16px;margin:6px 0}
+#sVoiceRow.isOff{opacity:.55}

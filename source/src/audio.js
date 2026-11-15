@@ -1,5 +1,6 @@
 import { createMusic } from './music.js';
 import { EXT, EXT_SFX, withFallback } from './audio-fmt.js';
+import { loadVoiceLines, voiceUrl, firstVoiceId } from './voice.js';
 const BASE = import.meta.env.BASE_URL;
 // Mixer (t22u): master -> destination, with buses music / sfx (gameplay) / amb (ambience) / rain. Slider values 0..1 map linearly
 // to bus gain. Master 70% (the old default) = unity gain.
@@ -7,7 +8,7 @@ export const RAIN_BASE = 0.065; // was 0.13 straight to the speakers (and it ign
 export function createAudio() {
   let ctx = null, started = false, muted = false, rainN = null, master = null, night = 0, calm = 0;
   const samples = new Map();
-  const lv = { master: 0.7, music: 1, sfx: 1, ui: 1, amb: 1, rain: 0.5 }, bus = {};
+  const lv = { master: 0.7, music: 1, sfx: 1, ui: 1, amb: 1, rain: 0.5, voice: 1 }, bus = {};
   const curve = v => Math.max(0, Math.min(1, v));
   const gainOf = k => k === 'master' ? (muted ? 0 : curve(lv.master) / 0.7) : curve(lv[k]);
   const music = createMusic();
@@ -17,6 +18,7 @@ export function createAudio() {
     creek: { f: 'creek-trickle-loop', b: 0.5 }, night: { f: 'night-crickets-frogs-loop', b: 0.4 } };
   const lvlAmb = { name: null, el: null, g: null, vol: 0.55 };
   let creek = 0, winter = false, hidden = false, rainEl = null, rainNoise = false, rainNoiseOn = false;
+  let voiceEl = null, voiceWant = null, readAloud = false;
   const want = k => { const d = 1 - night, c = 1 - 0.75 * calm;
     return k === 'wind' ? 0.6 + 0.4 * calm : k === 'birds' ? d * c * (winter ? 0.4 : 1) : k === 'insects' ? d * c * (winter ? 0 : 1) : k === 'creek' ? creek : night * (winter ? 0.3 : 1) * (1 - 0.5 * calm); };
   const ambLevel = k => Math.max(0, AMB[k].b * want(k));
@@ -51,7 +53,7 @@ export function createAudio() {
       try { ctx = new (window.AudioContext || window.webkitAudioContext)(); ctx.resume?.(); } catch (e) { ctx = null; }
       if (ctx) {
         master = bus.master = ctx.createGain(); master.gain.value = gainOf('master'); master.connect(ctx.destination);
-        for (const k of ['music', 'sfx', 'amb', 'rain']) { bus[k] = ctx.createGain(); bus[k].gain.value = gainOf(k); bus[k].connect(master); }
+        for (const k of ['music', 'sfx', 'amb', 'rain', 'voice']) { bus[k] = ctx.createGain(); bus[k].gain.value = gainOf(k); bus[k].connect(master); }
         bus.ui = ctx.createGain(); bus.ui.gain.value = gainOf('ui'); bus.ui.connect(bus.sfx); // UI sounds: child of the Gameplay (sfx) slider
         music.start(ctx, bus.music); setTimeout(() => music.warm(), 4000);
         // iOS: a silent one-sample buffer inside the gesture fully unlocks output
@@ -60,11 +62,11 @@ export function createAudio() {
       applyAmb(true);
       if (lvlAmb.name && !lvlAmb.g) { const n = lvlAmb.name; lvlAmb.name = null; api.levelAmb(n, lvlAmb.vol); }
     },
-    /** set one bus level 0..1: master | music | sfx | amb | rain */
+    /** set one bus level 0..1: master | music | sfx | amb | rain | voice */
     set(k, v) { if (!(k in lv)) return; lv[k] = Math.max(0, Math.min(1, +v || 0)); apply(k); },
     levels: () => ({ ...lv }),
     volume(v) { api.set('master', v); },
-    setMute(m) { muted = !!m; for (const k in AMB) if (AMB[k].el) AMB[k].el.muted = muted; if (rainEl) rainEl.muted = muted; if (lvlAmb.el) { lvlAmb.el.muted = muted; if (!muted && !hidden) lvlAmb.el.play().catch(() => {}); } music.mute(muted); apply('master'); applyAmb(true); return !muted; },
+    setMute(m) { muted = !!m; for (const k in AMB) if (AMB[k].el) AMB[k].el.muted = muted; if (rainEl) rainEl.muted = muted; if (voiceEl) voiceEl.muted = muted; if (muted) api.stopVoice(); if (lvlAmb.el) { lvlAmb.el.muted = muted; if (!muted && !hidden) lvlAmb.el.play().catch(() => {}); } music.mute(muted); apply('master'); applyAmb(true); return !muted; },
     toggle() { return api.setMute(!muted); },
     night(v, c = 0) { night = v; calm = c; applyAmb(); },
     /** ambience context: w = 0..1 closeness to water (creek bed), win = winter (no insects) */
@@ -117,11 +119,51 @@ export function createAudio() {
     blip(n = 0) { if (!ctx || muted) return; const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(520 * Math.pow(1.0595, (n * 2) % 14), t); o.frequency.exponentialRampToValueAtTime(1100 * Math.pow(1.0595, (n * 2) % 14), t + 0.12); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28); o.connect(g).connect(sfxOut()); o.start(t); o.stop(t + 0.3); },
     chime() { if (!ctx || muted) return; [0, 4, 7, 12].forEach((s, i) => { const t = ctx.currentTime + i * 0.11, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = 440 * Math.pow(1.0595, s); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6); o.connect(g).connect(sfxOut()); o.start(t); o.stop(t + 0.65); }); },
     sparkle() { if (!ctx || muted) return; [0, 7, 12, 16, 19, 24].forEach((s, i) => { const t = ctx.currentTime + i * 0.07, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = 880 * Math.pow(1.0595, s); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); o.connect(g).connect(sfxOut()); o.start(t); o.stop(t + 0.55); }); },
+    setReadAloud(on) { readAloud = !!on; if (!readAloud) api.stopVoice(); },
+    readAloud: () => readAloud,
+    stopVoice() {
+      voiceWant = null;
+      const el = voiceEl; voiceEl = null;
+      if (el) { try { el.pause(); el.removeAttribute('src'); el.load(); } catch (e) {} }
+    },
+    /** Play a lines.json id (or a fallback list) on the voice bus. A new line cancels the current one. No-op unless Read-aloud is on. */
+    speak(idOrIds) {
+      const want = Array.isArray(idOrIds) ? idOrIds.filter(Boolean) : (idOrIds ? [idOrIds] : []);
+      if (!readAloud || muted || !want.length) return;
+      api.start();
+      const token = want[0] + ':' + Math.random().toString(36).slice(2);
+      voiceWant = token;
+      api.stopVoice();
+      voiceWant = token;
+      loadVoiceLines().then(() => {
+        if (voiceWant !== token) return;
+        const id = firstVoiceId(want); if (!id) return;
+        const url = voiceUrl(id, EXT); if (!url) return;
+        const el = withFallback(new Audio(url));
+        el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.muted = muted;
+        voiceEl = el;
+        if (ctx && bus.voice) {
+          try { const src = ctx.createMediaElementSource(el); src.connect(bus.voice); }
+          catch (e) { el.volume = Math.min(1, gainOf('voice') * gainOf('master')); }
+        } else el.volume = Math.min(1, gainOf('voice') * gainOf('master'));
+        el.addEventListener('ended', () => { if (voiceEl === el) { voiceEl = null; if (voiceWant === token) voiceWant = null; } });
+        el.play().catch(() => {});
+      });
+    },
+    preloadVoice(ids) {
+      if (!ids || !ids.length) return;
+      loadVoiceLines().then(() => {
+        for (const id of ids) {
+          const url = voiceUrl(id, EXT); if (!url) continue;
+          const el = new Audio(url); el.preload = 'auto';
+        }
+      });
+    },
     debug() {
       const r = x => x == null ? null : +x.toFixed(4);
       return { rainSrc: rainEl ? (rainEl.paused ? 'loop-paused' : 'loop') : rainNoise ? 'noise' : 'none', started, ctxState: ctx && ctx.state, levels: { ...lv }, muted, bus: Object.fromEntries(Object.entries(bus).map(([k, b]) => [k, r(b.gain.value)])), busTarget: Object.fromEntries(Object.keys(bus).map(k => [k, r(gainOf(k))])), rainBase: RAIN_BASE, rainNode: rainN && r(rainN.gain.value), amb: Object.fromEntries(Object.entries(AMB).map(([k, A]) => [k, { loaded: !!A.el, playing: !!A.el && !A.el.paused, gain: A.g ? r(A.g.gain.value) : A.el ? r(A.el.volume) : 0, want: r(ambLevel(k)) }])) };
     },
   };
-  document.addEventListener('visibilitychange', () => { if (!started) return; music.hide(document.hidden); hidden = document.hidden; if (hidden) { for (const k in AMB) AMB[k].el && AMB[k].el.pause(); rainEl && rainEl.pause(); lvlAmb.el && lvlAmb.el.pause(); } else if (!muted) { ctx && ctx.resume && ctx.resume(); applyAmb(true); lvlAmb.el && lvlAmb.el.play().catch(() => {}); } });
+  document.addEventListener('visibilitychange', () => { if (!started) return; music.hide(document.hidden); hidden = document.hidden; if (hidden) { for (const k in AMB) AMB[k].el && AMB[k].el.pause(); rainEl && rainEl.pause(); lvlAmb.el && lvlAmb.el.pause(); voiceEl && voiceEl.pause(); } else if (!muted) { ctx && ctx.resume && ctx.resume(); applyAmb(true); lvlAmb.el && lvlAmb.el.play().catch(() => {}); if (voiceEl && voiceEl.paused && voiceWant) voiceEl.play().catch(() => {}); } });
   return api;
 }

@@ -1,0 +1,3327 @@
+[
+  {
+    "id": "training_garden.step.01",
+    "group": "training_garden",
+    "text": "Walk to the flower!",
+    "fileStem": "training_garden/training_garden.step.01",
+    "durationSec": 1.272
+  },
+  {
+    "id": "training_garden.step.02",
+    "group": "training_garden",
+    "text": "Jump up!",
+    "fileStem": "training_garden/training_garden.step.02",
+    "durationSec": 0.936
+  },
+  {
+    "id": "training_garden.step.03",
+    "group": "training_garden",
+    "text": "Tap the Bee!",
+    "fileStem": "training_garden/training_garden.step.03",
+    "durationSec": 1.145
+  },
+  {
+    "id": "training_garden.step.04",
+    "group": "training_garden",
+    "text": "Fly up! Ring it!",
+    "fileStem": "training_garden/training_garden.step.04",
+    "durationSec": 1.687
+  },
+  {
+    "id": "training_garden.step.05",
+    "group": "training_garden",
+    "text": "Tap the Raccoon!",
+    "fileStem": "training_garden/training_garden.step.05",
+    "durationSec": 1.089
+  },
+  {
+    "id": "training_garden.step.06",
+    "group": "training_garden",
+    "text": "Pull the lever!",
+    "fileStem": "training_garden/training_garden.step.06",
+    "durationSec": 1.205
+  },
+  {
+    "id": "training_garden.step.07",
+    "group": "training_garden",
+    "text": "Tap the Bear!",
+    "fileStem": "training_garden/training_garden.step.07",
+    "durationSec": 1.067
+  },
+  {
+    "id": "training_garden.step.08",
+    "group": "training_garden",
+    "text": "Push the block!",
+    "fileStem": "training_garden/training_garden.step.08",
+    "durationSec": 1.069
+  },
+  {
+    "id": "training_garden.step.09",
+    "group": "training_garden",
+    "text": "Climb up!",
+    "fileStem": "training_garden/training_garden.step.09",
+    "durationSec": 0.731
+  },
+  {
+    "id": "training_garden.step.10",
+    "group": "training_garden",
+    "text": "Sit on the plate!",
+    "fileStem": "training_garden/training_garden.step.10",
+    "durationSec": 1.186
+  },
+  {
+    "id": "training_garden.step.11",
+    "group": "training_garden",
+    "text": "Now tap the Bee!",
+    "fileStem": "training_garden/training_garden.step.11",
+    "durationSec": 1.277
+  },
+  {
+    "id": "training_garden.step.12",
+    "group": "training_garden",
+    "text": "Fly in! Ring it!",
+    "fileStem": "training_garden/training_garden.step.12",
+    "durationSec": 1.591
+  },
+  {
+    "id": "training_garden.step.14",
+    "group": "training_garden",
+    "text": "Stand in the circle!",
+    "fileStem": "training_garden/training_garden.step.14",
+    "durationSec": 1.443
+  },
+  {
+    "id": "training_garden.step.16",
+    "group": "training_garden",
+    "text": "Jump on Bear!",
+    "fileStem": "training_garden/training_garden.step.16",
+    "durationSec": 1.143
+  },
+  {
+    "id": "training_garden.step.17",
+    "group": "training_garden",
+    "text": "Jump up high!",
+    "fileStem": "training_garden/training_garden.step.17",
+    "durationSec": 1.108
+  },
+  {
+    "id": "training_garden.step.19",
+    "group": "training_garden",
+    "text": "Everyone to the flag!",
+    "fileStem": "training_garden/training_garden.step.19",
+    "durationSec": 1.431
+  },
+  {
+    "id": "training_garden.step.13",
+    "group": "training_garden",
+    "text": "Tap the Bear!",
+    "fileStem": "training_garden/training_garden.step.07",
+    "durationSec": 1.067
+  },
+  {
+    "id": "training_garden.step.15",
+    "group": "training_garden",
+    "text": "Tap the Raccoon!",
+    "fileStem": "training_garden/training_garden.step.05",
+    "durationSec": 1.089
+  },
+  {
+    "id": "training_garden.step.18",
+    "group": "training_garden",
+    "text": "Pull the lever!",
+    "fileStem": "training_garden/training_garden.step.06",
+    "durationSec": 1.205
+  },
+  {
+    "id": "training_garden.complete",
+    "group": "training_garden",
+    "text": "You did it!",
+    "fileStem": "training_garden/training_garden.complete",
+    "durationSec": 0.798
+  },
+  {
+    "id": "trailhead.step.01",
+    "group": "trailhead",
+    "text": "Tap Sneak! Shh…",
+    "fileStem": "trailhead/trailhead.step.01",
+    "durationSec": 1.178
+  },
+  {
+    "id": "trailhead.step.02",
+    "group": "trailhead",
+    "text": "Turn the mirror!",
+    "fileStem": "trailhead/trailhead.step.02",
+    "durationSec": 0.935
+  },
+  {
+    "id": "trailhead.step.03",
+    "group": "trailhead",
+    "text": "Hop on the sun step!",
+    "fileStem": "trailhead/trailhead.step.03",
+    "durationSec": 1.248
+  },
+  {
+    "id": "trailhead.step.04",
+    "group": "trailhead",
+    "text": "Tap Sneak again!",
+    "fileStem": "trailhead/trailhead.step.04",
+    "durationSec": 1.41
+  },
+  {
+    "id": "trailhead.step.05",
+    "group": "trailhead",
+    "text": "Tap the Raccoon!",
+    "fileStem": "training_garden/training_garden.step.05",
+    "durationSec": 1.089
+  },
+  {
+    "id": "trailhead.step.06",
+    "group": "trailhead",
+    "text": "Drain the pond!",
+    "fileStem": "trailhead/trailhead.step.06",
+    "durationSec": 1.189
+  },
+  {
+    "id": "trailhead.step.07",
+    "group": "trailhead",
+    "text": "Walk across!",
+    "fileStem": "trailhead/trailhead.step.07",
+    "durationSec": 1.217
+  },
+  {
+    "id": "trailhead.step.08",
+    "group": "trailhead",
+    "text": "Plant the seed!",
+    "fileStem": "trailhead/trailhead.step.08",
+    "durationSec": 1.145
+  },
+  {
+    "id": "trailhead.step.09",
+    "group": "trailhead",
+    "text": "Tap the Bee!",
+    "fileStem": "training_garden/training_garden.step.03",
+    "durationSec": 1.145
+  },
+  {
+    "id": "trailhead.step.10",
+    "group": "trailhead",
+    "text": "Fly to the drip!",
+    "fileStem": "trailhead/trailhead.step.10",
+    "durationSec": 1.003
+  },
+  {
+    "id": "trailhead.step.11",
+    "group": "trailhead",
+    "text": "Water the seed!",
+    "fileStem": "trailhead/trailhead.step.11",
+    "durationSec": 1.08
+  },
+  {
+    "id": "trailhead.step.12",
+    "group": "trailhead",
+    "text": "Tap the Raccoon!",
+    "fileStem": "training_garden/training_garden.step.05",
+    "durationSec": 1.089
+  },
+  {
+    "id": "trailhead.step.13",
+    "group": "trailhead",
+    "text": "Climb the vine!",
+    "fileStem": "trailhead/trailhead.step.13",
+    "durationSec": 1.053
+  },
+  {
+    "id": "trailhead.step.14",
+    "group": "trailhead",
+    "text": "Turn the wind!",
+    "fileStem": "trailhead/trailhead.step.14",
+    "durationSec": 1.02
+  },
+  {
+    "id": "trailhead.step.15",
+    "group": "trailhead",
+    "text": "Tap the Bee!",
+    "fileStem": "training_garden/training_garden.step.03",
+    "durationSec": 1.145
+  },
+  {
+    "id": "trailhead.step.16",
+    "group": "trailhead",
+    "text": "Fly with the wind!",
+    "fileStem": "trailhead/trailhead.step.16",
+    "durationSec": 1.308
+  },
+  {
+    "id": "trailhead.step.17",
+    "group": "trailhead",
+    "text": "Tap the Bear!",
+    "fileStem": "training_garden/training_garden.step.07",
+    "durationSec": 1.067
+  },
+  {
+    "id": "trailhead.step.18",
+    "group": "trailhead",
+    "text": "Stomp the mushroom!",
+    "fileStem": "trailhead/trailhead.step.18",
+    "durationSec": 1.314
+  },
+  {
+    "id": "trailhead.step.19",
+    "group": "trailhead",
+    "text": "Tap the Bee!",
+    "fileStem": "training_garden/training_garden.step.03",
+    "durationSec": 1.145
+  },
+  {
+    "id": "trailhead.step.20",
+    "group": "trailhead",
+    "text": "Grab the acorn!",
+    "fileStem": "trailhead/trailhead.step.20",
+    "durationSec": 1.398
+  },
+  {
+    "id": "trailhead.step.21",
+    "group": "trailhead",
+    "text": "Drop it in the ring!",
+    "fileStem": "trailhead/trailhead.step.21",
+    "durationSec": 1.21
+  },
+  {
+    "id": "trailhead.step.22",
+    "group": "trailhead",
+    "text": "Tap the Bear!",
+    "fileStem": "training_garden/training_garden.step.07",
+    "durationSec": 1.067
+  },
+  {
+    "id": "trailhead.step.23",
+    "group": "trailhead",
+    "text": "Grab the acorn!",
+    "fileStem": "trailhead/trailhead.step.20",
+    "durationSec": 1.398
+  },
+  {
+    "id": "trailhead.step.24",
+    "group": "trailhead",
+    "text": "Carry it home!",
+    "fileStem": "trailhead/trailhead.step.24",
+    "durationSec": 1.197
+  },
+  {
+    "id": "trailhead.step.25",
+    "group": "trailhead",
+    "text": "Pip lends you gear!",
+    "fileStem": "trailhead/trailhead.step.25",
+    "durationSec": 1.202
+  },
+  {
+    "id": "trailhead.step.26",
+    "group": "trailhead",
+    "text": "Tap the Bee!",
+    "fileStem": "training_garden/training_garden.step.03",
+    "durationSec": 1.145
+  },
+  {
+    "id": "trailhead.step.27",
+    "group": "trailhead",
+    "text": "Ring the night bell!",
+    "fileStem": "trailhead/trailhead.step.27",
+    "durationSec": 1.173
+  },
+  {
+    "id": "trailhead.step.28",
+    "group": "trailhead",
+    "text": "Lantern finds glow steps!",
+    "fileStem": "trailhead/trailhead.step.28",
+    "durationSec": 1.886
+  },
+  {
+    "id": "trailhead.step.29",
+    "group": "trailhead",
+    "text": "Tap the Raccoon!",
+    "fileStem": "training_garden/training_garden.step.05",
+    "durationSec": 1.089
+  },
+  {
+    "id": "trailhead.step.30",
+    "group": "trailhead",
+    "text": "Whistle finds secrets!",
+    "fileStem": "trailhead/trailhead.step.30",
+    "durationSec": 1.835
+  },
+  {
+    "id": "trailhead.step.31",
+    "group": "trailhead",
+    "text": "Pull the secret lever!",
+    "fileStem": "trailhead/trailhead.step.31",
+    "durationSec": 1.207
+  },
+  {
+    "id": "trailhead.step.32",
+    "group": "trailhead",
+    "text": "Tap the Bee!",
+    "fileStem": "training_garden/training_garden.step.03",
+    "durationSec": 1.145
+  },
+  {
+    "id": "trailhead.step.33",
+    "group": "trailhead",
+    "text": "Ring the snow bell!",
+    "fileStem": "trailhead/trailhead.step.33",
+    "durationSec": 1.315
+  },
+  {
+    "id": "trailhead.step.34",
+    "group": "trailhead",
+    "text": "Tap the Bear!",
+    "fileStem": "training_garden/training_garden.step.07",
+    "durationSec": 1.067
+  },
+  {
+    "id": "trailhead.step.35",
+    "group": "trailhead",
+    "text": "Push the log! Wheee!",
+    "fileStem": "trailhead/trailhead.step.35",
+    "durationSec": 1.462
+  },
+  {
+    "id": "trailhead.step.36",
+    "group": "trailhead",
+    "text": "Tap Sneak! A fox!",
+    "fileStem": "trailhead/trailhead.step.36",
+    "durationSec": 1.836
+  },
+  {
+    "id": "trailhead.step.37",
+    "group": "trailhead",
+    "text": "Sneak past the fox!",
+    "fileStem": "trailhead/trailhead.step.37",
+    "durationSec": 1.664
+  },
+  {
+    "id": "trailhead.step.38",
+    "group": "trailhead",
+    "text": "Tap Sneak again!",
+    "fileStem": "trailhead/trailhead.step.04",
+    "durationSec": 1.41
+  },
+  {
+    "id": "trailhead.step.39",
+    "group": "trailhead",
+    "text": "Tap the Bee!",
+    "fileStem": "training_garden/training_garden.step.03",
+    "durationSec": 1.145
+  },
+  {
+    "id": "trailhead.step.40",
+    "group": "trailhead",
+    "text": "Ring it! Open their gate!",
+    "fileStem": "trailhead/trailhead.step.40",
+    "durationSec": 1.944
+  },
+  {
+    "id": "trailhead.step.41",
+    "group": "trailhead",
+    "text": "Everyone to the flag!",
+    "fileStem": "training_garden/training_garden.step.19",
+    "durationSec": 1.431
+  },
+  {
+    "id": "onboarding.hello",
+    "group": "onboarding",
+    "text": "Hi, I'm Pip! 👋",
+    "fileStem": "onboarding/onboarding.hello",
+    "durationSec": 1.17
+  },
+  {
+    "id": "onboarding.move",
+    "group": "onboarding",
+    "text": "Drag to move · tap Jump.",
+    "fileStem": "onboarding/onboarding.move",
+    "durationSec": 1.679
+  },
+  {
+    "id": "onboarding.crew_swap",
+    "group": "onboarding",
+    "text": "Tap a portrait to swap.",
+    "fileStem": "onboarding/onboarding.crew_swap",
+    "durationSec": 1.778
+  },
+  {
+    "id": "onboarding.interact",
+    "group": "onboarding",
+    "text": "Glowing thing? Tap 🤝 Interact.",
+    "fileStem": "onboarding/onboarding.interact",
+    "durationSec": 2.565
+  },
+  {
+    "id": "onboarding.done",
+    "group": "onboarding",
+    "text": "Have fun!",
+    "fileStem": "onboarding/onboarding.done",
+    "durationSec": 0.888
+  },
+  {
+    "id": "onboarding.pipSkip",
+    "group": "onboarding",
+    "text": "Skip tips",
+    "fileStem": "onboarding/onboarding.pipSkip",
+    "durationSec": 0.992
+  },
+  {
+    "id": "onboarding.pipOk",
+    "group": "onboarding",
+    "text": "OK",
+    "fileStem": "onboarding/onboarding.pipOk",
+    "durationSec": 0.857
+  },
+  {
+    "id": "sunny_hollow.intro.01",
+    "group": "tips",
+    "text": "Tap a portrait to swap · friends stay put",
+    "fileStem": "tips/sunny_hollow.intro.01",
+    "durationSec": 2.678
+  },
+  {
+    "id": "sunny_hollow.tutor.sun",
+    "group": "tips",
+    "text": "🐦 Swap to 🐝 Bee (1) and fly to the glowing bell up north.",
+    "fileStem": "tips/sunny_hollow.tutor.sun",
+    "durationSec": 2.958
+  },
+  {
+    "id": "sunny_hollow.tutor.patch",
+    "group": "tips",
+    "text": "🐦 Swap to 🦝 Raccoon (2) · pull the green-glow lever.",
+    "fileStem": "tips/sunny_hollow.tutor.patch",
+    "durationSec": 2.851
+  },
+  {
+    "id": "sunny_hollow.tutor.glade",
+    "group": "tips",
+    "text": "🐦 Swap to 🐻 Bear (3) · shove the orange-glow log.",
+    "fileStem": "tips/sunny_hollow.tutor.glade",
+    "durationSec": 2.865
+  },
+  {
+    "id": "sunny_hollow.tutor.boostStar",
+    "group": "tips",
+    "text": "🐦 Secret: park Bear by the tall rock, hop Raccoon up his back!",
+    "fileStem": "tips/sunny_hollow.tutor.boostStar",
+    "durationSec": 3.729
+  },
+  {
+    "id": "creek_bend.intro.01",
+    "group": "tips",
+    "text": "🌊 Only the Scout can fly over deep water. 🐾 Tricksters cross thin planks. 🐻 Bear needs a stone ford.",
+    "fileStem": "tips/creek_bend.intro.01",
+    "durationSec": 6.145
+  },
+  {
+    "id": "creek_bend.intro.02",
+    "group": "tips",
+    "text": "Leave a friend on a plate and they keep holding it while you swap!",
+    "fileStem": "tips/creek_bend.intro.02",
+    "durationSec": 3.267
+  },
+  {
+    "id": "creek_bend.puzzle.willow",
+    "group": "tips",
+    "text": "🐾 Park your Trickster on the dam plate · 🐻 Bear hops up the steps and smashes the branches · 🪽 Scout rings the willow bell.",
+    "fileStem": "tips/creek_bend.puzzle.willow",
+    "durationSec": 6.659
+  },
+  {
+    "id": "moon_meadow.intro.01",
+    "group": "tips",
+    "text": "🌙 The exit is inside the Hollow Oak, behind tough roots.",
+    "fileStem": "tips/moon_meadow.intro.01",
+    "durationSec": 3.821
+  },
+  {
+    "id": "moon_meadow.intro.02",
+    "group": "tips",
+    "text": "🪽 Scouts slip through knotholes · 🐾 Tricksters dig · 🐻 Bruisers smash roots",
+    "fileStem": "tips/moon_meadow.intro.02",
+    "durationSec": 4.872
+  },
+  {
+    "id": "moon_meadow.intro.03",
+    "group": "tips",
+    "text": "🌙 At night, bonus Petals sparkle for a little while!",
+    "fileStem": "tips/moon_meadow.intro.03",
+    "durationSec": 3.467
+  },
+  {
+    "id": "log_jam.intro.01",
+    "group": "tips",
+    "text": "🪵 Bear builds the way — shove logs into stair slots.",
+    "fileStem": "tips/log_jam.intro.01",
+    "durationSec": 3.315
+  },
+  {
+    "id": "log_jam.intro.02",
+    "group": "tips",
+    "text": "Heavy plates only hold while Bear sits on them.",
+    "fileStem": "tips/log_jam.intro.02",
+    "durationSec": 2.721
+  },
+  {
+    "id": "picnic_lawn.intro.01",
+    "group": "tips",
+    "text": "🧺 Tricksters can throw acorns at far switches.",
+    "fileStem": "tips/picnic_lawn.intro.01",
+    "durationSec": 2.816
+  },
+  {
+    "id": "picnic_lawn.intro.02",
+    "group": "tips",
+    "text": "Two plates? Park two friends — the third one goes!",
+    "fileStem": "tips/picnic_lawn.intro.02",
+    "durationSec": 4.065
+  },
+  {
+    "id": "cliff_orchard.intro.01",
+    "group": "tips",
+    "text": "🍎 Climb ledge by ledge as a team.",
+    "fileStem": "tips/cliff_orchard.intro.01",
+    "durationSec": 1.926
+  },
+  {
+    "id": "cliff_orchard.intro.02",
+    "group": "tips",
+    "text": "Boost chain: Bear is a step for your Trickster, and the Scout tops it off.",
+    "fileStem": "tips/cliff_orchard.intro.02",
+    "durationSec": 4.152
+  },
+  {
+    "id": "windy_rise.intro.01",
+    "group": "tips",
+    "text": "💨 Gusts blow on a rhythm — glide between them.",
+    "fileStem": "tips/windy_rise.intro.01",
+    "durationSec": 2.721
+  },
+  {
+    "id": "windy_rise.intro.02",
+    "group": "tips",
+    "text": "Bear + Trickster build the gully crossing together.",
+    "fileStem": "tips/windy_rise.intro.02",
+    "durationSec": 2.892
+  },
+  {
+    "id": "festival_glade.intro.01",
+    "group": "tips",
+    "text": "🎉 Every district needs a different combo.",
+    "fileStem": "tips/festival_glade.intro.01",
+    "durationSec": 2.67
+  },
+  {
+    "id": "festival_glade.intro.02",
+    "group": "tips",
+    "text": "Open all three to free the Starheart on the knoll, then carry it home!",
+    "fileStem": "tips/festival_glade.intro.02",
+    "durationSec": 3.497
+  },
+  {
+    "id": "sunbeam_grove.pip.start",
+    "group": "tips",
+    "text": "Sunbeams make ghost steps solid. Let's try!",
+    "fileStem": "tips/sunbeam_grove.pip.start",
+    "durationSec": 3.334
+  },
+  {
+    "id": "sunbeam_grove.pip.z-2",
+    "group": "tips",
+    "text": "Bee, turn the mirror toward the ghost stair.",
+    "fileStem": "tips/sunbeam_grove.pip.z-2",
+    "durationSec": 2.976
+  },
+  {
+    "id": "sunbeam_grove.pip.z-30",
+    "group": "tips",
+    "text": "Park Bear in the beam. His shadow is a bridge!",
+    "fileStem": "tips/sunbeam_grove.pip.z-30",
+    "durationSec": 2.849
+  },
+  {
+    "id": "sunbeam_grove.pip.near-badger",
+    "group": "tips",
+    "text": "Tap Sneak. Tiptoe past the sleepy badger.",
+    "fileStem": "tips/sunbeam_grove.pip.near-badger",
+    "durationSec": 3.107
+  },
+  {
+    "id": "sunbeam_grove.pip.stuck-beam",
+    "group": "tips",
+    "text": "Open the shutter, then aim both mirrors.",
+    "fileStem": "tips/sunbeam_grove.pip.stuck-beam",
+    "durationSec": 2.695
+  },
+  {
+    "id": "sunbeam_grove.pip.stuck-badger",
+    "group": "tips",
+    "text": "Throw an acorn so he looks the other way.",
+    "fileStem": "tips/sunbeam_grove.pip.stuck-badger",
+    "durationSec": 2.259
+  },
+  {
+    "id": "mill_pond.pip.start",
+    "group": "tips",
+    "text": "Sluice levers set the water low, middle, or high.",
+    "fileStem": "tips/mill_pond.pip.start",
+    "durationSec": 3.185
+  },
+  {
+    "id": "mill_pond.pip.z-2",
+    "group": "tips",
+    "text": "Pull the water-down sluice. Walk the dry bed.",
+    "fileStem": "tips/mill_pond.pip.z-2",
+    "durationSec": 3.296
+  },
+  {
+    "id": "mill_pond.pip.z-33",
+    "group": "tips",
+    "text": "Raise the water and ride the log, Bear!",
+    "fileStem": "tips/mill_pond.pip.z-33",
+    "durationSec": 2.545
+  },
+  {
+    "id": "mill_pond.pip.near-turtle",
+    "group": "tips",
+    "text": "The turtle snaps in front. Sneak around behind.",
+    "fileStem": "tips/mill_pond.pip.near-turtle",
+    "durationSec": 3.577
+  },
+  {
+    "id": "mill_pond.pip.stuck-ford",
+    "group": "tips",
+    "text": "Flick the floating leaf so it looks away.",
+    "fileStem": "tips/mill_pond.pip.stuck-ford",
+    "durationSec": 2.327
+  },
+  {
+    "id": "mill_pond.pip.stuck-mill",
+    "group": "tips",
+    "text": "Raise water so it naps, then lower it again.",
+    "fileStem": "tips/mill_pond.pip.stuck-mill",
+    "durationSec": 3.001
+  },
+  {
+    "id": "bramble_patch.pip.start",
+    "group": "tips",
+    "text": "Raccoon plants. Bee brings a dewdrop. Then it grows!",
+    "fileStem": "tips/bramble_patch.pip.start",
+    "durationSec": 3.739
+  },
+  {
+    "id": "bramble_patch.pip.z-2",
+    "group": "tips",
+    "text": "Fly to the drip leaf, then water the seed.",
+    "fileStem": "tips/bramble_patch.pip.z-2",
+    "durationSec": 2.313
+  },
+  {
+    "id": "bramble_patch.pip.z-16",
+    "group": "tips",
+    "text": "Bear, bounce on the mushroom. You go the highest!",
+    "fileStem": "tips/bramble_patch.pip.z-16",
+    "durationSec": 3.328
+  },
+  {
+    "id": "bramble_patch.pip.near-spider",
+    "group": "tips",
+    "text": "Pluck the far strand, then snip the web.",
+    "fileStem": "tips/bramble_patch.pip.near-spider",
+    "durationSec": 2.364
+  },
+  {
+    "id": "bramble_patch.pip.stuck-web",
+    "group": "tips",
+    "text": "Wait until the spider turns away.",
+    "fileStem": "tips/bramble_patch.pip.stuck-web",
+    "durationSec": 2.23
+  },
+  {
+    "id": "bramble_patch.pip.stuck-nest",
+    "group": "tips",
+    "text": "Clear the web first, then water the far seed.",
+    "fileStem": "tips/bramble_patch.pip.stuck-nest",
+    "durationSec": 2.752
+  },
+  {
+    "id": "weathervane_hill.pip.start",
+    "group": "tips",
+    "text": "Crank a vane and the wind flips for the whole hill.",
+    "fileStem": "tips/weathervane_hill.pip.start",
+    "durationSec": 2.965
+  },
+  {
+    "id": "weathervane_hill.pip.z-2",
+    "group": "tips",
+    "text": "Turn the wind up the hill, then fly with it.",
+    "fileStem": "tips/weathervane_hill.pip.z-2",
+    "durationSec": 2.894
+  },
+  {
+    "id": "weathervane_hill.pip.z-5.5",
+    "group": "tips",
+    "text": "Bear holds the raft. Raccoon hops on. Then let go!",
+    "fileStem": "tips/weathervane_hill.pip.z-5.5",
+    "durationSec": 4.266
+  },
+  {
+    "id": "weathervane_hill.pip.near-crow",
+    "group": "tips",
+    "text": "Hide under the leaves until its back is turned.",
+    "fileStem": "tips/weathervane_hill.pip.near-crow",
+    "durationSec": 2.653
+  },
+  {
+    "id": "weathervane_hill.pip.stuck-crow",
+    "group": "tips",
+    "text": "Bear's shadow is a safe spot on the ridge.",
+    "fileStem": "tips/weathervane_hill.pip.stuck-crow",
+    "durationSec": 2.452
+  },
+  {
+    "id": "weathervane_hill.pip.stuck-ridge",
+    "group": "tips",
+    "text": "Flip the wind, then glide from canopy to canopy.",
+    "fileStem": "tips/weathervane_hill.pip.stuck-ridge",
+    "durationSec": 3.084
+  },
+  {
+    "id": "hornet_hedge.pip.start",
+    "group": "tips",
+    "text": "Pass the Golden Acorn from friend to friend.",
+    "fileStem": "tips/hornet_hedge.pip.start",
+    "durationSec": 2.753
+  },
+  {
+    "id": "hornet_hedge.pip.z-2",
+    "group": "tips",
+    "text": "Bee drops it in the glowing ring for Bear.",
+    "fileStem": "tips/hornet_hedge.pip.z-2",
+    "durationSec": 2.1
+  },
+  {
+    "id": "hornet_hedge.pip.z-34",
+    "group": "tips",
+    "text": "The ring only glows for a little while. Hurry, gently!",
+    "fileStem": "tips/hornet_hedge.pip.z-34",
+    "durationSec": 3.336
+  },
+  {
+    "id": "hornet_hedge.pip.near-nest",
+    "group": "tips",
+    "text": "Stomp the puff-mushroom, Bear. Walk through the smoke.",
+    "fileStem": "tips/hornet_hedge.pip.near-nest",
+    "durationSec": 3.249
+  },
+  {
+    "id": "hornet_hedge.pip.stuck-chain",
+    "group": "tips",
+    "text": "Plan the smoke, then pass the acorn.",
+    "fileStem": "tips/hornet_hedge.pip.stuck-chain",
+    "durationSec": 3.647
+  },
+  {
+    "id": "hornet_hedge.pip.carry-nest",
+    "group": "tips",
+    "text": "Don't carry the acorn through a buzz zone.",
+    "fileStem": "tips/hornet_hedge.pip.carry-nest",
+    "durationSec": 2.325
+  },
+  {
+    "id": "hornet_hedge.puzzle.chain",
+    "group": "tips",
+    "text": "🐻 Smoke + walk to the far ring · 🐾 climb the acorn up the vine · 🪽 fly it high over the nest · 🐻 carry it home. Hand-offs must be caught within 8 s!",
+    "fileStem": "tips/hornet_hedge.puzzle.chain",
+    "durationSec": 8.253
+  },
+  {
+    "id": "owl_wood.pip.start",
+    "group": "tips",
+    "text": "Something shiny is on that stump. Fly up, Bee!",
+    "fileStem": "tips/owl_wood.pip.start",
+    "durationSec": 3.386
+  },
+  {
+    "id": "owl_wood.pip.sig-gift-lantern",
+    "group": "tips",
+    "text": "That's the Glow Lantern! Tap G to switch it.",
+    "fileStem": "tips/owl_wood.pip.sig-gift-lantern",
+    "durationSec": 3.042
+  },
+  {
+    "id": "owl_wood.pip.near-owl",
+    "group": "tips",
+    "text": "The owl wakes at night. Hide behind trunks.",
+    "fileStem": "tips/owl_wood.pip.near-owl",
+    "durationSec": 3.199
+  },
+  {
+    "id": "owl_wood.pip.z-37.5",
+    "group": "tips",
+    "text": "The Echo Whistle sits on the quiet side.",
+    "fileStem": "tips/owl_wood.pip.z-37.5",
+    "durationSec": 2.695
+  },
+  {
+    "id": "owl_wood.pip.sig-gift-whistle",
+    "group": "tips",
+    "text": "Ping to find hidden steps. It can wake a badger.",
+    "fileStem": "tips/owl_wood.pip.sig-gift-whistle",
+    "durationSec": 2.94
+  },
+  {
+    "id": "owl_wood.pip.stuck-echo",
+    "group": "tips",
+    "text": "Ping the hidden steps. Bear, sneak to the plate.",
+    "fileStem": "tips/owl_wood.pip.stuck-echo",
+    "durationSec": 3.654
+  },
+  {
+    "id": "frost_hollow.pip.start",
+    "group": "tips",
+    "text": "Three bells: summer, winter, and spring. Bee can ring them.",
+    "fileStem": "tips/frost_hollow.pip.start",
+    "durationSec": 3.732
+  },
+  {
+    "id": "frost_hollow.pip.z-3",
+    "group": "tips",
+    "text": "Ring winter. The creek freezes. Walk the ice!",
+    "fileStem": "tips/frost_hollow.pip.z-3",
+    "durationSec": 3.516
+  },
+  {
+    "id": "frost_hollow.pip.z-17.5",
+    "group": "tips",
+    "text": "Ring spring, then belly-slide down the mud chute!",
+    "fileStem": "tips/frost_hollow.pip.z-17.5",
+    "durationSec": 2.671
+  },
+  {
+    "id": "frost_hollow.pip.near-fox",
+    "group": "tips",
+    "text": "Tap Sneak. Hide in the hollow log, Bee.",
+    "fileStem": "tips/frost_hollow.pip.near-fox",
+    "durationSec": 2.567
+  },
+  {
+    "id": "frost_hollow.pip.near-fox-5",
+    "group": "tips",
+    "text": "Winter snow hides Bee's smell from the fox.",
+    "fileStem": "tips/frost_hollow.pip.near-fox-5",
+    "durationSec": 2.475
+  },
+  {
+    "id": "frost_hollow.pip.stuck-fox",
+    "group": "tips",
+    "text": "Ring winter, slide the log, then sneak to the bell.",
+    "fileStem": "tips/frost_hollow.pip.stuck-fox",
+    "durationSec": 3.499
+  },
+  {
+    "id": "backyard_split.pip.start",
+    "group": "tips",
+    "text": "You're split up! Switches here open gates over there.",
+    "fileStem": "tips/backyard_split.pip.start",
+    "durationSec": 3.024
+  },
+  {
+    "id": "backyard_split.pip.z-4",
+    "group": "tips",
+    "text": "Raccoon, pull the lever. It opens Bear's gate.",
+    "fileStem": "tips/backyard_split.pip.z-4",
+    "durationSec": 3.375
+  },
+  {
+    "id": "backyard_split.pip.near-sprinkler",
+    "group": "tips",
+    "text": "Stand on the tap plate to pause the sprinkler.",
+    "fileStem": "tips/backyard_split.pip.near-sprinkler",
+    "durationSec": 2.525
+  },
+  {
+    "id": "backyard_split.pip.near-mower",
+    "group": "tips",
+    "text": "Wait for the mower to rest, then dash across.",
+    "fileStem": "tips/backyard_split.pip.near-mower",
+    "durationSec": 2.816
+  },
+  {
+    "id": "backyard_split.pip.stuck-tap",
+    "group": "tips",
+    "text": "Each friend opens a door for another.",
+    "fileStem": "tips/backyard_split.pip.stuck-tap",
+    "durationSec": 2.114
+  },
+  {
+    "id": "backyard_split.pip.sig-blR",
+    "group": "tips",
+    "text": "Everyone meet at the flag. Timing is everything!",
+    "fileStem": "tips/backyard_split.pip.sig-blR",
+    "durationSec": 3.168
+  },
+  {
+    "id": "ember_ridge.pip.start",
+    "group": "tips",
+    "text": "A cool cave sits by the creek. Look inside!",
+    "fileStem": "tips/ember_ridge.pip.start",
+    "durationSec": 3.146
+  },
+  {
+    "id": "ember_ridge.pip.gift-bubble",
+    "group": "tips",
+    "text": "Fill the pouch in the creek, then puff the sparks.",
+    "fileStem": "tips/ember_ridge.pip.gift-bubble",
+    "durationSec": 2.781
+  },
+  {
+    "id": "ember_ridge.pip.z-24.5",
+    "group": "tips",
+    "text": "Crank the vane. Blow the sparks off the path!",
+    "fileStem": "tips/ember_ridge.pip.z-24.5",
+    "durationSec": 3.174
+  },
+  {
+    "id": "ember_ridge.pip.z-39",
+    "group": "tips",
+    "text": "Ring the spring bell. Dew makes the grass safe.",
+    "fileStem": "tips/ember_ridge.pip.z-39",
+    "durationSec": 3.103
+  },
+  {
+    "id": "ember_ridge.pip.stuck-dam",
+    "group": "tips",
+    "text": "Bear dams the creek. Then refill the pouch.",
+    "fileStem": "tips/ember_ridge.pip.stuck-dam",
+    "durationSec": 2.715
+  },
+  {
+    "id": "ember_ridge.pip.cubBlocked",
+    "group": "tips",
+    "text": "Call the cub when the grass is cool and dim.",
+    "fileStem": "tips/ember_ridge.pip.cubBlocked",
+    "durationSec": 2.531
+  },
+  {
+    "id": "flooded_mill.pip.start",
+    "group": "tips",
+    "text": "The turtle rides high water to a far rock.",
+    "fileStem": "tips/flooded_mill.pip.start",
+    "durationSec": 2.563
+  },
+  {
+    "id": "flooded_mill.pip.sluices",
+    "group": "tips",
+    "text": "Try each sluice. Watch where the turtle goes.",
+    "fileStem": "tips/flooded_mill.pip.sluices",
+    "durationSec": 3.0
+  },
+  {
+    "id": "flooded_mill.pip.millstone",
+    "group": "tips",
+    "text": "Pass the millstone down: Bee, then Raccoon, then Bear.",
+    "fileStem": "tips/flooded_mill.pip.millstone",
+    "durationSec": 2.858
+  },
+  {
+    "id": "flooded_mill.pip.stuck-chain",
+    "group": "tips",
+    "text": "High for Bee. Middle for Raccoon. Low for Bear.",
+    "fileStem": "tips/flooded_mill.pip.stuck-chain",
+    "durationSec": 3.285
+  },
+  {
+    "id": "flooded_mill.pip.ducklings",
+    "group": "tips",
+    "text": "Ducklings float when the water is high.",
+    "fileStem": "tips/flooded_mill.pip.ducklings",
+    "durationSec": 2.479
+  },
+  {
+    "id": "flooded_mill.pip.stuck-grate",
+    "group": "tips",
+    "text": "Lower the water so the ducklings can hop.",
+    "fileStem": "tips/flooded_mill.pip.stuck-grate",
+    "durationSec": 2.266
+  },
+  {
+    "id": "night_market.pip.start",
+    "group": "tips",
+    "text": "You are split up! Bee is across the stream.",
+    "fileStem": "tips/night_market.pip.start",
+    "durationSec": 2.999
+  },
+  {
+    "id": "night_market.pip.lantern",
+    "group": "tips",
+    "text": "Bee, hold the lantern on the roof. The owl looks!",
+    "fileStem": "tips/night_market.pip.lantern",
+    "durationSec": 3.456
+  },
+  {
+    "id": "night_market.pip.whistle",
+    "group": "tips",
+    "text": "Raccoon, whistle to find the hidden lever.",
+    "fileStem": "tips/night_market.pip.whistle",
+    "durationSec": 2.652
+  },
+  {
+    "id": "night_market.pip.high-bell",
+    "group": "tips",
+    "text": "Bee, ring the high bell for the others.",
+    "fileStem": "tips/night_market.pip.high-bell",
+    "durationSec": 2.072
+  },
+  {
+    "id": "night_market.pip.reunion",
+    "group": "tips",
+    "text": "Bait the owl again. Then sneak the owlet across.",
+    "fileStem": "tips/night_market.pip.reunion",
+    "durationSec": 3.388
+  },
+  {
+    "id": "night_market.pip.lantern-off",
+    "group": "tips",
+    "text": "Tap G to turn the lantern off if the owl stares.",
+    "fileStem": "tips/night_market.pip.lantern-off",
+    "durationSec": 3.132
+  },
+  {
+    "id": "mirror_caves.pip.start",
+    "group": "tips",
+    "text": "The Pebble Sling is on that stone. Pick it up, Bear!",
+    "fileStem": "tips/mirror_caves.pip.start",
+    "durationSec": 3.574
+  },
+  {
+    "id": "mirror_caves.pip.sling",
+    "group": "tips",
+    "text": "Throw a pebble at the far crystal. Watch the beam!",
+    "fileStem": "tips/mirror_caves.pip.sling",
+    "durationSec": 3.143
+  },
+  {
+    "id": "mirror_caves.pip.whistle",
+    "group": "tips",
+    "text": "Whistle to see which crystals are mirrors.",
+    "fileStem": "tips/mirror_caves.pip.whistle",
+    "durationSec": 2.297
+  },
+  {
+    "id": "mirror_caves.pip.web",
+    "group": "tips",
+    "text": "Bubble the web from far away. Or sling the dew.",
+    "fileStem": "tips/mirror_caves.pip.web",
+    "durationSec": 2.977
+  },
+  {
+    "id": "mirror_caves.pip.pup",
+    "group": "tips",
+    "text": "Turn the lantern off. The pup only walks in the dark.",
+    "fileStem": "tips/mirror_caves.pip.pup",
+    "durationSec": 3.432
+  },
+  {
+    "id": "mirror_caves.pip.stuck-bounce",
+    "group": "tips",
+    "text": "Ping, then turn the three real mirrors.",
+    "fileStem": "tips/mirror_caves.pip.stuck-bounce",
+    "durationSec": 2.537
+  },
+  {
+    "id": "storm_orchard.pip.start",
+    "group": "tips",
+    "text": "A Leaf Glider hangs on that branch. Grab it!",
+    "fileStem": "tips/storm_orchard.pip.start",
+    "durationSec": 3.54
+  },
+  {
+    "id": "storm_orchard.pip.vane",
+    "group": "tips",
+    "text": "Crank the vane, then glide with the wind.",
+    "fileStem": "tips/storm_orchard.pip.vane",
+    "durationSec": 2.402
+  },
+  {
+    "id": "storm_orchard.pip.crow",
+    "group": "tips",
+    "text": "Bear, sling a shiny pebble. The crow will chase it.",
+    "fileStem": "tips/storm_orchard.pip.crow",
+    "durationSec": 3.506
+  },
+  {
+    "id": "storm_orchard.pip.plant",
+    "group": "tips",
+    "text": "Plant, water, then bounce Bear into the apple tree.",
+    "fileStem": "tips/storm_orchard.pip.plant",
+    "durationSec": 3.67
+  },
+  {
+    "id": "storm_orchard.pip.crown",
+    "group": "tips",
+    "text": "Stand Bear in the wind. Walk the chick behind him.",
+    "fileStem": "tips/storm_orchard.pip.crown",
+    "durationSec": 3.211
+  },
+  {
+    "id": "storm_orchard.pip.stuck-crown",
+    "group": "tips",
+    "text": "Flip the wind so it blows into the hill, not the drop.",
+    "fileStem": "tips/storm_orchard.pip.stuck-crown",
+    "durationSec": 3.319
+  },
+  {
+    "id": "thaw_valley.pip.start",
+    "group": "tips",
+    "text": "That big bell changes season, time, and wind together.",
+    "fileStem": "tips/thaw_valley.pip.start",
+    "durationSec": 3.796
+  },
+  {
+    "id": "thaw_valley.pip.fox",
+    "group": "tips",
+    "text": "Ping the whistle by the plate. Snow hides your smell.",
+    "fileStem": "tips/thaw_valley.pip.fox",
+    "durationSec": 3.246
+  },
+  {
+    "id": "thaw_valley.pip.seed",
+    "group": "tips",
+    "text": "Ring spring and day. Then plant and water the vine.",
+    "fileStem": "tips/thaw_valley.pip.seed",
+    "durationSec": 3.725
+  },
+  {
+    "id": "thaw_valley.pip.fawn",
+    "group": "tips",
+    "text": "The fawn needs a clear, unfrozen path. Try summer dusk.",
+    "fileStem": "tips/thaw_valley.pip.fawn",
+    "durationSec": 4.348
+  },
+  {
+    "id": "thaw_valley.pip.stuck-ford",
+    "group": "tips",
+    "text": "Ring until the three icons show summer, dusk, and calm.",
+    "fileStem": "tips/thaw_valley.pip.stuck-ford",
+    "durationSec": 4.026
+  },
+  {
+    "id": "thaw_valley.pip.den",
+    "group": "tips",
+    "text": "A fox kit is in the den, if you want to help.",
+    "fileStem": "tips/thaw_valley.pip.den",
+    "durationSec": 3.172
+  },
+  {
+    "id": "grand_garden.pip.start",
+    "group": "tips",
+    "text": "The snail is slow. Leave it here until the path is safe.",
+    "fileStem": "tips/grand_garden.pip.start",
+    "durationSec": 3.628
+  },
+  {
+    "id": "grand_garden.pip.cups",
+    "group": "tips",
+    "text": "Time the sprinkler to fill both cups. The pouch can help.",
+    "fileStem": "tips/grand_garden.pip.cups",
+    "durationSec": 3.462
+  },
+  {
+    "id": "grand_garden.pip.wasps",
+    "group": "tips",
+    "text": "Crank the vane. Blow the buzz off the path, then walk.",
+    "fileStem": "tips/grand_garden.pip.wasps",
+    "durationSec": 3.756
+  },
+  {
+    "id": "grand_garden.pip.gear",
+    "group": "tips",
+    "text": "Each job wants different gear. Swap at the stumps.",
+    "fileStem": "tips/grand_garden.pip.gear",
+    "durationSec": 3.517
+  },
+  {
+    "id": "grand_garden.pip.plates",
+    "group": "tips",
+    "text": "Hold the plates so the spray and mower stay still.",
+    "fileStem": "tips/grand_garden.pip.plates",
+    "durationSec": 3.274
+  },
+  {
+    "id": "grand_garden.pip.stuck-snail",
+    "group": "tips",
+    "text": "Someone has to keep standing on each plate.",
+    "fileStem": "tips/grand_garden.pip.stuck-snail",
+    "durationSec": 2.184
+  },
+  {
+    "id": "starheart_summit.pip.start",
+    "group": "tips",
+    "text": "Your rescued friends will help. The Starheart is up top.",
+    "fileStem": "tips/starheart_summit.pip.start",
+    "durationSec": 3.21
+  },
+  {
+    "id": "starheart_summit.pip.missing",
+    "group": "tips",
+    "text": "That friend isn't here, so you will have to do it.",
+    "fileStem": "tips/starheart_summit.pip.missing",
+    "durationSec": 2.947
+  },
+  {
+    "id": "starheart_summit.pip.ring2",
+    "group": "tips",
+    "text": "Lantern, water, seed, then a short still glide.",
+    "fileStem": "tips/starheart_summit.pip.ring2",
+    "durationSec": 3.823
+  },
+  {
+    "id": "starheart_summit.pip.bell",
+    "group": "tips",
+    "text": "Each ring of the bell helps with a different animal.",
+    "fileStem": "tips/starheart_summit.pip.bell",
+    "durationSec": 2.802
+  },
+  {
+    "id": "starheart_summit.pip.lift",
+    "group": "tips",
+    "text": "Two friends must stand close to lift the Starheart.",
+    "fileStem": "tips/starheart_summit.pip.lift",
+    "durationSec": 2.855
+  },
+  {
+    "id": "starheart_summit.pip.carry",
+    "group": "tips",
+    "text": "Walk the caps. A fall only drops it to the next one.",
+    "fileStem": "tips/starheart_summit.pip.carry",
+    "durationSec": 3.474
+  },
+  {
+    "id": "starheart_summit.pip.calm",
+    "group": "tips",
+    "text": "Calm summer dusk is the safest way down.",
+    "fileStem": "tips/starheart_summit.pip.calm",
+    "durationSec": 2.685
+  },
+  {
+    "id": "meadow_hub.intro.01",
+    "group": "tips",
+    "text": "🏡 Welcome home to the Meadow Hub!",
+    "fileStem": "tips/meadow_hub.intro.01",
+    "durationSec": 1.728
+  },
+  {
+    "id": "meadow_hub.intro.02",
+    "group": "tips",
+    "text": "🪧 Walk to the Trail Board to pick a level · ⛺ Crew Tent picks your crew",
+    "fileStem": "tips/meadow_hub.intro.02",
+    "durationSec": 3.793
+  },
+  {
+    "id": "act3_lab.intro.01",
+    "group": "tips",
+    "text": "📣 Tap Call (or C) so the badger cub follows you!",
+    "fileStem": "tips/act3_lab.intro.01",
+    "durationSec": 2.461
+  },
+  {
+    "id": "act3_lab.intro.02",
+    "group": "tips",
+    "text": "Try new lures: 🎶 whistle the fox, 🏮 bait the owl, 🌊 float the turtle, 🌬️ blow the wasps, ✨ pebble the crow, 🫧 bubble the web, 🏮 roll the badger, 💦 fill the cup.",
+    "fileStem": "tips/act3_lab.intro.02",
+    "durationSec": 10.187
+  },
+  {
+    "id": "act3_lab.intro.03",
+    "group": "tips",
+    "text": "🧰 East gear yard: swap gear at the stump · 🫧 fill the pouch at the pond, douse embers · 🪨 Bear slings the far crystal · 🍃 glide the ravine.",
+    "fileStem": "tips/act3_lab.intro.03",
+    "durationSec": 7.353
+  },
+  {
+    "id": "act3_lab.intro.04",
+    "group": "tips",
+    "text": "🏁 The exit needs all three friends AND the cub. Nobody gets hurt — a bonk just poofs you back to the 🚩 flag.",
+    "fileStem": "tips/act3_lab.intro.04",
+    "durationSec": 6.943
+  },
+  {
+    "id": "ui.logo",
+    "group": "menu",
+    "text": "Pollinator Meadow",
+    "fileStem": "menu/ui.logo",
+    "durationSec": 1.226
+  },
+  {
+    "id": "ui.tagline",
+    "group": "menu",
+    "text": "Grow your meadow. Gather, build and bloom.",
+    "fileStem": "menu/ui.tagline",
+    "durationSec": 2.983
+  },
+  {
+    "id": "ui.tValley",
+    "group": "menu",
+    "text": "▶ Play Adventure",
+    "fileStem": "menu/ui.tValley",
+    "durationSec": 1.053
+  },
+  {
+    "id": "ui.play",
+    "group": "menu",
+    "text": "▶ Arcade Play",
+    "fileStem": "menu/ui.play",
+    "durationSec": 1.0
+  },
+  {
+    "id": "ui.cont",
+    "group": "menu",
+    "text": "⏩ Continue round",
+    "fileStem": "menu/ui.cont",
+    "durationSec": 1.292
+  },
+  {
+    "id": "ui.tJournal",
+    "group": "menu",
+    "text": "📖 Journal",
+    "fileStem": "menu/ui.tJournal",
+    "durationSec": 0.671
+  },
+  {
+    "id": "ui.tSettings",
+    "group": "menu",
+    "text": "⚙ Settings",
+    "fileStem": "menu/ui.tSettings",
+    "durationSec": 0.907
+  },
+  {
+    "id": "ui.tHow",
+    "group": "menu",
+    "text": "❓ How to play",
+    "fileStem": "menu/ui.tHow",
+    "durationSec": 1.042
+  },
+  {
+    "id": "ui.startCredits",
+    "group": "menu",
+    "text": "ℹ Credits",
+    "fileStem": "menu/ui.startCredits",
+    "durationSec": 1.506
+  },
+  {
+    "id": "ui.lensRound",
+    "group": "menu",
+    "text": "Round",
+    "fileStem": "menu/ui.lensRound",
+    "durationSec": 0.826
+  },
+  {
+    "id": "ui.vAct1",
+    "group": "menu",
+    "text": "🗺️ Act 1 · Valley",
+    "fileStem": "menu/ui.vAct1",
+    "durationSec": 1.383
+  },
+  {
+    "id": "ui.vAct2",
+    "group": "menu",
+    "text": "🥾 Act 2 · Trail",
+    "fileStem": "menu/ui.vAct2",
+    "durationSec": 1.726
+  },
+  {
+    "id": "ui.vAct3",
+    "group": "menu",
+    "text": "🏡 Act 3 · Friends",
+    "fileStem": "menu/ui.vAct3",
+    "durationSec": 1.699
+  },
+  {
+    "id": "ui.vEditCrew",
+    "group": "menu",
+    "text": "⛺ Crew Tent",
+    "fileStem": "menu/ui.vEditCrew",
+    "durationSec": 0.952
+  },
+  {
+    "id": "ui.vSkins",
+    "group": "menu",
+    "text": "🎨 Skins",
+    "fileStem": "menu/ui.vSkins",
+    "durationSec": 1.051
+  },
+  {
+    "id": "ui.vBack",
+    "group": "menu",
+    "text": "◀ Title",
+    "fileStem": "menu/ui.vBack",
+    "durationSec": 0.794
+  },
+  {
+    "id": "ui.vHub",
+    "group": "menu",
+    "text": "🏡 Meadow Hub",
+    "fileStem": "menu/ui.vHub",
+    "durationSec": 1.082
+  },
+  {
+    "id": "ui.vFree",
+    "group": "menu",
+    "text": "🌿 Free roam",
+    "fileStem": "menu/ui.vFree",
+    "durationSec": 1.504
+  },
+  {
+    "id": "ui.vGo",
+    "group": "menu",
+    "text": "⏱ Challenge",
+    "fileStem": "menu/ui.vGo",
+    "durationSec": 0.903
+  },
+  {
+    "id": "ui.vGo.timed",
+    "group": "menu",
+    "text": "⏱ Timed",
+    "fileStem": "menu/ui.vGo.timed",
+    "durationSec": 0.681
+  },
+  {
+    "id": "ui.vGo.continueTimed",
+    "group": "menu",
+    "text": "⏱ Continue · Timed",
+    "fileStem": "menu/ui.vGo.continueTimed",
+    "durationSec": 1.578
+  },
+  {
+    "id": "ui.vFree.play",
+    "group": "menu",
+    "text": "▶ Play",
+    "fileStem": "menu/ui.vFree.play",
+    "durationSec": 0.922
+  },
+  {
+    "id": "ui.vFree.continue",
+    "group": "menu",
+    "text": "▶ Continue",
+    "fileStem": "menu/ui.vFree.continue",
+    "durationSec": 0.767
+  },
+  {
+    "id": "ui.pickLevel",
+    "group": "menu",
+    "text": "Pick a level to play",
+    "fileStem": "menu/ui.pickLevel",
+    "durationSec": 1.324
+  },
+  {
+    "id": "ui.comingSoon",
+    "group": "menu",
+    "text": "Coming soon!",
+    "fileStem": "menu/ui.comingSoon",
+    "durationSec": 1.139
+  },
+  {
+    "id": "ui.comingSoon.badge",
+    "group": "menu",
+    "text": "🚧 Coming soon",
+    "fileStem": "menu/ui.comingSoon.badge",
+    "durationSec": 1.079
+  },
+  {
+    "id": "ui.act3Note.openAll",
+    "group": "menu",
+    "text": "🏡 Act 3 · every level is open! Each one hides a lost baby animal — bring it home to the Meadow Hub. Levels arrive one at a time.",
+    "fileStem": "menu/ui.act3Note.openAll",
+    "durationSec": 8.42
+  },
+  {
+    "id": "ui.act3Note.bringHome",
+    "group": "menu",
+    "text": "🏡 Bring each lost baby home! Play 17 → 24 in order.",
+    "fileStem": "menu/ui.act3Note.bringHome",
+    "durationSec": 3.724
+  },
+  {
+    "id": "ui.act3Note.locked",
+    "group": "menu",
+    "text": "🔒 Beat level 16, Backyard Split, to open Act 3",
+    "fileStem": "menu/ui.act3Note.locked",
+    "durationSec": 4.131
+  },
+  {
+    "id": "ui.tsH.unlock",
+    "group": "menu",
+    "text": "Pip found a new trail sign!",
+    "fileStem": "menu/ui.tsH.unlock",
+    "durationSec": 2.007
+  },
+  {
+    "id": "ui.tsH.unlock.alt",
+    "group": "menu",
+    "text": "🪧 Pip found a new trail sign!",
+    "fileStem": "menu/ui.tsH.unlock.alt",
+    "durationSec": 2.015
+  },
+  {
+    "id": "ui.tsTx.unlock",
+    "group": "menu",
+    "text": "You beat all 8 levels! A new trail opened in Act 2. Try Trailhead Trials to peek at 8 new tricks and 8 sneaky critters.",
+    "fileStem": "menu/ui.tsTx.unlock",
+    "durationSec": 8.339
+  },
+  {
+    "id": "ui.tsH.badge",
+    "group": "menu",
+    "text": "🏅 Trailhead badge!",
+    "fileStem": "menu/ui.tsH.badge",
+    "durationSec": 1.321
+  },
+  {
+    "id": "ui.tsTx.badge",
+    "group": "menu",
+    "text": "You saw every new trick! Level 9, Sunbeam Grove, is open. Use Sneak 🐾 near sleepy critters.",
+    "fileStem": "menu/ui.tsTx.badge",
+    "durationSec": 7.281
+  },
+  {
+    "id": "ui.tsH.hub",
+    "group": "menu",
+    "text": "🏡 Welcome home to the Meadow Hub!",
+    "fileStem": "tips/meadow_hub.intro.01",
+    "durationSec": 1.728
+  },
+  {
+    "id": "ui.tsTx.hub",
+    "group": "menu",
+    "text": "You beat Act 2! Pip built a cozy glade for the crew. Lost baby animals are waiting out in Act 3 — rescue them and they move in here. Level 17, Ember Ridge, is open!",
+    "fileStem": "menu/ui.tsTx.hub",
+    "durationSec": 11.927
+  },
+  {
+    "id": "ui.tsOk",
+    "group": "menu",
+    "text": "Let's go! ▶",
+    "fileStem": "menu/ui.tsOk",
+    "durationSec": 0.985
+  },
+  {
+    "id": "ui.bSkipT",
+    "group": "menu",
+    "text": "⏭ Skip trail",
+    "fileStem": "menu/ui.bSkipT",
+    "durationSec": 1.109
+  },
+  {
+    "id": "ui.bJump",
+    "group": "menu",
+    "text": "Jump",
+    "fileStem": "menu/ui.bJump",
+    "durationSec": 0.752
+  },
+  {
+    "id": "ui.bSwap",
+    "group": "menu",
+    "text": "Swap",
+    "fileStem": "menu/ui.bSwap",
+    "durationSec": 0.672
+  },
+  {
+    "id": "ui.bSneak",
+    "group": "menu",
+    "text": "Sneak",
+    "fileStem": "menu/ui.bSneak",
+    "durationSec": 0.765
+  },
+  {
+    "id": "ui.bCall",
+    "group": "menu",
+    "text": "Call",
+    "fileStem": "menu/ui.bCall",
+    "durationSec": 0.615
+  },
+  {
+    "id": "ui.bInt",
+    "group": "menu",
+    "text": "Interact",
+    "fileStem": "menu/ui.bInt",
+    "durationSec": 0.927
+  },
+  {
+    "id": "ui.bAct",
+    "group": "menu",
+    "text": "Boost",
+    "fileStem": "menu/ui.bAct",
+    "durationSec": 0.496
+  },
+  {
+    "id": "ui.bBuild",
+    "group": "menu",
+    "text": "Build",
+    "fileStem": "menu/ui.bBuild",
+    "durationSec": 0.663
+  },
+  {
+    "id": "ui.bRts",
+    "group": "menu",
+    "text": "Command",
+    "fileStem": "menu/ui.bRts",
+    "durationSec": 3.418
+  },
+  {
+    "id": "ui.bbExit",
+    "group": "menu",
+    "text": "✕ Done",
+    "fileStem": "menu/ui.bbExit",
+    "durationSec": 0.607
+  },
+  {
+    "id": "ui.bbPlace",
+    "group": "menu",
+    "text": "✓ Place",
+    "fileStem": "menu/ui.bbPlace",
+    "durationSec": 0.751
+  },
+  {
+    "id": "ui.bHubMap",
+    "group": "menu",
+    "text": "🗺️ Levels",
+    "fileStem": "menu/ui.bHubMap",
+    "durationSec": 0.828
+  },
+  {
+    "id": "ui.packBtn",
+    "group": "menu",
+    "text": "📦 Pack Up",
+    "fileStem": "menu/ui.packBtn",
+    "durationSec": 0.651
+  },
+  {
+    "id": "ui.rbFree",
+    "group": "menu",
+    "text": "Free play",
+    "fileStem": "menu/ui.rbFree",
+    "durationSec": 0.893
+  },
+  {
+    "id": "ui.possBar",
+    "group": "menu",
+    "text": "🎮 Back to your animal",
+    "fileStem": "menu/ui.possBar",
+    "durationSec": 1.137
+  },
+  {
+    "id": "ui.rsAll",
+    "group": "menu",
+    "text": "🐾 All helpers",
+    "fileStem": "menu/ui.rsAll",
+    "durationSec": 1.238
+  },
+  {
+    "id": "ui.rsPlay",
+    "group": "menu",
+    "text": "▶ Play",
+    "fileStem": "menu/ui.vFree.play",
+    "durationSec": 0.922
+  },
+  {
+    "id": "ui.shAn",
+    "group": "menu",
+    "text": "🛠️ Workbench",
+    "fileStem": "menu/ui.shAn",
+    "durationSec": 0.828
+  },
+  {
+    "id": "ui.shClose",
+    "group": "menu",
+    "text": "Done ✓",
+    "fileStem": "menu/ui.shClose",
+    "durationSec": 0.595
+  },
+  {
+    "id": "ui.shNote",
+    "group": "menu",
+    "text": "Tap a row to preview the next upgrade on your animal.",
+    "fileStem": "menu/ui.shNote",
+    "durationSec": 3.115
+  },
+  {
+    "id": "ui.spTitle",
+    "group": "menu",
+    "text": "🎨 Pick your looks",
+    "fileStem": "menu/ui.spTitle",
+    "durationSec": 1.033
+  },
+  {
+    "id": "ui.spSub",
+    "group": "menu",
+    "text": "Every animal in a row has the same powers — it's just a new look!",
+    "fileStem": "menu/ui.spSub",
+    "durationSec": 4.61
+  },
+  {
+    "id": "ui.spDone",
+    "group": "menu",
+    "text": "✓ Done",
+    "fileStem": "menu/ui.spDone",
+    "durationSec": 0.63
+  },
+  {
+    "id": "ui.festTitle",
+    "group": "menu",
+    "text": "Meadow Festival!",
+    "fileStem": "menu/ui.festTitle",
+    "durationSec": 1.178
+  },
+  {
+    "id": "ui.festTxt",
+    "group": "menu",
+    "text": "Every patch is wild and every neighbor is a friend. Hooray!",
+    "fileStem": "menu/ui.festTxt",
+    "durationSec": 4.329
+  },
+  {
+    "id": "ui.festBadge",
+    "group": "menu",
+    "text": "🏅 Festival Badge",
+    "fileStem": "menu/ui.festBadge",
+    "durationSec": 1.281
+  },
+  {
+    "id": "ui.festOk",
+    "group": "menu",
+    "text": "Back to Valley",
+    "fileStem": "menu/ui.festOk",
+    "durationSec": 1.009
+  },
+  {
+    "id": "ui.rsHead",
+    "group": "menu",
+    "text": "🌼 Round complete!",
+    "fileStem": "menu/ui.rsHead",
+    "durationSec": 1.034
+  },
+  {
+    "id": "ui.rsAgain",
+    "group": "menu",
+    "text": "▶ Play again",
+    "fileStem": "menu/ui.rsAgain",
+    "durationSec": 1.112
+  },
+  {
+    "id": "ui.rsTitle",
+    "group": "menu",
+    "text": "⌂ Title",
+    "fileStem": "menu/ui.rsTitle",
+    "durationSec": 0.785
+  },
+  {
+    "id": "ui.tabGame",
+    "group": "menu",
+    "text": "⏸ Game",
+    "fileStem": "menu/ui.tabGame",
+    "durationSec": 0.739
+  },
+  {
+    "id": "ui.tabAnimals",
+    "group": "menu",
+    "text": "🐾 Animals",
+    "fileStem": "menu/ui.tabAnimals",
+    "durationSec": 0.993
+  },
+  {
+    "id": "ui.tabInv",
+    "group": "menu",
+    "text": "🎒 Inventory",
+    "fileStem": "menu/ui.tabInv",
+    "durationSec": 0.848
+  },
+  {
+    "id": "ui.tabTech",
+    "group": "menu",
+    "text": "🧬 Build/Tech",
+    "fileStem": "menu/ui.tabTech",
+    "durationSec": 1.284
+  },
+  {
+    "id": "ui.tabJournal",
+    "group": "menu",
+    "text": "📖 Journal",
+    "fileStem": "menu/ui.tJournal",
+    "durationSec": 0.671
+  },
+  {
+    "id": "ui.tabSettings",
+    "group": "menu",
+    "text": "⚙ Settings",
+    "fileStem": "menu/ui.tSettings",
+    "durationSec": 0.907
+  },
+  {
+    "id": "ui.paused",
+    "group": "menu",
+    "text": "⏸ Paused",
+    "fileStem": "menu/ui.paused",
+    "durationSec": 0.738
+  },
+  {
+    "id": "ui.pResume",
+    "group": "menu",
+    "text": "▶ Resume",
+    "fileStem": "menu/ui.pResume",
+    "durationSec": 0.875
+  },
+  {
+    "id": "ui.pRestart",
+    "group": "menu",
+    "text": "↻ Restart round",
+    "fileStem": "menu/ui.pRestart",
+    "durationSec": 1.549
+  },
+  {
+    "id": "ui.pValley",
+    "group": "menu",
+    "text": "🗺️ Back to Valley",
+    "fileStem": "menu/ui.pValley",
+    "durationSec": 0.95
+  },
+  {
+    "id": "ui.pQuit",
+    "group": "menu",
+    "text": "⌂ Quit to title",
+    "fileStem": "menu/ui.pQuit",
+    "durationSec": 1.187
+  },
+  {
+    "id": "ui.pSkins",
+    "group": "menu",
+    "text": "🎨 Skins",
+    "fileStem": "menu/ui.vSkins",
+    "durationSec": 1.051
+  },
+  {
+    "id": "ui.pJournal",
+    "group": "menu",
+    "text": "📖 Journal",
+    "fileStem": "menu/ui.tJournal",
+    "durationSec": 0.671
+  },
+  {
+    "id": "ui.pSettings",
+    "group": "menu",
+    "text": "⚙ Settings",
+    "fileStem": "menu/ui.tSettings",
+    "durationSec": 0.907
+  },
+  {
+    "id": "ui.bNight",
+    "group": "menu",
+    "text": "🌙 Day / night",
+    "fileStem": "menu/ui.bNight",
+    "durationSec": 1.369
+  },
+  {
+    "id": "ui.bSeason",
+    "group": "menu",
+    "text": "🌸 Season",
+    "fileStem": "menu/ui.bSeason",
+    "durationSec": 0.806
+  },
+  {
+    "id": "ui.bInfo",
+    "group": "menu",
+    "text": "ℹ Credits",
+    "fileStem": "menu/ui.startCredits",
+    "durationSec": 1.506
+  },
+  {
+    "id": "ui.pTech",
+    "group": "menu",
+    "text": "🧬 Tech tree",
+    "fileStem": "menu/ui.pTech",
+    "durationSec": 0.961
+  },
+  {
+    "id": "ui.hubResume",
+    "group": "menu",
+    "text": "▶ Back to the meadow",
+    "fileStem": "menu/ui.hubResume",
+    "durationSec": 1.219
+  },
+  {
+    "id": "ui.settingsTitle",
+    "group": "menu",
+    "text": "⚙ Settings",
+    "fileStem": "menu/ui.tSettings",
+    "durationSec": 0.907
+  },
+  {
+    "id": "ui.mix.master",
+    "group": "menu",
+    "text": "🔊 Master",
+    "fileStem": "menu/ui.mix.master",
+    "durationSec": 0.797
+  },
+  {
+    "id": "ui.mix.music",
+    "group": "menu",
+    "text": "🎵 Music",
+    "fileStem": "menu/ui.mix.music",
+    "durationSec": 0.737
+  },
+  {
+    "id": "ui.mix.gameplay",
+    "group": "menu",
+    "text": "✨ Gameplay",
+    "fileStem": "menu/ui.mix.gameplay",
+    "durationSec": 0.662
+  },
+  {
+    "id": "ui.mix.ambience",
+    "group": "menu",
+    "text": "🐦 Ambience",
+    "fileStem": "menu/ui.mix.ambience",
+    "durationSec": 0.893
+  },
+  {
+    "id": "ui.mix.rain",
+    "group": "menu",
+    "text": "🌧️ Rain",
+    "fileStem": "menu/ui.mix.rain",
+    "durationSec": 0.721
+  },
+  {
+    "id": "ui.sMute",
+    "group": "menu",
+    "text": "Mute all sound",
+    "fileStem": "menu/ui.sMute",
+    "durationSec": 1.524
+  },
+  {
+    "id": "ui.homePointer",
+    "group": "menu",
+    "text": "Home pointer",
+    "fileStem": "menu/ui.homePointer",
+    "durationSec": 1.359
+  },
+  {
+    "id": "ui.ind.ring",
+    "group": "menu",
+    "text": "◯ Ring",
+    "fileStem": "menu/ui.ind.ring",
+    "durationSec": 0.707
+  },
+  {
+    "id": "ui.ind.arrow",
+    "group": "menu",
+    "text": "➤ Arrow",
+    "fileStem": "menu/ui.ind.arrow",
+    "durationSec": 0.585
+  },
+  {
+    "id": "ui.roundLength",
+    "group": "menu",
+    "text": "Round length (next round)",
+    "fileStem": "menu/ui.roundLength",
+    "durationSec": 1.844
+  },
+  {
+    "id": "ui.sWipe",
+    "group": "menu",
+    "text": "🗑 Full reset save…",
+    "fileStem": "menu/ui.sWipe",
+    "durationSec": 1.281
+  },
+  {
+    "id": "ui.sWipe.note",
+    "group": "menu",
+    "text": "Wipes your gear, journal, animal homes, best scores and settings.",
+    "fileStem": "menu/ui.sWipe.note",
+    "durationSec": 4.703
+  },
+  {
+    "id": "ui.sClose",
+    "group": "menu",
+    "text": "Done",
+    "fileStem": "menu/ui.sClose",
+    "durationSec": 0.655
+  },
+  {
+    "id": "ui.cfT",
+    "group": "menu",
+    "text": "Are you sure?",
+    "fileStem": "menu/ui.cfT",
+    "durationSec": 1.127
+  },
+  {
+    "id": "ui.cfNo",
+    "group": "menu",
+    "text": "Cancel",
+    "fileStem": "menu/ui.cfNo",
+    "durationSec": 0.795
+  },
+  {
+    "id": "ui.cfYes",
+    "group": "menu",
+    "text": "Yes",
+    "fileStem": "menu/ui.cfYes",
+    "durationSec": 0.613
+  },
+  {
+    "id": "ui.howTitle",
+    "group": "menu",
+    "text": "How to play",
+    "fileStem": "menu/ui.howTitle",
+    "durationSec": 0.972
+  },
+  {
+    "id": "ui.how.intro",
+    "group": "menu",
+    "text": "🐾 Pollinator Meadow is a cozy puzzle adventure, like The Lost Vikings. Three friends — a bee, a raccoon and a bear — each have one special skill, and no one can finish a level alone. Nobody gets hurt: a wrong move just means trying again.",
+    "fileStem": "menu/ui.how.intro",
+    "durationSec": 16.412
+  },
+  {
+    "id": "ui.how.scout",
+    "group": "menu",
+    "text": "🐝 Scout — Honeybee: flies over gaps and deep water, slips through knotholes, rings high bells and lanterns. Too small to push heavy things.",
+    "fileStem": "menu/ui.how.scout",
+    "durationSec": 9.688
+  },
+  {
+    "id": "ui.how.trickster",
+    "group": "menu",
+    "text": "🦝 Trickster — Raccoon: pulls levers, climbs vines, digs tunnels, throws acorns at far targets and lays Plank Bridges. Only short hops.",
+    "fileStem": "menu/ui.how.trickster",
+    "durationSec": 10.446
+  },
+  {
+    "id": "ui.how.bruiser",
+    "group": "menu",
+    "text": "🐻 Bruiser — Black Bear: shoves logs and boulders, smashes cracked walls, holds heavy plates, and gives friends a boost up to high ledges.",
+    "fileStem": "menu/ui.how.bruiser",
+    "durationSec": 8.702
+  },
+  {
+    "id": "ui.how.swap",
+    "group": "menu",
+    "text": "🔁 Swap by tapping a portrait (or 1/2/3). Friends you swap away from stay put — leave one on a pressure plate or lever and it stays held while another goes through. Look for the class badge over each puzzle, then tap 🤝 Interact next to it.",
+    "fileStem": "menu/ui.how.swap",
+    "durationSec": 14.261
+  },
+  {
+    "id": "ui.how.exit",
+    "group": "menu",
+    "text": "🏁 A level is done when all three friends reach the exit. 🌸 Petals are your score, and each level hides one secret ⭐ Starseed.",
+    "fileStem": "menu/ui.how.exit",
+    "durationSec": 7.116
+  },
+  {
+    "id": "ui.how.touch",
+    "group": "menu",
+    "text": "Touch: drag on the left to move · Jump (tap twice for a double jump, hold to flutter) · action button · drag on the right to turn the camera.",
+    "fileStem": "menu/ui.how.touch",
+    "durationSec": 8.038
+  },
+  {
+    "id": "ui.how.keys",
+    "group": "menu",
+    "text": "Keys: WASD/arrows · Space jump · E action · Q/R camera · Tab / 1–3 swap friend · J journal · Esc pause.",
+    "fileStem": "menu/ui.how.keys",
+    "durationSec": 10.724
+  },
+  {
+    "id": "ui.howClose",
+    "group": "menu",
+    "text": "Got it",
+    "fileStem": "menu/ui.howClose",
+    "durationSec": 0.935
+  },
+  {
+    "id": "ui.creditsTitle",
+    "group": "menu",
+    "text": "Credits",
+    "fileStem": "menu/ui.creditsTitle",
+    "durationSec": 0.799
+  },
+  {
+    "id": "ui.credits.intro",
+    "group": "menu",
+    "text": "Made with Three.js. Models, textures, sky and music are free assets; thank you to their creators.",
+    "fileStem": "menu/ui.credits.intro",
+    "durationSec": 6.713
+  },
+  {
+    "id": "ui.crClose",
+    "group": "menu",
+    "text": "Close",
+    "fileStem": "menu/ui.crClose",
+    "durationSec": 0.859
+  },
+  {
+    "id": "ui.jTitle",
+    "group": "menu",
+    "text": "📖 Field Journal",
+    "fileStem": "menu/ui.jTitle",
+    "durationSec": 1.117
+  },
+  {
+    "id": "ui.jTabFoods",
+    "group": "menu",
+    "text": "🍯 Foods",
+    "fileStem": "menu/ui.jTabFoods",
+    "durationSec": 0.803
+  },
+  {
+    "id": "ui.jTabAnimals",
+    "group": "menu",
+    "text": "🐾 Animals",
+    "fileStem": "menu/ui.tabAnimals",
+    "durationSec": 0.993
+  },
+  {
+    "id": "ui.jTabMoments",
+    "group": "menu",
+    "text": "🌦️ Moments",
+    "fileStem": "menu/ui.jTabMoments",
+    "durationSec": 0.554
+  },
+  {
+    "id": "ui.jGuide",
+    "group": "menu",
+    "text": "📍 Guide me there",
+    "fileStem": "menu/ui.jGuide",
+    "durationSec": 1.11
+  },
+  {
+    "id": "ui.jClose",
+    "group": "menu",
+    "text": "Back to the meadow",
+    "fileStem": "menu/ui.jClose",
+    "durationSec": 1.181
+  },
+  {
+    "id": "ui.tkTitle",
+    "group": "menu",
+    "text": "🧬 Tech tree",
+    "fileStem": "menu/ui.pTech",
+    "durationSec": 0.961
+  },
+  {
+    "id": "ui.pkFree",
+    "group": "menu",
+    "text": "🌿 Free roam",
+    "fileStem": "menu/ui.vFree",
+    "durationSec": 1.504
+  },
+  {
+    "id": "ui.pkGo",
+    "group": "menu",
+    "text": "⏱ Challenge",
+    "fileStem": "menu/ui.vGo",
+    "durationSec": 0.903
+  },
+  {
+    "id": "ui.pkBack",
+    "group": "menu",
+    "text": "◀ Back",
+    "fileStem": "menu/ui.pkBack",
+    "durationSec": 0.497
+  },
+  {
+    "id": "ui.tpDef",
+    "group": "menu",
+    "text": "🐝🐦🐻 Starter",
+    "fileStem": "menu/ui.tpDef",
+    "durationSec": 0.815
+  },
+  {
+    "id": "ui.tpGo",
+    "group": "menu",
+    "text": "✓ Team up!",
+    "fileStem": "menu/ui.tpGo",
+    "durationSec": 0.744
+  },
+  {
+    "id": "valley.name.training_garden",
+    "group": "menu",
+    "text": "Training Garden",
+    "fileStem": "menu/valley.name.training_garden",
+    "durationSec": 1.395
+  },
+  {
+    "id": "valley.name.sunny_hollow",
+    "group": "menu",
+    "text": "Sunny Hollow",
+    "fileStem": "menu/valley.name.sunny_hollow",
+    "durationSec": 1.125
+  },
+  {
+    "id": "valley.name.creek_bend",
+    "group": "menu",
+    "text": "Creek Bend",
+    "fileStem": "menu/valley.name.creek_bend",
+    "durationSec": 1.064
+  },
+  {
+    "id": "valley.name.moon_meadow",
+    "group": "menu",
+    "text": "Moon Meadow",
+    "fileStem": "menu/valley.name.moon_meadow",
+    "durationSec": 0.873
+  },
+  {
+    "id": "valley.name.log_jam",
+    "group": "menu",
+    "text": "Log Jam",
+    "fileStem": "menu/valley.name.log_jam",
+    "durationSec": 1.019
+  },
+  {
+    "id": "valley.name.picnic_lawn",
+    "group": "menu",
+    "text": "Picnic Lawn",
+    "fileStem": "menu/valley.name.picnic_lawn",
+    "durationSec": 1.157
+  },
+  {
+    "id": "valley.name.cliff_orchard",
+    "group": "menu",
+    "text": "Cliff Orchard",
+    "fileStem": "menu/valley.name.cliff_orchard",
+    "durationSec": 1.078
+  },
+  {
+    "id": "valley.name.windy_rise",
+    "group": "menu",
+    "text": "Windy Rise",
+    "fileStem": "menu/valley.name.windy_rise",
+    "durationSec": 1.294
+  },
+  {
+    "id": "valley.name.festival_glade",
+    "group": "menu",
+    "text": "Festival Glade",
+    "fileStem": "menu/valley.name.festival_glade",
+    "durationSec": 1.193
+  },
+  {
+    "id": "valley.name.trailhead_trials",
+    "group": "menu",
+    "text": "Trailhead Trials",
+    "fileStem": "menu/valley.name.trailhead_trials",
+    "durationSec": 1.634
+  },
+  {
+    "id": "valley.teach.trailhead_trials",
+    "group": "menu",
+    "text": "All 8 new tricks · all 8 critters (asleep)",
+    "fileStem": "menu/valley.teach.trailhead_trials",
+    "durationSec": 2.294
+  },
+  {
+    "id": "valley.name.sunbeam_grove",
+    "group": "menu",
+    "text": "Sunbeam Grove",
+    "fileStem": "menu/valley.name.sunbeam_grove",
+    "durationSec": 1.123
+  },
+  {
+    "id": "valley.teach.sunbeam_grove",
+    "group": "menu",
+    "text": "Light & Shadow · Sleepy Badger",
+    "fileStem": "menu/valley.teach.sunbeam_grove",
+    "durationSec": 2.986
+  },
+  {
+    "id": "valley.name.mill_pond",
+    "group": "menu",
+    "text": "Mill Pond",
+    "fileStem": "menu/valley.name.mill_pond",
+    "durationSec": 1.024
+  },
+  {
+    "id": "valley.teach.mill_pond",
+    "group": "menu",
+    "text": "Water Level · Snapping Turtle",
+    "fileStem": "menu/valley.teach.mill_pond",
+    "durationSec": 2.305
+  },
+  {
+    "id": "valley.name.bramble_patch",
+    "group": "menu",
+    "text": "Bramble Patch",
+    "fileStem": "menu/valley.name.bramble_patch",
+    "durationSec": 1.073
+  },
+  {
+    "id": "valley.teach.bramble_patch",
+    "group": "menu",
+    "text": "Seed Growing · Grumpy Spider",
+    "fileStem": "menu/valley.teach.bramble_patch",
+    "durationSec": 2.409
+  },
+  {
+    "id": "valley.name.weathervane_hill",
+    "group": "menu",
+    "text": "Weathervane Hill",
+    "fileStem": "menu/valley.name.weathervane_hill",
+    "durationSec": 1.082
+  },
+  {
+    "id": "valley.teach.weathervane_hill",
+    "group": "menu",
+    "text": "Wind Vanes · Patrol Crow",
+    "fileStem": "menu/valley.teach.weathervane_hill",
+    "durationSec": 2.289
+  },
+  {
+    "id": "valley.name.hornet_hedge",
+    "group": "menu",
+    "text": "Hornet Hedge",
+    "fileStem": "menu/valley.name.hornet_hedge",
+    "durationSec": 1.035
+  },
+  {
+    "id": "valley.teach.hornet_hedge",
+    "group": "menu",
+    "text": "Carry Chain · Wasp Nest",
+    "fileStem": "menu/valley.teach.hornet_hedge",
+    "durationSec": 2.361
+  },
+  {
+    "id": "valley.name.owl_wood",
+    "group": "menu",
+    "text": "Owl Wood",
+    "fileStem": "menu/valley.name.owl_wood",
+    "durationSec": 0.958
+  },
+  {
+    "id": "valley.teach.owl_wood",
+    "group": "menu",
+    "text": "Day/Night + night gear · Night Owl",
+    "fileStem": "menu/valley.teach.owl_wood",
+    "durationSec": 3.073
+  },
+  {
+    "id": "valley.name.frost_hollow",
+    "group": "menu",
+    "text": "Frost Hollow",
+    "fileStem": "menu/valley.name.frost_hollow",
+    "durationSec": 0.932
+  },
+  {
+    "id": "valley.teach.frost_hollow",
+    "group": "menu",
+    "text": "Seasons (ice + mud) · Prowling Fox",
+    "fileStem": "menu/valley.teach.frost_hollow",
+    "durationSec": 3.064
+  },
+  {
+    "id": "valley.name.backyard_split",
+    "group": "menu",
+    "text": "Backyard Split",
+    "fileStem": "menu/valley.name.backyard_split",
+    "durationSec": 1.288
+  },
+  {
+    "id": "valley.teach.backyard_split",
+    "group": "menu",
+    "text": "Two-Room Split · Garden Hazards",
+    "fileStem": "menu/valley.teach.backyard_split",
+    "durationSec": 2.424
+  },
+  {
+    "id": "valley.name.ember_ridge",
+    "group": "menu",
+    "text": "Ember Ridge",
+    "fileStem": "menu/valley.name.ember_ridge",
+    "durationSec": 1.056
+  },
+  {
+    "id": "valley.teach.ember_ridge",
+    "group": "menu",
+    "text": "Bubble Pouch · damp the embers",
+    "fileStem": "menu/valley.teach.ember_ridge",
+    "durationSec": 1.817
+  },
+  {
+    "id": "valley.name.flooded_mill",
+    "group": "menu",
+    "text": "Flooded Mill",
+    "fileStem": "menu/valley.name.flooded_mill",
+    "durationSec": 0.998
+  },
+  {
+    "id": "valley.teach.flooded_mill",
+    "group": "menu",
+    "text": "Turtle ride · carry chain",
+    "fileStem": "menu/valley.teach.flooded_mill",
+    "durationSec": 2.435
+  },
+  {
+    "id": "valley.name.night_market",
+    "group": "menu",
+    "text": "Night Market",
+    "fileStem": "menu/valley.name.night_market",
+    "durationSec": 1.111
+  },
+  {
+    "id": "valley.teach.night_market",
+    "group": "menu",
+    "text": "Owl bait · two-room split",
+    "fileStem": "menu/valley.teach.night_market",
+    "durationSec": 1.513
+  },
+  {
+    "id": "valley.name.mirror_caves",
+    "group": "menu",
+    "text": "Mirror Caves",
+    "fileStem": "menu/valley.name.mirror_caves",
+    "durationSec": 1.44
+  },
+  {
+    "id": "valley.teach.mirror_caves",
+    "group": "menu",
+    "text": "Pebble Sling · 3-bounce beam",
+    "fileStem": "menu/valley.teach.mirror_caves",
+    "durationSec": 2.337
+  },
+  {
+    "id": "valley.name.storm_orchard",
+    "group": "menu",
+    "text": "Storm Orchard",
+    "fileStem": "menu/valley.name.storm_orchard",
+    "durationSec": 1.157
+  },
+  {
+    "id": "valley.teach.storm_orchard",
+    "group": "menu",
+    "text": "Leaf Glider · crow lure",
+    "fileStem": "menu/valley.teach.storm_orchard",
+    "durationSec": 2.084
+  },
+  {
+    "id": "valley.name.thaw_valley",
+    "group": "menu",
+    "text": "Thaw Valley",
+    "fileStem": "menu/valley.name.thaw_valley",
+    "durationSec": 1.267
+  },
+  {
+    "id": "valley.teach.thaw_valley",
+    "group": "menu",
+    "text": "Master Bell A · B · C",
+    "fileStem": "menu/valley.teach.thaw_valley",
+    "durationSec": 2.482
+  },
+  {
+    "id": "valley.name.grand_garden",
+    "group": "menu",
+    "text": "Grand Garden",
+    "fileStem": "menu/valley.name.grand_garden",
+    "durationSec": 1.168
+  },
+  {
+    "id": "valley.teach.grand_garden",
+    "group": "menu",
+    "text": "Gear swap · snail escort",
+    "fileStem": "menu/valley.teach.grand_garden",
+    "durationSec": 1.849
+  },
+  {
+    "id": "valley.name.starheart_summit",
+    "group": "menu",
+    "text": "Starheart Summit",
+    "fileStem": "menu/valley.name.starheart_summit",
+    "durationSec": 1.258
+  },
+  {
+    "id": "valley.teach.starheart_summit",
+    "group": "menu",
+    "text": "Finale · all friends",
+    "fileStem": "menu/valley.teach.starheart_summit",
+    "durationSec": 1.591
+  },
+  {
+    "id": "valley.name.act3_lab",
+    "group": "menu",
+    "text": "Practice Yard",
+    "fileStem": "menu/valley.name.act3_lab",
+    "durationSec": 1.105
+  },
+  {
+    "id": "valley.teach.act3_lab",
+    "group": "menu",
+    "text": "Escort + enemy lures",
+    "fileStem": "menu/valley.teach.act3_lab",
+    "durationSec": 2.115
+  },
+  {
+    "id": "valley.name.meadow_hub",
+    "group": "menu",
+    "text": "Meadow Hub",
+    "fileStem": "menu/valley.name.meadow_hub",
+    "durationSec": 1.31
+  },
+  {
+    "id": "settings.accessibility",
+    "group": "menu",
+    "text": "Accessibility",
+    "fileStem": "menu/settings.accessibility",
+    "durationSec": 1.196
+  },
+  {
+    "id": "settings.forParents",
+    "group": "menu",
+    "text": "For parents",
+    "fileStem": "menu/settings.forParents",
+    "durationSec": 1.099
+  },
+  {
+    "id": "settings.online",
+    "group": "menu",
+    "text": "Online",
+    "fileStem": "menu/settings.online",
+    "durationSec": 0.681
+  },
+  {
+    "id": "settings.sound",
+    "group": "menu",
+    "text": "Sound",
+    "fileStem": "menu/settings.sound",
+    "durationSec": 0.742
+  },
+  {
+    "id": "settings.voice",
+    "group": "menu",
+    "text": "Voice",
+    "fileStem": "menu/settings.voice",
+    "durationSec": 0.782
+  },
+  {
+    "id": "settings.muteAll",
+    "group": "menu",
+    "text": "Mute all",
+    "fileStem": "menu/settings.muteAll",
+    "durationSec": 0.94
+  },
+  {
+    "id": "settings.muted",
+    "group": "menu",
+    "text": "Muted",
+    "fileStem": "menu/settings.muted",
+    "durationSec": 0.665
+  },
+  {
+    "id": "settings.eraseSave",
+    "group": "menu",
+    "text": "Erase save",
+    "fileStem": "menu/settings.eraseSave",
+    "durationSec": 1.225
+  },
+  {
+    "id": "settings.fullReset",
+    "group": "menu",
+    "text": "Full reset save…",
+    "fileStem": "menu/settings.fullReset",
+    "durationSec": 1.366
+  },
+  {
+    "id": "settings.textSize",
+    "group": "menu",
+    "text": "Text size",
+    "fileStem": "menu/settings.textSize",
+    "durationSec": 1.382
+  },
+  {
+    "id": "settings.text.small",
+    "group": "menu",
+    "text": "Small",
+    "fileStem": "menu/settings.text.small",
+    "durationSec": 0.744
+  },
+  {
+    "id": "settings.text.medium",
+    "group": "menu",
+    "text": "Medium",
+    "fileStem": "menu/settings.text.medium",
+    "durationSec": 0.825
+  },
+  {
+    "id": "settings.text.large",
+    "group": "menu",
+    "text": "Large",
+    "fileStem": "menu/settings.text.large",
+    "durationSec": 0.743
+  },
+  {
+    "id": "settings.text.xl",
+    "group": "menu",
+    "text": "Extra large",
+    "fileStem": "menu/settings.text.xl",
+    "durationSec": 1.448
+  },
+  {
+    "id": "settings.readAloud",
+    "group": "menu",
+    "text": "Read tips and banter out loud",
+    "fileStem": "menu/settings.readAloud",
+    "durationSec": 2.401
+  },
+  {
+    "id": "settings.test",
+    "group": "menu",
+    "text": "Test",
+    "fileStem": "menu/settings.test",
+    "durationSec": 0.683
+  },
+  {
+    "id": "settings.readAloud.fallback",
+    "group": "menu",
+    "text": "If this device cannot speak, the words still appear on screen.",
+    "fileStem": "menu/settings.readAloud.fallback",
+    "durationSec": 4.127
+  },
+  {
+    "id": "settings.colorBlind",
+    "group": "menu",
+    "text": "Color-blind class colors and shapes",
+    "fileStem": "menu/settings.colorBlind",
+    "durationSec": 2.305
+  },
+  {
+    "id": "settings.reduceMotion",
+    "group": "menu",
+    "text": "Reduce motion",
+    "fileStem": "menu/settings.reduceMotion",
+    "durationSec": 1.271
+  },
+  {
+    "id": "settings.reduceMotion.hint",
+    "group": "menu",
+    "text": "Uses your device setting until you change it.",
+    "fileStem": "menu/settings.reduceMotion.hint",
+    "durationSec": 2.648
+  },
+  {
+    "id": "settings.tapToFly",
+    "group": "menu",
+    "text": "Tap to fly",
+    "fileStem": "menu/settings.tapToFly",
+    "durationSec": 1.211
+  },
+  {
+    "id": "settings.easyMode",
+    "group": "menu",
+    "text": "Easy mode",
+    "fileStem": "menu/settings.easyMode",
+    "durationSec": 0.826
+  },
+  {
+    "id": "settings.easyMode.hint",
+    "group": "menu",
+    "text": "Slower sneak-critters, more time on timers. Stars still count, except the time star.",
+    "fileStem": "menu/settings.easyMode.hint",
+    "durationSec": 6.42
+  },
+  {
+    "id": "settings.easyMode.results",
+    "group": "menu",
+    "text": "Easy mode — time star not used.",
+    "fileStem": "menu/settings.easyMode.results",
+    "durationSec": 2.895
+  },
+  {
+    "id": "settings.parentGate.title",
+    "group": "menu",
+    "text": "A quick check",
+    "fileStem": "menu/settings.parentGate.title",
+    "durationSec": 0.978
+  },
+  {
+    "id": "settings.parentGate.prompt",
+    "group": "menu",
+    "text": "Which of these is 8 + 5?",
+    "fileStem": "menu/settings.parentGate.prompt",
+    "durationSec": 2.318
+  },
+  {
+    "id": "settings.flyHint",
+    "group": "menu",
+    "text": "hold Jump in the air to fly",
+    "fileStem": "menu/settings.flyHint",
+    "durationSec": 1.923
+  },
+  {
+    "id": "settings.jumpFly",
+    "group": "menu",
+    "text": "Fly",
+    "fileStem": "menu/settings.jumpFly",
+    "durationSec": 0.784
+  },
+  {
+    "id": "lobby.btn-play-friends",
+    "group": "lobby",
+    "text": "Play with friends",
+    "fileStem": "lobby/lobby.btn-play-friends",
+    "durationSec": 1.533
+  },
+  {
+    "id": "lobby.choice-host",
+    "group": "lobby",
+    "text": "Host a game",
+    "fileStem": "lobby/lobby.choice-host",
+    "durationSec": 1.112
+  },
+  {
+    "id": "lobby.choice-join",
+    "group": "lobby",
+    "text": "Join a game",
+    "fileStem": "lobby/lobby.choice-join",
+    "durationSec": 1.126
+  },
+  {
+    "id": "lobby.host.title",
+    "group": "lobby",
+    "text": "Your room",
+    "fileStem": "lobby/lobby.host.title",
+    "durationSec": 1.109
+  },
+  {
+    "id": "lobby.host.copyLink",
+    "group": "lobby",
+    "text": "Copy link",
+    "fileStem": "lobby/lobby.host.copyLink",
+    "durationSec": 0.829
+  },
+  {
+    "id": "lobby.host.lock",
+    "group": "lobby",
+    "text": "Lock",
+    "fileStem": "lobby/lobby.host.lock",
+    "durationSec": 0.631
+  },
+  {
+    "id": "lobby.host.secretPin",
+    "group": "lobby",
+    "text": "Secret PIN",
+    "fileStem": "lobby/lobby.host.secretPin",
+    "durationSec": 1.301
+  },
+  {
+    "id": "lobby.host.waiting",
+    "group": "lobby",
+    "text": "Waiting for friends",
+    "fileStem": "lobby/lobby.host.waiting",
+    "durationSec": 1.504
+  },
+  {
+    "id": "lobby.join.title",
+    "group": "lobby",
+    "text": "Join a game",
+    "fileStem": "lobby/lobby.choice-join",
+    "durationSec": 1.126
+  },
+  {
+    "id": "lobby.tab.animals",
+    "group": "lobby",
+    "text": "Animals",
+    "fileStem": "lobby/lobby.tab.animals",
+    "durationSec": 0.962
+  },
+  {
+    "id": "lobby.tab.food",
+    "group": "lobby",
+    "text": "Food & plants",
+    "fileStem": "lobby/lobby.tab.food",
+    "durationSec": 1.533
+  },
+  {
+    "id": "lobby.tab.outside",
+    "group": "lobby",
+    "text": "Outside",
+    "fileStem": "lobby/lobby.tab.outside",
+    "durationSec": 1.03
+  },
+  {
+    "id": "lobby.tab.home",
+    "group": "lobby",
+    "text": "Home & toys",
+    "fileStem": "lobby/lobby.tab.home",
+    "durationSec": 1.389
+  },
+  {
+    "id": "lobby.join.btn",
+    "group": "lobby",
+    "text": "Join",
+    "fileStem": "lobby/lobby.join.btn",
+    "durationSec": 0.688
+  },
+  {
+    "id": "lobby.asking",
+    "group": "lobby",
+    "text": "Asking the host…",
+    "fileStem": "lobby/lobby.asking",
+    "durationSec": 1.853
+  },
+  {
+    "id": "lobby.approve-card",
+    "group": "lobby",
+    "text": "🐾 A friend wants to join!",
+    "fileStem": "lobby/lobby.approve-card",
+    "durationSec": 1.616
+  },
+  {
+    "id": "lobby.approve.letIn",
+    "group": "lobby",
+    "text": "✅ Let in",
+    "fileStem": "lobby/lobby.approve.letIn",
+    "durationSec": 0.775
+  },
+  {
+    "id": "lobby.approve.no",
+    "group": "lobby",
+    "text": "❌ No",
+    "fileStem": "lobby/lobby.approve.no",
+    "durationSec": 0.542
+  },
+  {
+    "id": "lobby.denied",
+    "group": "lobby",
+    "text": "The host said not now",
+    "fileStem": "lobby/lobby.denied",
+    "durationSec": 1.554
+  },
+  {
+    "id": "lobby.full",
+    "group": "lobby",
+    "text": "Room is full",
+    "fileStem": "lobby/lobby.full",
+    "durationSec": 0.967
+  },
+  {
+    "id": "lobby.pin.prompt",
+    "group": "lobby",
+    "text": "This game has a secret PIN 🔐",
+    "fileStem": "lobby/lobby.pin.prompt",
+    "durationSec": 1.872
+  },
+  {
+    "id": "lobby.pin.wrong",
+    "group": "lobby",
+    "text": "Not quite! Ask your friend for the PIN 🙂",
+    "fileStem": "lobby/lobby.pin.wrong",
+    "durationSec": 2.826
+  },
+  {
+    "id": "lobby.pin.lockout",
+    "group": "lobby",
+    "text": "Take a little break ⏳ 0:30",
+    "fileStem": "lobby/lobby.pin.lockout",
+    "durationSec": 2.015
+  },
+  {
+    "id": "lobby.pin.guessing",
+    "group": "lobby",
+    "text": "Someone keeps guessing your PIN. Make a new code? 🔄",
+    "fileStem": "lobby/lobby.pin.guessing",
+    "durationSec": 3.283
+  },
+  {
+    "id": "lobby.onlineOff",
+    "group": "lobby",
+    "text": "Online play is turned off on this device. Ask a grown-up.",
+    "fileStem": "lobby/lobby.onlineOff",
+    "durationSec": 4.355
+  },
+  {
+    "id": "lobby.connecting",
+    "group": "lobby",
+    "text": "Taking the safe path…",
+    "fileStem": "lobby/lobby.connecting",
+    "durationSec": 2.406
+  },
+  {
+    "id": "lobby.failed.title",
+    "group": "lobby",
+    "text": "Couldn't connect",
+    "fileStem": "lobby/lobby.failed.title",
+    "durationSec": 1.17
+  },
+  {
+    "id": "lobby.failed.body",
+    "group": "lobby",
+    "text": "We couldn't reach the game helper. Try again in a moment. We only connect the safe way.",
+    "fileStem": "lobby/lobby.failed.body",
+    "durationSec": 5.565
+  },
+  {
+    "id": "lobby.failed.retry",
+    "group": "lobby",
+    "text": "Try again",
+    "fileStem": "lobby/lobby.failed.retry",
+    "durationSec": 0.977
+  },
+  {
+    "id": "lobby.keepScreen.body",
+    "group": "lobby",
+    "text": "Keep your screen on so your friends stay in the game.",
+    "fileStem": "lobby/lobby.keepScreen.body",
+    "durationSec": 2.985
+  },
+  {
+    "id": "lobby.keepScreen.yes",
+    "group": "lobby",
+    "text": "Keep screen on",
+    "fileStem": "lobby/lobby.keepScreen.yes",
+    "durationSec": 1.29
+  },
+  {
+    "id": "lobby.keepScreen.no",
+    "group": "lobby",
+    "text": "Not now",
+    "fileStem": "lobby/lobby.keepScreen.no",
+    "durationSec": 1.072
+  },
+  {
+    "id": "lobby.starting.training_garden",
+    "group": "lobby",
+    "text": "Starting Training Garden in 3…",
+    "fileStem": "lobby/lobby.starting.training_garden",
+    "durationSec": 2.153
+  },
+  {
+    "id": "lobby.starting.sunny_hollow",
+    "group": "lobby",
+    "text": "Starting Sunny Hollow in 3…",
+    "fileStem": "lobby/lobby.starting.sunny_hollow",
+    "durationSec": 2.108
+  },
+  {
+    "id": "lobby.starting.creek_bend",
+    "group": "lobby",
+    "text": "Starting Creek Bend in 3…",
+    "fileStem": "lobby/lobby.starting.creek_bend",
+    "durationSec": 2.014
+  },
+  {
+    "id": "lobby.starting.moon_meadow",
+    "group": "lobby",
+    "text": "Starting Moon Meadow in 3…",
+    "fileStem": "lobby/lobby.starting.moon_meadow",
+    "durationSec": 2.012
+  },
+  {
+    "id": "lobby.starting.log_jam",
+    "group": "lobby",
+    "text": "Starting Log Jam in 3…",
+    "fileStem": "lobby/lobby.starting.log_jam",
+    "durationSec": 2.152
+  },
+  {
+    "id": "lobby.starting.picnic_lawn",
+    "group": "lobby",
+    "text": "Starting Picnic Lawn in 3…",
+    "fileStem": "lobby/lobby.starting.picnic_lawn",
+    "durationSec": 2.003
+  },
+  {
+    "id": "lobby.starting.cliff_orchard",
+    "group": "lobby",
+    "text": "Starting Cliff Orchard in 3…",
+    "fileStem": "lobby/lobby.starting.cliff_orchard",
+    "durationSec": 2.25
+  },
+  {
+    "id": "lobby.starting.windy_rise",
+    "group": "lobby",
+    "text": "Starting Windy Rise in 3…",
+    "fileStem": "lobby/lobby.starting.windy_rise",
+    "durationSec": 2.033
+  },
+  {
+    "id": "lobby.starting.festival_glade",
+    "group": "lobby",
+    "text": "Starting Festival Glade in 3…",
+    "fileStem": "lobby/lobby.starting.festival_glade",
+    "durationSec": 2.573
+  },
+  {
+    "id": "lobby.starting.trailhead_trials",
+    "group": "lobby",
+    "text": "Starting Trailhead Trials in 3…",
+    "fileStem": "lobby/lobby.starting.trailhead_trials",
+    "durationSec": 2.316
+  },
+  {
+    "id": "lobby.starting.sunbeam_grove",
+    "group": "lobby",
+    "text": "Starting Sunbeam Grove in 3…",
+    "fileStem": "lobby/lobby.starting.sunbeam_grove",
+    "durationSec": 2.286
+  },
+  {
+    "id": "lobby.starting.mill_pond",
+    "group": "lobby",
+    "text": "Starting Mill Pond in 3…",
+    "fileStem": "lobby/lobby.starting.mill_pond",
+    "durationSec": 2.035
+  },
+  {
+    "id": "lobby.starting.bramble_patch",
+    "group": "lobby",
+    "text": "Starting Bramble Patch in 3…",
+    "fileStem": "lobby/lobby.starting.bramble_patch",
+    "durationSec": 2.28
+  },
+  {
+    "id": "lobby.starting.weathervane_hill",
+    "group": "lobby",
+    "text": "Starting Weathervane Hill in 3…",
+    "fileStem": "lobby/lobby.starting.weathervane_hill",
+    "durationSec": 2.124
+  },
+  {
+    "id": "lobby.starting.hornet_hedge",
+    "group": "lobby",
+    "text": "Starting Hornet Hedge in 3…",
+    "fileStem": "lobby/lobby.starting.hornet_hedge",
+    "durationSec": 2.077
+  },
+  {
+    "id": "lobby.starting.owl_wood",
+    "group": "lobby",
+    "text": "Starting Owl Wood in 3…",
+    "fileStem": "lobby/lobby.starting.owl_wood",
+    "durationSec": 2.021
+  },
+  {
+    "id": "lobby.starting.frost_hollow",
+    "group": "lobby",
+    "text": "Starting Frost Hollow in 3…",
+    "fileStem": "lobby/lobby.starting.frost_hollow",
+    "durationSec": 2.3
+  },
+  {
+    "id": "lobby.starting.backyard_split",
+    "group": "lobby",
+    "text": "Starting Backyard Split in 3…",
+    "fileStem": "lobby/lobby.starting.backyard_split",
+    "durationSec": 2.384
+  },
+  {
+    "id": "lobby.starting.ember_ridge",
+    "group": "lobby",
+    "text": "Starting Ember Ridge in 3…",
+    "fileStem": "lobby/lobby.starting.ember_ridge",
+    "durationSec": 1.834
+  },
+  {
+    "id": "lobby.starting.flooded_mill",
+    "group": "lobby",
+    "text": "Starting Flooded Mill in 3…",
+    "fileStem": "lobby/lobby.starting.flooded_mill",
+    "durationSec": 2.189
+  },
+  {
+    "id": "lobby.starting.night_market",
+    "group": "lobby",
+    "text": "Starting Night Market in 3…",
+    "fileStem": "lobby/lobby.starting.night_market",
+    "durationSec": 2.063
+  },
+  {
+    "id": "lobby.starting.mirror_caves",
+    "group": "lobby",
+    "text": "Starting Mirror Caves in 3…",
+    "fileStem": "lobby/lobby.starting.mirror_caves",
+    "durationSec": 2.129
+  },
+  {
+    "id": "lobby.starting.storm_orchard",
+    "group": "lobby",
+    "text": "Starting Storm Orchard in 3…",
+    "fileStem": "lobby/lobby.starting.storm_orchard",
+    "durationSec": 2.504
+  },
+  {
+    "id": "lobby.starting.thaw_valley",
+    "group": "lobby",
+    "text": "Starting Thaw Valley in 3…",
+    "fileStem": "lobby/lobby.starting.thaw_valley",
+    "durationSec": 2.017
+  },
+  {
+    "id": "lobby.starting.grand_garden",
+    "group": "lobby",
+    "text": "Starting Grand Garden in 3…",
+    "fileStem": "lobby/lobby.starting.grand_garden",
+    "durationSec": 2.107
+  },
+  {
+    "id": "lobby.starting.starheart_summit",
+    "group": "lobby",
+    "text": "Starting Starheart Summit in 3…",
+    "fileStem": "lobby/lobby.starting.starheart_summit",
+    "durationSec": 2.387
+  },
+  {
+    "id": "lobby.starting.practice_yard",
+    "group": "lobby",
+    "text": "Starting Practice Yard in 3…",
+    "fileStem": "lobby/lobby.starting.practice_yard",
+    "durationSec": 2.165
+  },
+  {
+    "id": "lobby.starting.meadow_hub",
+    "group": "lobby",
+    "text": "Starting Meadow Hub in 3…",
+    "fileStem": "lobby/lobby.starting.meadow_hub",
+    "durationSec": 1.969
+  },
+  {
+    "id": "lobby.waitingFriends",
+    "group": "lobby",
+    "text": "Waiting for friends 🐝🦝🐻",
+    "fileStem": "lobby/lobby.waitingFriends",
+    "durationSec": 1.448
+  },
+  {
+    "id": "lobby.loadTimeout",
+    "group": "lobby",
+    "text": "Couldn't load, try again",
+    "fileStem": "lobby/lobby.loadTimeout",
+    "durationSec": 1.944
+  },
+  {
+    "id": "lobby.slot-reserved",
+    "group": "lobby",
+    "text": "💤 waiting for friend",
+    "fileStem": "lobby/lobby.slot-reserved",
+    "durationSec": 1.475
+  },
+  {
+    "id": "lobby.reconnecting",
+    "group": "lobby",
+    "text": "Reconnecting…",
+    "fileStem": "lobby/lobby.reconnecting",
+    "durationSec": 1.027
+  },
+  {
+    "id": "lobby.connectionLost",
+    "group": "lobby",
+    "text": "Connection lost",
+    "fileStem": "lobby/lobby.connectionLost",
+    "durationSec": 1.098
+  },
+  {
+    "id": "lobby.free.bee",
+    "group": "lobby",
+    "text": "🐝 is free. Tab to play it",
+    "fileStem": "lobby/lobby.free.bee",
+    "durationSec": 2.294
+  },
+  {
+    "id": "lobby.free.raccoon",
+    "group": "lobby",
+    "text": "🦝 is free. Tab to play it",
+    "fileStem": "lobby/lobby.free.raccoon",
+    "durationSec": 2.134
+  },
+  {
+    "id": "lobby.free.bear",
+    "group": "lobby",
+    "text": "🐻 is free. Tab to play it",
+    "fileStem": "lobby/lobby.free.bear",
+    "durationSec": 1.979
+  },
+  {
+    "id": "lobby.hostLeft",
+    "group": "lobby",
+    "text": "The host's game ended. Back to your Meadow 🌼",
+    "fileStem": "lobby/lobby.hostLeft",
+    "durationSec": 3.511
+  },
+  {
+    "id": "lobby.emote.hi",
+    "group": "lobby",
+    "text": "Hi!",
+    "fileStem": "lobby/lobby.emote.hi",
+    "durationSec": 0.816
+  },
+  {
+    "id": "lobby.emote.ok",
+    "group": "lobby",
+    "text": "OK!",
+    "fileStem": "lobby/lobby.emote.ok",
+    "durationSec": 0.877
+  },
+  {
+    "id": "lobby.emote.help",
+    "group": "lobby",
+    "text": "Help?",
+    "fileStem": "lobby/lobby.emote.help",
+    "durationSec": 0.581
+  },
+  {
+    "id": "lobby.emote.over-here",
+    "group": "lobby",
+    "text": "Over here!",
+    "fileStem": "lobby/lobby.emote.over-here",
+    "durationSec": 0.94
+  },
+  {
+    "id": "lobby.emote.wait",
+    "group": "lobby",
+    "text": "Wait for me!",
+    "fileStem": "lobby/lobby.emote.wait",
+    "durationSec": 1.077
+  },
+  {
+    "id": "lobby.emote.follow",
+    "group": "lobby",
+    "text": "Follow me!",
+    "fileStem": "lobby/lobby.emote.follow",
+    "durationSec": 0.724
+  },
+  {
+    "id": "lobby.emote.yay",
+    "group": "lobby",
+    "text": "Yay!",
+    "fileStem": "lobby/lobby.emote.yay",
+    "durationSec": 0.624
+  },
+  {
+    "id": "lobby.emote.thanks",
+    "group": "lobby",
+    "text": "Thanks!",
+    "fileStem": "lobby/lobby.emote.thanks",
+    "durationSec": 0.679
+  },
+  {
+    "id": "lobby.gate.hold",
+    "group": "lobby",
+    "text": "For grown-ups: press and hold for 3 seconds.",
+    "fileStem": "lobby/lobby.gate.hold",
+    "durationSec": 3.022
+  },
+  {
+    "id": "lobby.gate.more",
+    "group": "lobby",
+    "text": "More online settings appear after the hold.",
+    "fileStem": "lobby/lobby.gate.more",
+    "durationSec": 2.595
+  },
+  {
+    "id": "lobby.grownup.failureFold",
+    "group": "lobby",
+    "text": "If the game can't reach Cloudflare's relay, it shows an error. It never switches to a direct connection on its own.",
+    "fileStem": "lobby/lobby.grownup.failureFold",
+    "durationSec": 6.945
+  }
+]

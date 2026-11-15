@@ -1,6 +1,12 @@
 {
   "attribution": [
     {
+      "credit": "Read-aloud voice rendered with Piper (MIT License, Copyright (c) 2022 Michael Hansen), using the en_GB-cori-high voice trained from scratch by Bryce Beattie on public-domain LibriVox recordings. The Piper model itself is not shipped in the game.",
+      "license": "MIT (Piper); voice dataset public domain",
+      "url": "https://github.com/rhasspy/piper/blob/2023.11.14-2/LICENSE.md",
+      "note": "Read-aloud voice (Cori). Swap the audio/voice/<name>/ folder and the VOICE_BASE constant to change voices."
+    },
+    {
       "credit": "\"Cocoon (Antonio.Luis)\" by Antonio.Luis (CC-BY 4.0)",
       "license": "CC-BY 4.0",
       "url": "https://sketchfab.com/3d-models/cocoon-a25e90a80f95487b8ee56f647c630ad5",
@@ -1118,6 +1124,7 @@
     }
   ],
   "cc0": [
+    "Act 3 map theme: original CC0 1.0 composition, 2026. https://creativecommons.org/publicdomain/zero/1.0/",
     "Quaternius (https://quaternius.com), CC0 models via Poly Pizza",
     "Kenney (https://kenney.nl), CC0 packs: Nature Kit, Food Kit, Particle Pack, Game Icons, UI Pack Adventure, UI Audio, Music Jingles",
     "Poly Haven (https://polyhaven.com), CC0 HDRIs: meadow_2, kloofendal_48d_partly_cloudy_puresky",

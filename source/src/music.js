@@ -21,6 +21,7 @@ export const TRACKS = {
   puzzle: [{ f: 'mintodog_cozy-puzzle-in-game-1', g: 1.03 }],
   // Beans' act / hub cues (audio/music/act/, Opus + AAC, loop-safe). Registered so a level or the hub can ask for them via music.mood(); g 1 = their -18 LUFS master
   act1: [{ f: 'act/act1-meadow', g: 1, loop: true }], act2: [{ f: 'act/act2-trails', g: 1, loop: true }], act3: [{ f: 'act/act3-adventure', g: 1, loop: true }],
+  act3map: [{ f: 'act/act3-map-theme', g: 1, loop: true }],
   hub: [{ f: 'act/meadow-hub-theme', g: 1, loop: true }], cave: [{ f: 'act/night-cave', g: 1, loop: true }], finale: [{ f: 'act/finale-celebration', g: 1, loop: true }],
 };
 // normalized (-18 LUFS) jingles from Beans' game_use column; gains kept conservative (not yet listened to)

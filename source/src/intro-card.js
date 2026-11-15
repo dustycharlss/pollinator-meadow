@@ -3,6 +3,7 @@
 // by tools/map-assets.mjs), so redone art ships by re-running the sync.
 import './intro-card.css';
 import SPEC from './map/cards.json';
+import { attachIntroTips, parkIntroTips, dismissLevelTips, preloadTips, loadTips } from './tips-ui.js';
 
 const DIR = './ui/map/cards/';
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -26,23 +27,28 @@ function ensure() {
   root.hidden = true;
   root.setAttribute('role', 'dialog');
   root.setAttribute('aria-modal', 'true');
-  root.innerHTML = '<button type="button" class="icHit" aria-label="Skip"><span class="icFrame"><span class="icPic"></span><span class="icTitle"></span></span></button>';
-  root.querySelector('.icHit').addEventListener('click', () => dismissIntroCard());
+  root.innerHTML = '<button type="button" class="icHit" aria-label="Skip"><span class="icFrame"><span class="icPic"></span><span class="icTitle"></span></span></button><div class="icTips" hidden></div>';
+  root.querySelector('.icHit').addEventListener('click', () => dismissIntroCard('skip'));
   document.body.appendChild(root);
   return root;
 }
 
 export function introCardId() { return shownId; }
 
-export function dismissIntroCard() {
+export function dismissIntroCard(reason) {
   if (timer) { clearTimeout(timer); timer = 0; }
   const cb = onDone; onDone = null; shownId = null;
-  if (root && !root.hidden) { root.hidden = true; root.classList.remove('on', 'icStill'); }
+  if (root && !root.hidden) {
+    if (reason === 'timeout') parkIntroTips();
+    else dismissLevelTips();
+    root.hidden = true; root.classList.remove('on', 'icStill', 'icHasTips');
+    const slot = root.querySelector('.icTips'); if (slot) { slot.hidden = true; slot.innerHTML = ''; }
+  } else if (reason !== 'timeout') dismissLevelTips();
   cb?.();
 }
 
 export function preloadIntroCard(id) {
-  const c = cardFor(id); if (!c) return;
+  const c = cardFor(id); if (!c) { preloadTips(id); return; }
   const hi = typeof devicePixelRatio === 'number' && devicePixelRatio > 1.25;
   const file = (hi && c.webp2x) || c.webp || (hi && c.png2x) || c.png;
   if (!file) return;
@@ -85,6 +91,10 @@ export function showIntroCard(id, opts = {}) {
   el.classList.add('on');
   el.querySelector('.icHit').focus({ preventScroll: true });
   const hold = opts.holdMs != null ? opts.holdMs : (SPEC.holdMs ?? 2500);
-  if (hold > 0) timer = setTimeout(() => dismissIntroCard(), hold);
+  if (hold > 0) timer = setTimeout(() => dismissIntroCard('timeout'), hold);
+  loadTips().then(() => {
+    if (shownId !== id || !root || root.hidden) return;
+    attachIntroTips(root, id, { force: !!opts.force, play: opts.playTips !== false });
+  });
   return { shown: true, dismiss: dismissIntroCard };
 }

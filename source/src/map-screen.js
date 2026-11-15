@@ -4,6 +4,7 @@
 import './map-screen.css';
 import GRID from './map/grid.json';
 import { showIntroCard, preloadIntroCard } from './intro-card.js';
+import { preloadTips } from './tips-ui.js';
 import LAYOUT from './map/layout.json';
 
 const UI = './ui/map/';
@@ -200,7 +201,7 @@ ${s.seed ? img2x('nodes/marker-starseed', 'tSeed') : ''}</span>
   }
 
   // ---- input ----
-  grid.addEventListener('click', e => { const b = e.target.closest('.msTile'); if (!b) return; ctx.blip?.(); S.sel[S.view] = b.dataset.id; preloadIntroCard(b.dataset.id); render(); });
+  grid.addEventListener('click', e => { const b = e.target.closest('.msTile'); if (!b) return; ctx.blip?.(); S.sel[S.view] = b.dataset.id; preloadIntroCard(b.dataset.id); preloadTips(b.dataset.id); render(); });
   grid.addEventListener('dblclick', e => { const b = e.target.closest('.msTile'); if (b && !$('vGo').disabled) $('vGo').click(); });
   world.addEventListener('click', e => {
     const b = e.target.closest('.msNode'); if (!b) return; ctx.blip?.();

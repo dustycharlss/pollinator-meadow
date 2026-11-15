@@ -1,0 +1,2582 @@
+{
+  "version": 1,
+  "base": "./ui/tips/",
+  "levels": [
+    {
+      "id": "training_garden",
+      "number": "TG",
+      "name": "Training Garden",
+      "new_mechanics": [
+        "move",
+        "jump",
+        "swap",
+        "fly_bell",
+        "pull_lever",
+        "shove_block",
+        "hold_plate",
+        "boost",
+        "all_to_flag"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "move",
+          "new": true
+        },
+        {
+          "mechanic_id": "jump",
+          "new": true
+        },
+        {
+          "mechanic_id": "swap",
+          "new": true
+        },
+        {
+          "mechanic_id": "fly_bell",
+          "new": true
+        },
+        {
+          "mechanic_id": "pull_lever",
+          "new": true
+        },
+        {
+          "mechanic_id": "shove_block",
+          "new": true
+        },
+        {
+          "mechanic_id": "hold_plate",
+          "new": true
+        },
+        {
+          "mechanic_id": "boost",
+          "new": true
+        },
+        {
+          "mechanic_id": "all_to_flag",
+          "new": true
+        }
+      ]
+    },
+    {
+      "id": "sunny_hollow",
+      "number": 1,
+      "name": "Sunny Hollow",
+      "new_mechanics": [
+        "petals_starseed"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "petals_starseed",
+          "new": true
+        },
+        {
+          "mechanic_id": "swap",
+          "new": false
+        },
+        {
+          "mechanic_id": "fly_bell",
+          "new": false
+        },
+        {
+          "mechanic_id": "pull_lever",
+          "new": false
+        },
+        {
+          "mechanic_id": "shove_block",
+          "new": false
+        },
+        {
+          "mechanic_id": "boost",
+          "new": false
+        },
+        {
+          "mechanic_id": "all_to_flag",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "creek_bend",
+      "number": 2,
+      "name": "Creek Bend",
+      "new_mechanics": [
+        "water_rules",
+        "plank_bridge",
+        "smash"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "water_rules",
+          "new": true
+        },
+        {
+          "mechanic_id": "plank_bridge",
+          "new": true
+        },
+        {
+          "mechanic_id": "smash",
+          "new": true
+        },
+        {
+          "mechanic_id": "hold_plate",
+          "new": false
+        },
+        {
+          "mechanic_id": "boost",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "moon_meadow",
+      "number": 3,
+      "name": "Moon Meadow",
+      "new_mechanics": [
+        "knothole",
+        "dig_tunnel",
+        "throw_acorn"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "knothole",
+          "new": true
+        },
+        {
+          "mechanic_id": "dig_tunnel",
+          "new": true
+        },
+        {
+          "mechanic_id": "throw_acorn",
+          "new": true
+        },
+        {
+          "mechanic_id": "boost",
+          "new": false
+        },
+        {
+          "mechanic_id": "smash",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "log_jam",
+      "number": 4,
+      "name": "Log Jam",
+      "new_mechanics": [
+        "log_stair",
+        "climb_vine"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "log_stair",
+          "new": true
+        },
+        {
+          "mechanic_id": "climb_vine",
+          "new": true
+        },
+        {
+          "mechanic_id": "hold_plate",
+          "new": false
+        },
+        {
+          "mechanic_id": "boost",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "picnic_lawn",
+      "number": 5,
+      "name": "Picnic Lawn",
+      "new_mechanics": [
+        "two_plates"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "two_plates",
+          "new": true
+        },
+        {
+          "mechanic_id": "shove_block",
+          "new": false
+        },
+        {
+          "mechanic_id": "boost",
+          "new": false
+        },
+        {
+          "mechanic_id": "throw_acorn",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "cliff_orchard",
+      "number": 6,
+      "name": "Cliff Orchard",
+      "new_mechanics": [
+        "boost_chain"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "boost_chain",
+          "new": true
+        },
+        {
+          "mechanic_id": "throw_acorn",
+          "new": false
+        },
+        {
+          "mechanic_id": "log_stair",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "windy_rise",
+      "number": 7,
+      "name": "Windy Rise",
+      "new_mechanics": [
+        "wind_hoops"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "wind_hoops",
+          "new": true
+        },
+        {
+          "mechanic_id": "boost",
+          "new": false
+        },
+        {
+          "mechanic_id": "plank_bridge",
+          "new": false
+        },
+        {
+          "mechanic_id": "log_stair",
+          "new": false
+        },
+        {
+          "mechanic_id": "climb_vine",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "festival_glade",
+      "number": 8,
+      "name": "Festival Glade",
+      "new_mechanics": [
+        "starheart_carry"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "starheart_carry",
+          "new": true
+        },
+        {
+          "mechanic_id": "boost",
+          "new": false
+        },
+        {
+          "mechanic_id": "knothole",
+          "new": false
+        },
+        {
+          "mechanic_id": "throw_acorn",
+          "new": false
+        },
+        {
+          "mechanic_id": "log_stair",
+          "new": false
+        },
+        {
+          "mechanic_id": "two_plates",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "trailhead_trials",
+      "number": "TH",
+      "name": "Trailhead",
+      "new_mechanics": [
+        "sneak",
+        "light_beam",
+        "water_level",
+        "seed_vine",
+        "wind_vane",
+        "carry_chain",
+        "puff_smoke",
+        "night_bell",
+        "glow_lantern",
+        "echo_whistle",
+        "winter_ice",
+        "fox_hide",
+        "two_room"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "sneak",
+          "new": true
+        },
+        {
+          "mechanic_id": "light_beam",
+          "new": true
+        },
+        {
+          "mechanic_id": "water_level",
+          "new": true
+        },
+        {
+          "mechanic_id": "seed_vine",
+          "new": true
+        },
+        {
+          "mechanic_id": "wind_vane",
+          "new": true
+        },
+        {
+          "mechanic_id": "carry_chain",
+          "new": true
+        },
+        {
+          "mechanic_id": "puff_smoke",
+          "new": true
+        },
+        {
+          "mechanic_id": "night_bell",
+          "new": true
+        },
+        {
+          "mechanic_id": "glow_lantern",
+          "new": true
+        },
+        {
+          "mechanic_id": "echo_whistle",
+          "new": true
+        },
+        {
+          "mechanic_id": "winter_ice",
+          "new": true
+        },
+        {
+          "mechanic_id": "fox_hide",
+          "new": true
+        },
+        {
+          "mechanic_id": "two_room",
+          "new": true
+        },
+        {
+          "mechanic_id": "all_to_flag",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "sunbeam_grove",
+      "number": 9,
+      "name": "Sunbeam Grove",
+      "new_mechanics": [
+        "shadow_bridge",
+        "badger_distract"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "shadow_bridge",
+          "new": true
+        },
+        {
+          "mechanic_id": "badger_distract",
+          "new": true
+        },
+        {
+          "mechanic_id": "sneak",
+          "new": false
+        },
+        {
+          "mechanic_id": "light_beam",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "mill_pond",
+      "number": 10,
+      "name": "Mill Pond",
+      "new_mechanics": [
+        "log_ride",
+        "turtle_distract"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "log_ride",
+          "new": true
+        },
+        {
+          "mechanic_id": "turtle_distract",
+          "new": true
+        },
+        {
+          "mechanic_id": "water_level",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "bramble_patch",
+      "number": 11,
+      "name": "Bramble Patch",
+      "new_mechanics": [
+        "mushroom_bounce",
+        "spider_web"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "mushroom_bounce",
+          "new": true
+        },
+        {
+          "mechanic_id": "spider_web",
+          "new": true
+        },
+        {
+          "mechanic_id": "seed_vine",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "weathervane_hill",
+      "number": 12,
+      "name": "Weathervane Hill",
+      "new_mechanics": [
+        "dandelion_raft",
+        "crow_hide"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "dandelion_raft",
+          "new": true
+        },
+        {
+          "mechanic_id": "crow_hide",
+          "new": true
+        },
+        {
+          "mechanic_id": "wind_vane",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "hornet_hedge",
+      "number": 13,
+      "name": "Hornet Hedge",
+      "new_mechanics": [],
+      "no_new_mechanic": true,
+      "tips": [
+        {
+          "mechanic_id": "climb_vine",
+          "new": false
+        },
+        {
+          "mechanic_id": "carry_chain",
+          "new": false
+        },
+        {
+          "mechanic_id": "puff_smoke",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "owl_wood",
+      "number": 14,
+      "name": "Owl Wood",
+      "new_mechanics": [
+        "gear_gift",
+        "owl_hide"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "gear_gift",
+          "new": true
+        },
+        {
+          "mechanic_id": "owl_hide",
+          "new": true
+        },
+        {
+          "mechanic_id": "sneak",
+          "new": false
+        },
+        {
+          "mechanic_id": "night_bell",
+          "new": false
+        },
+        {
+          "mechanic_id": "glow_lantern",
+          "new": false
+        },
+        {
+          "mechanic_id": "echo_whistle",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "frost_hollow",
+      "number": 15,
+      "name": "Frost Hollow",
+      "new_mechanics": [
+        "mud_slide"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "mud_slide",
+          "new": true
+        },
+        {
+          "mechanic_id": "sneak",
+          "new": false
+        },
+        {
+          "mechanic_id": "winter_ice",
+          "new": false
+        },
+        {
+          "mechanic_id": "fox_hide",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "backyard_split",
+      "number": 16,
+      "name": "Backyard Split",
+      "new_mechanics": [
+        "garden_hazards"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "garden_hazards",
+          "new": true
+        },
+        {
+          "mechanic_id": "two_room",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "ember_ridge",
+      "number": 17,
+      "name": "Ember Ridge",
+      "new_mechanics": [
+        "bubble_pouch",
+        "call_baby"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "bubble_pouch",
+          "new": true
+        },
+        {
+          "mechanic_id": "call_baby",
+          "new": true
+        },
+        {
+          "mechanic_id": "wind_vane",
+          "new": false
+        },
+        {
+          "mechanic_id": "gear_gift",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "flooded_mill",
+      "number": 18,
+      "name": "Flooded Mill",
+      "new_mechanics": [
+        "turtle_ride",
+        "duckling_float"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "turtle_ride",
+          "new": true
+        },
+        {
+          "mechanic_id": "duckling_float",
+          "new": true
+        },
+        {
+          "mechanic_id": "water_level",
+          "new": false
+        },
+        {
+          "mechanic_id": "log_ride",
+          "new": false
+        },
+        {
+          "mechanic_id": "carry_chain",
+          "new": false
+        },
+        {
+          "mechanic_id": "call_baby",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "night_market",
+      "number": 19,
+      "name": "Night Market",
+      "new_mechanics": [
+        "lantern_bait"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "lantern_bait",
+          "new": true
+        },
+        {
+          "mechanic_id": "sneak",
+          "new": false
+        },
+        {
+          "mechanic_id": "night_bell",
+          "new": false
+        },
+        {
+          "mechanic_id": "glow_lantern",
+          "new": false
+        },
+        {
+          "mechanic_id": "echo_whistle",
+          "new": false
+        },
+        {
+          "mechanic_id": "owl_hide",
+          "new": false
+        },
+        {
+          "mechanic_id": "two_room",
+          "new": false
+        },
+        {
+          "mechanic_id": "call_baby",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "mirror_caves",
+      "number": 20,
+      "name": "Mirror Caves",
+      "new_mechanics": [
+        "pebble_sling",
+        "bubble_web",
+        "dark_escort"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "pebble_sling",
+          "new": true
+        },
+        {
+          "mechanic_id": "bubble_web",
+          "new": true
+        },
+        {
+          "mechanic_id": "dark_escort",
+          "new": true
+        },
+        {
+          "mechanic_id": "light_beam",
+          "new": false
+        },
+        {
+          "mechanic_id": "shadow_bridge",
+          "new": false
+        },
+        {
+          "mechanic_id": "echo_whistle",
+          "new": false
+        },
+        {
+          "mechanic_id": "gear_gift",
+          "new": false
+        },
+        {
+          "mechanic_id": "bubble_pouch",
+          "new": false
+        },
+        {
+          "mechanic_id": "call_baby",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "storm_orchard",
+      "number": 21,
+      "name": "Storm Orchard",
+      "new_mechanics": [
+        "leaf_glider",
+        "crow_lure",
+        "windbreak"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "leaf_glider",
+          "new": true
+        },
+        {
+          "mechanic_id": "crow_lure",
+          "new": true
+        },
+        {
+          "mechanic_id": "windbreak",
+          "new": true
+        },
+        {
+          "mechanic_id": "climb_vine",
+          "new": false
+        },
+        {
+          "mechanic_id": "seed_vine",
+          "new": false
+        },
+        {
+          "mechanic_id": "mushroom_bounce",
+          "new": false
+        },
+        {
+          "mechanic_id": "wind_vane",
+          "new": false
+        },
+        {
+          "mechanic_id": "crow_hide",
+          "new": false
+        },
+        {
+          "mechanic_id": "gear_gift",
+          "new": false
+        },
+        {
+          "mechanic_id": "call_baby",
+          "new": false
+        },
+        {
+          "mechanic_id": "pebble_sling",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "thaw_valley",
+      "number": 22,
+      "name": "Thaw Valley",
+      "new_mechanics": [
+        "master_bell",
+        "fox_lure"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "master_bell",
+          "new": true
+        },
+        {
+          "mechanic_id": "fox_lure",
+          "new": true
+        },
+        {
+          "mechanic_id": "seed_vine",
+          "new": false
+        },
+        {
+          "mechanic_id": "echo_whistle",
+          "new": false
+        },
+        {
+          "mechanic_id": "winter_ice",
+          "new": false
+        },
+        {
+          "mechanic_id": "fox_hide",
+          "new": false
+        },
+        {
+          "mechanic_id": "call_baby",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "grand_garden",
+      "number": 23,
+      "name": "Grand Garden",
+      "new_mechanics": [
+        "gear_swap",
+        "wasp_wind",
+        "sprinkler_cups"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "gear_swap",
+          "new": true
+        },
+        {
+          "mechanic_id": "wasp_wind",
+          "new": true
+        },
+        {
+          "mechanic_id": "sprinkler_cups",
+          "new": true
+        },
+        {
+          "mechanic_id": "glow_lantern",
+          "new": false
+        },
+        {
+          "mechanic_id": "garden_hazards",
+          "new": false
+        },
+        {
+          "mechanic_id": "bubble_pouch",
+          "new": false
+        },
+        {
+          "mechanic_id": "call_baby",
+          "new": false
+        },
+        {
+          "mechanic_id": "bubble_web",
+          "new": false
+        },
+        {
+          "mechanic_id": "leaf_glider",
+          "new": false
+        }
+      ]
+    },
+    {
+      "id": "starheart_summit",
+      "number": 24,
+      "name": "Starheart Summit",
+      "new_mechanics": [
+        "friend_helpers",
+        "team_lift_starheart"
+      ],
+      "no_new_mechanic": false,
+      "tips": [
+        {
+          "mechanic_id": "friend_helpers",
+          "new": true
+        },
+        {
+          "mechanic_id": "team_lift_starheart",
+          "new": true
+        },
+        {
+          "mechanic_id": "boost_chain",
+          "new": false
+        },
+        {
+          "mechanic_id": "seed_vine",
+          "new": false
+        },
+        {
+          "mechanic_id": "pebble_sling",
+          "new": false
+        },
+        {
+          "mechanic_id": "leaf_glider",
+          "new": false
+        },
+        {
+          "mechanic_id": "master_bell",
+          "new": false
+        },
+        {
+          "mechanic_id": "gear_swap",
+          "new": false
+        }
+      ]
+    }
+  ],
+  "strips": {
+    "move": {
+      "files": {
+        "png": "tip-move.png",
+        "png@2x": "tip-move@2x.png",
+        "webp": "tip-move.webp",
+        "webp@2x": "tip-move@2x.webp"
+      },
+      "alt": "A hand drags the on-screen joystick; the raccoon walks toward a glowing flower. Then: The raccoon reaches the flower and it sparkles.",
+      "voice_line_id": "training_garden.step.01",
+      "voice_ids": [
+        "training_garden.step.01",
+        "onboarding.move"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A hand drags the on-screen joystick; the raccoon walks toward a glowing flower."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon reaches the flower and it sparkles."
+        }
+      ]
+    },
+    "jump": {
+      "files": {
+        "png": "tip-jump.png",
+        "png@2x": "tip-jump@2x.png",
+        "webp": "tip-jump.webp",
+        "webp@2x": "tip-jump@2x.webp"
+      },
+      "alt": "The raccoon stands by a low wooden step; a hand taps the Jump button. Then: The raccoon lands on top of the step.",
+      "voice_line_id": "training_garden.step.02",
+      "voice_ids": [
+        "training_garden.step.02"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon stands by a low wooden step; a hand taps the Jump button."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon lands on top of the step."
+        }
+      ]
+    },
+    "swap": {
+      "files": {
+        "png": "tip-swap.png",
+        "png@2x": "tip-swap@2x.png",
+        "webp": "tip-swap.webp",
+        "webp@2x": "tip-swap@2x.webp"
+      },
+      "alt": "The raccoon is in charge. A hand taps the bee portrait in the crew dock. Then: Now the bee is in charge and buzzes off; the raccoon waits where it was.",
+      "voice_line_id": "training_garden.step.03",
+      "voice_ids": [
+        "training_garden.step.03",
+        "onboarding.crew_swap",
+        "ui.how.swap",
+        "sunny_hollow.intro.01"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon is in charge. A hand taps the bee portrait in the crew dock."
+        },
+        {
+          "n": 2,
+          "alt": "Now the bee is in charge and buzzes off; the raccoon waits where it was."
+        }
+      ]
+    },
+    "fly_bell": {
+      "files": {
+        "png": "tip-fly_bell.png",
+        "png@2x": "tip-fly_bell@2x.png",
+        "webp": "tip-fly_bell.webp",
+        "webp@2x": "tip-fly_bell@2x.webp"
+      },
+      "alt": "The bee waits by a tall hedge with a bell on the far side; a hand holds the Jump button. Then: The bee flies up and rings the bell. Then: The hedge sinks into the ground and the way is open.",
+      "voice_line_id": "training_garden.step.04",
+      "voice_ids": [
+        "training_garden.step.04",
+        "sunny_hollow.tutor.sun"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bee waits by a tall hedge with a bell on the far side; a hand holds the Jump button."
+        },
+        {
+          "n": 2,
+          "alt": "The bee flies up and rings the bell."
+        },
+        {
+          "n": 3,
+          "alt": "The hedge sinks into the ground and the way is open."
+        }
+      ]
+    },
+    "pull_lever": {
+      "files": {
+        "png": "tip-pull_lever.png",
+        "png@2x": "tip-pull_lever@2x.png",
+        "webp": "tip-pull_lever.webp",
+        "webp@2x": "tip-pull_lever@2x.webp"
+      },
+      "alt": "The raccoon stands at a lever next to a closed gate; a hand taps the Interact button. Then: The lever flips and the gate opens; the raccoon walks through.",
+      "voice_line_id": "training_garden.step.06",
+      "voice_ids": [
+        "training_garden.step.06",
+        "sunny_hollow.tutor.patch",
+        "ui.how.trickster"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon stands at a lever next to a closed gate; a hand taps the Interact button."
+        },
+        {
+          "n": 2,
+          "alt": "The lever flips and the gate opens; the raccoon walks through."
+        }
+      ]
+    },
+    "shove_block": {
+      "files": {
+        "png": "tip-shove_block.png",
+        "png@2x": "tip-shove_block@2x.png",
+        "webp": "tip-shove_block.webp",
+        "webp@2x": "tip-shove_block@2x.webp"
+      },
+      "alt": "The bear stands behind a stone block; an orange slot glows by a ledge. A hand taps Interact. Then: The block slides into the slot and makes a step up to the ledge. Then: The bear hops onto the block and up onto the ledge; a hand taps Jump.",
+      "voice_line_id": "training_garden.step.08",
+      "voice_ids": [
+        "training_garden.step.08",
+        "training_garden.step.09",
+        "sunny_hollow.tutor.glade"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bear stands behind a stone block; an orange slot glows by a ledge. A hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The block slides into the slot and makes a step up to the ledge."
+        },
+        {
+          "n": 3,
+          "alt": "The bear hops onto the block and up onto the ledge; a hand taps Jump."
+        }
+      ]
+    },
+    "hold_plate": {
+      "files": {
+        "png": "tip-hold_plate.png",
+        "png@2x": "tip-hold_plate@2x.png",
+        "webp": "tip-hold_plate.webp",
+        "webp@2x": "tip-hold_plate@2x.webp"
+      },
+      "alt": "The bear sits on a heavy orange plate and a door opens. Then: A hand taps the bee portrait; the bear keeps sitting on the plate. Then: The bee flies through the open door and rings the bell inside.",
+      "voice_line_id": "training_garden.step.10",
+      "voice_ids": [
+        "training_garden.step.10",
+        "training_garden.step.11",
+        "training_garden.step.12",
+        "creek_bend.intro.02"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bear sits on a heavy orange plate and a door opens."
+        },
+        {
+          "n": 2,
+          "alt": "A hand taps the bee portrait; the bear keeps sitting on the plate."
+        },
+        {
+          "n": 3,
+          "alt": "The bee flies through the open door and rings the bell inside."
+        }
+      ]
+    },
+    "boost": {
+      "files": {
+        "png": "tip-boost.png",
+        "png@2x": "tip-boost@2x.png",
+        "webp": "tip-boost.webp",
+        "webp@2x": "tip-boost@2x.webp"
+      },
+      "alt": "The bear stands in the orange circle by a tall wall. Then: The raccoon jumps onto the bear's back; a hand taps Jump. Then: From the bear's back the raccoon jumps up high and pulls the lever on top.",
+      "voice_line_id": "training_garden.step.14",
+      "voice_ids": [
+        "training_garden.step.14",
+        "training_garden.step.16",
+        "training_garden.step.17",
+        "sunny_hollow.tutor.boostStar"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bear stands in the orange circle by a tall wall."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon jumps onto the bear's back; a hand taps Jump."
+        },
+        {
+          "n": 3,
+          "alt": "From the bear's back the raccoon jumps up high and pulls the lever on top."
+        }
+      ]
+    },
+    "all_to_flag": {
+      "files": {
+        "png": "tip-all_to_flag.png",
+        "png@2x": "tip-all_to_flag@2x.png",
+        "webp": "tip-all_to_flag.webp",
+        "webp@2x": "tip-all_to_flag@2x.webp"
+      },
+      "alt": "Bee, raccoon and bear all head for the flag circle. Then: All three friends stand in the flag circle and it sparkles.",
+      "voice_line_id": "training_garden.step.19",
+      "voice_ids": [
+        "training_garden.step.19",
+        "training_garden.complete",
+        "ui.how.exit"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Bee, raccoon and bear all head for the flag circle."
+        },
+        {
+          "n": 2,
+          "alt": "All three friends stand in the flag circle and it sparkles."
+        }
+      ]
+    },
+    "petals_starseed": {
+      "files": {
+        "png": "tip-petals_starseed.png",
+        "png@2x": "tip-petals_starseed@2x.png",
+        "webp": "tip-petals_starseed.webp",
+        "webp@2x": "tip-petals_starseed@2x.webp"
+      },
+      "alt": "A trail of pink petals floats over the grass; the raccoon walks along it. Then: The petals pop as the raccoon touches them. Then: A glowing Starseed sits on a high rock: a hidden secret.",
+      "voice_line_id": "ui.how.exit",
+      "voice_ids": [
+        "ui.how.exit"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A trail of pink petals floats over the grass; the raccoon walks along it."
+        },
+        {
+          "n": 2,
+          "alt": "The petals pop as the raccoon touches them."
+        },
+        {
+          "n": 3,
+          "alt": "A glowing Starseed sits on a high rock: a hidden secret."
+        }
+      ]
+    },
+    "water_rules": {
+      "files": {
+        "png": "tip-water_rules.png",
+        "png@2x": "tip-water_rules@2x.png",
+        "webp": "tip-water_rules.webp",
+        "webp@2x": "tip-water_rules@2x.webp"
+      },
+      "alt": "The bee flies over the deep creek. The bear stops at the water's edge. Then: The bear shoves a boulder into the creek to make a stone ford; a hand taps Interact. Then: Now the bear walks across on the stones.",
+      "voice_line_id": "creek_bend.intro.01",
+      "voice_ids": [
+        "creek_bend.intro.01"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bee flies over the deep creek. The bear stops at the water's edge."
+        },
+        {
+          "n": 2,
+          "alt": "The bear shoves a boulder into the creek to make a stone ford; a hand taps Interact."
+        },
+        {
+          "n": 3,
+          "alt": "Now the bear walks across on the stones."
+        }
+      ]
+    },
+    "plank_bridge": {
+      "files": {
+        "png": "tip-plank_bridge.png",
+        "png@2x": "tip-plank_bridge@2x.png",
+        "webp": "tip-plank_bridge.webp",
+        "webp@2x": "tip-plank_bridge@2x.webp"
+      },
+      "alt": "The raccoon stands at a green bridge outline over the creek; a hand taps Interact. Then: A plank bridge appears and the raccoon walks across.",
+      "voice_line_id": "creek_bend.intro.01",
+      "voice_ids": [
+        "creek_bend.intro.01"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon stands at a green bridge outline over the creek; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "A plank bridge appears and the raccoon walks across."
+        }
+      ]
+    },
+    "smash": {
+      "files": {
+        "png": "tip-smash.png",
+        "png@2x": "tip-smash@2x.png",
+        "webp": "tip-smash.webp",
+        "webp@2x": "tip-smash@2x.webp"
+      },
+      "alt": "The bear faces a cracked wooden barrier; a hand taps Interact. Then: Crash! The barrier breaks into bits and the path is open.",
+      "voice_line_id": "moon_meadow.intro.02",
+      "voice_ids": [
+        "moon_meadow.intro.02"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bear faces a cracked wooden barrier; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "Crash! The barrier breaks into bits and the path is open."
+        }
+      ]
+    },
+    "knothole": {
+      "files": {
+        "png": "tip-knothole.png",
+        "png@2x": "tip-knothole@2x.png",
+        "webp": "tip-knothole.webp",
+        "webp@2x": "tip-knothole@2x.webp"
+      },
+      "alt": "Night. The bee hovers at a dark knothole in a big tree; a hand taps Interact. Then: The bee slips through and lights a lantern inside the tree.",
+      "voice_line_id": "moon_meadow.intro.02",
+      "voice_ids": [
+        "moon_meadow.intro.02"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Night. The bee hovers at a dark knothole in a big tree; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The bee slips through and lights a lantern inside the tree."
+        }
+      ]
+    },
+    "dig_tunnel": {
+      "files": {
+        "png": "tip-dig_tunnel.png",
+        "png@2x": "tip-dig_tunnel@2x.png",
+        "webp": "tip-dig_tunnel.webp",
+        "webp@2x": "tip-dig_tunnel@2x.webp"
+      },
+      "alt": "Night. The raccoon stands on a mound of soft dirt by a wall; a hand taps Interact. Then: The raccoon digs under the wall and pops out on the other side.",
+      "voice_line_id": "moon_meadow.intro.02",
+      "voice_ids": [
+        "moon_meadow.intro.02"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Night. The raccoon stands on a mound of soft dirt by a wall; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon digs under the wall and pops out on the other side."
+        }
+      ]
+    },
+    "throw_acorn": {
+      "files": {
+        "png": "tip-throw_acorn.png",
+        "png@2x": "tip-throw_acorn@2x.png",
+        "webp": "tip-throw_acorn.webp",
+        "webp@2x": "tip-throw_acorn@2x.webp"
+      },
+      "alt": "The raccoon faces a red-and-white target far away; a hand taps Interact. Then: The acorn flies in an arc and hits the target; a gate opens.",
+      "voice_line_id": "picnic_lawn.intro.01",
+      "voice_ids": [
+        "picnic_lawn.intro.01"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon faces a red-and-white target far away; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The acorn flies in an arc and hits the target; a gate opens."
+        }
+      ]
+    },
+    "log_stair": {
+      "files": {
+        "png": "tip-log_stair.png",
+        "png@2x": "tip-log_stair@2x.png",
+        "webp": "tip-log_stair.webp",
+        "webp@2x": "tip-log_stair@2x.webp"
+      },
+      "alt": "The bear shoves a log into a glowing stair slot by a high ledge; a hand taps Interact. Then: Two logs stand side by side: one tall, one short, like stairs. Then: The raccoon climbs the log stairs to the top of the ledge.",
+      "voice_line_id": "log_jam.intro.01",
+      "voice_ids": [
+        "log_jam.intro.01"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bear shoves a log into a glowing stair slot by a high ledge; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "Two logs stand side by side: one tall, one short, like stairs."
+        },
+        {
+          "n": 3,
+          "alt": "The raccoon climbs the log stairs to the top of the ledge."
+        }
+      ]
+    },
+    "climb_vine": {
+      "files": {
+        "png": "tip-climb_vine.png",
+        "png@2x": "tip-climb_vine@2x.png",
+        "webp": "tip-climb_vine.webp",
+        "webp@2x": "tip-climb_vine@2x.webp"
+      },
+      "alt": "The raccoon stands at a leafy vine on a tall wall; a hand taps Interact. Then: The raccoon climbs up the vine to the top.",
+      "voice_line_id": "trailhead.step.13",
+      "voice_ids": [
+        "trailhead.step.13",
+        "ui.how.trickster"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon stands at a leafy vine on a tall wall; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon climbs up the vine to the top."
+        }
+      ]
+    },
+    "two_plates": {
+      "files": {
+        "png": "tip-two_plates.png",
+        "png@2x": "tip-two_plates@2x.png",
+        "webp": "tip-two_plates.webp",
+        "webp@2x": "tip-two_plates@2x.webp"
+      },
+      "alt": "The bear sits on the big orange plate. Then: The raccoon stands on the small green plate. Both plates are pressed. Then: The gate is open and the bee, the third friend, flies through.",
+      "voice_line_id": "picnic_lawn.intro.02",
+      "voice_ids": [
+        "picnic_lawn.intro.02"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bear sits on the big orange plate."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon stands on the small green plate. Both plates are pressed."
+        },
+        {
+          "n": 3,
+          "alt": "The gate is open and the bee, the third friend, flies through."
+        }
+      ]
+    },
+    "boost_chain": {
+      "files": {
+        "png": "tip-boost_chain.png",
+        "png@2x": "tip-boost_chain@2x.png",
+        "webp": "tip-boost_chain.webp",
+        "webp@2x": "tip-boost_chain@2x.webp"
+      },
+      "alt": "The bear stands under a high ledge; the raccoon hops onto his back. Then: From the bear's back the raccoon jumps up onto the ledge. Then: The bee flies up from the raccoon to the very top bell.",
+      "voice_line_id": "cliff_orchard.intro.02",
+      "voice_ids": [
+        "cliff_orchard.intro.02"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bear stands under a high ledge; the raccoon hops onto his back."
+        },
+        {
+          "n": 2,
+          "alt": "From the bear's back the raccoon jumps up onto the ledge."
+        },
+        {
+          "n": 3,
+          "alt": "The bee flies up from the raccoon to the very top bell."
+        }
+      ]
+    },
+    "wind_hoops": {
+      "files": {
+        "png": "tip-wind_hoops.png",
+        "png@2x": "tip-wind_hoops@2x.png",
+        "webp": "tip-wind_hoops.webp",
+        "webp@2x": "tip-wind_hoops@2x.webp"
+      },
+      "alt": "A gust of wind blows past a pink hoop; the bee waits. Then: Between gusts, the bee flies through the hoop; a hand holds Jump.",
+      "voice_line_id": "windy_rise.intro.01",
+      "voice_ids": [
+        "windy_rise.intro.01"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A gust of wind blows past a pink hoop; the bee waits."
+        },
+        {
+          "n": 2,
+          "alt": "Between gusts, the bee flies through the hoop; a hand holds Jump."
+        }
+      ]
+    },
+    "starheart_carry": {
+      "files": {
+        "png": "tip-starheart_carry.png",
+        "png@2x": "tip-starheart_carry@2x.png",
+        "webp": "tip-starheart_carry.webp",
+        "webp@2x": "tip-starheart_carry@2x.webp"
+      },
+      "alt": "Two friends stand close to the glowing Starheart; a hand drags the joystick and the bear walks up to lift it. Then: The bear carries the Starheart; the raccoon walks beside him. Then: The Starheart is home in the crew nest and everyone celebrates.",
+      "voice_line_id": "festival_glade.intro.02",
+      "voice_ids": [
+        "festival_glade.intro.02"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Two friends stand close to the glowing Starheart; a hand drags the joystick and the bear walks up to lift it."
+        },
+        {
+          "n": 2,
+          "alt": "The bear carries the Starheart; the raccoon walks beside him."
+        },
+        {
+          "n": 3,
+          "alt": "The Starheart is home in the crew nest and everyone celebrates."
+        }
+      ]
+    },
+    "sneak": {
+      "files": {
+        "png": "tip-sneak.png",
+        "png@2x": "tip-sneak@2x.png",
+        "webp": "tip-sneak.webp",
+        "webp@2x": "tip-sneak@2x.webp"
+      },
+      "alt": "A sleepy badger blocks the path. A hand taps the purple Sneak button. Then: Tiptoeing, the raccoon creeps quietly past the badger, who keeps sleeping.",
+      "voice_line_id": "trailhead.step.01",
+      "voice_ids": [
+        "trailhead.step.01",
+        "trailhead.step.04",
+        "sunbeam_grove.pip.near-badger",
+        "ui.bSneak"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A sleepy badger blocks the path. A hand taps the purple Sneak button."
+        },
+        {
+          "n": 2,
+          "alt": "Tiptoeing, the raccoon creeps quietly past the badger, who keeps sleeping."
+        }
+      ]
+    },
+    "light_beam": {
+      "files": {
+        "png": "tip-light_beam.png",
+        "png@2x": "tip-light_beam@2x.png",
+        "webp": "tip-light_beam.webp",
+        "webp@2x": "tip-light_beam@2x.webp"
+      },
+      "alt": "Sunlight shines from a crystal into a mirror; the bee taps Interact to turn the mirror. Then: The beam bounces to a pale ghost step and it turns solid and golden. Then: The raccoon hops onto the sun step; a hand taps Jump.",
+      "voice_line_id": "trailhead.step.02",
+      "voice_ids": [
+        "trailhead.step.02",
+        "trailhead.step.03",
+        "sunbeam_grove.pip.z-2"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Sunlight shines from a crystal into a mirror; the bee taps Interact to turn the mirror."
+        },
+        {
+          "n": 2,
+          "alt": "The beam bounces to a pale ghost step and it turns solid and golden."
+        },
+        {
+          "n": 3,
+          "alt": "The raccoon hops onto the sun step; a hand taps Jump."
+        }
+      ]
+    },
+    "shadow_bridge": {
+      "files": {
+        "png": "tip-shadow_bridge.png",
+        "png@2x": "tip-shadow_bridge@2x.png",
+        "webp": "tip-shadow_bridge.webp",
+        "webp@2x": "tip-shadow_bridge@2x.webp"
+      },
+      "alt": "A sunbeam crosses a gap. The bear walks into the beam. Then: The bear's shadow falls across the gap as a purple bridge, and the bee walks over it.",
+      "voice_line_id": "sunbeam_grove.pip.z-30",
+      "voice_ids": [
+        "sunbeam_grove.pip.z-30"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A sunbeam crosses a gap. The bear walks into the beam."
+        },
+        {
+          "n": 2,
+          "alt": "The bear's shadow falls across the gap as a purple bridge, and the bee walks over it."
+        }
+      ]
+    },
+    "badger_distract": {
+      "files": {
+        "png": "tip-badger_distract.png",
+        "png@2x": "tip-badger_distract@2x.png",
+        "webp": "tip-badger_distract.webp",
+        "webp@2x": "tip-badger_distract@2x.webp"
+      },
+      "alt": "The badger is awake and watching the path. The raccoon throws an acorn far to the side. Then: The badger turns to look at the acorn, and the raccoon slips by behind it.",
+      "voice_line_id": "sunbeam_grove.pip.stuck-badger",
+      "voice_ids": [
+        "sunbeam_grove.pip.stuck-badger"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The badger is awake and watching the path. The raccoon throws an acorn far to the side."
+        },
+        {
+          "n": 2,
+          "alt": "The badger turns to look at the acorn, and the raccoon slips by behind it."
+        }
+      ]
+    },
+    "water_level": {
+      "files": {
+        "png": "tip-water_level.png",
+        "png@2x": "tip-water_level@2x.png",
+        "webp": "tip-water_level.webp",
+        "webp@2x": "tip-water_level@2x.webp"
+      },
+      "alt": "A full pond blocks the way. The raccoon pulls the sluice lever; a hand taps Interact. Then: The water drains away and the raccoon walks across the dry bed.",
+      "voice_line_id": "trailhead.step.06",
+      "voice_ids": [
+        "trailhead.step.06",
+        "trailhead.step.07",
+        "mill_pond.pip.z-2"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A full pond blocks the way. The raccoon pulls the sluice lever; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The water drains away and the raccoon walks across the dry bed."
+        }
+      ]
+    },
+    "log_ride": {
+      "files": {
+        "png": "tip-log_ride.png",
+        "png@2x": "tip-log_ride@2x.png",
+        "webp": "tip-log_ride.webp",
+        "webp@2x": "tip-log_ride@2x.webp"
+      },
+      "alt": "The raccoon pulls the other sluice lever and the water rises. Then: High water floats a log; the bear rides it across the pond.",
+      "voice_line_id": "mill_pond.pip.z-33",
+      "voice_ids": [
+        "mill_pond.pip.z-33"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon pulls the other sluice lever and the water rises."
+        },
+        {
+          "n": 2,
+          "alt": "High water floats a log; the bear rides it across the pond."
+        }
+      ]
+    },
+    "turtle_distract": {
+      "files": {
+        "png": "tip-turtle_distract.png",
+        "png@2x": "tip-turtle_distract@2x.png",
+        "webp": "tip-turtle_distract.webp",
+        "webp@2x": "tip-turtle_distract@2x.webp"
+      },
+      "alt": "A snappy turtle guards the stepping stones. The raccoon flicks a floating leaf; a hand taps Interact. Then: The turtle turns to look at the leaf, and the raccoon hops across behind it.",
+      "voice_line_id": "mill_pond.pip.stuck-ford",
+      "voice_ids": [
+        "mill_pond.pip.stuck-ford",
+        "mill_pond.pip.near-turtle"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A snappy turtle guards the stepping stones. The raccoon flicks a floating leaf; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The turtle turns to look at the leaf, and the raccoon hops across behind it."
+        }
+      ]
+    },
+    "seed_vine": {
+      "files": {
+        "png": "tip-seed_vine.png",
+        "png@2x": "tip-seed_vine@2x.png",
+        "webp": "tip-seed_vine.webp",
+        "webp@2x": "tip-seed_vine@2x.webp"
+      },
+      "alt": "The raccoon plants a seed in a dirt patch by a wall; a hand taps Interact. Then: The bee flies to a dripping leaf, takes a water drop and drops it on the seed. Then: A vine grows up the wall and the raccoon climbs it.",
+      "voice_line_id": "trailhead.step.08",
+      "voice_ids": [
+        "trailhead.step.08",
+        "trailhead.step.10",
+        "trailhead.step.11",
+        "trailhead.step.13",
+        "bramble_patch.pip.z-2"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon plants a seed in a dirt patch by a wall; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The bee flies to a dripping leaf, takes a water drop and drops it on the seed."
+        },
+        {
+          "n": 3,
+          "alt": "A vine grows up the wall and the raccoon climbs it."
+        }
+      ]
+    },
+    "mushroom_bounce": {
+      "files": {
+        "png": "tip-mushroom_bounce.png",
+        "png@2x": "tip-mushroom_bounce@2x.png",
+        "webp": "tip-mushroom_bounce.webp",
+        "webp@2x": "tip-mushroom_bounce@2x.webp"
+      },
+      "alt": "A big red mushroom pad grew from a seed. The bear walks onto it; a hand taps Jump. Then: Boing! The mushroom bounces the bear up onto a high ledge.",
+      "voice_line_id": "bramble_patch.pip.z-16",
+      "voice_ids": [
+        "bramble_patch.pip.z-16"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A big red mushroom pad grew from a seed. The bear walks onto it; a hand taps Jump."
+        },
+        {
+          "n": 2,
+          "alt": "Boing! The mushroom bounces the bear up onto a high ledge."
+        }
+      ]
+    },
+    "spider_web": {
+      "files": {
+        "png": "tip-spider_web.png",
+        "png@2x": "tip-spider_web@2x.png",
+        "webp": "tip-spider_web.webp",
+        "webp@2x": "tip-spider_web@2x.webp"
+      },
+      "alt": "A web blocks the path and a grumpy spider watches it. The raccoon plucks a far strand; a hand taps Interact. Then: The spider scurries off to the strand, and the raccoon snips the web open.",
+      "voice_line_id": "bramble_patch.pip.near-spider",
+      "voice_ids": [
+        "bramble_patch.pip.near-spider",
+        "bramble_patch.pip.stuck-web"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A web blocks the path and a grumpy spider watches it. The raccoon plucks a far strand; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The spider scurries off to the strand, and the raccoon snips the web open."
+        }
+      ]
+    },
+    "wind_vane": {
+      "files": {
+        "png": "tip-wind_vane.png",
+        "png@2x": "tip-wind_vane@2x.png",
+        "webp": "tip-wind_vane.webp",
+        "webp@2x": "tip-wind_vane@2x.webp"
+      },
+      "alt": "The raccoon turns the pink wind vane; a hand taps Interact. The wind now blows up the hill. Then: The bee flies with the wind up to the flower on the hill; a hand holds Jump.",
+      "voice_line_id": "trailhead.step.14",
+      "voice_ids": [
+        "trailhead.step.14",
+        "trailhead.step.16",
+        "weathervane_hill.pip.z-2"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon turns the pink wind vane; a hand taps Interact. The wind now blows up the hill."
+        },
+        {
+          "n": 2,
+          "alt": "The bee flies with the wind up to the flower on the hill; a hand holds Jump."
+        }
+      ]
+    },
+    "dandelion_raft": {
+      "files": {
+        "png": "tip-dandelion_raft.png",
+        "png@2x": "tip-dandelion_raft@2x.png",
+        "webp": "tip-dandelion_raft.webp",
+        "webp@2x": "tip-dandelion_raft@2x.webp"
+      },
+      "alt": "The bear stands on a fluffy dandelion raft to hold it down. Then: The raccoon hops onto the raft too; a hand taps Jump. Then: The bear steps off and the raft floats up with the raccoon on board.",
+      "voice_line_id": "weathervane_hill.pip.z-5.5",
+      "voice_ids": [
+        "weathervane_hill.pip.z-5.5"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bear stands on a fluffy dandelion raft to hold it down."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon hops onto the raft too; a hand taps Jump."
+        },
+        {
+          "n": 3,
+          "alt": "The bear steps off and the raft floats up with the raccoon on board."
+        }
+      ]
+    },
+    "crow_hide": {
+      "files": {
+        "png": "tip-crow_hide.png",
+        "png@2x": "tip-crow_hide@2x.png",
+        "webp": "tip-crow_hide.webp",
+        "webp@2x": "tip-crow_hide@2x.webp"
+      },
+      "alt": "A crow circles, looking down. The bee hides under a leafy canopy. Then: When the crow flies the other way, the bee zips out to ring the bell.",
+      "voice_line_id": "weathervane_hill.pip.near-crow",
+      "voice_ids": [
+        "weathervane_hill.pip.near-crow"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A crow circles, looking down. The bee hides under a leafy canopy."
+        },
+        {
+          "n": 2,
+          "alt": "When the crow flies the other way, the bee zips out to ring the bell."
+        }
+      ]
+    },
+    "carry_chain": {
+      "files": {
+        "png": "tip-carry_chain.png",
+        "png@2x": "tip-carry_chain@2x.png",
+        "webp": "tip-carry_chain.webp",
+        "webp@2x": "tip-carry_chain@2x.webp"
+      },
+      "alt": "The bee picks up a golden acorn from a high shelf; a hand taps Interact. Then: The bee drops the acorn into a glowing orange ring on the ground. Then: The bear picks up the acorn from the ring and carries it home.",
+      "voice_line_id": "trailhead.step.20",
+      "voice_ids": [
+        "trailhead.step.20",
+        "trailhead.step.21",
+        "trailhead.step.24",
+        "hornet_hedge.pip.z-2",
+        "hornet_hedge.pip.z-34"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bee picks up a golden acorn from a high shelf; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The bee drops the acorn into a glowing orange ring on the ground."
+        },
+        {
+          "n": 3,
+          "alt": "The bear picks up the acorn from the ring and carries it home."
+        }
+      ]
+    },
+    "puff_smoke": {
+      "files": {
+        "png": "tip-puff_smoke.png",
+        "png@2x": "tip-puff_smoke@2x.png",
+        "webp": "tip-puff_smoke.webp",
+        "webp@2x": "tip-puff_smoke@2x.webp"
+      },
+      "alt": "Wasps buzz around a nest by the path. The bear stomps a purple puff-mushroom; a hand taps Interact. Then: A cloud of smoke makes the wasps sleepy, and the friends walk through.",
+      "voice_line_id": "trailhead.step.18",
+      "voice_ids": [
+        "trailhead.step.18",
+        "hornet_hedge.pip.near-nest"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Wasps buzz around a nest by the path. The bear stomps a purple puff-mushroom; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "A cloud of smoke makes the wasps sleepy, and the friends walk through."
+        }
+      ]
+    },
+    "night_bell": {
+      "files": {
+        "png": "tip-night_bell.png",
+        "png@2x": "tip-night_bell@2x.png",
+        "webp": "tip-night_bell.webp",
+        "webp@2x": "tip-night_bell@2x.webp"
+      },
+      "alt": "Daytime. The bee flies up to a lilac bell with a moon icon; a hand holds Jump. Then: Ding! Night falls: the sky turns dark blue with stars and a moon.",
+      "voice_line_id": "trailhead.step.27",
+      "voice_ids": [
+        "trailhead.step.27"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Daytime. The bee flies up to a lilac bell with a moon icon; a hand holds Jump."
+        },
+        {
+          "n": 2,
+          "alt": "Ding! Night falls: the sky turns dark blue with stars and a moon."
+        }
+      ]
+    },
+    "glow_lantern": {
+      "files": {
+        "png": "tip-glow_lantern.png",
+        "png@2x": "tip-glow_lantern@2x.png",
+        "webp": "tip-glow_lantern.webp",
+        "webp@2x": "tip-glow_lantern@2x.webp"
+      },
+      "alt": "Night. A hand taps the gear slot on the bee's portrait to switch the lantern on. Then: In the lantern light, hidden glowing steps appear, and the bee hops up them.",
+      "voice_line_id": "trailhead.step.25",
+      "voice_ids": [
+        "trailhead.step.25",
+        "trailhead.step.28"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Night. A hand taps the gear slot on the bee's portrait to switch the lantern on."
+        },
+        {
+          "n": 2,
+          "alt": "In the lantern light, hidden glowing steps appear, and the bee hops up them."
+        }
+      ]
+    },
+    "echo_whistle": {
+      "files": {
+        "png": "tip-echo_whistle.png",
+        "png@2x": "tip-echo_whistle@2x.png",
+        "webp": "tip-echo_whistle.webp",
+        "webp@2x": "tip-echo_whistle@2x.webp"
+      },
+      "alt": "A hand taps the gear slot on the raccoon's portrait: the Echo Whistle sends out sound rings. Then: A secret lever shows up as a lilac outline in the grass. Then: The raccoon pulls the secret lever; a hand taps Interact.",
+      "voice_line_id": "trailhead.step.30",
+      "voice_ids": [
+        "trailhead.step.30",
+        "trailhead.step.31",
+        "owl_wood.pip.stuck-echo"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A hand taps the gear slot on the raccoon's portrait: the Echo Whistle sends out sound rings."
+        },
+        {
+          "n": 2,
+          "alt": "A secret lever shows up as a lilac outline in the grass."
+        },
+        {
+          "n": 3,
+          "alt": "The raccoon pulls the secret lever; a hand taps Interact."
+        }
+      ]
+    },
+    "gear_gift": {
+      "files": {
+        "png": "tip-gear_gift.png",
+        "png@2x": "tip-gear_gift@2x.png",
+        "webp": "tip-gear_gift.webp",
+        "webp@2x": "tip-gear_gift@2x.webp"
+      },
+      "alt": "A green gift box with a lantern icon sits on a stump; the bee flies to it. Then: The gift pops open and the lantern lands in the gear slot on the bee's portrait.",
+      "voice_line_id": "owl_wood.pip.sig-gift-lantern",
+      "voice_ids": [
+        "owl_wood.pip.sig-gift-lantern",
+        "owl_wood.pip.sig-gift-whistle",
+        "ember_ridge.pip.gift-bubble"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A green gift box with a lantern icon sits on a stump; the bee flies to it."
+        },
+        {
+          "n": 2,
+          "alt": "The gift pops open and the lantern lands in the gear slot on the bee's portrait."
+        }
+      ]
+    },
+    "owl_hide": {
+      "files": {
+        "png": "tip-owl_hide.png",
+        "png@2x": "tip-owl_hide@2x.png",
+        "webp": "tip-owl_hide.webp",
+        "webp@2x": "tip-owl_hide@2x.webp"
+      },
+      "alt": "Night. An owl on a post looks out with a pale light cone. The bee hides behind a tree trunk. Then: When the owl looks away, the bee darts to the next trunk. Then: Ring the day bell and the owl falls asleep.",
+      "voice_line_id": "owl_wood.pip.near-owl",
+      "voice_ids": [
+        "owl_wood.pip.near-owl"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Night. An owl on a post looks out with a pale light cone. The bee hides behind a tree trunk."
+        },
+        {
+          "n": 2,
+          "alt": "When the owl looks away, the bee darts to the next trunk."
+        },
+        {
+          "n": 3,
+          "alt": "Ring the day bell and the owl falls asleep."
+        }
+      ]
+    },
+    "winter_ice": {
+      "files": {
+        "png": "tip-winter_ice.png",
+        "png@2x": "tip-winter_ice@2x.png",
+        "webp": "tip-winter_ice.webp",
+        "webp@2x": "tip-winter_ice@2x.webp"
+      },
+      "alt": "The bee flies to a pale blue bell with a snowflake icon; a hand holds Jump. Then: Winter comes: snow covers the ground and the creek freezes into ice. Then: The bear shoves a log onto the ice and it slides all the way across.",
+      "voice_line_id": "trailhead.step.33",
+      "voice_ids": [
+        "trailhead.step.33",
+        "trailhead.step.35",
+        "frost_hollow.pip.z-3"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bee flies to a pale blue bell with a snowflake icon; a hand holds Jump."
+        },
+        {
+          "n": 2,
+          "alt": "Winter comes: snow covers the ground and the creek freezes into ice."
+        },
+        {
+          "n": 3,
+          "alt": "The bear shoves a log onto the ice and it slides all the way across."
+        }
+      ]
+    },
+    "fox_hide": {
+      "files": {
+        "png": "tip-fox_hide.png",
+        "png@2x": "tip-fox_hide@2x.png",
+        "webp": "tip-fox_hide.webp",
+        "webp@2x": "tip-fox_hide@2x.webp"
+      },
+      "alt": "A fox sniffs along the path. A hand taps Sneak. Then: The bee hides inside a hollow log while the fox trots past.",
+      "voice_line_id": "trailhead.step.36",
+      "voice_ids": [
+        "trailhead.step.36",
+        "trailhead.step.37",
+        "frost_hollow.pip.near-fox"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A fox sniffs along the path. A hand taps Sneak."
+        },
+        {
+          "n": 2,
+          "alt": "The bee hides inside a hollow log while the fox trots past."
+        }
+      ]
+    },
+    "mud_slide": {
+      "files": {
+        "png": "tip-mud_slide.png",
+        "png@2x": "tip-mud_slide@2x.png",
+        "webp": "tip-mud_slide.webp",
+        "webp@2x": "tip-mud_slide@2x.webp"
+      },
+      "alt": "Snow everywhere. The bee rings a green bell with a sprout icon. Then: Spring melts the snow into a mud chute, and the raccoon belly-slides down it.",
+      "voice_line_id": "frost_hollow.pip.z-17.5",
+      "voice_ids": [
+        "frost_hollow.pip.z-17.5"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Snow everywhere. The bee rings a green bell with a sprout icon."
+        },
+        {
+          "n": 2,
+          "alt": "Spring melts the snow into a mud chute, and the raccoon belly-slides down it."
+        }
+      ]
+    },
+    "two_room": {
+      "files": {
+        "png": "tip-two_room.png",
+        "png@2x": "tip-two_room@2x.png",
+        "webp": "tip-two_room.webp",
+        "webp@2x": "tip-two_room@2x.webp"
+      },
+      "alt": "A wall splits two rooms. On the left, the bee rings a bell; a hand holds Jump. Then: On the right, the gate opens for the bear.",
+      "voice_line_id": "trailhead.step.40",
+      "voice_ids": [
+        "trailhead.step.40",
+        "backyard_split.pip.z-4",
+        "backyard_split.pip.stuck-tap"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A wall splits two rooms. On the left, the bee rings a bell; a hand holds Jump."
+        },
+        {
+          "n": 2,
+          "alt": "On the right, the gate opens for the bear."
+        }
+      ]
+    },
+    "garden_hazards": {
+      "files": {
+        "png": "tip-garden_hazards.png",
+        "png@2x": "tip-garden_hazards@2x.png",
+        "webp": "tip-garden_hazards.webp",
+        "webp@2x": "tip-garden_hazards@2x.webp"
+      },
+      "alt": "A sprinkler sprays across the path. Then: The raccoon stands on the green tap plate and the sprinkler stops. Then: A lawn mower rests for a moment, and the bear dashes across.",
+      "voice_line_id": "backyard_split.pip.near-sprinkler",
+      "voice_ids": [
+        "backyard_split.pip.near-sprinkler",
+        "backyard_split.pip.near-mower"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A sprinkler sprays across the path."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon stands on the green tap plate and the sprinkler stops."
+        },
+        {
+          "n": 3,
+          "alt": "A lawn mower rests for a moment, and the bear dashes across."
+        }
+      ]
+    },
+    "bubble_pouch": {
+      "files": {
+        "png": "tip-bubble_pouch.png",
+        "png@2x": "tip-bubble_pouch@2x.png",
+        "webp": "tip-bubble_pouch.webp",
+        "webp@2x": "tip-bubble_pouch@2x.webp"
+      },
+      "alt": "The bee, wearing the Bubble Pouch, flies low over the creek and the pouch fills with a bubble. Then: Facing a patch of glowing embers, the bee taps Interact and puffs the bubble at it. Then: Pop! The embers go out in a soft grey puff and the path is safe.",
+      "voice_line_id": "ember_ridge.pip.gift-bubble",
+      "voice_ids": [
+        "ember_ridge.pip.gift-bubble"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bee, wearing the Bubble Pouch, flies low over the creek and the pouch fills with a bubble."
+        },
+        {
+          "n": 2,
+          "alt": "Facing a patch of glowing embers, the bee taps Interact and puffs the bubble at it."
+        },
+        {
+          "n": 3,
+          "alt": "Pop! The embers go out in a soft grey puff and the path is safe."
+        }
+      ]
+    },
+    "call_baby": {
+      "files": {
+        "png": "tip-call_baby.png",
+        "png@2x": "tip-call_baby@2x.png",
+        "webp": "tip-call_baby.webp",
+        "webp@2x": "tip-call_baby@2x.webp"
+      },
+      "alt": "A little badger cub waits. A hand taps the green Call button. Then: The cub follows right behind the bear as they walk.",
+      "voice_line_id": "act3_lab.intro.01",
+      "voice_ids": [
+        "act3_lab.intro.01",
+        "ember_ridge.pip.cubBlocked",
+        "ui.bCall"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A little badger cub waits. A hand taps the green Call button."
+        },
+        {
+          "n": 2,
+          "alt": "The cub follows right behind the bear as they walk."
+        }
+      ]
+    },
+    "turtle_ride": {
+      "files": {
+        "png": "tip-turtle_ride.png",
+        "png@2x": "tip-turtle_ride@2x.png",
+        "webp": "tip-turtle_ride.webp",
+        "webp@2x": "tip-turtle_ride@2x.webp"
+      },
+      "alt": "A turtle sits in the pool by the path. The raccoon pulls the high-water sluice; a hand taps Interact. Then: High water floats the turtle away to a far rock, where it naps. The way is clear.",
+      "voice_line_id": "flooded_mill.pip.start",
+      "voice_ids": [
+        "flooded_mill.pip.start",
+        "flooded_mill.pip.sluices"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A turtle sits in the pool by the path. The raccoon pulls the high-water sluice; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "High water floats the turtle away to a far rock, where it naps. The way is clear."
+        }
+      ]
+    },
+    "duckling_float": {
+      "files": {
+        "png": "tip-duckling_float.png",
+        "png@2x": "tip-duckling_float@2x.png",
+        "webp": "tip-duckling_float.webp",
+        "webp@2x": "tip-duckling_float@2x.webp"
+      },
+      "alt": "Three ducklings wait at the edge of a deep pool. Then: With the water high, the ducklings float across the pool in a line.",
+      "voice_line_id": "flooded_mill.pip.ducklings",
+      "voice_ids": [
+        "flooded_mill.pip.ducklings",
+        "flooded_mill.pip.stuck-grate"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Three ducklings wait at the edge of a deep pool."
+        },
+        {
+          "n": 2,
+          "alt": "With the water high, the ducklings float across the pool in a line."
+        }
+      ]
+    },
+    "lantern_bait": {
+      "files": {
+        "png": "tip-lantern_bait.png",
+        "png@2x": "tip-lantern_bait@2x.png",
+        "webp": "tip-lantern_bait.webp",
+        "webp@2x": "tip-lantern_bait@2x.webp"
+      },
+      "alt": "Night market. The bee sits still on a stall roof with its lantern on. The owl turns to stare at the light. Then: While the owl watches the lantern, the raccoon sneaks the owlet past behind it.",
+      "voice_line_id": "night_market.pip.lantern",
+      "voice_ids": [
+        "night_market.pip.lantern",
+        "night_market.pip.reunion"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Night market. The bee sits still on a stall roof with its lantern on. The owl turns to stare at the light."
+        },
+        {
+          "n": 2,
+          "alt": "While the owl watches the lantern, the raccoon sneaks the owlet past behind it."
+        }
+      ]
+    },
+    "pebble_sling": {
+      "files": {
+        "png": "tip-pebble_sling.png",
+        "png@2x": "tip-pebble_sling@2x.png",
+        "webp": "tip-pebble_sling.webp",
+        "webp@2x": "tip-pebble_sling@2x.webp"
+      },
+      "alt": "In a crystal cave, the bear with the Pebble Sling taps Interact to fling a pebble at a far crystal. Then: Clink! The crystal turns, and its light beam now lands on a ghost bridge, making it solid.",
+      "voice_line_id": "mirror_caves.pip.start",
+      "voice_ids": [
+        "mirror_caves.pip.start",
+        "mirror_caves.pip.sling"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "In a crystal cave, the bear with the Pebble Sling taps Interact to fling a pebble at a far crystal."
+        },
+        {
+          "n": 2,
+          "alt": "Clink! The crystal turns, and its light beam now lands on a ghost bridge, making it solid."
+        }
+      ]
+    },
+    "bubble_web": {
+      "files": {
+        "png": "tip-bubble_web.png",
+        "png@2x": "tip-bubble_web@2x.png",
+        "webp": "tip-bubble_web.webp",
+        "webp@2x": "tip-bubble_web@2x.webp"
+      },
+      "alt": "A web blocks the tunnel, guarded by a spider. From far away, the bee taps Interact to shoot a bubble. Then: Pop! The bubble breaks the web and the tunnel is open.",
+      "voice_line_id": "mirror_caves.pip.web",
+      "voice_ids": [
+        "mirror_caves.pip.web"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A web blocks the tunnel, guarded by a spider. From far away, the bee taps Interact to shoot a bubble."
+        },
+        {
+          "n": 2,
+          "alt": "Pop! The bubble breaks the web and the tunnel is open."
+        }
+      ]
+    },
+    "dark_escort": {
+      "files": {
+        "png": "tip-dark_escort.png",
+        "png@2x": "tip-dark_escort@2x.png",
+        "webp": "tip-dark_escort.webp",
+        "webp@2x": "tip-dark_escort@2x.webp"
+      },
+      "alt": "A bat pup hides from the bee's bright lantern and will not move. Then: A hand taps the gear slot to switch the lantern off, and the pup follows in the dark.",
+      "voice_line_id": "mirror_caves.pip.pup",
+      "voice_ids": [
+        "mirror_caves.pip.pup",
+        "night_market.pip.lantern-off"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A bat pup hides from the bee's bright lantern and will not move."
+        },
+        {
+          "n": 2,
+          "alt": "A hand taps the gear slot to switch the lantern off, and the pup follows in the dark."
+        }
+      ]
+    },
+    "leaf_glider": {
+      "files": {
+        "png": "tip-leaf_glider.png",
+        "png@2x": "tip-leaf_glider@2x.png",
+        "webp": "tip-leaf_glider.webp",
+        "webp@2x": "tip-leaf_glider@2x.webp"
+      },
+      "alt": "The raccoon, holding the Leaf Glider, stands at the edge of a gap; a hand taps Jump. Then: The raccoon floats under the leaf, glides across the gap and lands on the far side.",
+      "voice_line_id": "storm_orchard.pip.start",
+      "voice_ids": [
+        "storm_orchard.pip.start",
+        "storm_orchard.pip.vane"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon, holding the Leaf Glider, stands at the edge of a gap; a hand taps Jump."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon floats under the leaf, glides across the gap and lands on the far side."
+        }
+      ]
+    },
+    "crow_lure": {
+      "files": {
+        "png": "tip-crow_lure.png",
+        "png@2x": "tip-crow_lure@2x.png",
+        "webp": "tip-crow_lure.webp",
+        "webp@2x": "tip-crow_lure@2x.webp"
+      },
+      "alt": "A crow guards a bell. The bear flings a shiny pebble far away; a hand taps Interact. Then: The crow chases the shiny pebble, and the bee rings the bell.",
+      "voice_line_id": "storm_orchard.pip.crow",
+      "voice_ids": [
+        "storm_orchard.pip.crow"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A crow guards a bell. The bear flings a shiny pebble far away; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The crow chases the shiny pebble, and the bee rings the bell."
+        }
+      ]
+    },
+    "windbreak": {
+      "files": {
+        "png": "tip-windbreak.png",
+        "png@2x": "tip-windbreak@2x.png",
+        "webp": "tip-windbreak.webp",
+        "webp@2x": "tip-windbreak@2x.webp"
+      },
+      "alt": "Strong wind blows the little robin chick backwards. Then: The bear stands in the wind, and the chick walks safely in the calm space behind him.",
+      "voice_line_id": "storm_orchard.pip.crown",
+      "voice_ids": [
+        "storm_orchard.pip.crown",
+        "storm_orchard.pip.stuck-crown"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Strong wind blows the little robin chick backwards."
+        },
+        {
+          "n": 2,
+          "alt": "The bear stands in the wind, and the chick walks safely in the calm space behind him."
+        }
+      ]
+    },
+    "master_bell": {
+      "files": {
+        "png": "tip-master_bell.png",
+        "png@2x": "tip-master_bell@2x.png",
+        "webp": "tip-master_bell.webp",
+        "webp@2x": "tip-master_bell@2x.webp"
+      },
+      "alt": "The bee rings the big Master Bell; three icons above it show what comes next. Then: Ding! The valley turns to a snowy night and the creek freezes. Then: Ring again: spring day melts the ice back into water.",
+      "voice_line_id": "thaw_valley.pip.start",
+      "voice_ids": [
+        "thaw_valley.pip.start",
+        "thaw_valley.pip.stuck-ford",
+        "starheart_summit.pip.bell"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The bee rings the big Master Bell; three icons above it show what comes next."
+        },
+        {
+          "n": 2,
+          "alt": "Ding! The valley turns to a snowy night and the creek freezes."
+        },
+        {
+          "n": 3,
+          "alt": "Ring again: spring day melts the ice back into water."
+        }
+      ]
+    },
+    "fox_lure": {
+      "files": {
+        "png": "tip-fox_lure.png",
+        "png@2x": "tip-fox_lure@2x.png",
+        "webp": "tip-fox_lure.webp",
+        "webp@2x": "tip-fox_lure@2x.webp"
+      },
+      "alt": "Snow. The raccoon stands by a green plate and pings the Echo Whistle; a fox perks up its ears. Then: The fox trots over to the sound and steps on the plate, and a gate opens.",
+      "voice_line_id": "thaw_valley.pip.fox",
+      "voice_ids": [
+        "thaw_valley.pip.fox"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Snow. The raccoon stands by a green plate and pings the Echo Whistle; a fox perks up its ears."
+        },
+        {
+          "n": 2,
+          "alt": "The fox trots over to the sound and steps on the plate, and a gate opens."
+        }
+      ]
+    },
+    "gear_swap": {
+      "files": {
+        "png": "tip-gear_swap.png",
+        "png@2x": "tip-gear_swap@2x.png",
+        "webp": "tip-gear_swap.webp",
+        "webp@2x": "tip-gear_swap@2x.webp"
+      },
+      "alt": "The raccoon stands at a gear stump with a red toolbox; a hand taps Interact. Then: The raccoon's gear slot swaps from the whistle to the Leaf Glider.",
+      "voice_line_id": "grand_garden.pip.gear",
+      "voice_ids": [
+        "grand_garden.pip.gear"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "The raccoon stands at a gear stump with a red toolbox; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "The raccoon's gear slot swaps from the whistle to the Leaf Glider."
+        }
+      ]
+    },
+    "wasp_wind": {
+      "files": {
+        "png": "tip-wasp_wind.png",
+        "png@2x": "tip-wasp_wind@2x.png",
+        "webp": "tip-wasp_wind.webp",
+        "webp@2x": "tip-wasp_wind@2x.webp"
+      },
+      "alt": "Wasps buzz over the path. The raccoon cranks the wind vane; a hand taps Interact. Then: A gust blows the wasps away down the wind, and the raccoon walks through.",
+      "voice_line_id": "grand_garden.pip.wasps",
+      "voice_ids": [
+        "grand_garden.pip.wasps"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "Wasps buzz over the path. The raccoon cranks the wind vane; a hand taps Interact."
+        },
+        {
+          "n": 2,
+          "alt": "A gust blows the wasps away down the wind, and the raccoon walks through."
+        }
+      ]
+    },
+    "sprinkler_cups": {
+      "files": {
+        "png": "tip-sprinkler_cups.png",
+        "png@2x": "tip-sprinkler_cups@2x.png",
+        "webp": "tip-sprinkler_cups.webp",
+        "webp@2x": "tip-sprinkler_cups@2x.webp"
+      },
+      "alt": "A sprinkler sprays into an empty cup. Then: Both cups fill with water and the garden door opens.",
+      "voice_line_id": "grand_garden.pip.cups",
+      "voice_ids": [
+        "grand_garden.pip.cups"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A sprinkler sprays into an empty cup."
+        },
+        {
+          "n": 2,
+          "alt": "Both cups fill with water and the garden door opens."
+        }
+      ]
+    },
+    "friend_helpers": {
+      "files": {
+        "png": "tip-friend_helpers.png",
+        "png@2x": "tip-friend_helpers@2x.png",
+        "webp": "tip-friend_helpers.webp",
+        "webp@2x": "tip-friend_helpers@2x.webp"
+      },
+      "alt": "A friendly badger, rescued earlier, sleeps by an orange plate. The bee glows its lantern near him. Then: The badger wakes, rolls onto the heavy plate, and holds the gate open for the crew.",
+      "voice_line_id": "starheart_summit.pip.start",
+      "voice_ids": [
+        "starheart_summit.pip.start",
+        "starheart_summit.pip.missing"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "A friendly badger, rescued earlier, sleeps by an orange plate. The bee glows its lantern near him."
+        },
+        {
+          "n": 2,
+          "alt": "The badger wakes, rolls onto the heavy plate, and holds the gate open for the crew."
+        }
+      ]
+    },
+    "team_lift_starheart": {
+      "files": {
+        "png": "tip-team_lift_starheart.png",
+        "png@2x": "tip-team_lift_starheart@2x.png",
+        "webp": "tip-team_lift_starheart.webp",
+        "webp@2x": "tip-team_lift_starheart@2x.webp"
+      },
+      "alt": "On the summit, the glowing Starheart sits in a gold circle. The raccoon waits inside; a hand drags the joystick and the bear walks in too. Then: With two friends close, the bear lifts the Starheart high over his head. Then: The bear carries the Starheart gently down the stepping caps to the crew nest.",
+      "voice_line_id": "starheart_summit.pip.lift",
+      "voice_ids": [
+        "starheart_summit.pip.lift",
+        "starheart_summit.pip.carry"
+      ],
+      "panels": [
+        {
+          "n": 1,
+          "alt": "On the summit, the glowing Starheart sits in a gold circle. The raccoon waits inside; a hand drags the joystick and the bear walks in too."
+        },
+        {
+          "n": 2,
+          "alt": "With two friends close, the bear lifts the Starheart high over his head."
+        },
+        {
+          "n": 3,
+          "alt": "The bear carries the Starheart gently down the stepping caps to the crew nest."
+        }
+      ]
+    }
+  }
+}

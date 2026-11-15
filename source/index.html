@@ -257,6 +257,7 @@ body.rts #selCard.on{display:flex}body.rts.buildOn #selCard{display:none}
 .panel input[type=range]{flex:1;accent-color:#ffd23f}
 .danger{border-color:#ff9a8a!important;color:#ffb8ac!important}
 #confirm{z-index:15}
+#how{z-index:13} /* How to play from pause sits above the pause overlay */
 #tech{z-index:12} /* playtest-01 M1: tech tree opens above the ☰ hub (both were .ov z 10) */
 #results .sc{font-size:46px;font-weight:900;color:#ffd23f;text-align:center;line-height:1.1}
 #results .nb{text-align:center;font-weight:800;color:#9ff08a;min-height:20px}
@@ -966,6 +967,7 @@ body:not(.inRound) #bFlag{display:none!important}
 </div></div>
 <div class="ov" id="how"><div class="panel">
   <h2>How to play</h2>
+  <div id="howTips" class="howTips" hidden></div>
   <p>🐾 Pollinator Meadow is a cozy puzzle adventure, like The Lost Vikings. Three friends — a bee, a raccoon and a bear — each have one special skill, and no one can finish a level alone. Nobody gets hurt: a wrong move just means trying again.</p>
   <div class="howCls">
   <div class="hc" style="--cc:#4aa8ff"><img src="./ui/icons/class/class-tiny-scout.webp" alt=""><div><b>🐝 Scout — Honeybee</b>: flies over gaps and deep water, slips through knotholes, rings high bells and lanterns. Too small to push heavy things.</div></div>
@@ -979,7 +981,7 @@ body:not(.inRound) #bFlag{display:none!important}
 <div class="ov" id="pause"><div class="panel">
   <div class="tabs" id="hubTabs"><button data-tab="game" class="on">⏸ Game</button><button data-tab="animals">🐾 Animals</button><button data-tab="inv">🎒 Inventory</button><button data-tab="tech">🧬 Build/Tech</button><button data-tab="journal">📖 Journal</button><button data-tab="settings">⚙ Settings</button></div>
   <div class="tp on" id="tpGame"><h2>⏸ Paused</h2><p id="pauseInfo" style="text-align:center;font-weight:700"></p>
-  <div style="text-align:center"><button class="pill" id="pAccess" type="button">🌱 Easy off · 🔠 Medium</button></div>
+  <div style="text-align:center"><button class="pill" id="pAccess" type="button">🌱 Easy off · 🔠 Medium</button> <button class="pill" id="pHow" type="button">❓ How to play</button></div>
   <button class="big" id="pResume">▶ Resume</button>
   <div class="row2"><button class="big sec" id="pRestart">↻ Restart round</button><button class="big sec" id="pValley">🗺️ Back to Valley</button><button class="big sec" id="pQuit">⌂ Quit to title</button></div>
   <div class="row2"><button class="big sec" id="pSkins">🎨 Skins</button><button class="big sec" id="pJournal">📖 Journal</button><button class="big sec" id="pSettings">⚙ Settings</button><button class="big sec" id="bNight">🌙 Day / night</button><button class="big sec" id="bSeason">🌸 Season</button><button class="big sec" id="bInfo">ℹ Credits</button><button class="big sec" id="pTech">🧬 Tech tree</button><button class="big sec" id="pAdmin">🛠 Admin</button></div>
@@ -999,6 +1001,7 @@ body:not(.inRound) #bFlag{display:none!important}
     <label class="ksSl"><i class="ksI" style="--i:url(./ui/settings/icons/sfx@2x.png)"></i><span class="ksL">Gameplay</span><input type="range" data-k="sfx" min="0" max="100" value="100" aria-label="Gameplay volume"><span class="ksN">100</span></label>
     <label class="ksSl"><i class="ksI" style="--i:url(./ui/settings/icons/ambience@2x.png)"></i><span class="ksL">Ambience</span><input type="range" data-k="amb" min="0" max="100" value="100" aria-label="Ambience volume"><span class="ksN">100</span></label>
     <label class="ksSl"><i class="ksI" style="--i:url(./ui/settings/icons/rain@2x.png)"></i><span class="ksL">Rain</span><input type="range" data-k="rain" min="0" max="100" value="50" aria-label="Rain volume"><span class="ksN">50</span></label>
+    <label class="ksSl isOff" id="sVoiceRow"><i class="ksI" style="--i:url(./ui/settings/icons/voice@2x.png)"></i><span class="ksL">Voice</span><input type="range" data-k="voice" min="0" max="100" value="100" aria-label="Voice volume" disabled><span class="ksN">100</span></label>
   </div>
   <label class="ksMute"><input type="checkbox" id="sMute"><span>Mute all</span></label>
   </div><div class="ksCol">
@@ -1019,6 +1022,11 @@ body:not(.inRound) #bFlag{display:none!important}
   <div class="ksHead"><button class="ksIco ksBack" id="accBack" type="button" aria-label="Back to Settings"></button><h2>Accessibility</h2></div>
   <div class="ksPanel"><div class="ksScroll" id="sAccess">
     <div class="ksSec">Text size</div><div class="ksSeg" id="sText"><button data-v="s">Small</button><button data-v="m">Medium</button><button data-v="l">Large</button><button data-v="xl">Extra large</button></div>
+    <div class="ksRead">
+      <label class="ksChk"><input type="checkbox" id="sRead"><span>Read tips and banter out loud</span></label>
+      <button type="button" class="ksBtn" id="sReadTest" disabled>Test</button>
+    </div>
+    <p class="ksNote">If this device cannot speak, the words still appear on screen.</p>
     <label class="ksChk"><input type="checkbox" id="sCB"><span>Color-blind class colors and shapes<small>Class shapes (◯ Bee · ◇ Raccoon · ⬡ Bear) always show; this swaps the glow colors too.</small></span></label>
     <label class="ksChk"><input type="checkbox" id="sReduce"><span>Reduce motion<small id="sReduceH">Uses your device setting until you change it.</small></span></label>
     <label class="ksChk"><input type="checkbox" id="sEasy"><span>Easy mode<small>Slower sneak-critters, more time on timers. Stars still count, except the time star.</small></span></label>
