@@ -2413,8 +2413,8 @@ export function createZones(scene, host) {
     const p = ctx.getP(), c = clsOfCur(), C = CLASSES[c], pr = nearest(p), out = [];
     const img = (u) => `<img class="ico" src="${u}" alt="" draggable="false">`;
     if (pr) {
-      const A2 = ACTS[pr.act], ok = pr.cls === c;
-      out.push({ icon: img(CLASSES[pr.cls].abIcon), ik: 'class-act', label: `${A2.verb}`, dis: !ok, why: `Only a ${CLASSES[pr.cls].name} can do this — swap!`, on: () => doAct(pr, ctx.getP()) });
+      const A2 = ACTS[pr.act] || { verb: pr.label || 'Act' }, ok = !pr.cls || pr.cls === c;
+      out.push({ icon: img((pr.cls ? CLASSES[pr.cls] : C).abIcon), ik: 'class-act', label: `${A2.verb}`, dis: !ok, why: pr.cls ? `Only a ${CLASSES[pr.cls].name} can do this — swap!` : 'Anyone can ring this', on: () => doAct(pr, ctx.getP()) });
     }
     if (!pr && a2) { const gk = slotOf(c); if ((gk === 'pouch' || gk === 'sling') && gearOn(gk)) out.push({ icon: img(import.meta.env.BASE_URL + GEAR_INFO[gk].icon), ik: 'gear-act', label: gk === 'pouch' ? (a2.pouch.full ? 'Shoot Bubble' : 'Pouch empty') : 'Sling Pebble', dis: gk === 'pouch' && !a2.pouch.full, why: '🫧 Fly low over a creek or pond to fill the pouch', on: () => useGear(ctx.getP()) }); }
     for (const k of C.acts) {
@@ -2516,7 +2516,7 @@ export function createZones(scene, host) {
           if (!pr.done && c === 'scout' && dFlat(p, pr) < 2.4 && p.y > pr.y - 1.2 && p.y < pr.y + 6.5) ringBell(pr);
         }
       }
-      { const pr = nearest(p); if (pr && pr.cls !== c && !pr.done && t - (pr._hintT ?? -99) > 10) { pr._hintT = t; say(`${CLASSES[pr.cls].em} Needs a ${CLASSES[pr.cls].name}`, 1600); } if (id === host.cur()) nearOwn = pr && pr.cls === c && !(pr.done && !pr.two) ? pr : null; }
+      { const pr = nearest(p); if (pr && pr.cls && pr.cls !== c && !pr.done && t - (pr._hintT ?? -99) > 10) { pr._hintT = t; say(`${CLASSES[pr.cls].em} Needs a ${CLASSES[pr.cls].name}`, 1600); } if (id === host.cur()) nearOwn = pr && (!pr.cls || pr.cls === c) && !(pr.done && !pr.two) ? pr : null; }
       for (const h of hoops) if (!h.got && Math.hypot(p.x - h.m.position.x, p.z - h.m.position.z) < 1.8 && Math.abs(p.y + 0.5 - h.m.position.y) < 1.8) {
         if (h.prev && !sig[h.prev]) { say('💫 Start with the first hoop!', 1200); continue; }
         h.got = true; h.m.material = mat(0x8be07a, 0.6); setSig(h.sig); tst('💫 Hoop!', 900);
@@ -2740,7 +2740,7 @@ export function createZones(scene, host) {
     }
   }
   // ---- objective tracker + off-screen arrow ----
-  const VERB = { bell: 'ring', lever: 'pull', shove: 'shove', smash: 'smash', throw: 'throw an acorn at', plank: 'lay a plank at', slip: 'slip through', vine: 'climb', dig: 'dig at' };
+  const VERB = { bell: 'ring', master: 'ring', lever: 'pull', shove: 'shove', smash: 'smash', throw: 'throw an acorn at', plank: 'lay a plank at', slip: 'slip through', vine: 'climb', dig: 'dig at' };
   const lc = s => /^[A-Z][a-z'-]+( [a-z]|$)/.test(s) ? s[0].toLowerCase() + s.slice(1) : s;
   function objective() {
     if (!recipe || keyDone || !exitAt) return null;
@@ -2751,7 +2751,7 @@ export function createZones(scene, host) {
     const findFor = (k, depth) => { // what produces signal k? follows "needs X first" chains back to the first doable step
       if (sig[k] || depth > 5 || seen.has(k)) return null; seen.add(k);
       const cands = props.filter(q => q.sig === k && q.act && !q.done);
-      for (const pr of cands) if (isOn(pr.need)) { const C = CLASSES[pr.cls]; return { text: `${C.name}: ${pr.act === 'bell' && pr.lantern ? 'light' : VERB[pr.act]} the ${lc(pr.label)}`, cls: pr.cls, color: C.color, x: pr.x, y: pr.y, z: pr.z, pr, verb: ACTS[pr.act].verb }; }
+      for (const pr of cands) if (isOn(pr.need)) { if (!pr.cls) return { text: `Anyone: ${VERB[pr.act] || 'use'} the ${lc(pr.label)}`, cls: null, color: '#ffd23f', x: pr.x, y: pr.y, z: pr.z, pr, verb: (ACTS[pr.act] || { verb: 'Act' }).verb }; const C = CLASSES[pr.cls]; return { text: `${C.name}: ${pr.act === 'bell' && pr.lantern ? 'light' : VERB[pr.act]} the ${lc(pr.label)}`, cls: pr.cls, color: C.color, x: pr.x, y: pr.y, z: pr.z, pr, verb: ACTS[pr.act].verb }; }
       const pl = plates.find(q => q.sig === k && !q.holder);
       if (pl) { const c = pl.heavy ? 'bruiser' : 'trickster'; return { text: `${pl.heavy ? 'Bruiser' : 'A friend'}: stand on the ${lc(pl.label)}`, cls: c, color: CLASSES[c].color, x: pl.x, y: pl.y, z: pl.z, pr: props.find(q => q.plate === pl) }; }
       const h = hoops.find(q => q.sig === k && !q.got);

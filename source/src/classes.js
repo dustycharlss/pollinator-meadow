@@ -73,6 +73,7 @@ export const ACTS = {
   slide: { cls: 'trickster', verb: 'Belly-slide', icon: '🛷' },
   stomp: { cls: 'bruiser', verb: 'Stomp Puff', icon: '🍄' },
   pick: { cls: null, verb: 'Pick Up', icon: '🌰' },
+  master: { cls: null, verb: 'Ring Bell', icon: '🔔' }, // Act 3 S4 Master Bell (any class)
   gear: { cls: null, verb: 'Swap Gear', icon: '🧰' }, // Act 3 S2 gear stump (any class)
   drop: { cls: null, verb: 'Hand Off', icon: '⭕' },
 };
