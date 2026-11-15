@@ -595,7 +595,9 @@ export function createZones(scene, host) {
   function addSolid(s) { ctx.phys.addDyn(s); solids.push(s); return s; }
   function badge(c, x, y, z, s = 1.15) { const sp = new THREE.Sprite(badgeOf(c)); sp.scale.set(s, s, 1); sp.position.set(x, y, z); sp.renderOrder = 8; group.add(sp); return sp; }
   const isOn = (need) => !need || [].concat(need).every(k => sig[k]);
-  function setSig(k, v = true) { if (!k || !!sig[k] === !!v) return; sig[k] = !!v; if (v) lastProg = t; }
+  let applyingNet = false;
+  function emitNet(kind, payload) { if (applyingNet) return; ctx.onNetEvent?.({ kind, ...payload }); }
+  function setSig(k, v = true) { if (!k || !!sig[k] === !!v) return; sig[k] = !!v; if (v) lastProg = t; emitNet('sig', { sig: k, v: !!v }); }
   function clearWaterIn(x0, z0, x1, z1) { for (let i = WATER_RECTS.length - 1; i >= 0; i--) { const r = WATER_RECTS[i]; if (r.x > x0 - 0.4 && r.x < x1 + 0.4 && r.z > z0 - 0.4 && r.z < z1 + 0.4) WATER_RECTS.splice(i, 1); } }
   const addHeal = () => {}; // adventure refocus: no heal meter
   const nameOf = id => ctx.speciesName ? ctx.speciesName(id) : id;
@@ -993,12 +995,13 @@ export function createZones(scene, host) {
     return L.find(q => gearHas(q)) || L[0];
   }
   const gearOn = k => gearHas(k) && slotOf(GEAR_INFO[k].cls) === k && !!(borrowed(k) ? a2.borrow[eqK(k)] : gear[eqK(k)]);
-  function setSlot(c, k) { const bo = a2 && a2.borrow; if (bo) (bo.slot ||= {})[c] = k; if (gear[k]) { (gear.slot ||= {})[c] = k; gearSave(); } }
+  function setSlot(c, k) { const bo = a2 && a2.borrow; if (bo) (bo.slot ||= {})[c] = k; if (gear[k]) { (gear.slot ||= {})[c] = k; gearSave(); } emitNet('gear', { slot: c, k }); }
   function setGear(k, on, quiet) {
     if (!gearHas(k)) { tst(`🔒 Find the ${GEAR_INFO[k].name} in ${GEAR_INFO[k].where} first`, 2000); return false; }
     if (borrowed(k)) a2.borrow[eqK(k)] = !!on; else { gear[eqK(k)] = !!on; gearSave(); }
     if (!quiet) { tst(`${GEAR_INFO[k].em} ${GEAR_INFO[k].name} ${on ? 'on' : 'off'}`, 1400); ctx.audio?.sample?.('ui2/gear-equip-clink', 0.4); }
     if (k === 'whistle' && on && a2) a2.pingNext = t; // ping right away
+    emitNet('gear', { equip: GEAR_INFO[k] && GEAR_INFO[k].cls, k, on: !!on });
     ctx.onGear?.(); return true;
   }
   const sprite = (e, s) => emojiSprite(e, s);
@@ -1175,6 +1178,7 @@ export function createZones(scene, host) {
     if (S.master) S.master.coolUntil = 0; // S4 §1.6: bonk does not reset the Master Bell; cooldown clears so they can ring at once
     if ((S.acorns || []).some(a => a.by === ctx.cur())) acornBack();
     fx(p.x, p.y + 0.6, p.z); ctx.audio?.sample?.(src === 'ember' || (S.escorts || []).length ? 'act3/gentle-bonk-poof' : 'ui/error-bonk', 0.5); // Act 3: the gentle poof
+    emitNet('bonk', { body: ctx.cur(), src: src || (e && e.name) || '?', warp: src === 'escort' ? ctx.crewIds().slice() : [ctx.cur()] });
     if (src === 'ember') { tst('💨 Puff! Soot on your nose — poof, back to the 🚩 flag. Douse embers with a 🫧 bubble, or ring 🌱 spring to dim them', 2600); return; }
     tst(src === 'escort' ? `💫 Bonk! The ${e.name} reached the little one — poof, back to the 🚩 flag` : `💫 Bonk! The ${e.name} spotted you — poof, back to the 🚩 flag`, 2400);
   }
@@ -1996,7 +2000,7 @@ export function createZones(scene, host) {
   }
   function a2UpdateBody(dt, cam, p, cur) {
     const S = a2; if (!S) return; const c = CLASS_OF[cur];
-    for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; if (flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3 && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; if (!cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
+    for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; if (flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3 && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; if (!cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); emitNet('checkpoint', { x: +(cp.x - A.x).toFixed(2), z: +(cp.z - A.z).toFixed(2) }); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
     if (cur === host.cur()) flagBackUpd(S, p, cur);
     if (S.stuck) { if (t > S.stuck.until || !ctx.driven().includes(S.stuck.who)) S.stuck = null; else if (S.stuck.who === cur) { p.x = S.stuck.x; p.z = S.stuck.z; p.y = S.stuck.y; p.vx = p.vz = p.vy = 0; } }
     for (const d of S.drips) { if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
@@ -2187,7 +2191,7 @@ export function createZones(scene, host) {
     trunk.count = ti; canopy.count = ci; bush.count = bi; flower.count = fi;
     for (const im of [trunk, canopy, bush, flower]) { im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; group.add(im); }
   }
-  function tst(s, d) { if (recipe && recipe.kid) return; ctx.toast(s, d); }
+  function tst(s, d) { if (recipe && recipe.kid) return; ctx.toast(s, d); emitNet('toast', { text: s, ms: d }); }
   // ---- Pip kid tips (Fern act2-kid-tips.md / act3 sheets): recipe.pip = [[trigger | [triggers], line], …] ----
   // triggers: 'start' · 'z:N' (cross local z) · 'xlt:N' (go west of x) · 'sig:K' / 'sig:K+3' (3 s later) · 'near:KIND[:R]' (enemy or prop kind) · 'stuck:PUZZLE'
   let pipDone = new Set(), pipPend = null, pipSigT = {};
@@ -2314,7 +2318,7 @@ export function createZones(scene, host) {
     if (recipe.kid) { result.kid = true; result.stars = { petals: true, star: true, par: true }; confetti(true); setTimeout(() => kid && confetti(true), 700); }
     result.n = +!!result.stars.petals + +!!result.stars.star + +!!result.stars.par;
     if (a2 && !recipe.kid) result.stars.challenge = !a2.hidEver;
-    tst(`🏆 ${why}! ${'⭐'.repeat(result.n)}${'☆'.repeat(3 - result.n)}`, 3400); ctx.audio?.chime?.(); ctx.onComplete?.(result);
+    tst(`🏆 ${why}! ${'⭐'.repeat(result.n)}${'☆'.repeat(3 - result.n)}`, 3400); ctx.audio?.chime?.(); ctx.onComplete?.(result); emitNet('complete', { why, id, result });
   }
   const clsOfCur = () => CLASS_OF[ctx.cur()] || 'trickster';
   const d3 = (p, q) => Math.hypot(p.x - q.x, (p.y + 0.6) - q.y, p.z - q.z);
@@ -2544,7 +2548,7 @@ export function createZones(scene, host) {
         if (k.show && !isOn(k.show)) continue;
         if (Math.hypot(p.x - k.m.position.x, p.z - k.m.position.z) < 1.5 && Math.abs(p.y + 0.6 - k.m.position.y) < 1.8) {
           if (k.who && !k.who.includes(c)) { say('🙅 ' + (k.whyNot || 'Another class has to grab this'), 2000); continue; }
-          k.got = true; k.m.visible = false; k.alive = false; addHeal(TIER[k.tier].heal); ctx.audio?.sample?.('ui2/item-produced', 0.4); picked++; if (k.tier === 'petal' && !k.nightOnly) petalV += k.value || 1;
+          k.got = true; k.m.visible = false; k.alive = false; addHeal(TIER[k.tier].heal); ctx.audio?.sample?.('ui2/item-produced', 0.4); picked++; if (k.tier === 'petal' && !k.nightOnly) petalV += k.value || 1; emitNet('pick', { idx: picks.indexOf(k), by: ctx.cur(), tier: k.tier });
           if (k.bloom) say(`🌸 Bloom bunch! +${k.value} Petals`, 1200);
           if (k.tier === 'dew') keyDew++;
           if (k.set) setSig(k.set);
@@ -3004,11 +3008,202 @@ export function createZones(scene, host) {
     checkKey();
     return out;
   }
+
+  function bodySnap(id) {
+    const p = ctx.parked(id); if (!p) return null;
+    return {
+      x: p.x - A.x, y: p.y - baseY, z: p.z - A.z,
+      yaw: p.yaw || 0, vx: p.vx || 0, vy: p.vy || 0, vz: p.vz || 0,
+      grounded: !!p.grounded, flying: !!(p.flapping || p.flying), sneak: !!p.sneak,
+      carried: p.carried || 0, anim: Math.round(((p.t || 0) % 1) * 255) & 255,
+    };
+  }
+  function netState() {
+    const ids = ctx.crewIds() || [];
+    const bodies = {};
+    for (const id of ids) { const b = bodySnap(id); if (b) bodies[id] = b; }
+    const S = a2;
+    const enemies = S ? S.en.map(e => ({ id: e.id, kind: e.kind, x: e.x - A.x, z: e.z - A.z, y: e.y - baseY, yaw: e.yaw || 0, st: e.st, sus: e.sus || 0 })) : [];
+    const escorts = S ? S.escorts.map((b, i) => ({ i, kind: b.kind, x: b.x - A.x, y: b.y - baseY, z: b.z - A.z, yaw: b.yaw || 0, called: !!b.called, following: !!b.following, hide: !!b.hide })) : [];
+    const movers = [];
+    if (S) {
+      (S.logs || []).forEach((l, i) => movers.push({ id: i, kind: 'log', x: l.x - A.x, y: (l.y || 0) - baseY, z: l.z - A.z, yaw: l.yaw || 0 }));
+      (S.shots || []).forEach((s, i) => movers.push({ id: 16 + i, kind: 'shot', x: s.x - A.x, y: (s.y || 0) - baseY, z: s.z - A.z, yaw: s.yaw || 0 }));
+      (S.movers || []).forEach((m, i) => { const q = m.q || m; movers.push({ id: 32 + i, kind: 'mover', x: (q.x || 0) - A.x, y: (q.y || 0) - baseY, z: (q.z || 0) - A.z, yaw: q.yaw || 0 }); });
+    }
+    const mill = S && (S.wheels.length || S.grates.length || S.ponds.length) ? {
+      ponds: S.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })),
+      wheels: S.wheels.map(w => ({ id: w.id, spin: !!(w.spin && sig[w.spin]), rot: w.G ? w.G.rotation.z : 0 })),
+      grates: S.grates.map(g => ({ x0: g.x0 - A.x, z0: g.z0 - A.z, x1: g.x1 - A.x, z1: g.z1 - A.z })),
+    } : null;
+    // S4 Master Bell: another worker fills a2.bell / ctx.masterBell(); we ship the field so it rides snapshots when present.
+    const bell = (typeof ctx.masterBell === 'function' ? ctx.masterBell() : null) ?? (S && S.bell != null ? S.bell : null);
+    return {
+      id, t, keyDone, starGot, exitOpen, picked, keyDew,
+      sig: { ...sig },
+      bodies, bodyIds: ids.slice(),
+      enemies, escorts, movers,
+      props: props.map((pr, i) => ({ i, act: pr.act, sig: pr.sig, done: !!pr.done })),
+      picks: picks.map((k, i) => ({ i, tier: k.tier, got: !!k.got })),
+      hoops: hoops.map((h, i) => ({ i, got: !!h.got })),
+      plates: plates.map(pl => ({ sig: pl.sig, holder: pl.holder })),
+      cps: S ? S.cps.map((c, i) => ({ i, x: +(c.x - A.x).toFixed(2), z: +(c.z - A.z).toFixed(2), on: !!c.on, active: S.cp === c })) : [],
+      world: S ? { night: !!S.night, season: S.season, wind: S.wind, pouch: !!(S.pouch && S.pouch.full), heldTool: S.heldTool || null } : null,
+      gear: { ...gear },
+      mill, bell,
+      A: { ...A }, baseY,
+    };
+  }
+  function applyBody(id, b) {
+    if (!id || !b) return;
+    const p = ctx.parked(id); if (!p) return;
+    if (b.x != null) p.x = A.x + b.x;
+    if (b.z != null) p.z = A.z + b.z;
+    if (b.y != null) p.y = baseY + b.y;
+    if (b.yaw != null) p.yaw = b.yaw;
+    if (b.vx != null) p.vx = b.vx;
+    if (b.vy != null) p.vy = b.vy;
+    if (b.vz != null) p.vz = b.vz;
+    if (b.grounded != null) p.grounded = !!b.grounded;
+    if (b.sneak != null) p.sneak = !!b.sneak;
+    if (b.carried != null) p.carried = b.carried;
+  }
+  function applyNetState(state) {
+    if (!state) return false;
+    applyingNet = true;
+    try {
+      if (state.sig) {
+        for (const [k, v] of Object.entries(state.sig)) {
+          if (!!sig[k] !== !!v) { sig[k] = !!v; if (v) lastProg = t; }
+        }
+        if (state.sigFull) {
+          for (const k of Object.keys(sig)) if (!(k in state.sig)) sig[k] = false;
+        }
+      }
+      if (state.bodies) {
+        for (const id of Object.keys(state.bodies)) applyBody(id, state.bodies[id]);
+      }
+      if (state.poseOnly) return true;
+      if (state.keyDone && !keyDone && state.result) result = state.result;
+      if (state.keyDone) keyDone = true;
+      if (state.starGot) starGot = true;
+      if (state.exitOpen != null) exitOpen = !!state.exitOpen;
+      if (state.picked != null) picked = state.picked;
+      if (state.enemies && a2) {
+        for (let i = 0; i < state.enemies.length && i < a2.en.length; i++) {
+          const s = state.enemies[i], e = a2.en[i];
+          if (s.x != null) e.x = A.x + s.x;
+          if (s.z != null) e.z = A.z + s.z;
+          if (s.y != null) e.y = baseY + s.y;
+          if (s.yaw != null) e.yaw = s.yaw;
+          if (s.st) e.st = s.st;
+          if (s.sus != null) e.sus = s.sus;
+          if (e.G) e.G.position.set(e.x, e.y, e.z);
+        }
+      }
+      if (state.escorts && a2) {
+        for (let i = 0; i < state.escorts.length && i < a2.escorts.length; i++) {
+          const s = state.escorts[i], b = a2.escorts[i];
+          if (s.x != null) b.x = A.x + s.x;
+          if (s.z != null) b.z = A.z + s.z;
+          if (s.y != null) b.y = baseY + s.y;
+          if (s.yaw != null) b.yaw = s.yaw;
+          if (s.called != null) b.called = !!s.called;
+          if (s.following != null) b.following = !!s.following;
+          if (s.hide != null) b.hide = !!s.hide;
+          if (b.G) b.G.position.set(b.x, b.y, b.z);
+        }
+      }
+      if (state.movers && a2) {
+        for (const s of state.movers) {
+          if (s.kind === 'log' && a2.logs[s.id]) {
+            const l = a2.logs[s.id];
+            if (s.x != null) l.x = A.x + s.x;
+            if (s.z != null) l.z = A.z + s.z;
+            if (s.y != null) l.y = baseY + s.y;
+          }
+        }
+      }
+      if (state.picks) {
+        for (const s of state.picks) {
+          const k = picks[s.i]; if (!k) continue;
+          if (s.got && !k.got) { k.got = true; if (k.m) k.m.visible = false; k.alive = false; }
+        }
+      }
+      if (state.props) {
+        for (const s of state.props) {
+          const pr = props[s.i]; if (!pr) continue;
+          if (s.done) { pr.done = true; if (pr.icon) pr.icon.visible = false; }
+        }
+      }
+      if (state.hoops) {
+        for (const s of state.hoops) { const h = hoops[s.i]; if (h && s.got) h.got = true; }
+      }
+      if (state.cps && a2) {
+        for (const s of state.cps) {
+          const c = a2.cps[s.i]; if (!c) continue;
+          if (s.on && !c.on) { c.on = true; if (c.f && c.f.material) c.f.material = mat(0xff5a5a, 0.5); }
+          if (s.active) a2.cp = c;
+        }
+      }
+      if (state.world && a2) {
+        if (state.world.night != null && a2.night !== !!state.world.night) setNightA2(!!state.world.night);
+        if (state.world.season && a2.season !== state.world.season) { a2.season = state.world.season; }
+        if (state.world.wind != null && a2.wind !== state.world.wind) applyWind(state.world.wind, true);
+        if (state.world.pouch != null && a2.pouch) a2.pouch.full = !!state.world.pouch;
+        if (state.world.heldTool !== undefined) a2.heldTool = state.world.heldTool;
+      }
+      if (state.mill && a2) {
+        if (state.mill.ponds) {
+          for (const ps of state.mill.ponds) {
+            const pd = a2.ponds.find(q => q.id === ps.id);
+            if (pd && ps.level && pd.level !== ps.level) setPond(pd, ps.level, true);
+          }
+        }
+        if (state.mill.wheels) {
+          for (const ws of state.mill.wheels) {
+            const w = a2.wheels.find(q => q.id === ws.id);
+            if (w && w.G && ws.rot != null) w.G.rotation.z = ws.rot;
+          }
+        }
+      }
+      if (state.bell != null) {
+        if (a2) a2.bell = state.bell;
+        ctx.applyMasterBell?.(state.bell);
+      }
+      if (state.gear) Object.assign(gear, state.gear);
+    } finally { applyingNet = false; }
+    return true;
+  }
+  function applyNetEvent(ev) {
+    if (!ev) return false;
+    applyingNet = true;
+    try {
+      const kind = ev.kind || ev.type;
+      if (kind === 'sig' && ev.sig) setSig(ev.sig, ev.v !== false);
+      if (kind === 'pick' && ev.idx != null && picks[ev.idx] && !picks[ev.idx].got) {
+        const k = picks[ev.idx]; k.got = true; if (k.m) k.m.visible = false; k.alive = false;
+      }
+      if (kind === 'checkpoint' && a2) {
+        const c = a2.cps.find(q => Math.abs((q.x - A.x) - ev.x) < 0.2 && Math.abs((q.z - A.z) - ev.z) < 0.2) || a2.cps[ev.i];
+        if (c && !c.on) { c.on = true; a2.cp = c; if (c.f) c.f.material = mat(0xff5a5a, 0.5); }
+      }
+      if (kind === 'gear') {
+        if (ev.k && ev.equip && ev.on != null) setGear(ev.k, ev.on, true);
+        if (ev.slot && ev.k) setSlot(ev.slot, ev.k);
+      }
+      if (kind === 'complete' && ev.result && !keyDone) { result = ev.result; keyDone = true; }
+      if (kind === 'toast' && ev.text) ctx.toast(ev.text, ev.ms);
+    } finally { applyingNet = false; }
+    // Re-run setSig path without the applyingNet guard for visual steps? already set sig directly via setSig inside applyingNet (no emit). Good.
+    return true;
+  }
+
   function status() { return { id, t, exit: exitAt ? { x: exitAt.x - A.x, z: exitAt.z - A.z, open: exitOpen, n: crewAtExit() } : null, starGot, sig: { ...sig }, puzzles: puzzles.map(p => ({ id: p.id, done: p.done, req: p.req })), keyDone, picked, keyDew, props: props.filter(p => p.act).map(p => ({ act: p.act, cls: p.cls, sig: p.sig, label: p.label, x: p.x, y: p.y, z: p.z, done: !!p.done, b: p.b || null, from: p.from || null })), plates: plates.map(p => ({ sig: p.sig, x: p.x, y: p.y, z: p.z, heavy: p.heavy, holder: p.holder })), nodes: nodes.map(n => ({ kind: n.kind, x: n.m.position.x, y: n.m.position.y, z: n.m.position.z, done: n.done, sig: n.sig })), picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, show: k.show || null, who: k.who || null, night: k.nightOnly, value: k.value || 1, bloom: !!k.bloom })), hoops: hoops.map(h => ({ x: h.m.position.x, y: h.m.position.y, z: h.m.position.z, got: h.got })), A: { ...A }, baseY, petalValue: petalV, kid: kidState(), cps: a2 ? a2.cps.map(c => ({ x: +(c.x - A.x).toFixed(2), h: +(c.y - baseY).toFixed(2), z: +(c.z - A.z).toFixed(2), show: c.show, vis: c.G.visible, on: c.on })) : [], chains: (a2?.acorns || []).map(c => ({ id: c.id, timed: c.timed, win: c.win, ezWin: c.win * EZ('acorn') })), easy: !!ctx.easy?.() }; }
   /** kid-tutorial cursor (Fern regression §0.6): i = forward-only card index, max = high-water mark, n = station, slip = slipped hold step or -1 */
   function kidState() { if (!kid || !kid.steps) return null; const st = kid.steps[Math.max(0, kid.i)]; return { i: kid.i, max: kid.max, n: st ? st.n : 0, slip: kid.slip, latch: !!(st && st.latch !== false), safe: kid.safe ? { x: +(kid.safe.x - A.x).toFixed(2), z: +(kid.safe.z - A.z).toFixed(2) } : null, say: st ? st.say : '', slipSay: kid.slip >= 0 ? kid.steps[kid.slip].say : null }; }
   return {
-    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
+    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
     act, wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status, kidState,
     /** test hook: finish the level as if the exit was reached (used by the POLISH result tests) */

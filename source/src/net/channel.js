@@ -1,6 +1,7 @@
-/** Wrappable send/receive channel. N0 ships the shape only; N1 will expose it as g.net.
- *  S4 Master Bell (when present) belongs on the §2.5 world-state evt as `{ bell: 'A'|'B'|'C' }` plus season / time / wind.
- *  zones.netState() / applyNetState() already expose and apply that slice so N1 can fold it into the full snapshot.
+/** Wrappable send/receive channel. One path for LocalTransport now and Trystero later.
+ *  N1 exposes this as g.net; tests delay/loss-wrap g.net.broadcast / g.net.send.
+ *  S4 Master Bell belongs on the §2.5 world-state evt as `{ bell: 'A'|'B'|'C' }` plus season / time / wind;
+ *  zones.netState() / applyNetState() expose and apply that slice so it rides the snapshot.
  */
 export function createChannel(inner = {}) {
   const listeners = [];
