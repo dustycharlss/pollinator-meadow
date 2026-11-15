@@ -546,8 +546,9 @@ export function createLobby(hooks = {}) {
     const card = el('div', 'olCard');
     const head = el('div', 'olHead');
     const back = imgBtn(ICON('lobby', 'btn-back'), 'Back', () => {
-      if (screen === 'choice') { leave('back'); return; }
-      if (screen === 'join' || screen === 'host' || screen === 'asking' || screen === 'pin-enter' || screen === 'denied' || screen === 'full') { if (role) leave('back'); statusBanner = ''; showScreen('choice'); render(); return; }
+      if (screen === 'choice') { if (role) { closeUi(); if (bar) bar.hidden = false; } else closeUi(); return; }
+      if (screen === 'host' || screen === 'room') { closeUi(); if (bar) bar.hidden = false; return; }
+      if (screen === 'join' || screen === 'asking' || screen === 'pin-enter' || screen === 'denied' || screen === 'full') { if (role) leave('back'); statusBanner = ''; showScreen('choice'); render(); return; }
       showScreen('choice'); render();
     });
     const title = el('h2');
