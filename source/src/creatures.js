@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { SPECIES, AMBIENT, WORLD_R, POND } from './data.js';
 import { loadGLB, bakeParts, lambertFrom, makeFlapMaterial, updateFlaps } from './models.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
-import { lodify, lodBakedMeshes } from './lod.js';
+import { lodify, lodBakedMeshes, bakeLevels, stepLevel, lodCam, camBusy } from './lod.js';
 import { heightAt } from './world.js';
 import { makeGroundRider, BIRD_IDS, attachBirdWings } from './animals.js';
 export { BIRD_IDS, attachBirdWings, animateBirdWings, isBird } from './animals.js';
@@ -120,15 +120,30 @@ export async function buildAmbient(scene, world, quality = 1) {
     const gltf = await loadGLB(def.model); if (!gltf) continue;
     const count = Math.max(1, Math.round(def.count * (def.count > 10 ? quality : 1)));
     const rot = def.rot || MODEL_ROT[def.model] || [0, 0, 0];
-    const { parts, box } = bakeParts(gltf, { size: def.size, mode: 'max', rot, ground: false });
+    const { parts, box, M } = bakeParts(gltf, { size: def.size, mode: 'max', rot, ground: false });
     const flap = def.flap || (def.style === 'swoop' ? BAT_FLAP : null);
     const phase = new Float32Array(count).map(() => Math.random());
+    const mats = [];
     const meshes = parts.map(p => {
       p.geometry.setAttribute('aPhase', new THREE.InstancedBufferAttribute(phase, 1));
       const span = Math.max(box.max.x, -box.min.x) * 2;
-      const mat = flap ? flapMat(p.material, flap, span, TINT[def.kind]) : lambertFrom(p.material);
+      const mat = flap ? flapMat(p.material, flap, span, TINT[def.kind]) : lambertFrom(p.material); mats.push(mat);
       const im = new THREE.InstancedMesh(p.geometry, mat, count); im.frustumCulled = false; scene.add(im); return im;
     });
+    // polish4: Beans' pass-2 LODs for ambient flyers / crawlers — one InstancedMesh set per level; each mover sits in exactly one
+    // level (same 20% band + 250 ms hold + camera-ease guard as every other LOD), parked at y −500 in the others.
+    const levels = [meshes], dists = [0];
+    const lv = await bakeLevels(def.model, parts, M, rot, { drop: true, skinned: true }); // baked bind pose on both sides, so skinned sources are fine here
+    if (lv) for (const L of lv.slice(1)) {
+      const set = [];
+      L.parts.forEach((p, j) => {
+        const nmM = p.material && p.material.name; let i = nmM ? parts.findIndex(q => q.material && q.material.name === nmM) : -1;
+        if (i < 0 && L.parts.length === parts.length) i = j; if (i < 0) return;
+        p.geometry.setAttribute('aPhase', new THREE.InstancedBufferAttribute(phase, 1));
+        const im = new THREE.InstancedMesh(p.geometry, mats[i], count); im.frustumCulled = false; scene.add(im); set.push(im);
+      });
+      if (set.length) { levels.push(set); dists.push(L.d); }
+    }
     const items = [];
     const arr = def.likes ? B.byPol[def.likes] : null;
     for (let i = 0; i < count; i++) {
@@ -137,9 +152,10 @@ export async function buildAmbient(scene, world, quality = 1) {
       else { const a = Math.random() * 6.28, d = Math.sqrt(Math.random()) * 120; x = Math.cos(a) * d; z = Math.sin(a) * d; y = heightAt(x, z) + 6; }
       items.push({ x, y, z, vx: 0, vy: 0, vz: 0, yaw: Math.random() * 6.28, pitch: 0, roll: 0, st: 'seek', tm: Math.random() * 3, tgt: -1, wx: 0, wz: 0, wy: 8, ph: Math.random() * 10 });
     }
-    kinds.push({ def, meshes, items, count, size: def.size });
+    kinds.push({ def, meshes: levels.flat(), levels, dists, items, count, size: def.size });
   }
   const night = { v: 0 };
+  const PARK = new THREE.Matrix4().makeTranslation(0, -500, 0);
 
   function pick(it, def) {
     const arr = B.byPol[def.likes]; if (!arr || !arr.length) return -1;
@@ -206,10 +222,10 @@ export async function buildAmbient(scene, world, quality = 1) {
       const nAct = vis ? Math.max(1, Math.ceil(k.count * ACT.v)) : 0;
       for (const m of k.meshes) m.visible = vis;
       if (!vis) continue;
-      const st = k.def.style;
+      const st = k.def.style, now = performance.now(), busy = camBusy();
       for (let i = 0; i < k.count; i++) {
         const it = k.items[i];
-        if (i >= nAct || clipped(it.x, it.z, i, 6)) { dummy.position.set(it.x, -500, it.z); dummy.rotation.set(0, 0, 0); dummy.updateMatrix(); for (const m of k.meshes) m.setMatrixAt(i, dummy.matrix); continue; }
+        if (i >= nAct || clipped(it.x, it.z, i, 6)) { dummy.position.set(it.x, -500, it.z); dummy.rotation.set(0, 0, 0); dummy.updateMatrix(); for (const m of k.meshes) m.setMatrixAt(i, dummy.matrix); it.lv = -1; continue; }
         if (st === 'bee' || st === 'flutter' || st === 'dart') stepFlyer(it, k.def, dt, t, st);
         else if (st === 'patrol') stepPatrol(it, k.def, dt, t);
         else if (st === 'swoop') stepSwoop(it, k.def, dt, t);
@@ -217,7 +233,9 @@ export async function buildAmbient(scene, world, quality = 1) {
         const r = Math.hypot(it.x, it.z); if (r > WORLD_R - 5) { it.x *= (WORLD_R - 5) / r; it.z *= (WORLD_R - 5) / r; }
         const gy = heightAt(it.x, it.z) + 0.4; if (it.y < gy && st !== 'crawl') it.y = gy;
         dummy.position.set(it.x, it.y, it.z); dummy.rotation.set(it.pitch, it.yaw, it.roll); dummy.updateMatrix();
-        for (const m of k.meshes) m.setMatrixAt(i, dummy.matrix);
+        if (k.levels.length < 2) { for (const m of k.meshes) m.setMatrixAt(i, dummy.matrix); continue; }
+        const L = stepLevel(it, k.dists, lodCam().distanceTo(dummy.position), now, busy);
+        for (let l = 0; l < k.levels.length; l++) for (const m of k.levels[l]) m.setMatrixAt(i, l === L ? dummy.matrix : PARK);
       }
       for (const m of k.meshes) m.instanceMatrix.needsUpdate = true;
     }

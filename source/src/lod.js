@@ -13,24 +13,36 @@ const OFF = typeof location !== 'undefined' && /[?&]lod=0\b/.test(location.searc
 // models-lod/ with its lod-map.json. Any lod-map.json dropped there (Beans' raw {entries:[…]} format or the flat key map) is
 // merged over the built-in map at build time — import.meta.glob of a missing file is just {}, so no runtime fetch / 404.
 const DROPS = import.meta.glob(['../../models-lod/lod-map.json', '../../models-lod/**/lod-map.json'], { eager: true, import: 'default' });
+// LOD2 caps (pop check, polish4 — /workspace/shots/polish/p4-pop.json + p4-pop-*.png): the 30 rival buildings drop front frame
+// posts / props at LOD2 (silhouette IoU vs LOD1 0.82–0.94) and the 11 territory markers swap the sign emblem + thin the base at
+// lite range, for ~90 tris each — all capped at LOD1. rival-pile (pass 1) keeps its LOD2.
+const CAP2 = /^x\/buildings\/rivals\/(?:territory\/territory-marker-|[a-z]+\/[a-z]+-(?:home|producer|research)$)/;
 function mergeDrop(j) {
   if (!j) return 0; let n = 0;
   const put = (k, r) => { if (k && r && (r.l1 || r.l2)) { MAP[k] = r; n++; } };
   if (Array.isArray(j.entries)) for (const e of j.entries) {
-    if (e.skipped) continue; const D = e.distances || {};
-    const r = { l1: e.lod1 || null, l2: e.lod2 || null, d1: D.lod1 ?? null, d2: D.lod2 ?? null, cls: e.size_class, skinned: !!e.skinned, src: 'drop' };
+    if (e.skipped) continue;
+    let r;
+    if (j.slim) r = { l1: e.lod1, l2: e.lod2, d1: e.d1, d2: e.d2, lite: e.l1 != null || e.l2 != null ? [e.l1, e.l2] : null, cls: e.cls, skinned: e.skinned, src: 'drop' };
+    else { const D = e.distances || {}, L = D.lite; r = { l1: e.lod1 || null, l2: e.lod2 || null, d1: D.lod1 ?? null, d2: D.lod2 ?? null, lite: L ? [L.lod1 ?? null, L.lod2 ?? null] : null, cls: e.size_class, skinned: !!e.skinned, src: 'drop' }; }
+    if ((e.keys || []).some(k => CAP2.test(k))) r = { ...r, l2: null, d2: null, lite: r.lite && [r.lite[0], null], capped: 1 };
     for (const k of [...(e.keys || []), ...(e.short_keys || []), e.tc_path, e.lod0]) put(k, r);
   } else for (const [k, r] of Object.entries(j)) if (r && typeof r === 'object') put(k, { ...r, src: 'drop' });
   return n;
 }
 export const lodDrops = Object.entries(DROPS).map(([p, j]) => ({ path: p, entries: mergeDrop(j) }));
 
-// polish4 (Chaz): campaign lite mode uses LODs with the closest switch distances (Beans' phone-first "small" preset for every model)
-const CLOSEST = [6, 14];
+// polish4 (Chaz): campaign lite mode uses the closest switch distances — Beans' distances.lite (0.6 × Normal, same 20% band)
+// when the entry has them, else 0.6 × Normal by the same rule.
+const LITE_K = 0.6;
 let LITE = false;
 export function setLodLite(v) { LITE = !!v; }
-/** [d1, d2] switch distances for a record (lite → the closest preset; a model with no LOD2 keeps null) */
-export function lodDists(r) { return LITE ? [r.l1 ? CLOSEST[0] : null, r.l2 ? (r.l1 ? CLOSEST[1] : CLOSEST[0]) : null] : [r.d1, r.d2]; }
+/** [d1, d2] switch distances for a record (null where that level is absent) */
+export function lodDists(r) {
+  if (!LITE) return [r.l1 ? r.d1 : null, r.l2 ? r.d2 : null];
+  const L = r.lite || [r.d1 != null ? +(r.d1 * LITE_K).toFixed(2) : null, r.d2 != null ? +(r.d2 * LITE_K).toFixed(2) : null];
+  return [r.l1 ? L[0] : null, r.l2 ? L[1] : null];
+}
 /** lod record for a model key (or its resolved path), or null. Skinned records only when the caller can rebind skins (lodify). */
 // drop: only entries from a Beans drop in models-lod/ (characters, flyers, gardens, hazards, rivals wait for those — Chaz, polish4)
 export function lodFor(key, { skinned = false, drop = false } = {}) { if (OFF || !key) return null; const r = MAP[key] || MAP[URLS[key]]; return r && (!r.skinned || skinned) && (!drop || r.src === 'drop') && (r.l1 || r.l2) ? r : null; }
@@ -214,10 +226,19 @@ export async function lodBaked(key, parts0, M, rot, mk, opt = {}) {
   const lv = await bakeLevels(key, parts0, M, rot, opt); return lv ? makeLOD(lv, mk) : mk(parts0);
 }
 
+/** per-item level step with the same band / hold / camera-ease guard (instanced movers: ambient flyers + crawlers). o: {lv, want, since} */
+export function stepLevel(o, dists, d, now = performance.now(), busy = camBusy()) {
+  if (o.lv == null || o.lv < 0) { o.lv = o.want = pick(dists, 0, d); o.since = now; return o.lv; }
+  const t = pick(dists, o.lv, d);
+  if (t !== o.want) { o.want = t; o.since = now; }
+  if (t !== o.lv && now - o.since >= HOLD) { if (busy) lodStats.deferred++; else { o.lv = t; lodStats.switches++; } }
+  return o.lv;
+}
+/** camera world position as of the last lodTick (shared by instanced movers) */
+export const lodCam = () => camP;
 /** call once per frame before render */
 export function lodTick(camera) {
-  if (!buckets.length && !switches.size) return;
-  const now = sampleCam(camera), busy = camBusy();
+  const now = sampleCam(camera), busy = camBusy(); // always sample: instanced movers read lodCam()
   for (const b of buckets) b.tick(camP, now, busy);
   for (const s of switches) { if (now > s.nextGC) { s.nextGC = now + 2000; if (!inScene(s.root)) { s.dispose(); continue; } } s.update(camP, now, busy); }
 }

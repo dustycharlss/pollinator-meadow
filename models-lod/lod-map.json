@@ -1,0 +1,4875 @@
+{
+  "generated": "2026-11-14T22:36:00-06:00",
+  "output_root": "assets-incoming/optimized/lod/",
+  "cutoff": {
+    "pass1": {
+      "rule": "Unique live-resolved files (model-urls.json, one row per real path) with \u22651200 triangles. Playable hummingbird (1140 tris) is the only exception below that line. Unused x/animals/candidates (deer, rabbit, squirrel) and the non-blocky meadow-guide alternate are skipped even though they are over 1200. Plant LOD0 is the merged mesh in assets-incoming/optimized/models/ when one exists.",
+      "why_not_2k": "Only two unique live files exceed 2k tris (both red-flower variants at 2174). The library is already cute blocky low-poly, so a 2k cutoff would produce almost no LODs."
+    },
+    "pass2": {
+      "rule": "No 1,200-tri cutoff. Every unique live-loaded file in characters (all GLB skins), flyers (AMBIENT table, including ladybug and beetle crawlers), gardens (species buildings), hazards (hazards.js models), and rivals (per-species home/producer/research, territory markers, scaffold). Skip a model only if LOD1 cannot reach about 70% of LOD0 tris, the LOD file would be larger than LOD0, skinning/clips/nodes break, or QA shows a broken silhouette (holes, lost faces, collapsed body). Moose and walking-bat (batw) skins are primitive stand-ins with no GLB.",
+      "lod1_gate": "LOD1 must reach \u226470% of LOD0 triangles to ship (this pass). LOD2 still must reach \u226445%."
+    }
+  },
+  "phone_first_defaults": {
+    "small": {
+      "max_dim": "< 1.5",
+      "lod1": 6,
+      "lod2": 14
+    },
+    "medium": {
+      "max_dim": "1.5\u20134",
+      "lod1": 10,
+      "lod2": 22
+    },
+    "large": {
+      "max_dim": "4\u201310",
+      "lod1": 16,
+      "lod2": 36
+    },
+    "huge": {
+      "max_dim": "> 10",
+      "lod1": 24,
+      "lod2": 50
+    },
+    "hysteresis": 0.2,
+    "hysteresis_note": "THREE.LOD has no built-in hysteresis. Wrap the distance test so a level is entered at D and left only when the camera comes back inside D * 0.8, and optionally wait 200\u2013300 ms before committing a switch. The user gets motion sick; a hard pop between LODs should never happen in the same frame as a camera ease.",
+    "three_example": "lod.addLevel(lod0, 0); lod.addLevel(lod1, d1); lod.addLevel(lod2, d2); // then apply hysteresis in an update wrapper",
+    "lite": {
+      "rule": "0.6 \u00d7 Normal distances",
+      "hysteresis": 0.2,
+      "reason": "Lite mode is for weaker phones, so cheaper meshes should engage sooner. 0.6\u00d7 puts LOD1/LOD2 about 40% closer than Normal, which cuts mid-field vertex cost on rival colonies, ambient flyers and hazard fields without placing the lowest mesh in the player\u2019s face. The hysteresis band stays 20% (enter at D, leave at D\u00d70.8) with the same optional 200\u2013300 ms hold: a closer switch would otherwise fire more often during camera eases, which is worse for motion sickness, not better. Distances are the exact 0.6\u00d7 of the Normal defaults, kept to one decimal so the rule stays obvious.",
+      "small": {
+        "lod1": 3.6,
+        "lod2": 8.4
+      },
+      "medium": {
+        "lod1": 6.0,
+        "lod2": 13.2
+      },
+      "large": {
+        "lod1": 9.6,
+        "lod2": 21.6
+      },
+      "huge": {
+        "lod1": 14.4,
+        "lod2": 30.0
+      }
+    }
+  },
+  "entries": [
+    {
+      "keys": [
+        "x/flowers/simple-red-flower_3cOdxZNnZjY"
+      ],
+      "short_keys": [],
+      "tc_path": "models-opt/flowers/simple-red-flower_3cOdxZNnZjY.glb",
+      "lod0": "models-opt/flowers/simple-red-flower_3cOdxZNnZjY.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": null,
+      "lod2": null,
+      "tris": {
+        "lod0": 2174,
+        "lod1": null,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 92776,
+        "lod1": 82832,
+        "lod2": 82832
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": null,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": null,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": true,
+      "qa": "qa/simple-red-flower_3cOdxZNnZjY.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "redflower"
+      ],
+      "short_keys": [
+        "redflower"
+      ],
+      "tc_path": "models/redflower.glb",
+      "lod0": "assets-incoming/optimized/models/redflower.glb",
+      "lod0_kind": "optimized-plant",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models/redflower/redflower_lod1.glb",
+      "lod2": "models/redflower/redflower_lod2.glb",
+      "tris": {
+        "lod0": 2174,
+        "lod1": 1140,
+        "lod2": 440
+      },
+      "bytes": {
+        "lod0": 34312,
+        "lod1": 8472,
+        "lod2": 5572
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/redflower.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "flower0V"
+      ],
+      "short_keys": [
+        "flower0V"
+      ],
+      "tc_path": "models/flower0V.glb",
+      "lod0": "assets-incoming/optimized/models/flower0V.glb",
+      "lod0_kind": "optimized-plant",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": null,
+      "lod2": null,
+      "tris": {
+        "lod0": 1909,
+        "lod1": null,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 53992,
+        "lod1": null,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": null,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": null,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": true,
+      "qa": "qa/flower0V.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "blueEyed"
+      ],
+      "short_keys": [
+        "blueEyed"
+      ],
+      "tc_path": "models/blueEyed.glb",
+      "lod0": "assets-incoming/optimized/models/blueEyed.glb",
+      "lod0_kind": "optimized-plant",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models/blueEyed/blueEyed_lod1.glb",
+      "lod2": "models/blueEyed/blueEyed_lod2.glb",
+      "tris": {
+        "lod0": 1856,
+        "lod1": 926,
+        "lod2": 370
+      },
+      "bytes": {
+        "lod0": 22796,
+        "lod1": 7444,
+        "lod2": 5412
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/blueEyed.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/moth-moon-garden",
+        "x/buildings/species/moth-moon-garden-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/moth-moon-garden-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/moth-moon-garden-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/moth-moon-garden-blocky/moth-moon-garden-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/moth-moon-garden-blocky/moth-moon-garden-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1570,
+        "lod1": 1063,
+        "lod2": 571
+      },
+      "bytes": {
+        "lod0": 63712,
+        "lod1": 42680,
+        "lod2": 38252
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/moth-moon-garden-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/hummingbird-feeder-tower",
+        "x/buildings/species/hummingbird-feeder-tower-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/hummingbird-feeder-tower-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/hummingbird-feeder-tower-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/hummingbird-feeder-tower-blocky/hummingbird-feeder-tower-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/hummingbird-feeder-tower-blocky/hummingbird-feeder-tower-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1564,
+        "lod1": 1039,
+        "lod2": 462
+      },
+      "bytes": {
+        "lod0": 72204,
+        "lod1": 48372,
+        "lod2": 44924
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/hummingbird-feeder-tower-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/animals/meadow-guide-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-lod/animals/meadow-guide-blocky.glb",
+      "lod0": "models-lod/animals/meadow-guide-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/animals/meadow-guide-blocky/meadow-guide-blocky_lod1.glb",
+      "lod2": "models-lod/animals/meadow-guide-blocky/meadow-guide-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1500,
+        "lod1": 754,
+        "lod2": 494
+      },
+      "bytes": {
+        "lod0": 29164,
+        "lod1": 18032,
+        "lod2": 16704
+      },
+      "skinned": true,
+      "clips": [
+        "Idle",
+        "Wave"
+      ],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "lod2 drops the spectacles and mouth; silhouette holds. Use only at far distance \u2014 mid-range switch will pop."
+      ],
+      "skipped": false,
+      "qa": "qa/meadow-guide-blocky.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "bat"
+      ],
+      "short_keys": [
+        "bat"
+      ],
+      "tc_path": "models-lod/pollinators/bat-quaternius_hNO9XvjlKa-blocky.glb",
+      "lod0": "models-lod/pollinators/bat-quaternius_hNO9XvjlKa-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/pollinators/bat-quaternius_hNO9XvjlKa-blocky/bat-quaternius_hNO9XvjlKa-blocky_lod1.glb",
+      "lod2": "models-lod/pollinators/bat-quaternius_hNO9XvjlKa-blocky/bat-quaternius_hNO9XvjlKa-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1496,
+        "lod1": 748,
+        "lod2": 444
+      },
+      "bytes": {
+        "lod0": 86860,
+        "lod1": 50156,
+        "lod2": 48616
+      },
+      "skinned": true,
+      "clips": [
+        "BatArmature|Bat_Attack",
+        "BatArmature|Bat_Attack2",
+        "BatArmature|Bat_Death",
+        "BatArmature|Bat_Flying",
+        "BatArmature|Bat_Hit"
+      ],
+      "size_class": "large",
+      "distances": {
+        "lod1": 16,
+        "lod2": 36,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 9.6,
+          "lod2": 21.6,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/bat-quaternius_hNO9XvjlKa-blocky.png",
+      "cats": [
+        "character-skin",
+        "flyer"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/meadow-totem"
+      ],
+      "short_keys": [],
+      "tc_path": "models-lod/buildings/species/meadow-totem.glb",
+      "lod0": "models-lod/buildings/species/meadow-totem.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/buildings/species/meadow-totem/meadow-totem_lod1.glb",
+      "lod2": "models-lod/buildings/species/meadow-totem/meadow-totem_lod2.glb",
+      "tris": {
+        "lod0": 1490,
+        "lod1": 1084,
+        "lod2": 633
+      },
+      "bytes": {
+        "lod0": 77856,
+        "lod1": 57248,
+        "lod2": 52020
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/meadow-totem.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/bear-honey-cave",
+        "x/buildings/species/bear-honey-cave-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/bear-honey-cave-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/bear-honey-cave-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/bear-honey-cave-blocky/bear-honey-cave-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/bear-honey-cave-blocky/bear-honey-cave-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1486,
+        "lod1": 1058,
+        "lod2": 602
+      },
+      "bytes": {
+        "lod0": 71496,
+        "lod1": 48404,
+        "lod2": 45332
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/bear-honey-cave-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "bee"
+      ],
+      "short_keys": [
+        "bee"
+      ],
+      "tc_path": "models-lod/pollinators/bee-quaternius_HvfIku26CK-blocky.glb",
+      "lod0": "models-lod/pollinators/bee-quaternius_HvfIku26CK-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/pollinators/bee-quaternius_HvfIku26CK-blocky/bee-quaternius_HvfIku26CK-blocky_lod1.glb",
+      "lod2": "models-lod/pollinators/bee-quaternius_HvfIku26CK-blocky/bee-quaternius_HvfIku26CK-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1486,
+        "lod1": 820,
+        "lod2": 502
+      },
+      "bytes": {
+        "lod0": 21260,
+        "lod1": 9212,
+        "lod2": 7892
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "lod2 loses the cheek blush; eyes and stripes hold. Fine at far."
+      ],
+      "skipped": false,
+      "qa": "qa/bee-quaternius_HvfIku26CK-blocky.png",
+      "cats": [
+        "character-skin",
+        "flyer"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "bearB",
+        "x/animals/bear-blocky"
+      ],
+      "short_keys": [
+        "bearB"
+      ],
+      "tc_path": "models-lod/animals/bear-blocky.glb",
+      "lod0": "models-lod/animals/bear-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/animals/bear-blocky/bear-blocky_lod1.glb",
+      "lod2": "models-lod/animals/bear-blocky/bear-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1476,
+        "lod1": 738,
+        "lod2": 473
+      },
+      "bytes": {
+        "lod0": 62284,
+        "lod1": 42076,
+        "lod2": 40652
+      },
+      "skinned": true,
+      "clips": [
+        "AnimalArmature|AnimalArmature|AnimalArmature|Death",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Headbutt",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Idle",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Idle_Eating",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Jump_Loop",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Jump_Start",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Run",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Walk",
+        "startle",
+        "plop-sit"
+      ],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": 50,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": 30.0,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/bear-blocky.png",
+      "cats": [
+        "character-skin"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "opossum",
+        "x/animals/opossum"
+      ],
+      "short_keys": [
+        "opossum"
+      ],
+      "tc_path": "models-lod/animals/opossum.glb",
+      "lod0": "models-lod/animals/opossum.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/animals/opossum/opossum_lod1.glb",
+      "lod2": "models-lod/animals/opossum/opossum_lod2.glb",
+      "tris": {
+        "lod0": 1476,
+        "lod1": 738,
+        "lod2": 324
+      },
+      "bytes": {
+        "lod0": 61196,
+        "lod1": 41908,
+        "lod2": 39504
+      },
+      "skinned": true,
+      "clips": [
+        "AnimalArmature|AnimalArmature|AnimalArmature|Death",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Headbutt",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Idle",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Idle_Eating",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Jump_Loop",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Jump_Start",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Run",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Walk",
+        "startle",
+        "flop"
+      ],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": 50,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": 30.0,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "lod2 snout is a little softer; ears and tail hold. Fine at far."
+      ],
+      "skipped": false,
+      "qa": "qa/opossum.png",
+      "cats": [
+        "character-skin"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "raccoonQ",
+        "x/animals/raccoon-quaternius_xMmx6VQP3r"
+      ],
+      "short_keys": [
+        "raccoonQ"
+      ],
+      "tc_path": "models-lod/animals/raccoon-quaternius_xMmx6VQP3r.glb",
+      "lod0": "models-lod/animals/raccoon-quaternius_xMmx6VQP3r.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/animals/raccoon-quaternius_xMmx6VQP3r/raccoon-quaternius_xMmx6VQP3r_lod1.glb",
+      "lod2": "models-lod/animals/raccoon-quaternius_xMmx6VQP3r/raccoon-quaternius_xMmx6VQP3r_lod2.glb",
+      "tris": {
+        "lod0": 1476,
+        "lod1": 737,
+        "lod2": 418
+      },
+      "bytes": {
+        "lod0": 63400,
+        "lod1": 44044,
+        "lod2": 42240
+      },
+      "skinned": true,
+      "clips": [
+        "AnimalArmature|AnimalArmature|AnimalArmature|Death",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Headbutt",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Idle",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Idle_Eating",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Jump_Loop",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Jump_Start",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Run",
+        "AnimalArmature|AnimalArmature|AnimalArmature|Walk",
+        "startle",
+        "cover-eyes"
+      ],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": 50,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": 30.0,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "lod2 ears are a little softer; mask and tail rings hold. Fine at far."
+      ],
+      "skipped": false,
+      "qa": "qa/raccoon-quaternius_xMmx6VQP3r.png",
+      "cats": [
+        "character-skin"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "bumblebee"
+      ],
+      "short_keys": [
+        "bumblebee"
+      ],
+      "tc_path": "models-lod/pollinators/bumblebee-poly-by-google_42S5XD_3C4O-blocky.glb",
+      "lod0": "models-lod/pollinators/bumblebee-poly-by-google_42S5XD_3C4O-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/pollinators/bumblebee-poly-by-google_42S5XD_3C4O-blocky/bumblebee-poly-by-google_42S5XD_3C4O-blocky_lod1.glb",
+      "lod2": "models-lod/pollinators/bumblebee-poly-by-google_42S5XD_3C4O-blocky/bumblebee-poly-by-google_42S5XD_3C4O-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1476,
+        "lod1": 936,
+        "lod2": 408
+      },
+      "bytes": {
+        "lod0": 18940,
+        "lod1": 8408,
+        "lod2": 6188
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": 50,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": 30.0,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/bumblebee-poly-by-google_42S5XD_3C4O-blocky.png",
+      "cats": [
+        "character-skin",
+        "flyer"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "butterflyA"
+      ],
+      "short_keys": [
+        "butterflyA"
+      ],
+      "tc_path": "models-lod/pollinators/butterfly-poly-by-google_2ZwYwkTVnfG-blocky.glb",
+      "lod0": "models-lod/pollinators/butterfly-poly-by-google_2ZwYwkTVnfG-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/pollinators/butterfly-poly-by-google_2ZwYwkTVnfG-blocky/butterfly-poly-by-google_2ZwYwkTVnfG-blocky_lod1.glb",
+      "lod2": "models-lod/pollinators/butterfly-poly-by-google_2ZwYwkTVnfG-blocky/butterfly-poly-by-google_2ZwYwkTVnfG-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1476,
+        "lod1": 738,
+        "lod2": 294
+      },
+      "bytes": {
+        "lod0": 18320,
+        "lod1": 6520,
+        "lod2": 4488
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "lod2 slightly merges wing panels / spots. Fine at far."
+      ],
+      "skipped": false,
+      "qa": "qa/butterfly-poly-by-google_2ZwYwkTVnfG-blocky.png",
+      "cats": [
+        "flyer"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "butterflyB"
+      ],
+      "short_keys": [
+        "butterflyB"
+      ],
+      "tc_path": "models-lod/pollinators/butterfly-poly-by-google_814CINpG3H1-blocky.glb",
+      "lod0": "models-lod/pollinators/butterfly-poly-by-google_814CINpG3H1-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/pollinators/butterfly-poly-by-google_814CINpG3H1-blocky/butterfly-poly-by-google_814CINpG3H1-blocky_lod1.glb",
+      "lod2": "models-lod/pollinators/butterfly-poly-by-google_814CINpG3H1-blocky/butterfly-poly-by-google_814CINpG3H1-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1476,
+        "lod1": 738,
+        "lod2": 294
+      },
+      "bytes": {
+        "lod0": 17472,
+        "lod1": 6380,
+        "lod2": 4384
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": 50,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": 30.0,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "lod2 loses the pink wing spots. Fine at far."
+      ],
+      "skipped": false,
+      "qa": "qa/butterfly-poly-by-google_814CINpG3H1-blocky.png",
+      "cats": [
+        "character-skin",
+        "flyer"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "dragonfly"
+      ],
+      "short_keys": [
+        "dragonfly"
+      ],
+      "tc_path": "models-lod/pollinators/dragonfly-assetquest_de6jep5Fq5-blocky.glb",
+      "lod0": "models-lod/pollinators/dragonfly-assetquest_de6jep5Fq5-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/pollinators/dragonfly-assetquest_de6jep5Fq5-blocky/dragonfly-assetquest_de6jep5Fq5-blocky_lod1.glb",
+      "lod2": "models-lod/pollinators/dragonfly-assetquest_de6jep5Fq5-blocky/dragonfly-assetquest_de6jep5Fq5-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1476,
+        "lod1": 738,
+        "lod2": 424
+      },
+      "bytes": {
+        "lod0": 16856,
+        "lod1": 7384,
+        "lod2": 6072
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/dragonfly-assetquest_de6jep5Fq5-blocky.png",
+      "cats": [
+        "flyer"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "moth"
+      ],
+      "short_keys": [
+        "moth"
+      ],
+      "tc_path": "models-lod/pollinators/lil-moth-lee-mason_8ojwMQpu6DK-blocky.glb",
+      "lod0": "models-lod/pollinators/lil-moth-lee-mason_8ojwMQpu6DK-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-lod/pollinators/lil-moth-lee-mason_8ojwMQpu6DK-blocky/lil-moth-lee-mason_8ojwMQpu6DK-blocky_lod1.glb",
+      "lod2": "models-lod/pollinators/lil-moth-lee-mason_8ojwMQpu6DK-blocky/lil-moth-lee-mason_8ojwMQpu6DK-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1476,
+        "lod1": 738,
+        "lod2": 294
+      },
+      "bytes": {
+        "lod0": 18288,
+        "lod1": 6568,
+        "lod2": 4472
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "large",
+      "distances": {
+        "lod1": 16,
+        "lod2": 36,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 9.6,
+          "lod2": 21.6,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/lil-moth-lee-mason_8ojwMQpu6DK-blocky.png",
+      "cats": [
+        "character-skin",
+        "flyer"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/butterfly-garden-pavilion",
+        "x/buildings/species/butterfly-garden-pavilion-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/butterfly-garden-pavilion-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/butterfly-garden-pavilion-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/butterfly-garden-pavilion-blocky/butterfly-garden-pavilion-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/butterfly-garden-pavilion-blocky/butterfly-garden-pavilion-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1465,
+        "lod1": 1121,
+        "lod2": 581
+      },
+      "bytes": {
+        "lod0": 67920,
+        "lod1": 47424,
+        "lod2": 43944
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/butterfly-garden-pavilion-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/hazards/nettle-patch",
+        "x/hazards/nettle-patch-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/hazards/nettle-patch-blocky.glb",
+      "lod0": "models-blocky-opt/hazards/nettle-patch-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/hazards/nettle-patch-blocky/nettle-patch-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/hazards/nettle-patch-blocky/nettle-patch-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1460,
+        "lod1": 736,
+        "lod2": 304
+      },
+      "bytes": {
+        "lod0": 40148,
+        "lod1": 15092,
+        "lod2": 10712
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/nettle-patch-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/rival-pile-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-opt/buildings/rivals/rival-pile-blocky.glb",
+      "lod0": "models-opt/buildings/rivals/rival-pile-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-opt/buildings/rivals/rival-pile-blocky/rival-pile-blocky_lod1.glb",
+      "lod2": "models-opt/buildings/rivals/rival-pile-blocky/rival-pile-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1452,
+        "lod1": 1004,
+        "lod2": 546
+      },
+      "bytes": {
+        "lod0": 59292,
+        "lod1": 48660,
+        "lod2": 45332
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/rival-pile-blocky.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/raccoon-stash-den",
+        "x/buildings/species/raccoon-stash-den-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/raccoon-stash-den-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/raccoon-stash-den-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/raccoon-stash-den-blocky/raccoon-stash-den-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/raccoon-stash-den-blocky/raccoon-stash-den-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1415,
+        "lod1": 927,
+        "lod2": 542
+      },
+      "bytes": {
+        "lod0": 65296,
+        "lod1": 46456,
+        "lod2": 44056
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/raccoon-stash-den-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/pollen-lab",
+        "x/buildings/species/pollen-lab-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/pollen-lab-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/pollen-lab-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/pollen-lab-blocky/pollen-lab-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/pollen-lab-blocky/pollen-lab-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1392,
+        "lod1": 1000,
+        "lod2": 557
+      },
+      "bytes": {
+        "lod0": 67496,
+        "lod1": 50476,
+        "lod2": 47240
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/pollen-lab-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/bee-apiary-lv",
+        "x/buildings/species/bee-apiary-lv-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/bee-apiary-lv-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/bee-apiary-lv-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/bee-apiary-lv-blocky/bee-apiary-lv-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/bee-apiary-lv-blocky/bee-apiary-lv-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1361,
+        "lod1": 911,
+        "lod2": 566
+      },
+      "bytes": {
+        "lod0": 59560,
+        "lod1": 42756,
+        "lod2": 39172
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/bee-apiary-lv-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "littleFlowers"
+      ],
+      "short_keys": [
+        "littleFlowers"
+      ],
+      "tc_path": "models/littleFlowers.glb",
+      "lod0": "assets-incoming/optimized/models/littleFlowers.glb",
+      "lod0_kind": "optimized-plant",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models/littleFlowers/littleFlowers_lod1.glb",
+      "lod2": "models/littleFlowers/littleFlowers_lod2.glb",
+      "tris": {
+        "lod0": 1328,
+        "lod1": 664,
+        "lod2": 264
+      },
+      "bytes": {
+        "lod0": 23332,
+        "lod1": 6880,
+        "lod2": 5152
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/littleFlowers.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "bushFlowers"
+      ],
+      "short_keys": [
+        "bushFlowers"
+      ],
+      "tc_path": "models/bushFlowers.glb",
+      "lod0": "assets-incoming/optimized/models/bushFlowers.glb",
+      "lod0_kind": "optimized-plant",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": null,
+      "lod2": null,
+      "tris": {
+        "lod0": 1310,
+        "lod1": null,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 60212,
+        "lod1": 58100,
+        "lod2": 50792
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": null,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": null,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": true,
+      "qa": "qa/bushFlowers.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/totem-pixor"
+      ],
+      "short_keys": [],
+      "tc_path": "models-opt/buildings/totem-pixor.glb",
+      "lod0": "models-opt/buildings/totem-pixor.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-opt/buildings/totem-pixor/totem-pixor_lod1.glb",
+      "lod2": "models-opt/buildings/totem-pixor/totem-pixor_lod2.glb",
+      "tris": {
+        "lod0": 1302,
+        "lod1": 666,
+        "lod2": 286
+      },
+      "bytes": {
+        "lod0": 19668,
+        "lod1": 12944,
+        "lod2": 11272
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/totem-pixor.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/bumblebee-burrow",
+        "x/buildings/species/bumblebee-burrow-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/bumblebee-burrow-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/bumblebee-burrow-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/bumblebee-burrow-blocky/bumblebee-burrow-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/bumblebee-burrow-blocky/bumblebee-burrow-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1277,
+        "lod1": 840,
+        "lod2": 401
+      },
+      "bytes": {
+        "lod0": 69496,
+        "lod1": 50356,
+        "lod2": 46768
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/bumblebee-burrow-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/bat-roost",
+        "x/buildings/species/bat-roost-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/bat-roost-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/bat-roost-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/bat-roost-blocky/bat-roost-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/bat-roost-blocky/bat-roost-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1275,
+        "lod1": 807,
+        "lod2": 387
+      },
+      "bytes": {
+        "lod0": 59788,
+        "lod1": 42912,
+        "lod2": 38696
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/bat-roost-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "roseBush"
+      ],
+      "short_keys": [
+        "roseBush"
+      ],
+      "tc_path": "models/roseBush.glb",
+      "lod0": "assets-incoming/optimized/models/roseBush.glb",
+      "lod0_kind": "optimized-plant",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": null,
+      "lod2": null,
+      "tris": {
+        "lod0": 1268,
+        "lod1": null,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 52228,
+        "lod1": null,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": null,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": null,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": true,
+      "qa": "qa/roseBush.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "purpleLong"
+      ],
+      "short_keys": [
+        "purpleLong"
+      ],
+      "tc_path": "models/purpleLong.glb",
+      "lod0": "assets-incoming/optimized/models/purpleLong.glb",
+      "lod0_kind": "optimized-plant",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models/purpleLong/purpleLong_lod1.glb",
+      "lod2": "models/purpleLong/purpleLong_lod2.glb",
+      "tris": {
+        "lod0": 1254,
+        "lod1": 632,
+        "lod2": 258
+      },
+      "bytes": {
+        "lod0": 25716,
+        "lod1": 6144,
+        "lod2": 4656
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/purpleLong.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "grubG"
+      ],
+      "short_keys": [
+        "grubG"
+      ],
+      "tc_path": "models-opt/food/beetlegrub-gobkit-blocky.glb",
+      "lod0": "models-opt/food/beetlegrub-gobkit-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-opt/food/beetlegrub-gobkit-blocky/beetlegrub-gobkit-blocky_lod1.glb",
+      "lod2": "models-opt/food/beetlegrub-gobkit-blocky/beetlegrub-gobkit-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1248,
+        "lod1": 624,
+        "lod2": 384
+      },
+      "bytes": {
+        "lod0": 139356,
+        "lod1": 107332,
+        "lod2": 106108
+      },
+      "skinned": true,
+      "clips": [
+        "idle",
+        "attack",
+        "dead",
+        "walk",
+        "groom",
+        "alert",
+        "run",
+        "crawl",
+        "jump",
+        "fly",
+        "sting",
+        "eat",
+        "threat",
+        "hit",
+        "perch",
+        "buzz",
+        "sing",
+        "carry",
+        "dart",
+        "sway",
+        "curl",
+        "pounce",
+        "flip"
+      ],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": 50,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": 30.0,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/beetlegrub-gobkit-blocky.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/hazards/cobweb-pixor"
+      ],
+      "short_keys": [],
+      "tc_path": "models-opt/hazards/cobweb-pixor.glb",
+      "lod0": "models-opt/hazards/cobweb-pixor.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-opt/hazards/cobweb-pixor/cobweb-pixor_lod1.glb",
+      "lod2": null,
+      "tris": {
+        "lod0": 1244,
+        "lod1": 622,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 14996,
+        "lod1": 7148,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "QA: lod2 drops the post and most web strands. Unshipped; keep lod1 only."
+      ],
+      "skipped": false,
+      "qa": "qa/cobweb-pixor.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/opossum-woodpile-hollow",
+        "x/buildings/species/opossum-woodpile-hollow-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/opossum-woodpile-hollow-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/opossum-woodpile-hollow-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/opossum-woodpile-hollow-blocky/opossum-woodpile-hollow-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/opossum-woodpile-hollow-blocky/opossum-woodpile-hollow-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1240,
+        "lod1": 857,
+        "lod2": 558
+      },
+      "bytes": {
+        "lod0": 59836,
+        "lod1": 45044,
+        "lod2": 42452
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/opossum-woodpile-hollow-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/environment/honey-comb-hat-my-guy_atnjipGFNO"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/environment/honey-comb-hat-my-guy_atnjipGFNO.glb",
+      "lod0": "models/x/environment/honey-comb-hat-my-guy_atnjipGFNO.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models/x/environment/honey-comb-hat-my-guy_atnjipGFNO/honey-comb-hat-my-guy_atnjipGFNO_lod1.glb",
+      "lod2": "models/x/environment/honey-comb-hat-my-guy_atnjipGFNO/honey-comb-hat-my-guy_atnjipGFNO_lod2.glb",
+      "tris": {
+        "lod0": 1224,
+        "lod1": 612,
+        "lod2": 376
+      },
+      "bytes": {
+        "lod0": 62608,
+        "lod1": 4832,
+        "lod2": 4056
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "large",
+      "distances": {
+        "lod1": 16,
+        "lod2": 36,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 9.6,
+          "lod2": 21.6,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "lod2 warps the hex cells off-grid. Use only at far distance."
+      ],
+      "skipped": false,
+      "qa": "qa/honey-comb-hat-my-guy_atnjipGFNO.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "flowersBush"
+      ],
+      "short_keys": [
+        "flowersBush"
+      ],
+      "tc_path": "models/flowersBush.glb",
+      "lod0": "assets-incoming/optimized/models/flowersBush.glb",
+      "lod0_kind": "optimized-plant",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models/flowersBush/flowersBush_lod1.glb",
+      "lod2": "models/flowersBush/flowersBush_lod2.glb",
+      "tris": {
+        "lod0": 1208,
+        "lod1": 626,
+        "lod2": 273
+      },
+      "bytes": {
+        "lod0": 12960,
+        "lod1": 10384,
+        "lod2": 7792
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/flowersBush.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/species/robin-nest-grove",
+        "x/buildings/species/robin-nest-grove-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/buildings/species/robin-nest-grove-blocky.glb",
+      "lod0": "models-blocky-opt/buildings/species/robin-nest-grove-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models-blocky-opt/buildings/species/robin-nest-grove-blocky/robin-nest-grove-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/buildings/species/robin-nest-grove-blocky/robin-nest-grove-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1206,
+        "lod1": 828,
+        "lod2": 508
+      },
+      "bytes": {
+        "lod0": 67136,
+        "lod1": 49436,
+        "lod2": 47072
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/robin-nest-grove-blocky.png",
+      "cats": [
+        "garden"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "treeB"
+      ],
+      "short_keys": [
+        "treeB"
+      ],
+      "tc_path": "models/treeB.glb",
+      "lod0": "assets-incoming/optimized/models/treeB.glb",
+      "lod0_kind": "optimized-plant",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": null,
+      "lod2": "models/treeB/treeB_lod2.glb",
+      "tris": {
+        "lod0": 1206,
+        "lod1": null,
+        "lod2": 205
+      },
+      "bytes": {
+        "lod0": 40564,
+        "lod1": 38840,
+        "lod2": 28724
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "huge",
+      "distances": {
+        "lod1": null,
+        "lod2": 50,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": null,
+          "lod2": 30.0,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "No lod1 (simplifier could only reach 79% of LOD0, just above the useful-cut gate). lod2 canopy is thinner and spikier; the 100%\u219217% jump may pop. Prefer a later mid LOD if it matters."
+      ],
+      "skipped": false,
+      "qa": "qa/treeB.png",
+      "cats": [
+        "other"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "hummingbird"
+      ],
+      "short_keys": [
+        "hummingbird"
+      ],
+      "tc_path": "models/hummingbird.glb",
+      "lod0": "models/hummingbird.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "Use the merged plant in assets-incoming/optimized/models/ as LOD0 when lod0_kind is optimized-plant.",
+      "lod1": "models/hummingbird/hummingbird_lod1.glb",
+      "lod2": null,
+      "tris": {
+        "lod0": 1140,
+        "lod1": 570,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 43156,
+        "lod1": 5712,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "QA: lod2 opens a hole in the head and collapses the beak. Unshipped; keep lod1 only."
+      ],
+      "skipped": false,
+      "qa": "qa/hummingbird.png",
+      "cats": [
+        "character-skin",
+        "flyer"
+      ],
+      "batch": "pass1-heavy"
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/opossum/opossum-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/opossum/opossum-producer.glb",
+      "lod0": "models/x/buildings/rivals/opossum/opossum-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/opossum/opossum-producer/opossum-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/opossum/opossum-producer/opossum-producer_lod2.glb",
+      "tris": {
+        "lod0": 2984,
+        "lod1": 1779,
+        "lod2": 670
+      },
+      "bytes": {
+        "lod0": 136300,
+        "lod1": 41224,
+        "lod2": 33832
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/opossum-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.711641816371907
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bumblebee/bumblebee-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bumblebee/bumblebee-producer.glb",
+      "lod0": "models/x/buildings/rivals/bumblebee/bumblebee-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bumblebee/bumblebee-producer/bumblebee-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bumblebee/bumblebee-producer/bumblebee-producer_lod2.glb",
+      "tris": {
+        "lod0": 2684,
+        "lod1": 1294,
+        "lod2": 526
+      },
+      "bytes": {
+        "lod0": 124948,
+        "lod1": 39080,
+        "lod2": 33912
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bumblebee-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.7016418259086503
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bee/bee-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bee/bee-producer.glb",
+      "lod0": "models/x/buildings/rivals/bee/bee-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bee/bee-producer/bee-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bee/bee-producer/bee-producer_lod2.glb",
+      "tris": {
+        "lod0": 2554,
+        "lod1": 1232,
+        "lod2": 532
+      },
+      "bytes": {
+        "lod0": 120012,
+        "lod1": 38180,
+        "lod2": 34976
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bee-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.7016418259086503
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/moth/moth-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/moth/moth-producer.glb",
+      "lod0": "models/x/buildings/rivals/moth/moth-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/moth/moth-producer/moth-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/moth/moth-producer/moth-producer_lod2.glb",
+      "tris": {
+        "lod0": 2454,
+        "lod1": 1216,
+        "lod2": 530
+      },
+      "bytes": {
+        "lod0": 116148,
+        "lod1": 37040,
+        "lod2": 32692
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/moth-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.7016418259086503
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/robin/robin-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/robin/robin-producer.glb",
+      "lod0": "models/x/buildings/rivals/robin/robin-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/robin/robin-producer/robin-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/robin/robin-producer/robin-producer_lod2.glb",
+      "tris": {
+        "lod0": 2444,
+        "lod1": 1176,
+        "lod2": 510
+      },
+      "bytes": {
+        "lod0": 115852,
+        "lod1": 36156,
+        "lod2": 33236
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/robin-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.711641816371907
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/hummingbird/hummingbird-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/hummingbird/hummingbird-producer.glb",
+      "lod0": "models/x/buildings/rivals/hummingbird/hummingbird-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/hummingbird/hummingbird-producer/hummingbird-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/hummingbird/hummingbird-producer/hummingbird-producer_lod2.glb",
+      "tris": {
+        "lod0": 2420,
+        "lod1": 1272,
+        "lod2": 527
+      },
+      "bytes": {
+        "lod0": 114940,
+        "lod1": 37108,
+        "lod2": 33012
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/hummingbird-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.351641861671437
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bear/bear-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bear/bear-home.glb",
+      "lod0": "models/x/buildings/rivals/bear/bear-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bear/bear-home/bear-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bear/bear-home/bear-home_lod2.glb",
+      "tris": {
+        "lod0": 2374,
+        "lod1": 1188,
+        "lod2": 484
+      },
+      "bytes": {
+        "lod0": 113208,
+        "lod1": 37308,
+        "lod2": 34532
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bear-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.7016418259086503
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/butterfly/butterfly-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/butterfly/butterfly-producer.glb",
+      "lod0": "models/x/buildings/rivals/butterfly/butterfly-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/butterfly/butterfly-producer/butterfly-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/butterfly/butterfly-producer/butterfly-producer_lod2.glb",
+      "tris": {
+        "lod0": 2354,
+        "lod1": 1180,
+        "lod2": 512
+      },
+      "bytes": {
+        "lod0": 112460,
+        "lod1": 36216,
+        "lod2": 33432
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/butterfly-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.693688718551625
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bee/bee-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bee/bee-research.glb",
+      "lod0": "models/x/buildings/rivals/bee/bee-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bee/bee-research/bee-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bee/bee-research/bee-research_lod2.glb",
+      "tris": {
+        "lod0": 2274,
+        "lod1": 1110,
+        "lod2": 470
+      },
+      "bytes": {
+        "lod0": 109488,
+        "lod1": 35964,
+        "lod2": 31832
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bee-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.56764182257079
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bear/bear-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bear/bear-research.glb",
+      "lod0": "models/x/buildings/rivals/bear/bear-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bear/bear-research/bear-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bear/bear-research/bear-research_lod2.glb",
+      "tris": {
+        "lod0": 2252,
+        "lod1": 1074,
+        "lod2": 444
+      },
+      "bytes": {
+        "lod0": 108532,
+        "lod1": 35208,
+        "lod2": 32232
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bear-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.7416417877616777
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bee/bee-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bee/bee-home.glb",
+      "lod0": "models/x/buildings/rivals/bee/bee-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bee/bee-home/bee-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bee/bee-home/bee-home_lod2.glb",
+      "tris": {
+        "lod0": 2232,
+        "lod1": 1086,
+        "lod2": 458
+      },
+      "bytes": {
+        "lod0": 107744,
+        "lod1": 35500,
+        "lod2": 32148
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bee-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.7416417877616777
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/butterfly/butterfly-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/butterfly/butterfly-home.glb",
+      "lod0": "models/x/buildings/rivals/butterfly/butterfly-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/butterfly/butterfly-home/butterfly-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/butterfly/butterfly-home/butterfly-home_lod2.glb",
+      "tris": {
+        "lod0": 2206,
+        "lod1": 1076,
+        "lod2": 446
+      },
+      "bytes": {
+        "lod0": 106856,
+        "lod1": 36912,
+        "lod2": 33764
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/butterfly-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.5894206445159806
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bumblebee/bumblebee-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bumblebee/bumblebee-home.glb",
+      "lod0": "models/x/buildings/rivals/bumblebee/bumblebee-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bumblebee/bumblebee-home/bumblebee-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bumblebee/bumblebee-home/bumblebee-home_lod2.glb",
+      "tris": {
+        "lod0": 2180,
+        "lod1": 1054,
+        "lod2": 454
+      },
+      "bytes": {
+        "lod0": 105772,
+        "lod1": 36220,
+        "lod2": 32608
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bumblebee-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.6516418139877214
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/butterfly/butterfly-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/butterfly/butterfly-research.glb",
+      "lod0": "models/x/buildings/rivals/butterfly/butterfly-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/butterfly/butterfly-research/butterfly-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/butterfly/butterfly-research/butterfly-research_lod2.glb",
+      "tris": {
+        "lod0": 2164,
+        "lod1": 1046,
+        "lod2": 474
+      },
+      "bytes": {
+        "lod0": 105156,
+        "lod1": 35000,
+        "lod2": 32360
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/butterfly-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.6696418206634416
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/robin/robin-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/robin/robin-research.glb",
+      "lod0": "models/x/buildings/rivals/robin/robin-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/robin/robin-research/robin-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/robin/robin-research/robin-research_lod2.glb",
+      "tris": {
+        "lod0": 2158,
+        "lod1": 1117,
+        "lod2": 499
+      },
+      "bytes": {
+        "lod0": 104984,
+        "lod1": 34552,
+        "lod2": 31792
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/robin-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.5916418712081803
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/moth/moth-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/moth/moth-research.glb",
+      "lod0": "models/x/buildings/rivals/moth/moth-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/moth/moth-research/moth-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/moth/moth-research/moth-research_lod2.glb",
+      "tris": {
+        "lod0": 2136,
+        "lod1": 1058,
+        "lod2": 430
+      },
+      "bytes": {
+        "lod0": 104144,
+        "lod1": 35088,
+        "lod2": 31952
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/moth-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.4516417663040055
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bumblebee/bumblebee-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bumblebee/bumblebee-research.glb",
+      "lod0": "models/x/buildings/rivals/bumblebee/bumblebee-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bumblebee/bumblebee-research/bumblebee-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bumblebee/bumblebee-research/bumblebee-research_lod2.glb",
+      "tris": {
+        "lod0": 2102,
+        "lod1": 1084,
+        "lod2": 468
+      },
+      "bytes": {
+        "lod0": 102860,
+        "lod1": 35560,
+        "lod2": 32420
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bumblebee-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.665657488578786
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/hummingbird/hummingbird-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/hummingbird/hummingbird-home.glb",
+      "lod0": "models/x/buildings/rivals/hummingbird/hummingbird-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/hummingbird/hummingbird-home/hummingbird-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/hummingbird/hummingbird-home/hummingbird-home_lod2.glb",
+      "tris": {
+        "lod0": 2086,
+        "lod1": 1052,
+        "lod2": 516
+      },
+      "bytes": {
+        "lod0": 102296,
+        "lod1": 34936,
+        "lod2": 33664
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/hummingbird-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.351641861671437
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/robin/robin-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/robin/robin-home.glb",
+      "lod0": "models/x/buildings/rivals/robin/robin-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/robin/robin-home/robin-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/robin/robin-home/robin-home_lod2.glb",
+      "tris": {
+        "lod0": 2082,
+        "lod1": 1056,
+        "lod2": 500
+      },
+      "bytes": {
+        "lod0": 102060,
+        "lod1": 36060,
+        "lod2": 32376
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/robin-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.4516417663040055
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bat/bat-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bat/bat-research.glb",
+      "lod0": "models/x/buildings/rivals/bat/bat-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bat/bat-research/bat-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bat/bat-research/bat-research_lod2.glb",
+      "tris": {
+        "lod0": 2014,
+        "lod1": 1000,
+        "lod2": 438
+      },
+      "bytes": {
+        "lod0": 99488,
+        "lod1": 36708,
+        "lod2": 33852
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bat-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.655641822093953
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/hummingbird/hummingbird-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/hummingbird/hummingbird-research.glb",
+      "lod0": "models/x/buildings/rivals/hummingbird/hummingbird-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/hummingbird/hummingbird-research/hummingbird-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/hummingbird/hummingbird-research/hummingbird-research_lod2.glb",
+      "tris": {
+        "lod0": 1996,
+        "lod1": 931,
+        "lod2": 406
+      },
+      "bytes": {
+        "lod0": 98812,
+        "lod1": 36124,
+        "lod2": 33640
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/hummingbird-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.7316533009948625
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/raccoon/raccoon-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/raccoon/raccoon-research.glb",
+      "lod0": "models/x/buildings/rivals/raccoon/raccoon-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/raccoon/raccoon-research/raccoon-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/raccoon/raccoon-research/raccoon-research_lod2.glb",
+      "tris": {
+        "lod0": 1990,
+        "lod1": 986,
+        "lod2": 453
+      },
+      "bytes": {
+        "lod0": 98572,
+        "lod1": 34460,
+        "lod2": 32088
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/raccoon-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.3516583644973594
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bat/bat-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bat/bat-home.glb",
+      "lod0": "models/x/buildings/rivals/bat/bat-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bat/bat-home/bat-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bat/bat-home/bat-home_lod2.glb",
+      "tris": {
+        "lod0": 1890,
+        "lod1": 895,
+        "lod2": 385
+      },
+      "bytes": {
+        "lod0": 94780,
+        "lod1": 34944,
+        "lod2": 33656
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bat-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.53048312664032
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bat/bat-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bat/bat-producer.glb",
+      "lod0": "models/x/buildings/rivals/bat/bat-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bat/bat-producer/bat-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bat/bat-producer/bat-producer_lod2.glb",
+      "tris": {
+        "lod0": 1884,
+        "lod1": 966,
+        "lod2": 448
+      },
+      "bytes": {
+        "lod0": 94500,
+        "lod1": 34404,
+        "lod2": 31616
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bat-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.721641806835164
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/bear/bear-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/bear/bear-producer.glb",
+      "lod0": "models/x/buildings/rivals/bear/bear-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/bear/bear-producer/bear-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/bear/bear-producer/bear-producer_lod2.glb",
+      "tris": {
+        "lod0": 1884,
+        "lod1": 940,
+        "lod2": 452
+      },
+      "bytes": {
+        "lod0": 94548,
+        "lod1": 35460,
+        "lod2": 32864
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/bear-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.7016418259086503
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/opossum/opossum-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/opossum/opossum-home.glb",
+      "lod0": "models/x/buildings/rivals/opossum/opossum-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/opossum/opossum-home/opossum-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/opossum/opossum-home/opossum-home_lod2.glb",
+      "tris": {
+        "lod0": 1872,
+        "lod1": 920,
+        "lod2": 373
+      },
+      "bytes": {
+        "lod0": 94104,
+        "lod1": 34356,
+        "lod2": 31084
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/opossum-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.4516417663040055
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/moth/moth-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/moth/moth-home.glb",
+      "lod0": "models/x/buildings/rivals/moth/moth-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/moth/moth-home/moth-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/moth/moth-home/moth-home_lod2.glb",
+      "tris": {
+        "lod0": 1866,
+        "lod1": 891,
+        "lod2": 413
+      },
+      "bytes": {
+        "lod0": 93880,
+        "lod1": 36104,
+        "lod2": 33852
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/moth-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.4516417663040055
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/opossum/opossum-research"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/opossum/opossum-research.glb",
+      "lod0": "models/x/buildings/rivals/opossum/opossum-research.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/opossum/opossum-research/opossum-research_lod1.glb",
+      "lod2": "models/x/buildings/rivals/opossum/opossum-research/opossum-research_lod2.glb",
+      "tris": {
+        "lod0": 1850,
+        "lod1": 860,
+        "lod2": 386
+      },
+      "bytes": {
+        "lod0": 93252,
+        "lod1": 34884,
+        "lod2": 33428
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/opossum-research.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.351641861671437
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/raccoon/raccoon-home"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/raccoon/raccoon-home.glb",
+      "lod0": "models/x/buildings/rivals/raccoon/raccoon-home.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/raccoon/raccoon-home/raccoon-home_lod1.glb",
+      "lod2": "models/x/buildings/rivals/raccoon/raccoon-home/raccoon-home_lod2.glb",
+      "tris": {
+        "lod0": 1778,
+        "lod1": 863,
+        "lod2": 428
+      },
+      "bytes": {
+        "lod0": 90432,
+        "lod1": 34076,
+        "lod2": 31752
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/raccoon-home.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.6516418139877214
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/raccoon/raccoon-producer"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/raccoon/raccoon-producer.glb",
+      "lod0": "models/x/buildings/rivals/raccoon/raccoon-producer.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/raccoon/raccoon-producer/raccoon-producer_lod1.glb",
+      "lod2": "models/x/buildings/rivals/raccoon/raccoon-producer/raccoon-producer_lod2.glb",
+      "tris": {
+        "lod0": 1744,
+        "lod1": 886,
+        "lod2": 436
+      },
+      "bytes": {
+        "lod0": 89124,
+        "lod1": 34388,
+        "lod2": 31168
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Rival building LOD2 drops some frame posts and merges interior props. Silhouette and flags hold; use LOD2 at far only to avoid popping."
+      ],
+      "skipped": false,
+      "qa": "qa/raccoon-producer.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.6516418139877214
+    },
+    {
+      "keys": [
+        "x/hazards/venus-flytrap-poly-by-google_0y4ZpRcGhoD-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/venus-flytrap-poly-by-google_0y4ZpRcGhoD-blocky.glb",
+      "lod0": "models/x/hazards/venus-flytrap-poly-by-google_0y4ZpRcGhoD-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/venus-flytrap-poly-by-google_0y4ZpRcGhoD-blocky/venus-flytrap-poly-by-google_0y4ZpRcGhoD-blocky_lod1.glb",
+      "lod2": null,
+      "tris": {
+        "lod0": 1484,
+        "lod1": 726,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 95888,
+        "lod1": 7040,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Unshipped: LOD2 loses faces, teeth and eyes \u2014 just green mouths. Keep LOD1 (faces still readable)."
+      ],
+      "skipped": false,
+      "qa": "qa/venus-flytrap-poly-by-google_0y4ZpRcGhoD-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 10.782314874231815
+    },
+    {
+      "keys": [
+        "x/hazards/thorn-bush-pixor-blocky",
+        "x/hazards/thorn-bush-pixor"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/hazards/thorn-bush-pixor-blocky.glb",
+      "lod0": "models-blocky-opt/hazards/thorn-bush-pixor-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models-blocky-opt/hazards/thorn-bush-pixor-blocky/thorn-bush-pixor-blocky_lod1.glb",
+      "lod2": "models-blocky-opt/hazards/thorn-bush-pixor-blocky/thorn-bush-pixor-blocky_lod2.glb",
+      "tris": {
+        "lod0": 1120,
+        "lod1": 728,
+        "lod2": 404
+      },
+      "bytes": {
+        "lod0": 26600,
+        "lod1": 14064,
+        "lod2": 12252
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "LOD2 thorns go spindly and berries shrink/merge. Keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/thorn-bush-pixor-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.0366109013557434
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/rival-scaffold-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models-opt/buildings/rivals/rival-scaffold-blocky.glb",
+      "lod0": "models-opt/buildings/rivals/rival-scaffold-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models-opt/buildings/rivals/rival-scaffold-blocky/rival-scaffold-blocky_lod1.glb",
+      "lod2": null,
+      "tris": {
+        "lod0": 1020,
+        "lod1": 558,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 31900,
+        "lod1": 21652,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Unshipped: LOD2 drops two sides of the frame, so the cube scaffold reads as two loose walls. Keep LOD1 (some stray interior edges).",
+        "LOD1 keeps the cube frame but adds a few stray interior edges. Mild popping risk."
+      ],
+      "skipped": false,
+      "qa": "qa/rival-scaffold-blocky.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.255384862422943
+    },
+    {
+      "keys": [
+        "x/hazards/pigeon-quaternius_9NGlBTpDEr-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/pigeon-quaternius_9NGlBTpDEr-blocky.glb",
+      "lod0": "models/x/hazards/pigeon-quaternius_9NGlBTpDEr-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/pigeon-quaternius_9NGlBTpDEr-blocky/pigeon-quaternius_9NGlBTpDEr-blocky_lod1.glb",
+      "lod2": null,
+      "tris": {
+        "lod0": 928,
+        "lod1": 464,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 107404,
+        "lod1": 18832,
+        "lod2": null
+      },
+      "skinned": true,
+      "clips": [
+        "CharacterArmature|Bite_Front",
+        "CharacterArmature|Dance",
+        "CharacterArmature|Death",
+        "CharacterArmature|HitRecieve",
+        "CharacterArmature|Idle",
+        "CharacterArmature|Jump",
+        "CharacterArmature|No",
+        "CharacterArmature|Walk",
+        "CharacterArmature|Yes"
+      ],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Unshipped: LOD2 melts the face \u2014 eyes smear away and the beak collapses into an orange blob. Keep LOD1 at mid range only (mild face softening / popping risk).",
+        "LOD1 slightly softens the face and shortens the beak \u2014 mild popping risk. Do not use closer than the size-class LOD1 distance."
+      ],
+      "skipped": false,
+      "qa": "qa/pigeon-quaternius_9NGlBTpDEr-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 0.368342860899073
+    },
+    {
+      "keys": [
+        "ladybug"
+      ],
+      "short_keys": [
+        "ladybug"
+      ],
+      "tc_path": "models/ladybug.glb",
+      "lod0": "models/ladybug.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/ladybug/ladybug_lod1.glb",
+      "lod2": null,
+      "tris": {
+        "lod0": 900,
+        "lod1": 450,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 41520,
+        "lod1": 4992,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Unshipped: LOD2 loses the back spots that make the ladybug a ladybug. Keep LOD1 (spots are slightly distorted).",
+        "LOD1 distorts the spot pattern (still readable as a ladybug). Use only past the LOD1 distance; hysteresis matters."
+      ],
+      "skipped": false,
+      "qa": "qa/ladybug.png",
+      "cats": [
+        "flyer-crawler"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.3095319271087646
+    },
+    {
+      "keys": [
+        "robinJ"
+      ],
+      "short_keys": [
+        "robinJ"
+      ],
+      "tc_path": "models/robinJ.glb",
+      "lod0": "models/robinJ.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/robinJ/robinJ_lod1.glb",
+      "lod2": "models/robinJ/robinJ_lod2.glb",
+      "tris": {
+        "lod0": 888,
+        "lod1": 504,
+        "lod2": 272
+      },
+      "bytes": {
+        "lod0": 36988,
+        "lod1": 5304,
+        "lod2": 4356
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": 50,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": 30.0,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/robinJ.png",
+      "cats": [
+        "character-skin"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 279.4378356933594
+    },
+    {
+      "keys": [
+        "x/hazards/wasp-quaternius_3aQgc75sUR-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/wasp-quaternius_3aQgc75sUR-blocky.glb",
+      "lod0": "models/x/hazards/wasp-quaternius_3aQgc75sUR-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/wasp-quaternius_3aQgc75sUR-blocky/wasp-quaternius_3aQgc75sUR-blocky_lod1.glb",
+      "lod2": "models/x/hazards/wasp-quaternius_3aQgc75sUR-blocky/wasp-quaternius_3aQgc75sUR-blocky_lod2.glb",
+      "tris": {
+        "lod0": 880,
+        "lod1": 512,
+        "lod2": 308
+      },
+      "bytes": {
+        "lod0": 136768,
+        "lod1": 36064,
+        "lod2": 34640
+      },
+      "skinned": true,
+      "clips": [
+        "WaspArmature|Wasp_Attack",
+        "WaspArmature|Wasp_Death",
+        "WaspArmature|Wasp_Flying"
+      ],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "LOD2 abdomen is lumpier; eyes, stripes and wings remain. Far only for LOD2."
+      ],
+      "skipped": false,
+      "qa": "qa/wasp-quaternius_3aQgc75sUR-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 0.2981096846952983
+    },
+    {
+      "keys": [
+        "beetle"
+      ],
+      "short_keys": [
+        "beetle"
+      ],
+      "tc_path": "models/beetle.glb",
+      "lod0": "models/beetle.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/beetle/beetle_lod1.glb",
+      "lod2": "models/beetle/beetle_lod2.glb",
+      "tris": {
+        "lod0": 720,
+        "lod1": 360,
+        "lod2": 200
+      },
+      "bytes": {
+        "lod0": 32856,
+        "lod1": 4700,
+        "lod2": 3944
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "huge",
+      "distances": {
+        "lod1": 24,
+        "lod2": 50,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 14.4,
+          "lod2": 30.0,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/beetle.png",
+      "cats": [
+        "flyer-crawler"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 95.20041275024414
+    },
+    {
+      "keys": [
+        "x/hazards/spider-web-google_cM0NzColM_0-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/spider-web-google_cM0NzColM_0-blocky.glb",
+      "lod0": "models/x/hazards/spider-web-google_cM0NzColM_0-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/spider-web-google_cM0NzColM_0-blocky/spider-web-google_cM0NzColM_0-blocky_lod1.glb",
+      "lod2": null,
+      "tris": {
+        "lod0": 672,
+        "lod1": 320,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 48740,
+        "lod1": 4952,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Unshipped: LOD2 drops the radial web and leaves sparse broken strands (same failure mode as cobweb-pixor). Posts still stand. Keep LOD1 (slightly looser strands).",
+        "LOD1 web is a little looser but the radial structure and posts remain."
+      ],
+      "skipped": false,
+      "qa": "qa/spider-web-google_cM0NzColM_0-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.4423131942749023
+    },
+    {
+      "keys": [
+        "x/nests/mud-pool-pixor"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/nests/mud-pool-pixor.glb",
+      "lod0": "models/x/nests/mud-pool-pixor.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/nests/mud-pool-pixor/mud-pool-pixor_lod1.glb",
+      "lod2": "models/x/nests/mud-pool-pixor/mud-pool-pixor_lod2.glb",
+      "tris": {
+        "lod0": 670,
+        "lod1": 350,
+        "lod2": 158
+      },
+      "bytes": {
+        "lod0": 84524,
+        "lod1": 27228,
+        "lod2": 24476
+      },
+      "skinned": false,
+      "clips": [
+        "Bubble"
+      ],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/mud-pool-pixor.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.05229514837265
+    },
+    {
+      "keys": [
+        "x/hazards/steam-vent-pixor-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/steam-vent-pixor-blocky.glb",
+      "lod0": "models/x/hazards/steam-vent-pixor-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/steam-vent-pixor-blocky/steam-vent-pixor-blocky_lod1.glb",
+      "lod2": "models/x/hazards/steam-vent-pixor-blocky/steam-vent-pixor-blocky_lod2.glb",
+      "tris": {
+        "lod0": 564,
+        "lod1": 359,
+        "lod2": 187
+      },
+      "bytes": {
+        "lod0": 60708,
+        "lod1": 17824,
+        "lod2": 15400
+      },
+      "skinned": false,
+      "clips": [
+        "Puff"
+      ],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "LOD2 melts the vent base; the puff stack still reads. Far only for LOD2."
+      ],
+      "skipped": false,
+      "qa": "qa/steam-vent-pixor-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.2887427806854248
+    },
+    {
+      "keys": [
+        "x/hazards/rock-mossy-pixor-blocky",
+        "x/hazards/rock-mossy-pixor"
+      ],
+      "short_keys": [],
+      "tc_path": "models-blocky-opt/hazards/rock-mossy-pixor-blocky.glb",
+      "lod0": "models-blocky-opt/hazards/rock-mossy-pixor-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": null,
+      "lod2": null,
+      "tris": {
+        "lod0": 546,
+        "lod1": null,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 13912,
+        "lod1": null,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": null,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": null,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Unshipped: LOD1 opens holes in the voxel rock and greens/purples bleed together. LOD2 already skipped (only reached 49% of LOD0 tris)."
+      ],
+      "skipped": true,
+      "qa": "qa/rock-mossy-pixor-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.181172490119934
+    },
+    {
+      "keys": [
+        "x/hazards/garden-sprinkler"
+      ],
+      "short_keys": [],
+      "tc_path": "models-opt/hazards/garden-sprinkler.glb",
+      "lod0": "models-opt/hazards/garden-sprinkler.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": null,
+      "lod2": null,
+      "tris": {
+        "lod0": 532,
+        "lod1": null,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 22204,
+        "lod1": null,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": null,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": null,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Unshipped: the yellow body collapses into a thin diagonal beam and the green feet splay out \u2014 silhouette does not hold.",
+        "Unshipped with LOD1: same collapsed body."
+      ],
+      "skipped": true,
+      "qa": "qa/garden-sprinkler.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 0.41040998697280884
+    },
+    {
+      "keys": [
+        "x/hazards/acorn-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/acorn-blocky.glb",
+      "lod0": "models/x/hazards/acorn-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/acorn-blocky/acorn-blocky_lod1.glb",
+      "lod2": "models/x/hazards/acorn-blocky/acorn-blocky_lod2.glb",
+      "tris": {
+        "lod0": 516,
+        "lod1": 344,
+        "lod2": 232
+      },
+      "bytes": {
+        "lod0": 21728,
+        "lod1": 6056,
+        "lod2": 5540
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Cap checker softens at both LODs; silhouette and stem hold. Mild pattern-pop risk."
+      ],
+      "skipped": false,
+      "qa": "qa/acorn-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 0.45279928388499524
+    },
+    {
+      "keys": [
+        "x/hazards/smoke-puff-pixor-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/smoke-puff-pixor-blocky.glb",
+      "lod0": "models/x/hazards/smoke-puff-pixor-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/smoke-puff-pixor-blocky/smoke-puff-pixor-blocky_lod1.glb",
+      "lod2": "models/x/hazards/smoke-puff-pixor-blocky/smoke-puff-pixor-blocky_lod2.glb",
+      "tris": {
+        "lod0": 516,
+        "lod1": 268,
+        "lod2": 128
+      },
+      "bytes": {
+        "lod0": 89340,
+        "lod1": 23828,
+        "lod2": 19232
+      },
+      "skinned": false,
+      "clips": [
+        "Puff"
+      ],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [],
+      "skipped": false,
+      "qa": "qa/smoke-puff-pixor-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.145808219909668
+    },
+    {
+      "keys": [
+        "x/hazards/geyser-pixor-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/geyser-pixor-blocky.glb",
+      "lod0": "models/x/hazards/geyser-pixor-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/geyser-pixor-blocky/geyser-pixor-blocky_lod1.glb",
+      "lod2": "models/x/hazards/geyser-pixor-blocky/geyser-pixor-blocky_lod2.glb",
+      "tris": {
+        "lod0": 388,
+        "lod1": 244,
+        "lod2": 146
+      },
+      "bytes": {
+        "lod0": 64848,
+        "lod1": 23868,
+        "lod2": 21536
+      },
+      "skinned": false,
+      "clips": [
+        "Erupt"
+      ],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "LOD1/2 soften the stepped rock base; the column and cap hold."
+      ],
+      "skipped": false,
+      "qa": "qa/geyser-pixor-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.2071136832237244
+    },
+    {
+      "keys": [
+        "x/hazards/puddle-water-pixor-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/puddle-water-pixor-blocky.glb",
+      "lod0": "models/x/hazards/puddle-water-pixor-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/puddle-water-pixor-blocky/puddle-water-pixor-blocky_lod1.glb",
+      "lod2": null,
+      "tris": {
+        "lod0": 372,
+        "lod1": 218,
+        "lod2": null
+      },
+      "bytes": {
+        "lod0": 131236,
+        "lod1": 17420,
+        "lod2": null
+      },
+      "skinned": false,
+      "clips": [
+        "Ripple"
+      ],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": null,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": null,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "Unshipped: LOD2 loses the smile/ripple and the puddle collapses into a dark broken diamond. Keep LOD1 (smile is softer).",
+        "LOD1 smile/ripple is softer and a little darker."
+      ],
+      "skipped": false,
+      "qa": "qa/puddle-water-pixor-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.2127564549446106
+    },
+    {
+      "keys": [
+        "x/hazards/rain-cloud-pixor-blocky"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/hazards/rain-cloud-pixor-blocky.glb",
+      "lod0": "models/x/hazards/rain-cloud-pixor-blocky.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/hazards/rain-cloud-pixor-blocky/rain-cloud-pixor-blocky_lod1.glb",
+      "lod2": "models/x/hazards/rain-cloud-pixor-blocky/rain-cloud-pixor-blocky_lod2.glb",
+      "tris": {
+        "lod0": 236,
+        "lod1": 134,
+        "lod2": 73
+      },
+      "bytes": {
+        "lod0": 98788,
+        "lod1": 17044,
+        "lod2": 16632
+      },
+      "skinned": false,
+      "clips": [
+        "Rain"
+      ],
+      "size_class": "medium",
+      "distances": {
+        "lod1": 10,
+        "lod2": 22,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 6.0,
+          "lod2": 13.2,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "The puddle under the cloud gets a darker hole at LOD1/2; the blocky cloud silhouette holds."
+      ],
+      "skipped": false,
+      "qa": "qa/rain-cloud-pixor-blocky.png",
+      "cats": [
+        "hazard"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 2.572530508041382
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-bat"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-bat.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-bat.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-bat/territory-marker-bat_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-bat/territory-marker-bat_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11296,
+        "lod1": 7428,
+        "lod2": 7192
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-bat.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-bear"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-bear.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-bear.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-bear/territory-marker-bear_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-bear/territory-marker-bear_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11296,
+        "lod1": 7432,
+        "lod2": 7196
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-bear.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-bee"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-bee.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-bee.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-bee/territory-marker-bee_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-bee/territory-marker-bee_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11276,
+        "lod1": 7412,
+        "lod2": 7176
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-bee.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-bumblebee"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-bumblebee.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-bumblebee.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-bumblebee/territory-marker-bumblebee_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-bumblebee/territory-marker-bumblebee_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11284,
+        "lod1": 7416,
+        "lod2": 7184
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-bumblebee.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-butterfly"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-butterfly.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-butterfly.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-butterfly/territory-marker-butterfly_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-butterfly/territory-marker-butterfly_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11284,
+        "lod1": 7416,
+        "lod2": 7180
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-butterfly.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-hummingbird"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-hummingbird.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-hummingbird.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-hummingbird/territory-marker-hummingbird_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-hummingbird/territory-marker-hummingbird_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11304,
+        "lod1": 7440,
+        "lod2": 7204
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-hummingbird.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-moth"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-moth.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-moth.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-moth/territory-marker-moth_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-moth/territory-marker-moth_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11296,
+        "lod1": 7428,
+        "lod2": 7192
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-moth.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-neutral"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-neutral.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-neutral.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-neutral/territory-marker-neutral_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-neutral/territory-marker-neutral_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11296,
+        "lod1": 7428,
+        "lod2": 7196
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-neutral.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-opossum"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-opossum.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-opossum.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-opossum/territory-marker-opossum_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-opossum/territory-marker-opossum_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11280,
+        "lod1": 7416,
+        "lod2": 7180
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-opossum.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-raccoon"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-raccoon.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-raccoon.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-raccoon/territory-marker-raccoon_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-raccoon/territory-marker-raccoon_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11296,
+        "lod1": 7432,
+        "lod2": 7196
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-raccoon.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    },
+    {
+      "keys": [
+        "x/buildings/rivals/territory/territory-marker-robin"
+      ],
+      "short_keys": [],
+      "tc_path": "models/x/buildings/rivals/territory/territory-marker-robin.glb",
+      "lod0": "models/x/buildings/rivals/territory/territory-marker-robin.glb",
+      "lod0_kind": "tc",
+      "lod0_abs_note": "LOD0 is the file the live build actually loads (model-urls.json when present, else models/<key>.glb).",
+      "lod1": "models/x/buildings/rivals/territory/territory-marker-robin/territory-marker-robin_lod1.glb",
+      "lod2": "models/x/buildings/rivals/territory/territory-marker-robin/territory-marker-robin_lod2.glb",
+      "tris": {
+        "lod0": 204,
+        "lod1": 116,
+        "lod2": 70
+      },
+      "bytes": {
+        "lod0": 11296,
+        "lod1": 7428,
+        "lod2": 7192
+      },
+      "skinned": false,
+      "clips": [],
+      "size_class": "small",
+      "distances": {
+        "lod1": 6,
+        "lod2": 14,
+        "hysteresis": 0.2,
+        "units": "world units (same as SPECIES.size / bakeParts metres-ish)",
+        "note": "Switch UP (lower detail) at these distances. Switch DOWN (higher detail) at distance * (1-hysteresis). Optional 200\u2013300 ms hold before a switch, so the user is not popped while the camera eases.",
+        "lite": {
+          "lod1": 3.6,
+          "lod2": 8.4,
+          "hysteresis": 0.2,
+          "rule": "0.6 \u00d7 the Normal lod1/lod2 distances, same 20% hysteresis (enter at D, leave at D\u00d70.8) and the same optional 200\u2013300 ms hold."
+        }
+      },
+      "flags": [
+        "All 11 territory markers share the same 204-tri mesh. LOD2 tapers the pole into a spike and tilts the sign; keep for far only."
+      ],
+      "skipped": false,
+      "qa": "qa/territory-marker-robin.png",
+      "cats": [
+        "rival"
+      ],
+      "batch": "pass2-categories",
+      "max_dim": 1.1549480557441711
+    }
+  ]
+}
