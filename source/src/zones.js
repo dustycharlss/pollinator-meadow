@@ -1296,6 +1296,9 @@ export function createZones(scene, host) {
       else if (e.sus >= grace) { withFocus(seeId || cur, () => bonk(e)); st = 'alert'; }
       if (e.kind === 'mower' && e.warn) st = 'sus';
       if (e.kind === 'mower' && e.live) st = 'alert';
+      if (st !== e.st && (st === 'sus' || st === 'alert') && e.st !== 'sus' && e.st !== 'alert' && t - (e.cueT || -9) > 3) { // polish4: Act 3 critter cues
+        const cue = { fox: 'fox-sniff', owl: 'owl-hoot', nest: 'wasp-buzz' }[e.kind]; if (cue) { e.cueT = t; ctx.audio?.sample?.('act3/' + cue, e.kind === 'owl' ? 0.42 : 0.45); }
+      }
       e.st = st;
       const col = AWCOL[st === 'sleep' ? 'sleep' : st], op = { idle: 0.26, sus: 0.42, alert: 0.55, sleep: 0.12 }[st];
       if (e.cone) { e.cone.material.color.setHex(col); e.cone.material.opacity = op; }
@@ -1618,6 +1621,7 @@ export function createZones(scene, host) {
     S.time = m; S.night = m === 'night';
     setSig('night', m === 'night'); setSig('day', m === 'day'); setSig('dusk', m === 'dusk');
     if (ctx.setTime) ctx.setTime(m, true); else ctx.setNight(S.night);
+    if (!quiet && m === 'night' && (S.en || []).some(e => e.kind === 'owl')) ctx.audio?.sample?.('act3/owl-hoot', 0.4); // polish4
     if (!quiet) tst(m === 'night' ? '🌙 Night! The owl wakes up…' : m === 'dusk' ? '🌇 Dusk! The owl is drowsy…' : '☀️ Day! The owl dozes off.', 2000);
   }
   function setSeason(s, quiet) {
@@ -1789,7 +1793,7 @@ export function createZones(scene, host) {
       const q = S.targets.find(g => !g.done && Math.hypot(g.x - sh.x, g.z - sh.z) < 1.8 && Math.abs(g.y - sh.y) < 2.5);
       if (q) { q.done = true; q.gem.material = mat(0xffd23f, 0.9); q.tg.visible = false; setSig(q.sig); q.onHit?.(); fx(q.x, q.y, q.z); ctx.audio?.sample?.('contest/win-jingle', 0.4); tst(`🎯 Ding! The pebble rang the ${q.label.toLowerCase()}`, 1800); return true; }
       for (const e of S.en) { const d = flatD(e, sh); if (d > 9) continue;
-        if (e.kind === 'fox' && !e.pingLure) { e.pingLure = { x: sh.x, z: sh.z, phase: 'go' }; tst('🦊 The fox trots off to sniff the pebble…', 1600); }
+        if (e.kind === 'fox' && !e.pingLure) { e.pingLure = { x: sh.x, z: sh.z, phase: 'go' }; tst('🦊 The fox trots off to sniff the pebble…', 1600); ctx.audio?.sample?.('act3/fox-sniff', 0.45); }
         else if ((e.kind === 'spider' || e.kind === 'turtle') && !e.look) { e.look = { x: sh.x, z: sh.z, until: t + 6 }; tst(`👀 The ${e.name || e.kind} turns to look at the pebble`, 1600); } }
       return false; // stays a few seconds as a shiny lure (crows swoop at it)
     }
@@ -2405,7 +2409,7 @@ export function createZones(scene, host) {
     if (recipe.kid) { result.kid = true; result.stars = { petals: true, star: true, par: true }; confetti(true); setTimeout(() => kid && confetti(true), 700); }
     result.n = +!!result.stars.petals + +!!result.stars.star + +!!result.stars.par;
     if (a2 && !recipe.kid) result.stars.challenge = !a2.hidEver;
-    tst(`🏆 ${why}! ${'⭐'.repeat(result.n)}${'☆'.repeat(3 - result.n)}`, 3400); ctx.audio?.chime?.(); ctx.onComplete?.(result); emitNet('complete', { why, id, result });
+    tst(`🏆 ${why}! ${'⭐'.repeat(result.n)}${'☆'.repeat(3 - result.n)}`, 3400); if (result.n && !result.noStars && ctx.audio?.sample) ctx.audio.sample('act3/star-earned-jingle', 0.5); else ctx.audio?.chime?.(); /* polish4 */ ctx.onComplete?.(result); emitNet('complete', { why, id, result });
   }
   const clsOfCur = () => CLASS_OF[ctx.cur()] || 'trickster';
   const d3 = (p, q) => Math.hypot(p.x - q.x, (p.y + 0.6) - q.y, p.z - q.z);

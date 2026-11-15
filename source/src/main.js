@@ -404,7 +404,7 @@ function closeShop() {
 function buyGear(id, si) {
   const g = save.gear[id], t = g.t[si]; if (t >= 3) return false; const cost = gCost(id, t + 1); if (g.bank < cost) return false;
   g.bank -= cost; g.t[si] = t + 1; abCache[id] = null; gearFx.set(id, g.t); gearFx.burst(id, t === 2 ? 0xffd23a : 0xbff7c8);
-  audio.sample('ui2/gear-equip-clink', 0.45); persist(); buildTray(); updateHud();
+  audio.sample('act3/shop-purchase', 0.45); setTimeout(() => audio.sample('ui2/gear-equip-clink', 0.4), 160); persist(); buildTray(); updateHud(); // polish4: purchase cue + equip clink
   toast(`${GEAR[id][si].icon} ${GEAR[id][si].names[t]}! ${gearEffect(id, si, t + 1)}`, 2600);
   if (shopOpen) { shopSel = g.t[si] < 3 ? si : Math.max(0, g.t.findIndex(v => v < 3)); renderShop(); previewShop(); }
   return true;

@@ -166,7 +166,14 @@ body.adv #mapScreen #vGo{display:flex!important} /* index.html hides the old #vG
   #mapScreen{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
   .msFrame{gap:8px;padding:8px;border-radius:22px}
   .msFrame::before{inset:-4px -4px -6px}
-  .msPanel{padding:8px 10px;gap:4px 8px}
+  /* polish4: layout.json landscape boxes, panel-relative (panel at 568,76): thumb 12,12 236×110 · name 12,128 236×28 · stars 12,168 · Timed 132,152 116×56 · Play 12,224 236×56 */
+  .msPanel{display:block;padding:0}
+  .msPanel>.msThumb{position:absolute;left:12px;top:12px;width:calc(100% - 24px);height:auto;aspect-ratio:236/110;max-height:110px}
+  .msPanel>.msInfo{position:absolute;left:12px;top:128px;width:calc(100% - 24px);height:28px;display:flex;align-items:center}
+  .msPanel .msSubline{display:none}
+  .msPanel>.msStarsRow{position:absolute;left:12px;top:168px;width:112px;height:24px;min-height:0}
+  .msPanel>.msTimed{position:absolute;right:12px;top:152px}
+  .msPanel>.msPlay{position:absolute;left:12px;top:224px;width:calc(100% - 24px);max-width:none}
   .msThumb{max-height:118px}
   .msName{font-size:16px}
   .msTitle{font-size:20px}
