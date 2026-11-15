@@ -155,8 +155,6 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     if (!composer) return; const sz = renderer.getSize(new THREE.Vector2()), pr = renderer.getPixelRatio();
     composer.setPixelRatio(pr); composer.setSize(sz.x, sz.y);
   }
-  perf.onTierChange(t => applyTier(t.name));
-  applyTier(perf.getTier());
 
   // ---- per-material pastel lift (props 1, animals 0.5, level terrain 0.8; water / glow / UI sprites skipped) ----
   const OK = m => m && (m.isMeshLambertMaterial || m.isMeshStandardMaterial || m.isMeshPhongMaterial || m.isMeshToonMaterial || m.isMeshBasicMaterial) && !(m.transparent && m.opacity < 0.97) && m.blending === THREE.NormalBlending && !m.userData.noPastel;
@@ -288,5 +286,8 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   }
   function start() { perf.resume(); probeT0 = performance.now(); }
   function status() { const s = perf.stats(); return { ...s, look: tierName, preset: QMAP[tierName], post: !!composer, shadows: renderer.shadowMap.enabled, motes: motes.count }; }
+  // Tier is applied last: applyLookBloom reads patchLook/qBucket declared above (TDZ crash on High/Ultra otherwise).
+  perf.onTierChange(t => applyTier(t.name));
+  applyTier(perf.getTier());
   return { perf, tune, render, frame, start, resize, styleScene, status, setPatch, setMaster, sky, motes, get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
 }
