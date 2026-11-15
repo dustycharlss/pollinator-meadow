@@ -63,6 +63,38 @@ const TITLE_NIGHT = { color: '#f6f2ff', shadow: '0 1px 2px rgba(16,12,36,.9), 0 
 // Night / dark-band cards that need light title text with a shadow (cards 3 and 14; Act 3 Night Market + Mirror Caves).
 const NIGHT_IDS = new Set(['moon_meadow', 'owl_wood', 'night_market', 'mirror_caves']);
 
+// Night Market's dusk sky sits under the light title at ~3.92:1. Bake a soft top scrim into
+// that card's art so #f6f2ff reaches ≥ 4.5:1 in the title safe area (Fern samples the image,
+// not the CSS shadow). Other night cards already clear 4.5:1 and are left alone.
+const TITLE_SCRIM = {
+  night_market: { rgb: [16, 12, 36], alpha: 0.28, fadeStart: 0.30, fadeEnd: 0.40 },
+};
+
+async function applyTitleScrim(file, spec) {
+  const img = sharp(file);
+  const { width, height, format } = await img.metadata();
+  if (!width || !height) return;
+  const [r, g, b] = spec.rgb;
+  const a = spec.alpha;
+  const s = Math.round(spec.fadeStart * 1000) / 10;
+  const e = Math.round(spec.fadeEnd * 1000) / 10;
+  const svg = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+    `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">` +
+    `<stop offset="0%" stop-color="rgb(${r},${g},${b})" stop-opacity="${a}"/>` +
+    `<stop offset="${s}%" stop-color="rgb(${r},${g},${b})" stop-opacity="${a}"/>` +
+    `<stop offset="${e}%" stop-color="rgb(${r},${g},${b})" stop-opacity="0"/>` +
+    `</linearGradient></defs>` +
+    `<rect width="100%" height="100%" fill="url(#g)"/></svg>`
+  );
+  const tmp = file + '.scrim';
+  const pipe = sharp(file).composite([{ input: svg, blend: 'over' }]);
+  if (format === 'webp') await pipe.webp({ quality: 90 }).toFile(tmp);
+  else await pipe.png().toFile(tmp);
+  fs.renameSync(tmp, file);
+}
+
+
 function tileIdFor(card) {
   if (typeof card.level === 'number' && card.level >= 1) {
     for (const a of Object.values(grid.acts)) {
@@ -106,6 +138,9 @@ for (const src of [readManifest(CARDS12), readManifest(CARDS3)].filter(Boolean))
       fs.copyFileSync(from, path.join(cout, name));
       outFiles[k] = name;
       copied++;
+    }
+    if (TITLE_SCRIM[id]) {
+      for (const name of Object.values(outFiles)) await applyTitleScrim(path.join(cout, name), TITLE_SCRIM[id]);
     }
     const night = NIGHT_IDS.has(id);
     const ink = night ? TITLE_NIGHT : TITLE_DAY;
