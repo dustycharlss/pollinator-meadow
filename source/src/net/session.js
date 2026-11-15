@@ -61,6 +61,7 @@ export function createNet(hooks = {}) {
   let pendingPoses = {};
   let poseSeeded = false;
   let lastInAt = 0;
+  let lastWorldSent = null;
   const evq = [];
 
   const room = LOCAL_ROOM;
@@ -185,6 +186,20 @@ export function createNet(hooks = {}) {
     lastEncoded = c;
     lastSnapAt = now;
     try { net.broadcast('snap', buf); } catch (e) {}
+    sendWorld(st, wantFull);
+  }
+
+  function worldSlice(st) {
+    if (!st) return null;
+    return { bell: st.bell ?? null, master: st.master || null, world: st.world || null };
+  }
+  function sendWorld(st, force = false) {
+    const w = worldSlice(st);
+    if (!w || (w.bell == null && !w.master && !w.world)) return;
+    const same = lastWorldSent && JSON.stringify(lastWorldSent) === JSON.stringify(w);
+    if (!force && same) return;
+    lastWorldSent = w;
+    sendEvt({ type: 'world', ...w, from: 'host' });
   }
 
   function sendEvt(obj) {
@@ -419,6 +434,12 @@ export function createNet(hooks = {}) {
     // world events: client applies
     if (role === 'client' && typ !== 'in') {
       const zones = hooks.getZones?.();
+      if (typ === 'world' && zones?.applyNetState) {
+        const slice = { bell: data.bell, master: data.master, world: data.world };
+        zones.applyNetState(slice);
+        if (lastApplied) lastApplied = { ...lastApplied, ...slice };
+        return;
+      }
       if (zones?.applyNetEvent) zones.applyNetEvent(data);
       else if (data.sig != null && zones?.applyNetState) {
         const sig = { ...((zones.status?.() || {}).sig || {}) };

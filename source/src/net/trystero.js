@@ -1,36 +1,91 @@
-/** TrysteroTransport interface (§2.1).
+/** TrysteroTransport for ?online=dev.
  *
- *  LIVE PATH (not wired in N2): `trystero` with identity: 'none',
- *  appId 'dustycharlss.github.io/pollinator-meadow', roomId 'pm-'+code,
- *  password = code+':pollinator-meadow', maxUsers: 3, a custom SignalRoom
- *  Durable Object strategy (no public Nostr relays), and Cloudflare TURN
- *  iceServers from /ice with iceTransportPolicy: 'relay'.
+ *  Uses Trystero's public Nostr signalling (no accounts, no keys) and
+ *  public STUN only (no TURN) so two separate devices on the same Wi-Fi
+ *  can find each other before Cloudflare SignalRoom / TURN exists.
  *
- *  N2 does not create a Cloudflare account or Worker. This factory returns
- *  a LocalTransport over BroadcastChannel on the same room id so testers
- *  can exercise the lobby on one machine under ?online=dev. The shape
- *  (send / onMessage / close, name, room) matches LocalTransport so
- *  session.js can wrap either.
+ *  identity is 'none' (nothing written to IndexedDB). This module must
+ *  never assign to window.Trystero / window.trystero — n1.mjs would then
+ *  take the isolated-context path and BroadcastChannel ?nettest would break.
+ *
+ *  The live (non-dev) path still wants a custom SignalRoom strategy and
+ *  Cloudflare TURN iceServers from /ice with iceTransportPolicy: 'relay'.
+ *  Those are stubbed until the Cloudflare account exists; a failed /ice
+ *  must not fall back to direct.
  */
-import { createLocalTransport } from './local.js';
+import { joinRoom, getRelaySockets } from 'trystero';
+import { devIceConfig } from './ice.js';
 
-export const TRYSTERO_STUB = true;
+export const TRYSTERO_STUB = false;
 
-export function createTrysteroTransport({ room, password, appId, maxUsers = 3 } = {}) {
-  const local = createLocalTransport({ room: room || 'pm-dev' });
-  return {
-    ...local,
-    name: 'DevTransport',
-    id: 'dev-local',
-    kind: 'local-stub',
-    stub: true,
-    password: password || null,
-    appId: appId || 'dustycharlss.github.io/pollinator-meadow',
+const APP_ID = 'dustycharlss.github.io/pollinator-meadow';
+const NOTE = 'Trystero public signalling (Nostr) + public STUN, no TURN. Cloudflare SignalRoom / TURN not configured.';
+
+export function createTrysteroTransport({ room, password, appId, maxUsers = 4, rtcConfig } = {}) {
+  const roomId = room || 'pm-dev';
+  const cfg = {
+    appId: appId || APP_ID,
+    identity: 'none',
+    password: password || undefined,
     maxUsers,
-    note: 'Local BroadcastChannel stand-in. Cloudflare SignalRoom + TURN not configured.',
-    // Placeholders so a later real Trystero wiring can fill these without changing callers.
-    getRelaySockets() { return []; },
-    peerConnection: null,
-    icePolicy: 'local',
+    rtcConfig: rtcConfig || devIceConfig(),
+  };
+  const tr = joinRoom(cfg, roomId);
+  const action = tr.makeAction('lobby');
+  const listeners = [];
+  const joinListeners = [];
+  const errorListeners = [];
+  const offs = [];
+  offs.push(action.onMessage((data) => {
+    for (const fn of listeners) { try { fn(data); } catch (e) {} }
+  }));
+  offs.push(tr.onUserJoin((ctx) => {
+    for (const fn of joinListeners) { try { fn(ctx); } catch (e) {} }
+  }));
+  offs.push(tr.onError((err) => {
+    for (const fn of errorListeners) { try { fn(err); } catch (e) {} }
+  }));
+
+  return {
+    name: 'TrysteroTransport',
+    id: 'trystero-nostr',
+    kind: 'trystero',
+    stub: false,
+    room: roomId,
+    password: password || null,
+    appId: cfg.appId,
+    maxUsers,
+    icePolicy: (cfg.rtcConfig && cfg.rtcConfig.iceTransportPolicy) || 'all',
+    note: NOTE,
+    send(msg) {
+      try {
+        const p = action.send(msg);
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      } catch (e) {}
+    },
+    onMessage(fn) {
+      listeners.push(fn);
+      return () => { const i = listeners.indexOf(fn); if (i >= 0) listeners.splice(i, 1); };
+    },
+    onPeerJoin(fn) {
+      joinListeners.push(fn);
+      return () => { const i = joinListeners.indexOf(fn); if (i >= 0) joinListeners.splice(i, 1); };
+    },
+    onError(fn) {
+      errorListeners.push(fn);
+      return () => { const i = errorListeners.indexOf(fn); if (i >= 0) errorListeners.splice(i, 1); };
+    },
+    getRelaySockets() {
+      try { return getRelaySockets() || {}; } catch (e) { return {}; }
+    },
+    ready: tr.ready,
+    close() {
+      for (const off of offs) { try { off(); } catch (e) {} }
+      offs.length = 0;
+      try {
+        const p = tr.leave();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      } catch (e) {}
+    },
   };
 }

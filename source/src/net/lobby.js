@@ -1,5 +1,6 @@
 /** N2 lobby: host/join, picture codes, secret PIN, approval, class pick, emotes.
- *  Transport is DevTransport (BroadcastChannel stub). No methods named host/join
+ *  Transport is Trystero (public Nostr signalling + public STUN) under ?online=dev.
+ *  No methods named host/join
  *  are hung on g.net (n1.mjs would then take the isolated-context path).
  */
 import { createTrysteroTransport } from './trystero.js';
@@ -51,6 +52,7 @@ export function createLobby(hooks = {}) {
     saveSettings: hooks.saveSettings,
     onChange: (online) => {
       hooks.onOnlineSettings?.(online);
+      syncTitleButton();
       if (!online.allow) leave('allow-off');
     },
     audio: hooks.audio,
@@ -69,21 +71,35 @@ export function createLobby(hooks = {}) {
   let tab = 0, focusRC = [0, 0], typeOpen = false;
   let pinGuard = createPinGuard();
   let pinNonce = null, pinHostId = '';
-  let pendingAsk = null;
+  let pendingAsk = null, askQueue = [];
   let lastEmoteAt = 0;
   let wakeLock = null, wakeState = 'off';
   let lobbyMusic = false;
+  let helloTimer = null, helloOff = null, findTimer = null;
+  let pinHint = '';
 
   function audio() { return hooks.audio; }
   function sfx(name, vol = 0.5) { try { audio()?.sample?.('online/' + name, vol); } catch (e) {} }
   function toast(s, ms) { hooks.toast?.(s, ms); }
   function pathInfo() {
+    const t = transport;
     return {
-      path: 'local',
-      detail: 'DevTransport (BroadcastChannel). Cloudflare TURN / SignalRoom not configured.',
-      policy: 'local',
+      path: t?.kind || (t?.stub ? 'local' : 'trystero'),
+      detail: t?.note || 'Trystero public signalling (Nostr) + public STUN, no TURN. Cloudflare SignalRoom / TURN not configured.',
+      policy: t?.icePolicy || 'all',
       wake: wakeState,
+      relays: typeof t?.getRelaySockets === 'function' ? Object.keys(t.getRelaySockets() || {}).length : 0,
     };
+  }
+
+  function stopFind() {
+    if (findTimer) { clearTimeout(findTimer); findTimer = null; }
+  }
+  function stopHello() {
+    if (helloTimer) { clearInterval(helloTimer); helloTimer = null; }
+    try { helloOff?.(); } catch (e) {}
+    helloOff = null;
+    stopFind();
   }
 
   async function requestWake() {
@@ -133,12 +149,23 @@ export function createLobby(hooks = {}) {
       room,
       password: formatCode(words, '-') + ':pollinator-meadow',
       appId: 'dustycharlss.github.io/pollinator-meadow',
-      maxUsers: MAX_PLAYERS,
+      // One extra signalling seat so a 4th friend can receive "Room is full"
+      // (Trystero maxUsers otherwise rejects them before hello arrives).
+      maxUsers: MAX_PLAYERS + 1,
     });
     channel = createChannel(transport);
     channel.onMessage(msg => {
       if (!msg || msg.ch !== 'lobby') return;
       onMsg(msg.data || msg);
+    });
+    transport.onError?.((err) => {
+      if (err && err.code === 'room-full' && role !== 'host') {
+        stopFind();
+        stopHello();
+        toast('Room is full', 3200);
+        showScreen('full');
+        render();
+      }
     });
     hooks.onRoomReady?.({ role, room, code: formatCode(words, '-'), transport, channel });
   }
@@ -165,18 +192,7 @@ export function createLobby(hooks = {}) {
     const typ = d.type;
     if (role === 'host') {
       if (typ === 'hello') {
-        if (locked) { send('locked', { to: d.from }); return; }
-        if (players.length >= MAX_PLAYERS) { send('full', { to: d.from }); return; }
-        if (pinGuard.roomLocked()) { send('pin-room-lock', { to: d.from }); return; }
-        if (usePin && pinWords) {
-          pendingAsk = { peer: d.from };
-          pinNonce = randomNonce();
-          send('pin-nonce', { to: d.from, nonce: bytesToB64(pinNonce), hostPeer: me });
-          return;
-        }
-        pendingAsk = { peer: d.from };
-        showApprove(d.from);
-        sfx('join-request-knock', 0.55);
+        onHello(d.from);
         return;
       }
       if (typ === 'pin-reply' && pendingAsk && pendingAsk.peer === d.from) {
@@ -201,18 +217,20 @@ export function createLobby(hooks = {}) {
       }
     }
     if (d.to && d.to !== me) return;
-    if (typ === 'full') { toast('Room is full', 2600); showScreen('choice'); return; }
-    if (typ === 'locked') { toast('This room is locked', 2600); showScreen('choice'); return; }
-    if (typ === 'deny') { toast('The host said not now', 2800); showScreen('choice'); sfx('connection-lost', 0.4); return; }
-    if (typ === 'pin-nonce') { pinNonce = b64ToBytes(d.nonce); pinHostId = d.hostPeer || d.from || ''; showScreen('pin-enter'); return; }
+    if (typ === 'full') { stopFind(); stopHello(); toast('Room is full', 3200); showScreen('full'); render(); return; }
+    if (typ === 'locked') { stopFind(); stopHello(); toast('This room is locked', 2600); showScreen('choice'); return; }
+    if (typ === 'deny') { stopFind(); stopHello(); toast('The host said not now', 2800); showScreen('choice'); sfx('connection-lost', 0.4); return; }
+    if (typ === 'pin-nonce') { stopFind(); pinNonce = b64ToBytes(d.nonce); pinHostId = d.hostPeer || d.from || ''; pick = []; pinHint = ''; showScreen('pin-enter'); render(); return; }
     if (typ === 'pin-result') {
-      if (d.ok) return;
+      if (d.ok) { stopFind(); showScreen('asking'); render(); return; }
       if (d.room) { toast('This room is locked for a bit', 2600); showScreen('choice'); return; }
+      showScreen('pin-enter');
       shakePin(d.lockMs || 0);
       return;
     }
     if (typ === 'approve' || typ === 'state') {
       if (typ === 'approve' && role !== 'host') {
+        stopHello();
         role = 'client';
         sfx('joined', 0.55);
         audio()?.music?.jingle?.('joined');
@@ -226,7 +244,7 @@ export function createLobby(hooks = {}) {
       return;
     }
     if (typ === 'emote' && d.emote) hooks.onEmote?.(d.from, d.emote);
-    if (typ === 'pin-room-lock') { toast('Someone keeps guessing the PIN. Try a new code.', 3000); showScreen('choice'); }
+    if (typ === 'pin-room-lock') { stopFind(); stopHello(); toast('Someone keeps guessing the PIN. Try a new code.', 3000); showScreen('choice'); }
     if (typ === 'host-left' || typ === 'ended') {
       toast("The host's game ended. Back to your Meadow 🌼", 3200);
       leave('host-left');
@@ -260,17 +278,42 @@ export function createLobby(hooks = {}) {
     }
   }
 
+  function reservedSlots() {
+    return players.length + (pendingAsk ? 1 : 0) + askQueue.length;
+  }
+
+  function onHello(from) {
+    if (locked) { send('locked', { to: from }); return; }
+    if (players.some(p => p.id === from) || (pendingAsk && pendingAsk.peer === from) || askQueue.includes(from)) return;
+    if (reservedSlots() >= MAX_PLAYERS) { send('full', { to: from }); return; }
+    if (pinGuard.roomLocked()) { send('pin-room-lock', { to: from }); return; }
+    if (pendingAsk) { askQueue.push(from); return; }
+    if (usePin && pinWords) {
+      pendingAsk = { peer: from };
+      pinNonce = randomNonce();
+      send('pin-nonce', { to: from, nonce: bytesToB64(pinNonce), hostPeer: me });
+      return;
+    }
+    showApprove(from);
+    sfx('join-request-knock', 0.55);
+  }
+
+  function nextAsk() {
+    const from = askQueue.shift();
+    if (from) onHello(from);
+  }
+
   function showApprove(peer) {
     pendingAsk = { peer };
     showScreen('approve');
     render();
   }
 
-  function approve(yes) {
+  function approve(yes = true) {
     if (role !== 'host' || !pendingAsk) return;
     const peer = pendingAsk.peer;
-    if (!yes) { send('deny', { to: peer }); pendingAsk = null; showScreen('host'); render(); return; }
-    if (players.length >= MAX_PLAYERS) { send('full', { to: peer }); pendingAsk = null; return; }
+    if (!yes) { send('deny', { to: peer }); pendingAsk = null; showScreen('host'); render(); nextAsk(); return; }
+    if (players.length >= MAX_PLAYERS) { send('full', { to: peer }); pendingAsk = null; nextAsk(); return; }
     const style = PLAYER_STYLE[players.length] || PLAYER_STYLE[2];
     players.push({ id: peer, cls: null, style: style.id, fill: style.fill, shape: style.shape });
     send('approve', lobbyState());
@@ -279,6 +322,50 @@ export function createLobby(hooks = {}) {
     pendingAsk = null;
     showScreen('host');
     render();
+    nextAsk();
+  }
+
+  function setPin(words) {
+    if (role !== 'host') return false;
+    if (!words) { usePin = false; pinWords = null; }
+    else {
+      const list = Array.isArray(words) ? words.map(w => String(w).toLowerCase()) : String(words).toLowerCase().split(/[-·,+\s]+/).filter(Boolean);
+      if (list.length !== 4 || list.some(w => !PIN_WORDS.includes(w))) return false;
+      usePin = true;
+      pinWords = list;
+    }
+    pinGuard.resetRoom();
+    broadcastState();
+    render();
+    return true;
+  }
+
+  function lockRoom(v) {
+    if (role !== 'host') return;
+    locked = v == null ? !locked : !!v;
+    broadcastState();
+    render();
+  }
+
+  function syncTitleButton() {
+    if (typeof document === 'undefined') return;
+    let b = document.getElementById('playWithFriends');
+    if (!b) {
+      const menu = document.querySelector('#title .menu') || document.getElementById('title');
+      if (!menu) return;
+      b = document.createElement('button');
+      b.id = 'playWithFriends';
+      b.className = 'big sec';
+      b.type = 'button';
+      b.textContent = 'Play with friends';
+      b.addEventListener('click', () => openChoice());
+      const after = document.getElementById('tSettings');
+      if (after && after.parentNode) after.parentNode.insertBefore(b, after);
+      else menu.appendChild(b);
+    }
+    const on = allowed();
+    b.hidden = !on;
+    b.style.display = on ? '' : 'none';
   }
 
   function startHosting() {
@@ -291,6 +378,8 @@ export function createLobby(hooks = {}) {
     pinGuard.resetRoom();
     pinHostId = me;
     players = [];
+    pendingAsk = null;
+    askQueue = [];
     ensureSelf();
     attachRoom(code);
     sfx('room-created', 0.55);
@@ -305,17 +394,24 @@ export function createLobby(hooks = {}) {
     const parsed = Array.isArray(words) ? words : parseCode(words);
     if (!parsed) { toast('Not a known code. Check the four pictures.', 2400); return; }
     role = 'client';
+    stopHello();
     attachRoom(parsed);
     playLobbyMusic();
     showScreen('asking');
     render();
-    setTimeout(() => send('hello', { want: 'join' }), 80);
-    setTimeout(() => {
+    const tryHello = () => { if (screen === 'asking') send('hello', { want: 'join' }); };
+    tryHello();
+    helloOff = transport?.onPeerJoin?.(tryHello) || null;
+    helloTimer = setInterval(tryHello, 1000);
+    findTimer = setTimeout(() => {
+      findTimer = null;
+      stopHello();
       if (screen === 'asking') { toast("Couldn't find that game. Check the code.", 3000); showScreen('join'); render(); }
     }, 15000);
   }
 
   function leave(why) {
+    stopHello();
     if (role) send('leave', { why });
     if (role === 'host') send('ended', { why });
     role = null; code = null; players = []; pick = [];
@@ -337,10 +433,22 @@ export function createLobby(hooks = {}) {
 
   function freshPin() { if (role === 'host' && usePin) { pinWords = randomPin(); render(); } }
 
-  function copyLink() {
+  async function copyLink() {
     const url = shareLink(code, location.origin, location.pathname);
-    try { navigator.clipboard?.writeText(url); toast('Link copied! The secret PIN is not in the link.', 2400); }
-    catch (e) { toast(url, 4000); }
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: 'Play with friends', text: 'Join my Pollinator Meadow game', url });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+        // Fall through to the clipboard if share is unavailable or failed.
+      }
+    }
+    try {
+      if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url);
+      else throw new Error('no clipboard');
+      toast('Copied!', 2400);
+    } catch (e) { toast(url, 4000); }
   }
 
   function sendEmote(id) {
@@ -429,7 +537,7 @@ export function createLobby(hooks = {}) {
 
     if (screen === 'pin-enter') {
       title.textContent = 'This game has a secret PIN 🔐';
-      pick = [];
+      if (pinHint) body.append(el('p', 'olHint', pinHint));
       renderPicker(body, {
         pin: true,
         onJoin: async () => {
@@ -438,8 +546,8 @@ export function createLobby(hooks = {}) {
           try {
             const mac = await pinReply(pinIndices(pick), formatCode(code, '-'), pinNonce, pinHostId, me);
             send('pin-reply', { mac: bytesToB64(mac) });
-            showScreen('asking');
-            render();
+            // Stay on the PIN pad until pin-result so a wrong guess can shake
+            // and show "Not quite! Ask your friend for the PIN 🙂".
           } catch (e) { toast('Could not send the PIN. Try again.', 2000); }
         },
       });
@@ -449,6 +557,12 @@ export function createLobby(hooks = {}) {
     if (screen === 'asking') {
       title.textContent = 'Join a game';
       body.append(el('p', 'olHint', 'Asking the host…'));
+      return;
+    }
+
+    if (screen === 'full') {
+      title.textContent = 'Join a game';
+      body.append(el('p', 'olHint', 'Room is full'));
       return;
     }
 
@@ -541,8 +655,12 @@ export function createLobby(hooks = {}) {
     if (lockMs > 0) {
       sfx('locked-out', 0.45);
       const s = Math.ceil(lockMs / 1000);
-      toast(`Take a little break ⏳ 0:${String(s).padStart(2, '0')}`, 2800);
-    } else toast('Not quite! Ask your friend for the PIN 🙂', 2600);
+      pinHint = `Take a little break ⏳ 0:${String(s).padStart(2, '0')}`;
+      toast(pinHint, 2800);
+    } else {
+      pinHint = 'Not quite! Ask your friend for the PIN 🙂';
+      toast(pinHint, 2600);
+    }
     pick = [];
     render();
   }
@@ -661,6 +779,8 @@ export function createLobby(hooks = {}) {
     else { pick = []; showScreen('join'); render(); }
   }
 
+  try { syncTitleButton(); } catch (e) {}
+
   // Document-level Z for emotes when bar is visible
   document.addEventListener('keydown', ev => {
     if (bar && !bar.hidden && (ev.key === 'z' || ev.key === 'Z') && ev.target === document.body) {
@@ -672,13 +792,38 @@ export function createLobby(hooks = {}) {
     open: openChoice,
     openChoice,
     maybeAutoJoin,
+    startHosting,
+    beginJoin,
+    copyLink,
+    approve,
     leave,
     sendEmote,
     settings: settingsApi,
+    // Fern n2.mjs hook names (on g.lobby only — never on g.net).
+    startHost: startHosting,
+    hostRoom: startHosting,
+    joinRoom: beginJoin,
+    joinByCode: beginJoin,
+    enterRoom: beginJoin,
+    setPin,
+    setPIN: setPin,
+    enablePin: setPin,
+    letIn: () => approve(true),
+    deny: () => approve(false),
+    lock: lockRoom,
     get role() { return role; },
     get code() { return code && formatCode(code, '-'); },
+    get roomCode() { return code && formatCode(code, '-'); },
     get players() { return players.slice(); },
+    get peers() { return players.slice(); },
+    get connected() { return !!role && players.length > 0; },
+    get pending() { return !!pendingAsk; },
+    get pin() { return usePin; },
+    get pinOn() { return usePin; },
+    get secretPin() { return usePin; },
     get transport() { return transport; },
+    get iceTransportPolicy() { return pathInfo().policy; },
+    get directAllowed() { return true; },
     allowed,
     pathInfo,
     wakeState: () => wakeState,

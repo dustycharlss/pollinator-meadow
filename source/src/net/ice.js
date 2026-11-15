@@ -5,12 +5,26 @@
  *    with Origin check, 4 h TTL, per-IP rate limit. Used as
  *    rtcConfig: { iceServers, iceTransportPolicy: 'relay' }.
  *
- *  N2 ships a stub: no Cloudflare resources are created. Testers under
- *  ?online=dev use LocalTransport (BroadcastChannel) or this empty ICE
- *  config if a later Trystero path is pointed at it. A failed /ice must
- *  never silently fall back to a direct connection (§4.1).
+ *  Under ?online=dev only, testers use public STUN (no TURN) so two devices
+ *  on the same Wi-Fi can connect before Cloudflare is set up. The public
+ *  build stays relay-only by default: a missing or failed /ice must never
+ *  silently fall back to a direct connection (§4.1).
  */
 export const ICE_STUB_REASON = 'cloudflare-unset';
+
+/** Public STUN only — Google + Cloudflare. No TURN, no credentials. */
+export const PUBLIC_STUN = [
+  { urls: 'stun:stun.cloudflare.com:3478' },
+  { urls: 'stun:stun.l.google.com:19302' },
+];
+
+/** Dev-only ICE: allow host/srflx candidates so same-Wi-Fi peers can connect. */
+export function devIceConfig() {
+  return {
+    iceServers: PUBLIC_STUN.slice(),
+    iceTransportPolicy: 'all',
+  };
+}
 
 export async function fetchIce({ url, direct = false } = {}) {
   if (!url) {
@@ -19,7 +33,7 @@ export async function fetchIce({ url, direct = false } = {}) {
       reason: ICE_STUB_REASON,
       iceServers: [],
       iceTransportPolicy: 'relay',
-      note: 'pm-net /ice is not deployed. N2 uses a local/dev transport. Cloudflare Realtime TURN + a short-lived credential Worker still need to be set up (§1.8).',
+      note: 'pm-net /ice is not deployed. Public play stays relay-only. Cloudflare Realtime TURN + a short-lived credential Worker still need to be set up (§1.8).',
     };
   }
   try {

@@ -33,7 +33,7 @@ export function mountDebugOverlay(hooks = {}) {
       `Wake Lock API ${support} · state ${wake}`,
       `path ${mode} · policy ${policy}`,
       detail,
-      'Cloudflare TURN / SignalRoom: not configured (N2 stub)',
+      'Cloudflare TURN / SignalRoom: not configured',
     ].filter(Boolean).join('\n');
   }
   function update() { el.textContent = line(); }
