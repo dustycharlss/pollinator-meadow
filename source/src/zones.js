@@ -3036,8 +3036,9 @@ export function createZones(scene, host) {
       wheels: S.wheels.map(w => ({ id: w.id, spin: !!(w.spin && sig[w.spin]), rot: w.G ? w.G.rotation.z : 0 })),
       grates: S.grates.map(g => ({ x0: g.x0 - A.x, z0: g.z0 - A.z, x1: g.x1 - A.x, z1: g.z1 - A.z })),
     } : null;
-    // S4 Master Bell: another worker fills a2.bell / ctx.masterBell(); we ship the field so it rides snapshots when present.
-    const bell = (typeof ctx.masterBell === 'function' ? ctx.masterBell() : null) ?? (S && S.bell != null ? S.bell : null);
+    // S4 Master Bell (shipped): ride state/next/start/cool on the snapshot.
+    const bell = S && S.master ? S.master.state : ((typeof ctx.masterBell === 'function' ? ctx.masterBell() : null) ?? (S && S.bell != null ? S.bell : null));
+    const master = S && S.master ? { state: S.master.state, next: S.master.next, start: S.master.start, cool: +Math.max(0, (S.master.coolUntil || 0) - t).toFixed(2) } : null;
     return {
       id, t, keyDone, starGot, exitOpen, picked, keyDew,
       sig: { ...sig },
@@ -3048,9 +3049,9 @@ export function createZones(scene, host) {
       hoops: hoops.map((h, i) => ({ i, got: !!h.got })),
       plates: plates.map(pl => ({ sig: pl.sig, holder: pl.holder })),
       cps: S ? S.cps.map((c, i) => ({ i, x: +(c.x - A.x).toFixed(2), z: +(c.z - A.z).toFixed(2), on: !!c.on, active: S.cp === c })) : [],
-      world: S ? { night: !!S.night, season: S.season, wind: S.wind, pouch: !!(S.pouch && S.pouch.full), heldTool: S.heldTool || null } : null,
+      world: S ? { night: !!S.night, season: S.season, wind: S.wind, time: S.time || (S.night ? 'night' : 'day'), windMag: S.windMag ?? (S.wind ? 6 : 0), pouch: !!(S.pouch && S.pouch.full), heldTool: S.heldTool || null } : null,
       gear: { ...gear },
-      mill, bell,
+      mill, bell, master,
       A: { ...A }, baseY,
     };
   }
@@ -3168,9 +3169,10 @@ export function createZones(scene, host) {
           }
         }
       }
-      if (state.bell != null) {
-        if (a2) a2.bell = state.bell;
-        ctx.applyMasterBell?.(state.bell);
+      if (state.bell != null || (state.master && state.master.state)) {
+        const st = state.bell || state.master.state;
+        applyMaster(st, { quiet: true, net: true });
+        if (a2.master && state.master && state.master.cool != null) a2.master.coolUntil = t + Math.max(0, +state.master.cool);
       }
       if (state.gear) Object.assign(gear, state.gear);
     } finally { applyingNet = false; }
@@ -3218,9 +3220,7 @@ export function createZones(scene, host) {
     moody() { return !!(a2 && recipe && recipe.moody) ? !!AA().night : null; },
     timeLocked: () => !!(a2 && a2.master), // S4: Master Bell owns clock.t (dusk/night/day) until clear()
     debugBonk(src = 'test') { if (a2) bonk({ name: 'Test' }, src); },
-    // N1 should fold these into the full §2.5 snapshot. evt shape: { bell: 'A'|'B'|'C' } plus season / time / wind.
-    netState() { if (!a2) return null; return { sig: { ...sig }, season: a2.season, night: !!a2.night, time: a2.time || (a2.night ? 'night' : 'day'), wind: a2.wind, windMag: a2.windMag ?? (a2.wind ? 6 : 0), bell: a2.master ? a2.master.state : null, master: a2.master ? { state: a2.master.state, next: a2.master.next, start: a2.master.start, cool: +Math.max(0, (a2.master.coolUntil || 0) - t).toFixed(2) } : null }; },
-    applyNetState(s) { if (!s || !a2) return; if (s.bell || (s.master && s.master.state)) { applyMaster(s.bell || s.master.state, { quiet: true, net: true }); if (a2.master && s.master && s.master.cool != null) a2.master.coolUntil = t + Math.max(0, +s.master.cool); } },
+    // netState / applyNetState are the full §2.5 snapshot (including S4 Master Bell) defined above.
     gearInfo(c) { const k = slotOf(c); if (!k || !a2) return null; const own = GEAR_BY_CLS[c].filter(q => gearHas(q)); return { k, em: GEAR_INFO[k].em, icon: GEAR_INFO[k].icon ? import.meta.env.BASE_URL + GEAR_INFO[k].icon : null, name: GEAR_INFO[k].name, has: gearHas(k), on: gearOn(k), borrowed: !gear[k] && gearHas(k), own, full: k === 'pouch' ? !!a2.pouch.full : undefined }; },
     toggleGear(c) { const k = slotOf(c || CLASS_OF[ctx.cur()]); if (!k || !a2) return false; return setGear(k, !gearOn(k)); },
     swapGear(c, k) { if (!a2 || !GEAR_BY_CLS[c] || !GEAR_BY_CLS[c].includes(k) || !gearHas(k)) return false; setSlot(c, k); setGear(k, true, true); return true; },
