@@ -1,6 +1,5 @@
-// Polish 2: texture helpers — @1x art on 1x DPR screens, KTX2 (Basis) for grass + star with WebP fallback.
+// Polish 2/4: texture helpers — @1x art on 1x DPR screens; WebP everywhere (KTX2 path kept, opt-in per texture).
 import * as THREE from 'three';
-import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 
 const BASE = import.meta.env.BASE_URL;
 export const DPR1 = (typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1) < 1.5;
@@ -13,17 +12,26 @@ export function at1x(url) {
   return HAS_1X.has(bare) ? url.replace(/\.webp$/, '@1x.webp') : url;
 }
 
-let ktx2 = null; const cache = new Map();
-/** call once the renderer exists */
-export function initKTX2(renderer) {
-  try { ktx2 = new KTX2Loader().setTranscoderPath(BASE + 'libs/basis/').detectSupport(renderer); } catch (e) { console.warn('[tex] KTX2 unavailable', e); ktx2 = null; }
+// polish4 (Chaz): KTX2 only where it saves bytes *including* the 0.58 MB Basis transcoder. Measured: grass.ktx2 70 KB vs
+// grass.webp 81 KB / grass@1x.webp 20 KB, star.ktx2 4.3 KB vs star.webp 2.7 KB — nothing clears the transcoder, so KTX_NAMES is
+// empty and the transcoder is never fetched. Add a name here (with img/<name>.ktx2) only if its saving beats the transcoder;
+// KTX2Loader is then pulled in lazily by dynamic import, so it never weighs on first load otherwise.
+const KTX_NAMES = new Set([]);
+let ktx2 = null, R = null; const cache = new Map();
+/** call once the renderer exists (cheap: no loader or transcoder is touched unless KTX_NAMES has entries) */
+export function initKTX2(renderer) { R = renderer; }
+async function ktxLoader() {
+  if (ktx2) return ktx2;
+  const { KTX2Loader } = await import('three/examples/jsm/loaders/KTX2Loader.js');
+  ktx2 = new KTX2Loader().setTranscoderPath(BASE + 'libs/basis/').detectSupport(R); return ktx2;
 }
-/** load img/<name>.ktx2 (Basis, sRGB); falls back to img/<name>.webp (or @1x) on any failure. Shared + cached. */
+/** load img/<name>.webp (or @1x on 1x screens); img/<name>.ktx2 only for KTX_NAMES. Shared + cached. */
 export function loadKtx(name) {
   if (cache.has(name)) return cache.get(name);
   const webp = () => new THREE.TextureLoader().loadAsync(at1x(BASE + 'img/' + name + '.webp')).then(t => { t.colorSpace = THREE.SRGBColorSpace; t.userData.fmt = 'webp'; return t; });
-  const p = (ktx2 ? ktx2.loadAsync(BASE + 'img/' + name + '.ktx2').then(t => { t.colorSpace = THREE.SRGBColorSpace; t.userData.fmt = 'ktx2'; return t; }) : Promise.reject(new Error('no ktx2')))
-    .catch(e => { if (ktx2) console.warn('[tex] ktx2 fallback', name, e && e.message); return webp(); });
+  const p = KTX_NAMES.has(name) && R
+    ? ktxLoader().then(L => L.loadAsync(BASE + 'img/' + name + '.ktx2')).then(t => { t.colorSpace = THREE.SRGBColorSpace; t.userData.fmt = 'ktx2'; return t; }).catch(e => { console.warn('[tex] ktx2 fallback', name, e && e.message); return webp(); })
+    : webp();
   cache.set(name, p); return p;
 }
 /** set mat.map once the shared texture is ready (sync call sites that used TextureLoader().load) */
