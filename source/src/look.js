@@ -188,6 +188,9 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
       if (typeof renderer.compile === 'function') renderer.compile(root, camera);
     } catch (e) {}
     for (const o of hidden) o.visible = false;
+    // renderer.compile does not run the shadow map or EffectComposer passes;
+    // one real frame here (during load / ready-wait) is what actually links them.
+    try { render(); } catch (e) {}
   }
 
   // ---- per-level look targets (values/<id>.json). Global High/Low presets stay as written above. ----
