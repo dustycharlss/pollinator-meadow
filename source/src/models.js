@@ -39,16 +39,25 @@ export function toFloat(g) {
 }
 
 // Lambert replacement keeps phones fast while preserving texture/vertex colour.
+// Cache by look (color/map/opacity), not source uuid, so cave meshes can share and merge.
 const matCache = new Map();
-export function lambertFrom(m, { emissive } = {}) {
-  const key = m.uuid + (emissive || '');
+function lambertLookKey(m, extra = '') {
+  const c = m.color ? m.color.getHexString() : 'ffffff';
+  const e = m.emissive && m.emissive.getHex ? m.emissive.getHexString() : '000000';
+  const ei = (m.emissiveIntensity || 0).toFixed(3);
+  const map = m.map ? m.map.uuid : '';
+  return [c, e, ei, map, +!!m.vertexColors, +!!m.transparent, (m.opacity ?? 1).toFixed(3), m.side || 0, m.blending || 1, m.depthWrite === false ? 0 : 1, m.alphaTest || 0, extra].join('|');
+}
+export function lambertFrom(m, { emissive, caveNight } = {}) {
+  const key = lambertLookKey(m, (emissive || '') + (caveNight ? ':cn' : ''));
   if (matCache.has(key)) return matCache.get(key);
   const n = new THREE.MeshLambertMaterial({
     color: m.color ? m.color.clone() : 0xffffff, map: m.map || null, vertexColors: !!m.vertexColors,
     flatShading: true, transparent: m.transparent, opacity: m.opacity, alphaTest: m.alphaTest, side: m.side === THREE.BackSide ? THREE.BackSide : (m.transparent || m.alphaTest ? THREE.DoubleSide : m.side)
   });
   if (n.map) n.map.colorSpace = THREE.SRGBColorSpace;
-  if (m.emissive && m.emissive.getHex() > 0) { n.emissive = m.emissive.clone(); n.emissiveMap = m.emissiveMap; }
+  if (caveNight) { n.emissive = n.color.clone().multiplyScalar(0.18); n.emissiveIntensity = Math.max(n.emissiveIntensity || 0, 0.16); }
+  else if (m.emissive && m.emissive.getHex() > 0) { n.emissive = m.emissive.clone(); n.emissiveMap = m.emissiveMap; }
   n.name = m.name;
   matCache.set(key, n);
   return n;

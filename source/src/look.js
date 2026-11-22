@@ -8,7 +8,7 @@
 // tune() blends the day share of that toward preset B every frame.
 import * as THREE from 'three';
 import { PRESET_B as B, pastelize, createComposerB, cssOverlayB, sunDirectionB, isSoftGl } from './preset-B.js';
-import { skipCustomShaders, cullWorldFx } from './l20-fallback.js';
+import { skipCustomShaders, cullWorldFx, isCaveLevel } from './l20-fallback.js';
 import { initPerf } from './perf.js';
 import LOOK_L20 from './look-targets/L20-mirror-caves.json';
 import LOOK_L21 from './look-targets/L21-storm-orchard.json';
@@ -152,7 +152,8 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     tierName = name; L = LOOKS[name] || LOOKS.med;
     vig.style.display = L.vignette ? 'block' : 'none';
     motes.count = L.motes;
-    const sh = L.shadow > 0; renderer.shadowMap.enabled = sh; renderer.shadowMap.type = THREE.PCFShadowMap; sun.castShadow = sh;
+    const sh = L.shadow > 0 && !(tierName === 'low' && isCaveLevel());
+    renderer.shadowMap.enabled = sh; renderer.shadowMap.type = THREE.PCFShadowMap; sun.castShadow = sh;
     if (sh) { const S = B.shadow, sc = sun.shadow.camera; Object.assign(sc, S.camera); sc.updateProjectionMatrix(); sun.shadow.bias = S.bias; sun.shadow.normalBias = S.normalBias; sun.shadow.radius = S.radius;
       if (sun.shadow.mapSize.x !== L.shadow) { sun.shadow.mapSize.set(L.shadow, L.shadow); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } } }
     scene.traverse(o => { if (o.material) for (const m of (Array.isArray(o.material) ? o.material : [o.material])) if (m) m.needsUpdate = true; });
@@ -195,8 +196,9 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   const qBucket = () => QMAP[tierName] || 'medium';
   function canCastShadow(o) {
     if (!o || o.userData.terrain || o.isInstancedMesh || o.userData.noCast) return false;
-    // Low: only the playable crew / animals cast, so the 512 map stays cheap on L17–19
-    if (tierName === 'low') return !!o.userData.isAnimal;
+    // Low: no casters. High/med in a cave: only the playable crew / animals — static cave/prop meshes are merged and noCast.
+    if (tierName === 'low') return false;
+    if (isCaveLevel()) return !!o.userData.isAnimal;
     return true;
   }
   function refreshShadowFlags(root = scene) {
@@ -294,6 +296,8 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   function tune({ n = 0, md = 0, grey = 0, mist = 0, t = 0, heightAt } = {}) {
     tickLookLerp(t); lastTuneT = t;
     const P = Pnow, owned = !!patchLook;
+    const wantSh = L.shadow > 0 && !(tierName === 'low' && isCaveLevel());
+    if (renderer.shadowMap.enabled !== wantSh) { renderer.shadowMap.enabled = wantSh; sun.castShadow = wantSh; refreshShadowFlags(scene); }
     const k = owned ? 1 : Math.max(0, (1 - n) * (1 - md) * (1 - 0.6 * grey) * (1 - 0.5 * mist)), lerp = THREE.MathUtils.lerp;
     hemi.color.lerp(cHS, k); hemi.groundColor.lerp(cHG, k); hemi.intensity = lerp(hemi.intensity, P.hemi.intensity, k);
     sun.color.lerp(cSun, k); sun.intensity = lerp(sun.intensity, P.sun.intensity, k);

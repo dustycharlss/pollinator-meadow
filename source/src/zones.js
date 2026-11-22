@@ -535,7 +535,7 @@ export function createZones(scene, host) {
   let hubPads = [], hubFr = [], friendsSpec = null;
   let exitAt = null, exitOpen = false, exitMesh = null, exitLabel = null, starGot = false;
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
-  let sampleH = null, waterMeshes = [], terrMesh = null, instWalls = [], decoJobs = new Map(), decoBatching = false, camRooms = [];
+  let sampleH = null, waterMeshes = [], terrMesh = null, instWalls = [], decoJobs = new Map(), decoBatching = false, camRooms = [], caveChunks = [];
   // three-class puzzle state
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
@@ -1067,7 +1067,7 @@ export function createZones(scene, host) {
   function decoInto(holder, key, size, o = {}) {
     loadGLB(key).then(g => {
       if (!g || !holder.parent) return;
-      const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; if (recipe && recipe.night && n.material.emissive) { n.material.emissive = n.material.color.clone().multiplyScalar(0.18); n.material.emissiveIntensity = Math.max(n.material.emissiveIntensity || 0, 0.16); } } });
+      const night = !!(recipe && recipe.night); const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material, night ? { caveNight: true } : {}); n.castShadow = false; } });
       const bb = new THREE.Box3().setFromObject(m), sz = bb.getSize(new THREE.Vector3()), L = o.byLong ? Math.max(sz.x, sz.y, sz.z) : sz.y; if (L < 1e-4) return;
       const k = size / L; m.scale.setScalar(k); const bb2 = new THREE.Box3().setFromObject(m), c = bb2.getCenter(new THREE.Vector3()); m.position.set(-c.x, -bb2.min.y + (o.sink || 0), -c.z);
       holder.add(m); lodify(m, key); if (o.fallback) o.fallback.forEach(f => { f.visible = false; }); o.onLoad?.(m);
@@ -1076,10 +1076,11 @@ export function createZones(scene, host) {
   /** Instance repeated static decos (dry-grass, trees, stalls). Unique or 1–2 copies still use decoInto. LOD1/2 stay with the polish lod-map loader — this only batches LOD0. */
   function flushDecos() {
     const jobs = decoJobs; decoJobs = new Map();
+    const pending = [];
     for (const [key, list] of jobs) {
       const cave = !!(recipe && recipe.caveFloor);
       if ((!cave && list.length < 3) || (!cave && lodFor(key))) { list.forEach(j => decoInto(j.H, key, j.size, j.o)); continue; } // cave: instance even a single copy (LOD skipped; fog is tight)
-      loadGLB(key).then(g => {
+      pending.push(loadGLB(key).then(g => {
         const live = list.filter(j => j.H.parent); if (!g || !live.length) { live.forEach(j => decoInto(j.H, key, j.size, j.o)); return; }
         const src = g.scene, night = !!(recipe && recipe.night);
         src.updateMatrixWorld(true);
@@ -1088,8 +1089,7 @@ export function createZones(scene, host) {
         src.traverse(n => {
           if (!n.isMesh || !n.geometry) return;
           const geo = n.geometry.clone(); geo.applyMatrix4(n.matrixWorld);
-          const mat0 = lambertFrom(n.material);
-          if (night && mat0.emissive) { mat0.emissive = mat0.color.clone().multiplyScalar(0.18); mat0.emissiveIntensity = Math.max(mat0.emissiveIntensity || 0, 0.16); }
+          const mat0 = lambertFrom(n.material, night ? { caveNight: true } : {});
           parts.push({ geo, mat: mat0 });
         });
         if (cave && parts.length > 1) {
@@ -1120,8 +1120,9 @@ export function createZones(scene, host) {
           im.instanceMatrix.needsUpdate = true; group.add(im);
         }
         live.forEach(j => { if (j.o.fallback) j.o.fallback.forEach(f => { f.visible = false; }); });
-      });
+      }));
     }
+    return Promise.all(pending);
   }
   function gearModel(k, holder, fallback, onLoad) {
     const I = GEAR_INFO[k]; if (!I.glb) return;
@@ -2348,6 +2349,11 @@ export function createZones(scene, host) {
         // Once the baby has reached the escort goal, don't follow the lead back
         // through hazards behind it (holders may leave; collect-all teleports the crew).
         if (b.atGoal && goal && goal.z != null) tz = Math.max(tz, A.z + goal.z);
+        // N3 leadBody follows the caller, not the swapped body. If the pup is already
+        // at an open exit, keep it there so fail-star session C (and a real flag wait) can complete.
+        if (exitOpen && exitAt && Math.hypot(b.x - exitAt.x, b.z - exitAt.z) < (exitAt.r || 3) + 0.8) b.atExit = true;
+        if (b.atExit && exitOpen && exitAt) { tx = exitAt.x; tz = exitAt.z; }
+        if (!(exitOpen && exitAt)) b.atExit = false;
         const d = Math.hypot(tx - b.x, tz - b.z);
         if (d > 0.12) {
           // Walk each frame and honor hazards. Do not teleport onto the lead when d > 4
@@ -2650,7 +2656,7 @@ export function createZones(scene, host) {
     fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady'); syncObjH();
     sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
-    instWalls = []; decoJobs = new Map(); camRooms = [];
+    instWalls = []; decoJobs = new Map(); camRooms = []; caveChunks = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
     tutorI = 0; tutorT = -99; endLines = []; result = null;
     for (const h of hubPads) h.el.remove(); hubPads = []; hubFr = []; document.body.classList.remove('inHub');
@@ -2660,31 +2666,112 @@ export function createZones(scene, host) {
     ctx.look?.setPatch?.(null);
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
+  function caveMatKey(mat) {
+    const c = mat.color && mat.color.getHexString ? mat.color.getHexString() : 'x';
+    const e = mat.emissive && mat.emissive.getHexString ? mat.emissive.getHexString() : '0';
+    const ei = (mat.emissiveIntensity || 0).toFixed(3);
+    const map = mat.map ? mat.map.uuid : '';
+    return [mat.type, c, e, ei, map, +!!mat.vertexColors, +!!mat.transparent, (mat.opacity ?? 1).toFixed(3), mat.side || 0, mat.blending || 1, mat.depthWrite === false ? 0 : 1, mat.alphaTest || 0].join('|');
+  }
+  function normCaveGeo(g) {
+    for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal' && name !== 'uv') g.deleteAttribute(name);
+    if (!g.attributes.normal && g.attributes.position) g.computeVertexNormals();
+    if (!g.attributes.uv && g.attributes.position) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    if (g.morphAttributes) g.morphAttributes = {};
+    if (g.clearGroups) g.clearGroups();
+    return g;
+  }
+  function tryMergeCaveGeos(geos) {
+    if (!geos.length) return null;
+    if (geos.length === 1) return geos[0];
+    try { return mergeGeos(geos, false) || null; } catch (e) { return null; }
+  }
   function mergeCaveStatics() {
     if (!(recipe && recipe.caveFloor)) return;
+    const skip = new Set();
+    const mark = (o) => { if (!o) return; skip.add(o); o.traverse?.(c => skip.add(c)); };
+    // Keep live / animated bits out of the merge (rotating mirrors, levers, webs, pickups,
+    // ghosts, creatures). Static prop shells (stumps, lamp posts, hide logs) do merge.
+    for (const pr of props) {
+      mark(pr.icon);
+      if (pr.act === 'aim' && pr.mir && pr.mir.F) mark(pr.mir.F);
+      else if (pr.act === 'lever' || pr.act === 'cut' || pr.act === 'throw' || pr.act === 'sling') mark(pr.G);
+    }
+    for (const k of picks) mark(k.m || k.mesh || k.G);
+    for (const d of nightDews) mark(d.m);
+    if (star) mark(star.m || star.G);
+    if (exitMesh) { mark(exitMesh.ringM); mark(exitMesh.flag); mark(exitMesh.disc); mark(exitMesh.spark); }
+    for (const gh of (a2 && a2.ghosts) || []) mark(gh.r && gh.r.m);
+    if (a2) {
+      for (const e of a2.en || []) { mark(e.F); mark(e.G); mark(e.cone); }
+      for (const b of a2.escorts || []) mark(b.G);
+      for (const tl of a2.tools || []) mark(tl.G);
+      for (const s of a2.shots || []) mark(s.m || s.G);
+      for (const src of a2.srcs || []) mark(src.cr);
+    }
+    group.updateMatrixWorld(true);
     const buckets = new Map();
-    for (const m of group.children.slice()) {
-      if (!m.isMesh || !m.userData.zoneWall || !m.visible) continue;
-      const key = (m.material && m.material.uuid) || 'mat';
-      const L = buckets.get(key) || []; L.push(m); buckets.set(key, L);
-    }
-    for (const list of buckets.values()) {
-      if (list.length < 2) continue;
-      const geos = [];
-      for (const m of list) {
-        m.updateMatrixWorld(true);
-        const g = m.geometry.clone();
-        g.applyMatrix4(m.matrix);
-        geos.push(g);
+    const doomed = [];
+    const take = (geo, matrix, wx, wz, mat, src) => {
+      if (!geo || !mat) return;
+      if (mat.transparent && (mat.opacity < 0.2 || mat.blending !== THREE.NormalBlending)) return;
+      const g = normCaveGeo(geo.clone());
+      g.applyMatrix4(matrix);
+      const cx = Math.floor(wx / 16), cz = Math.floor(wz / 16);
+      const key = caveMatKey(mat) + '@' + cx + ',' + cz;
+      const L = buckets.get(key) || { mat, cx, cz, geos: [] };
+      L.geos.push(g); buckets.set(key, L); doomed.push(src);
+    };
+    const _pos = new THREE.Vector3(), _M = new THREE.Matrix4(), _MW = new THREE.Matrix4();
+    group.traverse(m => {
+      if (skip.has(m)) return;
+      if (!(m.isMesh || m.isInstancedMesh) || !m.visible || !m.geometry) return;
+      if (m.isSkinnedMesh || m.userData.caveChunk || m.userData.noMerge || m.userData.isAnimal) return;
+      const mat = Array.isArray(m.material) ? null : m.material; if (!mat) return;
+      if (m.isInstancedMesh) {
+        const W = m.matrixWorld;
+        for (let i = 0; i < m.count; i++) {
+          m.getMatrixAt(i, _M); _MW.multiplyMatrices(W, _M); _pos.setFromMatrixPosition(_MW);
+          take(m.geometry, _MW, _pos.x, _pos.z, mat, m);
+        }
+      } else {
+        _pos.setFromMatrixPosition(m.matrixWorld);
+        take(m.geometry, m.matrixWorld, _pos.x, _pos.z, mat, m);
       }
-      const merged = mergeGeos(geos, false);
-      if (!merged) continue;
-      const nm = new THREE.Mesh(merged, list[0].material);
-      nm.userData.zoneWall = true; nm.userData.noCast = true; nm.castShadow = false; nm.receiveShadow = true;
-      nm.frustumCulled = true;
-      group.add(nm);
-      for (const m of list) group.remove(m);
+    });
+    const seen = new Set();
+    for (const m of doomed) { if (seen.has(m)) continue; seen.add(m); if (m.parent) m.parent.remove(m); }
+    caveChunks = caveChunks.filter(m => m.parent);
+    for (const { mat, geos } of buckets.values()) {
+      const merged = tryMergeCaveGeos(geos); if (!merged) continue;
+      const nm = new THREE.Mesh(merged, mat);
+      merged.computeBoundingSphere();
+      const sph = merged.boundingSphere;
+      nm.userData.caveChunk = true; nm.userData.noCast = true; nm.userData.zoneWall = true;
+      nm.userData.chunkPos = sph ? sph.center.clone() : new THREE.Vector3();
+      nm.userData.chunkR = sph ? sph.radius : 12;
+      nm.userData.fogCull = (nm.userData.chunkR || 0) < 22; // leave huge ceiling/long walls drawn
+      nm.castShadow = false; nm.receiveShadow = true; nm.frustumCulled = true;
+      group.add(nm); caveChunks.push(nm);
     }
+  }
+  function cullCaveChunks(cam) {
+    if (!caveChunks.length || !cam) return;
+    const sc = group.parent;
+    const farD = (sc && sc.fog && sc.fog.far) || 42;
+    const x = cam.position.x, z = cam.position.z;
+    const _cull = new THREE.Vector3();
+    for (const m of caveChunks) {
+      if (!m.userData.fogCull) { m.visible = true; continue; }
+      const p = m.userData.chunkPos, r = m.userData.chunkR || 12;
+      m.visible = Math.hypot(x - p.x, z - p.z) < farD + r + 6;
+    }
+    const fogR = farD + 4;
+    group.traverse(o => {
+      if (!o.isSprite || (o.userData && o.userData.noFogCull)) return;
+      o.getWorldPosition(_cull);
+      o.visible = Math.hypot(_cull.x - x, _cull.z - z) < fogR;
+    });
   }
   function load(pid, anchor) {
     clear(); recipe = MAPS[pid]; if (!recipe) return; id = pid; recipe.id = recipe.id || pid;
@@ -2695,12 +2782,13 @@ export function createZones(scene, host) {
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
     decoBatching = true; recipe.build(B); decoBatching = false;
-    flushDecos();
+    const decoReady = flushDecos();
     mergeCaveStatics();
     refreshFallbackMaterials();
     if (!recipe.hub) { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); } else hubInit();
     if (!(recipe.caveFloor || recipe.id === 'mirror_caves')) buildLeafyBackdrop(recipe.bounds);
     decorateProps();
+    Promise.resolve(decoReady).then(() => { if (recipe && recipe.caveFloor) { mergeCaveStatics(); refreshFallbackMaterials(); } });
     if (recipe.act2) a2Init();
     if (ctx.look?.setPatch) {
       const fills = {};
@@ -3206,9 +3294,11 @@ export function createZones(scene, host) {
       // Host is authoritative for pickups, pads, sigs, carries, escorts, and complete.
       // Clients still tick mixers so babies and decorations don't freeze.
       for (const mx of babyMixers) try { mx.update(dt); } catch (e) {}
+      cullCaveChunks(cam);
       return;
     }
     updateWorld(dt, cam);
+    cullCaveChunks(cam);
     if (!recipe || recipe.hub) return;
     const ids = [...new Set((ctx.driven() || []).filter(Boolean))];
     const view = host.cur();
@@ -3799,7 +3889,7 @@ export function createZones(scene, host) {
     getA2: () => a2,
     aimMirror: (id) => { const m = a2 && a2.mirrors.find(q => q.id === id); if (!m) return null; aimMirror(m); return m.k; },
     flagBack, callEscort, throwToolAt: (kind, lx, lz) => throwTool(kind, A.x + lx, A.z + lz),
-    placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); b.hide = false; b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
+    placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); b.hide = false; b.atExit = false; b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
     escort: () => a2 ? a2.escorts.map(b => ({ kind: b.kind, glb: b.G.userData.babyGlb || null, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), y: +b.y.toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })) : [], escortLead: () => a2 ? a2.escorts.map(b => ({ x: b.x, y: b.y, z: b.z, called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })) : [], heldTool: () => a2 ? a2.heldTool : null,
     moody() { return !!(a2 && recipe && recipe.moody) ? !!AA().night : null; },
     timeLocked: () => !!(a2 && a2.master), // S4: Master Bell owns clock.t (dusk/night/day) until clear()
