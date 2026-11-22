@@ -80,6 +80,8 @@ export function createLevelFlow(hooks = {}) {
   }
 
   function showReady({ map, name, roster: people, phase } = {}) {
+    // A visible complete card owns the screen; late ready-wait must not clobber it.
+    if (!completeBox.hidden) return;
     lastMap = map || lastMap;
     showRoot();
     readyBox.hidden = false;
@@ -114,6 +116,7 @@ export function createLevelFlow(hooks = {}) {
   }
 
   function showCountdown(n, name, map) {
+    if (!completeBox.hidden) return;
     lastMap = map || lastMap;
     showRoot();
     readyBox.hidden = false;
@@ -138,6 +141,7 @@ export function createLevelFlow(hooks = {}) {
   }
 
   function showTimeout() {
+    if (!completeBox.hidden) return;
     showRoot();
     readyBox.hidden = false;
     count.hidden = true;
