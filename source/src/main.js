@@ -1359,6 +1359,7 @@ function creditLevelResult(res, sess, lines) {
 }
 
 function hostContinueLevel() {
+  if (net && !net.isHost) return;
   const dest = endValleyPatchWild({ fromContinue: true });
   net?.sendContinue?.({ to: dest || 'hub' });
 }
