@@ -183,13 +183,24 @@ export function makeGradePassB(P = PRESET_B) {
 }
 
 /** EffectComposer for the chosen quality: Render -> Bloom -> Output -> Grade. Returns null on 'low' (render directly). */
+export function isSoftGl(renderer) {
+  try {
+    const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
+    const s = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || '') : '';
+    return /SwiftShader|llvmpipe|soft-?pipe|Microsoft Basic Render/i.test(s);
+  } catch (e) { return false; }
+}
+
 export function createComposerB(renderer, scene, camera, fx, P = PRESET_B) {
   const Q = fx.quality; if (!Q.bloom && !Q.grade) return null;
   const size = renderer.getSize(new THREE.Vector2()), pr = renderer.getPixelRatio();
-  const rt = new THREE.WebGLRenderTarget(size.x * pr, size.y * pr, { type: THREE.HalfFloatType, samples: Q.msaa });
+  const soft = !!(fx.softGl ?? isSoftGl(renderer));
+  // Half-float composer/bloom targets often clear to black on SwiftShader; use 8-bit and skip bloom there.
+  const rtType = soft || fx.byteTarget ? THREE.UnsignedByteType : THREE.HalfFloatType;
+  const rt = new THREE.WebGLRenderTarget(size.x * pr, size.y * pr, { type: rtType, samples: soft ? 0 : (Q.msaa || 0) });
   const composer = new EffectComposer(renderer, rt); composer.setPixelRatio(pr); composer.setSize(size.x, size.y);
   composer.addPass(new RenderPass(scene, camera));
-  if (Q.bloom) { const b = new UnrealBloomPass(new THREE.Vector2(size.x * Q.bloomScale, size.y * Q.bloomScale), P.bloom.strength, P.bloom.radius, P.bloom.threshold); b.name = 'presetB-bloom'; composer.addPass(b); }
+  if (Q.bloom && !soft) { const b = new UnrealBloomPass(new THREE.Vector2(size.x * Q.bloomScale, size.y * Q.bloomScale), P.bloom.strength, P.bloom.radius, P.bloom.threshold); b.name = 'presetB-bloom'; composer.addPass(b); }
   composer.addPass(new OutputPass());
   if (Q.grade) composer.addPass(makeGradePassB(P));
   return composer;

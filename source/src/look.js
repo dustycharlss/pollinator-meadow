@@ -7,7 +7,7 @@
 // Phones never go past 'high'. Day/night, seasons, weather and moody night still come from main.js updateNight();
 // tune() blends the day share of that toward preset B every frame.
 import * as THREE from 'three';
-import { PRESET_B as B, pastelize, createComposerB, cssOverlayB, sunDirectionB } from './preset-B.js';
+import { PRESET_B as B, pastelize, createComposerB, cssOverlayB, sunDirectionB, isSoftGl } from './preset-B.js';
 import { skipCustomShaders, cullWorldFx } from './l20-fallback.js';
 import { initPerf } from './perf.js';
 import LOOK_L20 from './look-targets/L20-mirror-caves.json';
@@ -140,7 +140,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   function buildComposer() {
     if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); composer = null; bloomPass = null; gradePass = null; }
     if (postLockedOff || !L.post) return;
-    const fx = { quality: { bloom: L.bloom, bloomScale: L.bloomScale || 0.5, grade: L.grade, msaa: L.msaa } };
+    const fx = { quality: { bloom: L.bloom, bloomScale: L.bloomScale || 0.5, grade: L.grade, msaa: L.msaa }, softGl: isSoftGl(renderer) };
     composer = createComposerB(renderer, scene, camera, fx, Pnow || B);
     bloomPass = composer && composer.passes.find(p => p.name === 'presetB-bloom');
     gradePass = composer && composer.passes.find(p => p.name === 'presetB-grade');
@@ -152,7 +152,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     tierName = name; L = LOOKS[name] || LOOKS.med;
     vig.style.display = L.vignette ? 'block' : 'none';
     motes.count = L.motes;
-    const sh = L.shadow > 0; renderer.shadowMap.enabled = sh; renderer.shadowMap.type = THREE.PCFSoftShadowMap; sun.castShadow = sh;
+    const sh = L.shadow > 0; renderer.shadowMap.enabled = sh; renderer.shadowMap.type = THREE.PCFShadowMap; sun.castShadow = sh;
     if (sh) { const S = B.shadow, sc = sun.shadow.camera; Object.assign(sc, S.camera); sc.updateProjectionMatrix(); sun.shadow.bias = S.bias; sun.shadow.normalBias = S.normalBias; sun.shadow.radius = S.radius;
       if (sun.shadow.mapSize.x !== L.shadow) { sun.shadow.mapSize.set(L.shadow, L.shadow); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } } }
     scene.traverse(o => { if (o.material) for (const m of (Array.isArray(o.material) ? o.material : [o.material])) if (m) m.needsUpdate = true; });
@@ -244,6 +244,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     clearFills();
     if (!look || !look.extras || !look.extras.fills) return;
     for (const spec of look.extras.fills) {
+      if (spec.type && !/PointLight/i.test(String(spec.type))) continue;
       const l = new THREE.PointLight(spec.color, 0, spec.distance, spec.decay == null ? 2 : spec.decay);
       l.castShadow = false; l.name = 'look-fill-' + spec.name; scene.add(l);
       const at = opts.fills && opts.fills[spec.name]; if (at) l.position.set(at.x, at.y, at.z);
@@ -299,7 +300,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     const fogFar = (tierName === 'low' && P.quality && P.quality.low && P.quality.low.fogFar) ? P.quality.low.fogFar : (owned && P.fog && P.fog.far) ? P.fog.far : L.fogFar;
     const fogNear = owned && P.fog ? P.fog.near : B.fog.near;
     scene.fog.color.lerp(cFog, k); scene.fog.near = lerp(scene.fog.near, fogNear, k); scene.fog.far = lerp(scene.fog.far, fogFar, k);
-    if (L.bake) { sun.color.lerp(tc.copy(sun.color).multiply(LT), k); hemi.color.lerp(tc.copy(hemi.color).multiply(LT), k); hemi.groundColor.lerp(tc.copy(hemi.groundColor).multiply(LT), k); scene.fog.color.lerp(HZ, ((P.quality && P.quality.low && P.quality.low.bakeGrade && P.quality.low.bakeGrade.hazeMix) || B.quality.low.bakeGrade.hazeMix) * k); }
+    if (L.bake && !owned) { sun.color.lerp(tc.copy(sun.color).multiply(LT), k); hemi.color.lerp(tc.copy(hemi.color).multiply(LT), k); hemi.groundColor.lerp(tc.copy(hemi.groundColor).multiply(LT), k); scene.fog.color.lerp(HZ, ((P.quality && P.quality.low && P.quality.low.bakeGrade && P.quality.low.bakeGrade.hazeMix) || B.quality.low.bakeGrade.hazeMix) * k); }
     // sun: day direction from preset B (low, raking), night keeps the moon key from main.js — unless a look target owns the key (L22 A moon, L24 dusk)
     dirB.lerp(sunDirectionB(camera, P), 0.06).normalize(); dirO.copy(sun.position).normalize().lerp(dirB, k).normalize();
     const p = getPlayer && getPlayer(), tg = sun.target.position; if (p) tg.set(p.x, p.y, p.z); else tg.set(0, 0, 0);

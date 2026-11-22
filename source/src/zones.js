@@ -662,7 +662,7 @@ export function createZones(scene, host) {
     wall(x, z, w, d, top, o = {}) {
       const g = gy(x, z), bot = o.bot ?? -1.5, T = top - bot, col = o.c ?? LOOK[o.look] ?? COL.stone;
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, T, d), mat(col));
-      m.position.set(A.x + x, g + bot + T / 2, A.z + z); m.rotation.y = o.yaw || 0; m.userData.noCast = true; m.castShadow = false;
+      m.position.set(A.x + x, g + bot + T / 2, A.z + z); m.rotation.y = o.yaw || 0; m.userData.zoneWall = true; m.userData.noCast = true; m.castShadow = false; m.receiveShadow = true;
       if (!o.hidden) {
         group.add(m);
         if (o.look === 'hedge' || o.look === 'leaf') { const cap = new THREE.Mesh(new THREE.BoxGeometry(w + 0.12, 0.25, d + 0.12), mat(o.look === 'leaf' ? 0x4f9a3e : COL.hedgeTop)); cap.position.set(A.x + x, g + top + 0.08, A.z + z); group.add(cap); }
@@ -671,7 +671,7 @@ export function createZones(scene, host) {
       const s = addSolid({ type: 'box', x: A.x + x, z: A.z + z, hx: w / 2, hz: d / 2, yaw: -(o.yaw || 0), y0: g + bot, top: g + top, kind: 'zone' });
       if (o.hidden) { s.off = true; }
       { const ca = Math.abs(Math.cos(o.yaw || 0)), sa = Math.abs(Math.sin(o.yaw || 0)), hx = (w * ca + d * sa) / 2, hz = (w * sa + d * ca) / 2;
-        if (Math.max(w, d) < 14) { const e = { roots: [m], x0: A.x + x - hx, x1: A.x + x + hx, z0: A.z + z - hz, z1: A.z + z + hz, y0: g + bot, y1: g + top + 0.3, a: 1 }; fades.push(e); s.fadeM = e; } } // long boundary cliffs keep the camera pull-in
+        if (Math.max(w, d) < 14 && !(recipe && recipe.caveFloor)) { const e = { roots: [m], x0: A.x + x - hx, x1: A.x + x + hx, z0: A.z + z - hz, z1: A.z + z + hz, y0: g + bot, y1: g + top + 0.3, a: 1 }; fades.push(e); s.fadeM = e; } } // long boundary cliffs keep the camera pull-in; cave walls are merged instead
       return { m, s, g };
     },
     /** one instanced hedge (or leaf) strip that follows the ground, plus 2 m collision segments and a fly cap.
@@ -1077,7 +1077,8 @@ export function createZones(scene, host) {
   function flushDecos() {
     const jobs = decoJobs; decoJobs = new Map();
     for (const [key, list] of jobs) {
-      if (list.length < 3 || lodFor(key)) { list.forEach(j => decoInto(j.H, key, j.size, j.o)); continue; } // polish LOD pass 2 wins when lod-map has this key
+      const cave = !!(recipe && recipe.caveFloor);
+      if ((!cave && list.length < 3) || (!cave && lodFor(key))) { list.forEach(j => decoInto(j.H, key, j.size, j.o)); continue; } // cave: instance even a single copy (LOD skipped; fog is tight)
       loadGLB(key).then(g => {
         const live = list.filter(j => j.H.parent); if (!g || !live.length) { live.forEach(j => decoInto(j.H, key, j.size, j.o)); return; }
         const src = g.scene, night = !!(recipe && recipe.night);
@@ -1091,6 +1092,19 @@ export function createZones(scene, host) {
           if (night && mat0.emissive) { mat0.emissive = mat0.color.clone().multiplyScalar(0.18); mat0.emissiveIntensity = Math.max(mat0.emissiveIntensity || 0, 0.16); }
           parts.push({ geo, mat: mat0 });
         });
+        if (cave && parts.length > 1) {
+          const buckets = new Map();
+          for (const part of parts) {
+            const mk = (part.mat.color ? part.mat.color.getHex() : 0) + '|' + ((part.mat.emissiveIntensity || 0).toFixed(3)) + '|' + (part.mat.transparent ? 't' : 'o');
+            const L = buckets.get(mk) || []; L.push(part); buckets.set(mk, L);
+          }
+          parts.length = 0;
+          for (const L of buckets.values()) {
+            if (L.length === 1) { parts.push(L[0]); continue; }
+            const merged = mergeGeos(L.map(q => q.geo), false);
+            if (merged) parts.push({ geo: merged, mat: L[0].mat }); else parts.push(...L);
+          }
+        }
         if (!parts.length) { live.forEach(j => decoInto(j.H, key, j.size, j.o)); return; }
         const n = live.length;
         const mats = live.map(j => {
@@ -2646,6 +2660,32 @@ export function createZones(scene, host) {
     ctx.look?.setPatch?.(null);
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
+  function mergeCaveStatics() {
+    if (!(recipe && recipe.caveFloor)) return;
+    const buckets = new Map();
+    for (const m of group.children.slice()) {
+      if (!m.isMesh || !m.userData.zoneWall || !m.visible) continue;
+      const key = (m.material && m.material.uuid) || 'mat';
+      const L = buckets.get(key) || []; L.push(m); buckets.set(key, L);
+    }
+    for (const list of buckets.values()) {
+      if (list.length < 2) continue;
+      const geos = [];
+      for (const m of list) {
+        m.updateMatrixWorld(true);
+        const g = m.geometry.clone();
+        g.applyMatrix4(m.matrix);
+        geos.push(g);
+      }
+      const merged = mergeGeos(geos, false);
+      if (!merged) continue;
+      const nm = new THREE.Mesh(merged, list[0].material);
+      nm.userData.zoneWall = true; nm.userData.noCast = true; nm.castShadow = false; nm.receiveShadow = true;
+      nm.frustumCulled = true;
+      group.add(nm);
+      for (const m of list) group.remove(m);
+    }
+  }
   function load(pid, anchor) {
     clear(); recipe = MAPS[pid]; if (!recipe) return; id = pid; recipe.id = recipe.id || pid;
     setCaveLevel(!!(recipe.caveFloor || recipe.id === 'mirror_caves' || pid === 'mirror_caves'));
@@ -2656,9 +2696,10 @@ export function createZones(scene, host) {
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
     decoBatching = true; recipe.build(B); decoBatching = false;
     flushDecos();
+    mergeCaveStatics();
     refreshFallbackMaterials();
     if (!recipe.hub) { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); } else hubInit();
-    buildLeafyBackdrop(recipe.bounds);
+    if (!(recipe.caveFloor || recipe.id === 'mirror_caves')) buildLeafyBackdrop(recipe.bounds);
     decorateProps();
     if (recipe.act2) a2Init();
     if (ctx.look?.setPatch) {
@@ -3755,6 +3796,8 @@ export function createZones(scene, host) {
     skipKid() { if (!recipe || !recipe.kid || !recipe.act2 || keyDone) return false; complete('Trail skipped'); return true; },
     toggleSneak(v) { if (!a2 || !recipe?.act2) return false; sneak = v == null ? !sneak : !!v; const bp = ctx.getP(); if (bp) bp.sneak = sneak; ctx.onSneak?.(sneak); tst(sneak ? '🐾 Sneaking: slow, quiet paws' : '🏃 Walking normally', 1200); return sneak; }, sneakOn: () => { const bp = ctx.getP(); return !!(a2 && (bp && bp.sneak || sneak)); }, isAct2: () => !!(a2 && recipe && recipe.act2),
     setAct2Night: v => { if (a2) setNightA2(!!v); },
+    getA2: () => a2,
+    aimMirror: (id) => { const m = a2 && a2.mirrors.find(q => q.id === id); if (!m) return null; aimMirror(m); return m.k; },
     flagBack, callEscort, throwToolAt: (kind, lx, lz) => throwTool(kind, A.x + lx, A.z + lz),
     placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); b.hide = false; b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
     escort: () => a2 ? a2.escorts.map(b => ({ kind: b.kind, glb: b.G.userData.babyGlb || null, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), y: +b.y.toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })) : [], escortLead: () => a2 ? a2.escorts.map(b => ({ x: b.x, y: b.y, z: b.z, called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })) : [], heldTool: () => a2 ? a2.heldTool : null,
@@ -3769,6 +3812,6 @@ export function createZones(scene, host) {
     gearViz: () => { const V = a2 && a2.gviz; if (!V) return null; const o = {}; for (const k of ['pouch', 'glider', 'sling']) { const m = V[k].children.find(c => c.userData && c.userData.model); const sz = m && m.visible !== false && V[k].visible ? new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3()) : null; o[k] = { shown: V[k].visible, model: !!m, size: sz ? [+sz.x.toFixed(2), +sz.y.toFixed(2), +sz.z.toFixed(2)] : null }; } return o; },
     gearList: () => Object.keys(GEAR_INFO).map(k => ({ k, ...GEAR_INFO[k], has: !!gear[k] })),
     setT: v => { t = +v; }, forcePuzzles, setTiming: k => { timingK = +k > 0 ? +k : 1; }, timing: () => TK(),
-    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, cpPos: a2.cp ? { x: +(a2.cp.x - A.x).toFixed(2), z: +(a2.cp.z - A.z).toFixed(2) } : null, cps: a2.cps.map(c => ({ x: c.x - A.x, z: c.z - A.z, on: !!c.on })), hidEver: !!a2.hidEver, bonkLog: (a2.bonkLog || []).slice(-20), dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0, stayedFar: !!e.stayedFar })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })), time: a2.time || (a2.night ? 'night' : 'day'), windMag: a2.windMag ?? 6, master: a2.master ? { state: a2.master.state, next: a2.master.next, start: a2.master.start, cool: +Math.max(0, (a2.master.coolUntil || 0) - t).toFixed(2) } : null } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
+    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, cpPos: a2.cp ? { x: +(a2.cp.x - A.x).toFixed(2), z: +(a2.cp.z - A.z).toFixed(2) } : null, cps: a2.cps.map(c => ({ x: c.x - A.x, z: c.z - A.z, on: !!c.on })), hidEver: !!a2.hidEver, bonkLog: (a2.bonkLog || []).slice(-20), dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0, stayedFar: !!e.stayedFar })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), mirrors: a2.mirrors.map(m => ({ id: m.id, k: m.k || 0, dummy: !!m.dummy, lights: m.lights || null })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })), time: a2.time || (a2.night ? 'night' : 'day'), windMag: a2.windMag ?? 6, master: a2.master ? { state: a2.master.state, next: a2.master.next, start: a2.master.start, cool: +Math.max(0, (a2.master.coolUntil || 0) - t).toFixed(2) } : null } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }
