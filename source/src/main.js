@@ -2467,7 +2467,7 @@ async function boot() {
     getZones: () => zones,
     getCrew: () => crew ? crew.get() : ['bee', 'raccoon', 'bear'],
     isPlaying: () => !!playing || !!(zones && zones.active?.()),
-    isPaused: () => !!paused || !!(net && net.holding),
+    isPaused: () => !!paused,
     isInLevel: () => {
       const id = zones && zones.status && zones.status()?.id;
       if (!id) return false;

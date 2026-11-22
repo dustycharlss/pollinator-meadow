@@ -597,7 +597,10 @@ export function createNet(hooks = {}) {
   }
 
   function snapRate() {
-    if (hooks.isPaused?.() || holding) return 1;
+    // Ready-wait (`holding`) still freezes the sim in worldTick, but in-level
+    // snapshots stay at 20 Hz even on a slow host. Only the pause overlay
+    // drops the ticker to 1 Hz (n22 behaviour).
+    if (hooks.isPaused?.()) return 1;
     if (!hooks.isPlaying?.() || !hooks.isInLevel?.()) return 10;
     return 20;
   }

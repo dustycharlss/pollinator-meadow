@@ -26,3 +26,21 @@ export function parseJoinCode(search = typeof location !== 'undefined' ? locatio
   if (!m) return null;
   try { return decodeURIComponent(m[1]).trim().toLowerCase(); } catch (e) { return String(m[1] || '').toLowerCase(); }
 }
+
+/** Room-identity query keys. Keep feature flags such as online=dev / nettest / debug. */
+const ROOM_PARAMS = ['join'];
+
+/** Drop join (and any other room params) so a refresh cannot rejoin a room the player just left. */
+export function stripRoomParamsFromUrl() {
+  if (typeof location === 'undefined' || typeof history === 'undefined' || typeof URL === 'undefined') return;
+  try {
+    const u = new URL(location.href);
+    let changed = false;
+    for (const k of ROOM_PARAMS) {
+      if (u.searchParams.has(k)) { u.searchParams.delete(k); changed = true; }
+    }
+    if (!changed) return;
+    const search = u.searchParams.toString();
+    history.replaceState(history.state, '', u.pathname + (search ? '?' + search : '') + u.hash);
+  } catch (e) {}
+}

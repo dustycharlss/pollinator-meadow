@@ -12,7 +12,7 @@ import {
 } from './words.js';
 import { pinReply, randomNonce, bytesToB64, b64ToBytes, timingSafeEqual, createPinGuard } from './pin.js';
 import { EMOTES, EMOTE_COOLDOWN, EMOTE_SHOW, emoteOf } from './emotes.js';
-import { isOnlineDev, canShowFriendsStation, parseJoinCode, onlineDefaults } from './flags.js';
+import { isOnlineDev, canShowFriendsStation, parseJoinCode, onlineDefaults, stripRoomParamsFromUrl } from './flags.js';
 import { createOnlineSettings } from './online-settings.js';
 import { mountDebugOverlay } from './debug-overlay.js';
 
@@ -482,6 +482,7 @@ export function createLobby(hooks = {}) {
 
   function leave(why) {
     if (why === 'lobby' || why === 'pause') sfx('sfx-n2/leave-game', 0.5);
+    try { stripRoomParamsFromUrl(); } catch (e) {}
     stopHello();
     if (role) send('leave', { why });
     if (role === 'host') send('ended', { why });
