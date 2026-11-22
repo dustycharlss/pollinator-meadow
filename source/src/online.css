@@ -98,11 +98,13 @@
 .olRosterSlot .olSlotGlyph { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 64px; height: 64px; object-fit: contain; pointer-events: none; }
 .olRosterSlot.empty { box-shadow: inset 0 0 0 3px var(--ol-fill, #3b2614); border-radius: 16px; }
 
-.olCards { align-items: flex-end; }
-.olClass { width: 100px; min-width: 100px; height: 100px; min-height: 100px; padding: 0; border: 0; background: transparent; box-shadow: none !important; opacity: 1; filter: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.olClass img { width: 100px; height: 100px; display: block; pointer-events: none; }
-.olClass small, .olClass .olClassLab { font: 700 11px system-ui, sans-serif; color: #3b2614; }
+.olCards { align-items: flex-end; gap: 8px; justify-content: center; flex-wrap: nowrap; }
+.olClass { width: 100px; min-width: 100px; height: auto; min-height: 0; padding: 0; border: 0; background: transparent; box-shadow: none !important; opacity: 1; filter: none; display: flex; flex-direction: column; align-items: center; gap: 4px; overflow: visible; }
+.olClass img { width: 100px; height: 100px; min-width: 100px; min-height: 100px; flex: none; display: block; pointer-events: none; }
+.olClass small, .olClass .olClassLab { font: 700 11px/1.2 system-ui, sans-serif; color: #3b2614; text-align: center; flex: none; max-width: 100%; white-space: nowrap; }
 .olClass.taken { opacity: 1; cursor: default; filter: none; }
+
+.olStart { width: 100%; max-width: 280px; margin: 8px auto 0; display: block; }
 
 .olChoiceRow { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 .olChoiceCard { width: 148px; background: none; border: 0; padding: 0; cursor: pointer; color: #3b2614; font: 800 14px system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -217,6 +219,17 @@ body:has(#pause.on) .olBar { display: none !important; }
   .olRosterSlot { width: 80px; height: 94px; }
   .olRosterSlot img.olSlotFace { width: 80px; height: 94px; }
   .olRosterSlot .olSlotGlyph { width: 52px; height: 52px; }
-  .olClass, .olClass img { width: 80px; height: 80px; min-width: 80px; min-height: 80px; }
+  .olClass { width: 80px; min-width: 80px; height: auto; min-height: 0; }
+  .olClass img { width: 80px; height: 80px; min-width: 80px; min-height: 80px; }
+  .olStart { max-width: 140px; min-height: 48px; margin: 6px auto 0; }
   .olChoiceCard img { width: 120px; height: 130px; }
+}
+
+/* 360×740-class phones: 3×100px cards overflow the 312px body and labels collide. */
+@media (orientation: portrait) and (max-width: 380px) {
+  .olClass { width: 88px; min-width: 88px; }
+  .olClass img { width: 88px; height: 88px; min-width: 88px; min-height: 88px; }
+  .olClass small, .olClass .olClassLab { font-size: 10px; }
+  .olRosterSlot { width: 88px; height: 102px; }
+  .olRosterSlot img.olSlotFace { width: 88px; height: 102px; }
 }
