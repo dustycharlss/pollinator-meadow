@@ -889,8 +889,16 @@ function updateCamera(dt) {
   const ox = -Math.cos(cam.yaw) * cam.offX * dist, oz = Math.sin(cam.yaw) * cam.offX * dist, oy = cam.offY * dist; cx += ox; cz += oz; cy += oy;
   { // occlusion pull-in (playtest-01 H2: was shop-only): pull the camera in front of rocks / stumps / logs / decor and tree canopies
     // between it and the focus, in play, build mode, the shop and the title orbit.
+    const room = (playing && zones && valleySession && zones.camRoomAt) ? zones.camRoomAt(cam.fx, cam.fz) : null;
+    if (room && room.anchor) {
+      const ax = room.anchor.x, az = room.anchor.z, ay = room.anchor.y != null ? room.anchor.y : (heightAt(ax, az) + 1.6);
+      const u = room.mix != null ? room.mix : 0.72;
+      cx = cx + (ax - cx) * u; cz = cz + (az - cz) * u; cy = cy + (ay - cy) * u;
+      cy = Math.max(cy, heightAt(cx, cz) + 0.9);
+    }
     const fx = cam.fx + ox, fy = focusY + oy, fz = cam.fz + oz; let want = 1;
-    if (world?.phys) {
+    if (room) want = 1; // a camera volume owns framing — do not jam against the bee / walls
+    if (!room && world?.phys) {
       const segR = Math.hypot(cx - fx, cz - fz), CN = [];
       for (const c of world.canopies || []) { const dx = c.x - fx, dz = c.z - fz; if (dx * dx + dz * dz < (segR + c.r + 1) ** 2 && Math.hypot(dx, dz) > c.r * 0.7 + 0.3) CN.push(c); }
       for (let i = 1; i <= 14 && want === 1; i++) {
@@ -979,7 +987,7 @@ function updateNight(dt) {
   const ang = (clock.t - 0.25) * 6.2832; sun.position.set(Math.cos(ang) * 100, 28 + 92 * Math.max(0, Math.sin(ang)), 40);
   stars.material.opacity = n; stars.visible = n > 0.01; moon.visible = n > 0.01; moon.material.opacity = n;
   world.sparkle.mat.uniforms.uBoost.value = 1 + 0.35 * n;
-  renderer.toneMappingExposure = THREE.MathUtils.lerp(1.0, 1.35, n);
+  if (!look.patch) renderer.toneMappingExposure = THREE.MathUtils.lerp(1.0, 1.35, n);
   { // deep-blue moody night (only while a moody level is at night): dim ambient, cool moon key light, close fog
     state.mood = (state.mood || 0) + (((mw && n > 0.5) ? 1 : 0) - (state.mood || 0)) * Math.min(1, Math.max(dt, 0.016) * 3); if (state.mood < 0.002) state.mood = 0;
     const md = state.mood, L = THREE.MathUtils.lerp;
@@ -987,7 +995,7 @@ function updateNight(dt) {
       hemi.intensity *= 1 - 0.4 * md; hemi.color.lerp(wxCol.set(0x5a6ee0), md); hemi.groundColor.lerp(wxCol.set(0x1a2448), md);
       sun.intensity = L(sun.intensity, 1.15, md); sun.color.lerp(wxCol.set(0x9fb8ff), md); sun.position.lerp(MOON_KEY, md);
       scene.fog.color.lerp(wxCol.set(0x080d26), md); scene.fog.near = L(scene.fog.near, 20, md); scene.fog.far = L(scene.fog.far, 78, md);
-      scene.backgroundIntensity *= 1 - 0.6 * md; renderer.toneMappingExposure = L(renderer.toneMappingExposure, 1.15, md);
+      scene.backgroundIntensity *= 1 - 0.6 * md; if (!look.patch) renderer.toneMappingExposure = L(renderer.toneMappingExposure, 1.15, md);
     }
     if (md > 0 && !MOOD_L.parent) scene.add(MOOD_L); if (md > 0 && !MOOD_FILL.parent) scene.add(MOOD_FILL);
     MOOD_L.visible = md > 0; MOOD_FILL.visible = md > 0; MOOD_L.intensity = 4.2 * md; MOOD_FILL.intensity = 0.55 * md;
@@ -2573,7 +2581,7 @@ function syncInd() { document.querySelectorAll('#indOpt button').forEach(b => b.
 $('indOpt').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings.ind = b.dataset.v; saveSettings(settings); syncInd(); audio.blip(2); });
 syncInd();
 // settings: graphics tier (art pass) — Auto picks from the first seconds of FPS; manual picks are saved in pm-perf
-function syncGfx() { const m = look.perf.getMode(); document.querySelectorAll('#gfxOpt button').forEach(b => { b.classList.toggle('on', b.dataset.v === m); if (b.classList.contains('deskOnly')) b.style.display = isMobile ? 'none' : ''; }); const g = $('gfxNow'); if (g) g.textContent = 'Now: ' + ({ low: 'Low', med: 'Medium', high: 'High', ultra: 'Ultra' }[look.tier] || look.tier) + (m === 'auto' ? ' (auto)' : ''); }
+function syncGfx() { const m = look.perf.getMode(); document.querySelectorAll('#gfxOpt button').forEach(b => { b.classList.toggle('on', b.dataset.v === m); if (b.classList.contains('deskOnly')) b.style.display = isMobile ? 'none' : ''; }); const g = $('gfxNow'); if (g) g.textContent = 'Now: ' + ({ low: 'Low', med: 'Medium', high: 'High (phone)', ultra: 'Ultra' }[look.tier] || look.tier) + (m === 'auto' ? ' (auto)' : ''); }
 $('gfxOpt').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; look.perf.setMode(b.dataset.v); syncGfx(); audio.blip(2); });
 look.perf.onTierChange(() => syncGfx()); syncGfx();
 function loop(now) {

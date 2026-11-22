@@ -1,6 +1,6 @@
 // Art pass (Nov 14, 2026): Squid's "Golden Hour Pastel" (preset B) applied to the live game, driven by the perf.js auto tiers.
 // perf tier -> look (Act 3 art pass / phone-safe STYLE-GUIDE §5):
-//   low  = no post, grade baked into lights/sky/fog, CSS vignette, 1024 PCF shadows, 12 motes, fog 30–70
+//   low  = no post, grade baked into lights/sky/fog, CSS vignette, 512 PCF shadows (crew casters only), 12 motes, fog 30–70
 //   med  = grade pass only (no bloom), no shadows, 24 motes, fog 30–95
 //   high = half-res bloom + grade, 1024 PCFSoft sun shadow, 24 motes, pixel ratio 1.75 (phones cap 1.5), fog 30–95
 //   ultra (desktop only) = 2048 map (never 4096), full bloom, MSAA 4, 46 motes, fog 30–95
@@ -56,7 +56,7 @@ function lerpPreset(a, b, t) {
 const C = h => new THREE.Color(h);
 const QMAP = { low: 'low', med: 'medium', high: 'medium', ultra: 'high' }; // phone High = Medium column (look-targets); LOOKS.high is still the phone-safe half-res / 1024 / 24-mote row
 const LOOKS = {
-  low:   { post: false, bloom: false, bloomScale: 0, grade: false, msaa: 0, shadow: 1024, motes: 12, fogFar: 70, vignette: true, bake: true },
+  low:   { post: false, bloom: false, bloomScale: 0, grade: false, msaa: 0, shadow: 512, motes: 12, fogFar: 70, vignette: true, bake: true },
   med:   { post: true, bloom: false, bloomScale: 0, grade: true, msaa: 0, shadow: 0, motes: 24, fogFar: 95 },
   high:  { post: true, bloom: true, bloomScale: 0.5, grade: true, msaa: 0, shadow: 1024, motes: 24, fogFar: 95 },
   ultra: { post: true, bloom: true, bloomScale: 1, grade: true, msaa: 4, shadow: 2048, motes: 46, fogFar: 95 },
@@ -131,19 +131,21 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   const cv = renderer.domElement; cv.parentNode && cv.parentNode.insertBefore(vig, cv.nextSibling);
 
   // ---- composer + shadows per tier ----
-  let L = LOOKS.med, tierName = null, composer = null, bloomPass = null;
+  let L = LOOKS.med, tierName = null, composer = null, bloomPass = null, gradePass = null;
   let postLockedOff = false;
   function disablePost() {
     postLockedOff = true;
-    if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); composer = null; bloomPass = null; }
+    if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); composer = null; bloomPass = null; gradePass = null; }
   }
   function buildComposer() {
-    if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); composer = null; }
+    if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); composer = null; bloomPass = null; gradePass = null; }
     if (postLockedOff || !L.post) return;
     const fx = { quality: { bloom: L.bloom, bloomScale: L.bloomScale || 0.5, grade: L.grade, msaa: L.msaa } };
-    composer = createComposerB(renderer, scene, camera, fx);
+    composer = createComposerB(renderer, scene, camera, fx, Pnow || B);
     bloomPass = composer && composer.passes.find(p => p.name === 'presetB-bloom');
+    gradePass = composer && composer.passes.find(p => p.name === 'presetB-grade');
     if (bloomPass && L.bloomScale < 1) { const s0 = bloomPass.setSize.bind(bloomPass), k = L.bloomScale; bloomPass.setSize = (w, h) => s0(Math.max(64, w * k), Math.max(64, h * k)); }
+    applyLookGrade();
     resize();
   }
   function applyTier(name) {
@@ -154,8 +156,10 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     if (sh) { const S = B.shadow, sc = sun.shadow.camera; Object.assign(sc, S.camera); sc.updateProjectionMatrix(); sun.shadow.bias = S.bias; sun.shadow.normalBias = S.normalBias; sun.shadow.radius = S.radius;
       if (sun.shadow.mapSize.x !== L.shadow) { sun.shadow.mapSize.set(L.shadow, L.shadow); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } } }
     scene.traverse(o => { if (o.material) for (const m of (Array.isArray(o.material) ? o.material : [o.material])) if (m) m.needsUpdate = true; });
+    refreshShadowFlags(scene);
     buildComposer();
     applyLookBloom();
+    applyLookGrade();
   }
   function resize() {
     if (!composer) return; const sz = renderer.getSize(new THREE.Vector2()), pr = renderer.getPixelRatio();
@@ -177,7 +181,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     if (o.userData.pastel != null) s = Math.min(s, o.userData.pastel); // playable crew: barely lifted so the bee keeps its stripes
     if (o.userData.terrain) s = 0; // STYLE-GUIDE: terrain and water get no lift (level terrain is authored in B grass tones)
     if (o.isMesh && o.material) { if (s > 0) for (const m of (Array.isArray(o.material) ? o.material : [o.material])) styleMat(m, s);
-      if (shadows && !o.userData._sh) { o.userData._sh = 1; const solid = OK(Array.isArray(o.material) ? o.material[0] : o.material); o.receiveShadow = solid; o.castShadow = solid && !o.userData.terrain && !o.isInstancedMesh; } }
+      if (shadows) { const solid = OK(Array.isArray(o.material) ? o.material[0] : o.material); o.receiveShadow = solid; o.castShadow = solid && canCastShadow(o); } }
     for (const c of o.children) walk(c, s, shadows);
   }
   /** Style everything currently visible (call after a level or skin is built; cheap when nothing is new). */
@@ -189,6 +193,33 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   const tc = new THREE.Color(), dirB = SUN_B.clone(), dirO = new THREE.Vector3(), LT = C(B.quality.low.bakeGrade.lightTint), ST = C(B.quality.low.bakeGrade.skyTint), HZ = C(B.grade.hazeColor);
   const cHS = C(B.hemi.sky), cHG = C(B.hemi.ground), cSun = C(B.sun.color), cFog = C(B.fog.color);
   const qBucket = () => QMAP[tierName] || 'medium';
+  function canCastShadow(o) {
+    if (!o || o.userData.terrain || o.isInstancedMesh || o.userData.noCast) return false;
+    // Low: only the playable crew / animals cast, so the 512 map stays cheap on L17–19
+    if (tierName === 'low') return !!o.userData.isAnimal;
+    return true;
+  }
+  function refreshShadowFlags(root = scene) {
+    root.traverse(o => {
+      if (!o.isMesh && !o.isInstancedMesh) return;
+      const solid = OK(Array.isArray(o.material) ? o.material[0] : o.material);
+      o.receiveShadow = !!solid;
+      o.castShadow = !!solid && canCastShadow(o);
+    });
+  }
+  function applyLookGrade() {
+    if (!gradePass || !gradePass.uniforms) return;
+    const g = (Pnow && Pnow.grade) || B.grade, u = gradePass.uniforms;
+    if (u.sat && g.saturation != null) u.sat.value = g.saturation;
+    if (u.contrast && g.contrast != null) u.contrast.value = g.contrast;
+    if (u.bright) u.bright.value = g.brightness || 0;
+    if (u.lift) u.lift.value.set(g.lift);
+    if (u.gain) u.gain.value.set(g.gain);
+    if (u.vignette && g.vignette != null) u.vignette.value = g.vignette;
+    if (u.vigColor) u.vigColor.value.set(g.vignetteColor);
+    if (u.haze && g.haze != null) u.haze.value = g.haze;
+    if (u.hazeColor) u.hazeColor.value.set(g.hazeColor);
+  }
   function applyLookBloom() {
     if (!bloomPass) return;
     const bq = patchLook && patchLook.bloom_per_quality && patchLook.bloom_per_quality[qBucket()];
@@ -206,6 +237,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     const bake = (P.quality && P.quality.low && P.quality.low.bakeGrade) || B.quality.low.bakeGrade;
     LT.set(bake.lightTint); ST.set(bake.skyTint); HZ.set(P.grade.hazeColor);
     applyLookBloom();
+    applyLookGrade();
   }
   function clearFills() { for (const f of fills) { f.light.removeFromParent(); } fills.length = 0; }
   function setupFills(look, opts = {}) {
@@ -282,6 +314,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
       if (f.follow && p) f.light.position.set(p.x, p.y + 2.2, p.z + 1.6);
     }
     motes.visible = !cullWorldFx() && k > 0.25 && motes.count > 0; moteMat.opacity = 0.9 * Math.min(1, k * 1.5); if (motes.visible) updateMotes(t, heightAt);
+    if (owned && P.exposure != null) renderer.toneMappingExposure = P.exposure;
   }
   renderer.info.autoReset = false; // count every pass of a frame (composer + shadow), reset once per frame below
   function render() { renderer.info.reset(); if (composer) composer.render(); else renderer.render(scene, camera); }

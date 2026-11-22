@@ -63,8 +63,9 @@ export const MAPS3 = {
       B.wall(-13, 4, 10.4, 8.6, 5.0, { bot: 3.8, look: 'cliff' }); // cooler inner soffit
       B.deco('act3/ember-ridge/cave-entrance', -8.6, 2, 3.4, { yaw: -Math.PI / 2 });
       B.deco('act3/ember-ridge/rock-tall', -17, 1.5, 2.2); B.deco('act3/ember-ridge/rock-large', -16.5, 7, 1.6);
-      B.gift('bubble', -14, 2, 0.6);
+      B.gift('bubble', -11.5, 2, 0.6); // inward so the follow camera can sit at the mouth and still see the gift + stump
       B.gearStump(-7, 3.2, { label: 'Gear stump' });
+      B.camRoom(-19, -1.2, -6.2, 9.2, { anchor: [-7.2, 2, 2.2], mix: 0.7 });
       // A · teach the pouch: the creek fills it, one bubble puts out ember A (door A opens)
       B.checkpoint(0, -1);
       B.escort('cub', 2.5, -3);
@@ -121,7 +122,7 @@ export const MAPS3 = {
       [[9.5, -6, 'tree-fall', 4.2], [10, 12, 'tree-crooked', 4.6], [-11, 20, 'tree-simple-fall', 4.4], [-13, 34, 'tree-fall', 4.8], [9.5, 45, 'tree-crooked', 5], [-12, 48, 'tree-simple-fall', 4.4], [9.5, 70, 'tree-fall', 4.6], [-13, 80, 'tree-crooked', 5], [9.6, 82, 'tree-simple-fall', 4.2]].forEach(([x, z, k, h], i) => B.deco('act3/ember-ridge/' + k, x, z, h, { yaw: i * 2.1 }));
       [[-10, 12, 'rock-large', 1.6], [9.5, 20, 'rock-tall', 2.2], [-10, 42, 'stump-old', 1.0], [9.5, 56, 'rock-large', 1.4], [-4.8, 63.5, 'log', 0.8], [-5.2, 79, 'stump-old', 1.0]].forEach(([x, z, k, h], i) => B.deco('act3/ember-ridge/' + k, x, z, h, { yaw: i * 1.3 }));
       B.deco('act3/ember-ridge/season-bell', 4.6, 39.2, 1.6, { yaw: Math.PI });
-      B.puzzle('pouch', 'Bubble Pouch', ['scout'], ['safe:emA'], { hint: '🪽 Find the Bubble Pouch in the cool cave · dip low over the creek to fill it · face the sparks and press G (or Use) to puff them out.', track: [['gift:bubble', 'any', 'find the Bubble Pouch in the cool cave', -14, 2, 0.6], ['safe:emA', 'scout', 'fill it in the creek, then puff ember A', 0, 13]] });
+      B.puzzle('pouch', 'Bubble Pouch', ['scout'], ['safe:emA'], { hint: '🪽 Find the Bubble Pouch in the cool cave · dip low over the creek to fill it · face the sparks and press G (or Use) to puff them out.', track: [['gift:bubble', 'any', 'find the Bubble Pouch in the cool cave', -11.5, 2, 0.6], ['safe:emA', 'scout', 'fill it in the creek, then puff ember A', 0, 13]] });
       B.puzzle('sparks', 'Windy shelf', ['trickster'], ['safe:emB'], { hint: '🐾 Crank the wind vane — the wind blows EAST and the sparks fly off the path for 6 seconds. Run!', track: [['safe:emB', 'trickster', 'crank the vane, then cross while the sparks are blown away', 5, 26]] });
       B.puzzle('dew', 'Season dew', ['scout'], ['safe:emC'], { hint: '🪽 Fly into the 🌱 spring bell — dew dims the hot grass so you and the cub can cross.', track: [['spring', 'scout', 'ring the 🌱 spring bell', 0, 40, 2]] });
       B.puzzle('dam', 'Log dam', ['bruiser', 'trickster', 'scout'], ['logD', 'safe:emD'], { hint: '🐻 Shove the log into the gully slot → the puddle fills · 🐾 crank vane D · 🪽 refill the pouch in the puddle and puff any sparks left.', track: [['logD', 'bruiser', 'shove the log west into the gully slot', -3, 62], ['safe:emD', 'trickster', 'crank vane D (or 🪽 puff the sparks)', 5, 64]] });
@@ -153,7 +154,8 @@ export const MAPS3 = {
       B.gearStump(-4, 10, { label: 'Gear stump' });
       B.hide('log', -4, 12, 1.4, 1.4);
       // sluices (Trickster) — custom mill pond: dry / 2.4 m / 5.0 m
-      B.pond('millPond', -14, 10, 14, 67.5, { level: 'mid', heights: { low: 0, mid: 2.4, high: 5.0 } });
+      B.pond('millPond', -14, 10, 14, 67.5, { level: 'mid', heights: { low: 0, mid: 2.4, high: 5.0 }, holes: [[3.0, 41.2, 14, 49.2]] });
+      B.wall(8, 45.2, 8.8, 6.4, 0.35, { look: 'stone' }); // dry footing at the millstone / waterwheel so the mechanic camera is not in the water
       B.sluice('millPond', 6, 8, 'high', { label: 'Sluice · high water' });
       B.sluice('millPond', 0, 8, 'mid', { label: 'Sluice · mid water' });
       B.sluice('millPond', -6, 8, 'low', { label: 'Sluice · low water' });
@@ -483,6 +485,7 @@ export const MAPS3 = {
     terraces: [[28, 36, 4], [58, 66, 4]], // floor 0 → melt shelf 4 → bell hill 8
     crew: 'Bee · Raccoon · Bear', friend: 'fawn', loanGear: 'all', masterStart: 'A', windWalk: true,
     escortGoal: { z: 85, sig: 'fawn' }, bellLearnZ: 4,
+    petalCol: 0xc8c6e8, petalCenter: 0xeef0fb,
     windYaw: { down: Math.PI, up: 0 },
     windText: { up: '🌬️ The wind turns — it blows NORTH, up the valley', down: '🌬️ The wind turns — it blows SOUTH, down the valley' },
     banter: {
@@ -498,8 +501,8 @@ export const MAPS3 = {
       ['sig:foxPl', 'A fox kit is in the den, if you want to help.'],
     ],
     build(B) {
-      B.home(0, -5); B.lane(-18, 16, -10, 92, { look: 'hedge' });
-      const hedge = (x, z0, z1) => { for (let z = z0; z < z1 - 0.01; z += 2) { const L = Math.min(2, z1 - z), zc = z + L / 2; B.wall(x, zc, 0.6, L + 0.05, 2.4, { look: 'hedge' }); B.wall(x, zc, 0.6, L + 0.05, 30, { bot: 2.3, hidden: true }).s.off = false; } };
+      B.home(0, -5); B.lane(-18, 16, -10, 92, { look: 'snow' });
+      const hedge = (x, z0, z1) => B.hedgeRun(x, z0, z1, { look: 'snow' });
       // corridor hedges, with an east den gap (z 8–24) and a west seed-bank gap (z 40–56)
       hedge(-6.5, -10, 28); hedge(-6.5, 28, 40); hedge(-6.5, 56, 92);
       hedge(6.5, -10, 8); hedge(6.5, 24, 50); hedge(6.5, 58, 92);
@@ -564,8 +567,12 @@ export const MAPS3 = {
       P(-3, 82, 0.9); P(3, 82, 0.9);
       // dressing (CC0 Kenney Holiday + Nature, built ice)
       const snow = (k, x, z, h, yaw) => B.deco('act3/thaw-valley/' + k, x, z, h, { yaw: yaw || 0 });
-      [[-5, -7, 'kenney-platformer-tree-pine-snow', 4.4], [5.2, -8, 'kenney-holiday-tree-snow-a', 4.2], [11, 10, 'kenney-platformer-tree-snow', 4.6], [15, 14, 'kenney-holiday-tree-snow-b', 4.0], [-14, 38, 'kenney-holiday-tree-snow-c', 4.4], [-16, 52, 'kenney-platformer-tree-pine-snow-small', 3.2], [5.4, 62, 'kenney-holiday-tree-snow-a', 4.2], [-5.4, 88, 'kenney-platformer-tree-pine-snow', 4.6], [5.4, 88, 'kenney-holiday-tree-snow-b', 4.2]].forEach(([x, z, k, h], i) => snow(k, x, z, h, i * 1.3));
-      [[-5, 12, 'kenney-holiday-snow-pile', 1.1], [10, 22, 'built-melting-snow', 1.0], [-15, 44, 'kenney-holiday-snow-flat', 0.7], [5.2, 48, 'built-ice-chunk', 0.8], [-4, 74, 'kenney-holiday-snow-pile', 1.0]].forEach(([x, z, k, h], i) => { const H = snow(k, x, z, h, i * 0.8); H.userData.winterScale = true; });
+      // repeat 3+ of the same keys so decorateProps can instance them (look-target instancing)
+      [[-5, -7, 'kenney-platformer-tree-pine-snow', 4.4], [11, 10, 'kenney-platformer-tree-pine-snow', 4.6], [-5.4, 88, 'kenney-platformer-tree-pine-snow', 4.6],
+        [5.2, -8, 'kenney-holiday-tree-snow-a', 4.2], [5.4, 62, 'kenney-holiday-tree-snow-a', 4.2], [-14, 38, 'kenney-holiday-tree-snow-a', 4.4],
+        [15, 14, 'kenney-holiday-tree-snow-b', 4.0], [5.4, 88, 'kenney-holiday-tree-snow-b', 4.2], [-16, 52, 'kenney-holiday-tree-snow-b', 3.6]].forEach(([x, z, k, h], i) => snow(k, x, z, h, i * 1.3));
+      [[-5, 12, 'kenney-holiday-snow-pile', 1.1], [10, 22, 'kenney-holiday-snow-pile', 1.0], [-4, 74, 'kenney-holiday-snow-pile', 1.0],
+        [-15, 44, 'kenney-holiday-snow-pile', 0.9], [5.2, 48, 'kenney-holiday-snow-pile', 0.9]].forEach(([x, z, k, h], i) => { const H = snow(k, x, z, h, i * 0.8); H.userData.winterScale = true; });
       B.puzzle('bell', 'Learn the Master Bell', ['scout', 'trickster', 'bruiser'], ['bellLearn'], { hint: 'Walk north around the first creek. The three icons on the post match the big hill bell — A is winter, night, and a north wind.', track: [['bellLearn', 'any', 'walk north around the creek', 0, 4]] });
       B.puzzle('fox', 'Fox lure', ['trickster'], ['foxPl'], { hint: '🐾 Stay in state A (snow hides your smell). Stand by the plate and ping the Echo Whistle so the fox walks onto it.', track: [['foxPl', 'trickster', 'ping the whistle by the fox plate', 8, 16]] });
       B.puzzle('melt', 'Melt flood', ['trickster', 'scout'], ['grown:sV', 'lvV'], { hint: 'Ring the bell to B (spring and day). 🐾 plant the seed, 🪽 water it, then climb the vine and pull the lever.', track: [['planted:sV', 'trickster', 'plant the vine seed in spring', -12, 46], ['grown:sV', 'scout', 'water the seed from the drip or with the pouch', -12, 46], ['lvV', 'trickster', 'climb the vine and pull the lever', -8, 56]] });
