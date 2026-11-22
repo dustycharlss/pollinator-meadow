@@ -3827,5 +3827,229 @@
     "text": "Allow playing with friends (online)",
     "fileStem": "menu/settings.online.allow",
     "durationSec": 2.151
+  },
+  {
+    "id": "lobby.cleared",
+    "group": "lobby",
+    "text": "Level cleared!",
+    "fileStem": "lobby/lobby.cleared",
+    "durationSec": 1.144
+  },
+  {
+    "id": "lobby.waitingHost",
+    "group": "lobby",
+    "text": "Waiting for the host…",
+    "fileStem": "lobby/lobby.waitingHost",
+    "durationSec": 1.493
+  },
+  {
+    "id": "lobby.starting.level",
+    "group": "lobby",
+    "text": "Starting the level in 3…",
+    "fileStem": "lobby/lobby.starting.level",
+    "durationSec": 1.856
+  },
+  {
+    "id": "lobby.cleared.training_garden",
+    "group": "lobby",
+    "text": "Training Garden cleared!",
+    "fileStem": "lobby/lobby.cleared.training_garden",
+    "durationSec": 1.506
+  },
+  {
+    "id": "lobby.cleared.sunny_hollow",
+    "group": "lobby",
+    "text": "Sunny Hollow cleared!",
+    "fileStem": "lobby/lobby.cleared.sunny_hollow",
+    "durationSec": 1.464
+  },
+  {
+    "id": "lobby.cleared.creek_bend",
+    "group": "lobby",
+    "text": "Creek Bend cleared!",
+    "fileStem": "lobby/lobby.cleared.creek_bend",
+    "durationSec": 1.438
+  },
+  {
+    "id": "lobby.cleared.moon_meadow",
+    "group": "lobby",
+    "text": "Moon Meadow cleared!",
+    "fileStem": "lobby/lobby.cleared.moon_meadow",
+    "durationSec": 1.315
+  },
+  {
+    "id": "lobby.cleared.log_jam",
+    "group": "lobby",
+    "text": "Log Jam cleared!",
+    "fileStem": "lobby/lobby.cleared.log_jam",
+    "durationSec": 1.36
+  },
+  {
+    "id": "lobby.cleared.picnic_lawn",
+    "group": "lobby",
+    "text": "Picnic Lawn cleared!",
+    "fileStem": "lobby/lobby.cleared.picnic_lawn",
+    "durationSec": 1.448
+  },
+  {
+    "id": "lobby.cleared.cliff_orchard",
+    "group": "lobby",
+    "text": "Cliff Orchard cleared!",
+    "fileStem": "lobby/lobby.cleared.cliff_orchard",
+    "durationSec": 1.523
+  },
+  {
+    "id": "lobby.cleared.windy_rise",
+    "group": "lobby",
+    "text": "Windy Rise cleared!",
+    "fileStem": "lobby/lobby.cleared.windy_rise",
+    "durationSec": 1.407
+  },
+  {
+    "id": "lobby.cleared.festival_glade",
+    "group": "lobby",
+    "text": "Festival Glade cleared!",
+    "fileStem": "lobby/lobby.cleared.festival_glade",
+    "durationSec": 1.667
+  },
+  {
+    "id": "lobby.cleared.trailhead_trials",
+    "group": "lobby",
+    "text": "Trailhead Trials cleared!",
+    "fileStem": "lobby/lobby.cleared.trailhead_trials",
+    "durationSec": 1.608
+  },
+  {
+    "id": "lobby.cleared.sunbeam_grove",
+    "group": "lobby",
+    "text": "Sunbeam Grove cleared!",
+    "fileStem": "lobby/lobby.cleared.sunbeam_grove",
+    "durationSec": 1.547
+  },
+  {
+    "id": "lobby.cleared.mill_pond",
+    "group": "lobby",
+    "text": "Mill Pond cleared!",
+    "fileStem": "lobby/lobby.cleared.mill_pond",
+    "durationSec": 1.324
+  },
+  {
+    "id": "lobby.cleared.bramble_patch",
+    "group": "lobby",
+    "text": "Bramble Patch cleared!",
+    "fileStem": "lobby/lobby.cleared.bramble_patch",
+    "durationSec": 1.578
+  },
+  {
+    "id": "lobby.cleared.weathervane_hill",
+    "group": "lobby",
+    "text": "Weathervane Hill cleared!",
+    "fileStem": "lobby/lobby.cleared.weathervane_hill",
+    "durationSec": 1.633
+  },
+  {
+    "id": "lobby.cleared.hornet_hedge",
+    "group": "lobby",
+    "text": "Hornet Hedge cleared!",
+    "fileStem": "lobby/lobby.cleared.hornet_hedge",
+    "durationSec": 1.398
+  },
+  {
+    "id": "lobby.cleared.owl_wood",
+    "group": "lobby",
+    "text": "Owl Wood cleared!",
+    "fileStem": "lobby/lobby.cleared.owl_wood",
+    "durationSec": 1.444
+  },
+  {
+    "id": "lobby.cleared.frost_hollow",
+    "group": "lobby",
+    "text": "Frost Hollow cleared!",
+    "fileStem": "lobby/lobby.cleared.frost_hollow",
+    "durationSec": 1.498
+  },
+  {
+    "id": "lobby.cleared.backyard_split",
+    "group": "lobby",
+    "text": "Backyard Split cleared!",
+    "fileStem": "lobby/lobby.cleared.backyard_split",
+    "durationSec": 1.614
+  },
+  {
+    "id": "lobby.cleared.ember_ridge",
+    "group": "lobby",
+    "text": "Ember Ridge cleared!",
+    "fileStem": "lobby/lobby.cleared.ember_ridge",
+    "durationSec": 1.365
+  },
+  {
+    "id": "lobby.cleared.flooded_mill",
+    "group": "lobby",
+    "text": "Flooded Mill cleared!",
+    "fileStem": "lobby/lobby.cleared.flooded_mill",
+    "durationSec": 1.431
+  },
+  {
+    "id": "lobby.cleared.night_market",
+    "group": "lobby",
+    "text": "Night Market cleared!",
+    "fileStem": "lobby/lobby.cleared.night_market",
+    "durationSec": 1.584
+  },
+  {
+    "id": "lobby.cleared.mirror_caves",
+    "group": "lobby",
+    "text": "Mirror Caves cleared!",
+    "fileStem": "lobby/lobby.cleared.mirror_caves",
+    "durationSec": 1.402
+  },
+  {
+    "id": "lobby.cleared.storm_orchard",
+    "group": "lobby",
+    "text": "Storm Orchard cleared!",
+    "fileStem": "lobby/lobby.cleared.storm_orchard",
+    "durationSec": 1.703
+  },
+  {
+    "id": "lobby.cleared.thaw_valley",
+    "group": "lobby",
+    "text": "Thaw Valley cleared!",
+    "fileStem": "lobby/lobby.cleared.thaw_valley",
+    "durationSec": 1.308
+  },
+  {
+    "id": "lobby.cleared.grand_garden",
+    "group": "lobby",
+    "text": "Grand Garden cleared!",
+    "fileStem": "lobby/lobby.cleared.grand_garden",
+    "durationSec": 1.503
+  },
+  {
+    "id": "lobby.cleared.starheart_summit",
+    "group": "lobby",
+    "text": "Starheart Summit cleared!",
+    "fileStem": "lobby/lobby.cleared.starheart_summit",
+    "durationSec": 1.686
+  },
+  {
+    "id": "lobby.cleared.practice_yard",
+    "group": "lobby",
+    "text": "Practice Yard cleared!",
+    "fileStem": "lobby/lobby.cleared.practice_yard",
+    "durationSec": 1.755
+  },
+  {
+    "id": "lobby.cleared.meadow_hub",
+    "group": "lobby",
+    "text": "Meadow Hub cleared!",
+    "fileStem": "lobby/lobby.cleared.meadow_hub",
+    "durationSec": 1.475
+  },
+  {
+    "id": "lobby.cleared.act3_lab",
+    "group": "lobby",
+    "text": "Practice Yard cleared!",
+    "fileStem": "lobby/lobby.cleared.act3_lab",
+    "durationSec": 1.776
   }
 ]

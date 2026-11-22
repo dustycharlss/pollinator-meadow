@@ -1514,7 +1514,7 @@ export function createZones(scene, host) {
         const w = L2W(x + i * 0.85, z + i * 0.2), mk = info.model || kind, G = (MODEL[mk] || MODEL.cub)();
         G.scale.multiplyScalar(info.scale || 1); G.position.set(w.x, w.y, w.z); group.add(G); babyModel(G, mk);
         const el = document.createElement('div'); el.className = 'a2Mark'; document.body.appendChild(el);
-        S.escorts.push({ kind, info, G, el, x: w.x, y: w.y, z: w.z, yaw: o.yaw || 0, home: { x: w.x, y: w.y, z: w.z }, called: false, following: false, hide: false, ph: Math.random() * 6, i });
+        S.escorts.push({ kind, info, G, el, x: w.x, y: w.y, z: w.z, yaw: o.yaw || 0, home: { x: w.x, y: w.y, z: w.z }, called: false, following: false, hide: false, leadBody: null, ph: Math.random() * 6, i });
       }
     },
     cup(s, x, z, o = {}) {
@@ -2150,7 +2150,7 @@ export function createZones(scene, host) {
   function callEscort() {
     if (ctx.isNetClient?.()) { emitNet('intent', { intent: 'call', body: ctx.cur() }); return true; }
     const S = a2; if (!S || !S.escorts.length) return false;
-    for (const b of S.escorts) { b.called = true; b.following = true; b.hide = false; }
+    const leadId = ctx.cur(); for (const b of S.escorts) { b.called = true; b.following = true; b.hide = false; b.leadBody = leadId; }
     setSig('called'); tst('📣 Come on, little one! The baby follows you', 2200); ctx.audio?.sample?.('act3/baby-call-chirp', 0.5); setTimeout(() => ctx.audio?.sample?.('act3/baby-follow-happy', 0.45), 420);
     return true;
   }
@@ -2258,22 +2258,23 @@ export function createZones(scene, host) {
   }
   function updEscort(dt, cam, p, cur) {
     const S = a2; if (!S || !S.escorts.length) return;
-    const leadYg = ctx.heightAt(p.x, p.z), leadAir = (p.y - leadYg) > 1.4;
     const lantern = gearOn('lantern');
     const goal = recipe && recipe.escortGoal;
     for (let i = 0; i < S.escorts.length; i++) {
-      const b = S.escorts[i], lead = (i > 0 && S.escorts[i - 1].kind === b.kind && S.escorts[i - 1].following) ? S.escorts[i - 1] : p;
+      const b = S.escorts[i], leadP = (b.leadBody && posOfId(b.leadBody)) || p;
+      const leadYg = ctx.heightAt(leadP.x, leadP.z), leadAir = (leadP.y - leadYg) > 1.4;
+      const lead = (i > 0 && S.escorts[i - 1].kind === b.kind && S.escorts[i - 1].following) ? S.escorts[i - 1] : leadP;
       if (goal && goal.z != null && (b.z - A.z) >= goal.z) b.atGoal = true;
       const threat = enemyNearBaby(b, 6.2);
       const inCover = hidden(b, 'log') || hidden(b, 'trunk') || hidden(b, 'canopy');
       if (b.following && threat && !inCover) { if (!b.hide) a2.hidEver = true; if (!b.hide) tst(`${b.info.em} The ${b.info.name} hides!`, 1600); b.hide = true; }
       else if (b.hide && !threat) { b.hide = false; ctx.audio?.sample?.('act3/baby-follow-happy', 0.4); }
-      const darkOk = !b.info.darkOnly || !lantern || flatD(b, (idOfCls('scout') && posOfId(idOfCls('scout'))) || p) > 5.5;
+      const darkOk = !b.info.darkOnly || !lantern || flatD(b, (idOfCls('scout') && posOfId(idOfCls('scout'))) || leadP) > 5.5;
       let spd = 0;
       if (b.following && !b.hide && !leadAir && darkOk) {
         const mates = S.escorts.filter(q => q.kind === b.kind), slot = Math.max(0, mates.indexOf(b));
         const spread = (slot - (mates.length - 1) / 2) * 0.9;
-        let tx = p.x + spread, tz = p.z;
+        let tx = lead.x + (lead === leadP ? spread : 0), tz = lead.z;
         const wet = S.ponds.some(pd => pd.level === 'mid' || pd.level === 'high');
         if (goal && goal.z != null && wet && p.z < A.z + goal.z - 0.5) {
           const cap = (S.grates || []).reduce((m, gtr) => Math.min(m, gtr.z0 - 0.2), A.z + goal.z - 0.4);
@@ -2864,7 +2865,21 @@ export function createZones(scene, host) {
       if (h.model) h.model.traverse(m => { const n = (m.name || '').toLowerCase(); if (n === 'highlight' || n === 'on') m.visible = !!h.inside; });
       const v = new THREE.Vector3(h.x, h.y + 3.6, h.z); v.project(cam); const show = !cover && v.z < 1 && d < 30;
       h.el.style.display = show ? 'block' : 'none';
-      if (show) { h.el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px'; h.el.style.top = ((1 - v.y) / 2 * innerHeight) + 'px'; h.el.textContent = (h.open ? '' : '🔒 ') + h.label; }
+      if (show) {
+        h.el.style.left = ((v.x + 1) / 2 * innerWidth) + 'px';
+        h.el.style.top = ((1 - v.y) / 2 * innerHeight) + 'px';
+        let tx = h.el.querySelector('.hubLblTx');
+        if (!tx) { h.el.textContent = ''; tx = document.createElement('span'); tx.className = 'hubLblTx'; h.el.append(tx); }
+        tx.textContent = (h.open ? '' : '🔒 ') + h.label;
+        const startPad = /^(map|lab|bell|trail)$/.test(h.key) || /level|trail|garden|yard/i.test(h.label || '');
+        let badge = h.el.querySelector('.olHostOnlyBadge');
+        if (ctx.isNetClient?.() && startPad) {
+          if (!badge) { badge = document.createElement('img'); badge.className = 'olHostOnlyBadge'; badge.alt = 'Only the host can start a level'; h.el.append(badge); }
+          const src = (import.meta.env.BASE_URL || './') + 'ui/online/host/badge-host-only.png';
+          if (badge.getAttribute('src') !== src) badge.src = src;
+          h.el.classList.add('olHostOnlyCtrl');
+        } else if (badge) { badge.remove(); h.el.classList.remove('olHostOnlyCtrl'); }
+      }
       if (d < h.r && !h.inside) { h.inside = true; introQ = []; msgT = t; if (h.open) ctx.onHub?.(h.key); else tst(h.lockTx || '🔒 Not open yet', 3000); }
       else if (d > h.r + 1.2) h.inside = false;
     }
@@ -3438,7 +3453,7 @@ export function createZones(scene, host) {
     for (const id of ids) { const b = bodySnap(id); if (b) bodies[id] = b; }
     const S = a2;
     const enemies = S ? S.en.map(e => ({ id: e.id, kind: e.kind, x: e.x - A.x, z: e.z - A.z, y: e.y - baseY, yaw: e.yaw || 0, st: e.st, sus: e.sus || 0 })) : [];
-    const escorts = S ? S.escorts.map((b, i) => ({ i, kind: b.kind, x: b.x - A.x, y: b.y - baseY, z: b.z - A.z, yaw: b.yaw || 0, called: !!b.called, following: !!b.following, hide: !!b.hide })) : [];
+    const escorts = S ? S.escorts.map((b, i) => ({ i, kind: b.kind, x: b.x - A.x, y: b.y - baseY, z: b.z - A.z, yaw: b.yaw || 0, called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })) : [];
     const movers = [];
     if (S) {
       (S.logs || []).forEach((l, i) => movers.push({ id: i, kind: 'log', x: l.x - A.x, y: (l.y || 0) - baseY, z: l.z - A.z, yaw: l.yaw || 0 }));
@@ -3526,6 +3541,7 @@ export function createZones(scene, host) {
           if (s.yaw != null) b.yaw = s.yaw;
           if (s.called != null) b.called = !!s.called;
           if (s.following != null) b.following = !!s.following;
+          if (s.leadBody !== undefined) b.leadBody = s.leadBody || null;
           if (s.hide != null) b.hide = !!s.hide;
           if (b.G) b.G.position.set(b.x, b.y, b.z);
         }
@@ -3650,7 +3666,7 @@ export function createZones(scene, host) {
     setAct2Night: v => { if (a2) setNightA2(!!v); },
     flagBack, callEscort, throwToolAt: (kind, lx, lz) => throwTool(kind, A.x + lx, A.z + lz),
     placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); b.hide = false; b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
-    escort: () => a2 ? a2.escorts.map(b => ({ kind: b.kind, glb: b.G.userData.babyGlb || null, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), y: +b.y.toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })) : [], heldTool: () => a2 ? a2.heldTool : null,
+    escort: () => a2 ? a2.escorts.map(b => ({ kind: b.kind, glb: b.G.userData.babyGlb || null, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), y: +b.y.toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })) : [], escortLead: () => a2 ? a2.escorts.map(b => ({ x: b.x, y: b.y, z: b.z, called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })) : [], heldTool: () => a2 ? a2.heldTool : null,
     moody() { return !!(a2 && recipe && recipe.moody) ? !!AA().night : null; },
     timeLocked: () => !!(a2 && a2.master), // S4: Master Bell owns clock.t (dusk/night/day) until clear()
     debugBonk(src = 'test') { if (a2) bonk({ name: 'Test' }, src); },
@@ -3662,6 +3678,6 @@ export function createZones(scene, host) {
     gearViz: () => { const V = a2 && a2.gviz; if (!V) return null; const o = {}; for (const k of ['pouch', 'glider', 'sling']) { const m = V[k].children.find(c => c.userData && c.userData.model); const sz = m && m.visible !== false && V[k].visible ? new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3()) : null; o[k] = { shown: V[k].visible, model: !!m, size: sz ? [+sz.x.toFixed(2), +sz.y.toFixed(2), +sz.z.toFixed(2)] : null }; } return o; },
     gearList: () => Object.keys(GEAR_INFO).map(k => ({ k, ...GEAR_INFO[k], has: !!gear[k] })),
     setT: v => { t = +v; }, forcePuzzles, setTiming: k => { timingK = +k > 0 ? +k : 1; }, timing: () => TK(),
-    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, cpPos: a2.cp ? { x: +(a2.cp.x - A.x).toFixed(2), z: +(a2.cp.z - A.z).toFixed(2) } : null, cps: a2.cps.map(c => ({ x: c.x - A.x, z: c.z - A.z, on: !!c.on })), hidEver: !!a2.hidEver, bonkLog: (a2.bonkLog || []).slice(-20), dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0, stayedFar: !!e.stayedFar })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })), time: a2.time || (a2.night ? 'night' : 'day'), windMag: a2.windMag ?? 6, master: a2.master ? { state: a2.master.state, next: a2.master.next, start: a2.master.start, cool: +Math.max(0, (a2.master.coolUntil || 0) - t).toFixed(2) } : null } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
+    gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, cpPos: a2.cp ? { x: +(a2.cp.x - A.x).toFixed(2), z: +(a2.cp.z - A.z).toFixed(2) } : null, cps: a2.cps.map(c => ({ x: c.x - A.x, z: c.z - A.z, on: !!c.on })), hidEver: !!a2.hidEver, bonkLog: (a2.bonkLog || []).slice(-20), dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0, stayedFar: !!e.stayedFar })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })), time: a2.time || (a2.night ? 'night' : 'day'), windMag: a2.windMag ?? 6, master: a2.master ? { state: a2.master.state, next: a2.master.next, start: a2.master.start, cool: +Math.max(0, (a2.master.coolUntil || 0) - t).toFixed(2) } : null } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }
