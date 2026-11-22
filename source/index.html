@@ -2,6 +2,246 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script data-boot-guard>
+(function () {
+  var LIMIT = 20000;
+  var KID = 'Something went wrong loading the meadow';
+  var done = false, errors = [];
+  var lastProgress = Date.now();
+  var timer = null;
+  var failKind = null;
+  var inflight = 0;
+
+  function textOf(x) {
+    if (!x) return '';
+    if (typeof x === 'string') return x;
+    if (x.stack) return String(x.stack);
+    if (x.message) return String(x.message);
+    return String(x);
+  }
+  function fmt(ev, typ) {
+    if (ev && ev.reason) return typ + ': ' + textOf(ev.reason);
+    if (ev && ev.error) return typ + ': ' + textOf(ev.error);
+    if (ev && ev.message) return typ + ': ' + ev.message + (ev.filename ? ' (' + ev.filename + ':' + ev.lineno + ')' : '');
+    return typ + ': ' + textOf(ev);
+  }
+  function details() {
+    return errors.length ? errors.join('\n\n') : 'Timed out after 20 seconds with no progress.';
+  }
+
+  function writeLoadTxt() {
+    var txt = document.getElementById('loadTxt');
+    if (!txt) return;
+    txt.textContent = '';
+    var msg = document.createElement('span');
+    msg.textContent = KID;
+    txt.appendChild(msg);
+    if (!document.getElementById('loadRetryTxt')) {
+      txt.appendChild(document.createTextNode(' '));
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.id = 'loadRetryTxt';
+      b.className = 'loadRetry';
+      b.textContent = 'Retry';
+      txt.appendChild(b);
+    }
+  }
+
+  function showFail(reason, kind) {
+    kind = kind || 'error';
+    if (done && failKind === 'error') return;
+    if (window.__bootFailed && failKind === 'error' && kind !== 'error') return;
+    failKind = kind;
+    window.__bootFailed = true;
+    window.__bootFailKind = kind;
+    if (reason) {
+      var line = textOf(reason);
+      if (line && errors.indexOf(line) < 0) errors.push(line);
+    }
+    var L = document.getElementById('load');
+    var box = document.getElementById('loadFail');
+    var pre = document.getElementById('loadFailText');
+    if (pre) pre.textContent = details();
+    if (L) { L.classList.add('fail'); L.style.opacity = '1'; L.style.pointerEvents = 'auto'; }
+    if (box) box.hidden = false;
+    writeLoadTxt();
+  }
+
+  function hideFailUi() {
+    var L = document.getElementById('load');
+    var box = document.getElementById('loadFail');
+    if (L) L.classList.remove('fail');
+    if (box) box.hidden = true;
+    window.__bootFailed = false;
+    window.__bootFailKind = null;
+    failKind = null;
+  }
+
+  window.__bootOk = function () {
+    if (window.__bootFailed && failKind === 'error') return;
+    if (window.__bootFailed && failKind === 'stall') hideFailUi();
+    done = true;
+    window.__bootReady = true;
+    if (timer) { clearTimeout(timer); timer = null; }
+  };
+  window.__bootFail = function (reason) { showFail(reason, 'error'); };
+  window.__bootProgress = touch;
+
+  function armTimer() {
+    if (timer) clearTimeout(timer);
+    if (done || (window.__bootFailed && failKind === 'error')) return;
+    timer = setTimeout(onStall, LIMIT);
+  }
+  function touch() {
+    if (done || (window.__bootFailed && failKind === 'error')) return;
+    lastProgress = Date.now();
+    armTimer();
+  }
+  function onStall() {
+    if (done || (window.__bootFailed && failKind === 'error')) return;
+    var wait = LIMIT - (Date.now() - lastProgress);
+    if (wait > 50) { timer = setTimeout(onStall, wait); return; }
+    var load = document.getElementById('load');
+    var loadGone = !load || !load.isConnected || load.style.opacity === '0';
+    var playable = document.body && (document.body.classList.contains('inRound') || document.body.classList.contains('inValley'));
+    var title = document.getElementById('title');
+    var titleOn = title && title.classList.contains('on');
+    if (window.__bootReady || window.__game || (loadGone && (playable || titleOn))) {
+      window.__bootOk();
+      return;
+    }
+    // A still-downloading game module is a running load (Retry would abandon it).
+    // Only time out once that script has settled (load or error) or is absent.
+    var pendingMod = false;
+    var scripts = document.querySelectorAll('script[src]');
+    for (var i = 0; i < scripts.length; i++) {
+      var s = scripts[i];
+      var src = s.src || s.getAttribute('src') || '';
+      if (/index-[A-Za-z0-9_-]+\.js/.test(src) && !s.__bootSettled) { pendingMod = true; break; }
+    }
+    if (pendingMod) { armTimer(); return; }
+    showFail('Timed out after 20 seconds with no progress.', 'stall');
+  }
+
+  window.addEventListener('error', function (ev) { if (!done) showFail(fmt(ev, 'Error'), 'error'); });
+  window.addEventListener('unhandledrejection', function (ev) { if (!done) showFail(fmt(ev, 'Unhandled promise rejection'), 'error'); });
+
+  document.addEventListener('load', function () { touch(); }, true);
+  try {
+    var po = new PerformanceObserver(function (list) { if (list.getEntries().length) touch(); });
+    po.observe({ type: 'resource', buffered: true });
+  } catch (e) {}
+
+  function begin() { inflight++; touch(); }
+  function end() { inflight = Math.max(0, inflight - 1); touch(); }
+  try {
+    var _fetch = window.fetch;
+    if (typeof _fetch === 'function') {
+      window.fetch = function () {
+        begin();
+        var p = _fetch.apply(this, arguments);
+        var wrap = function (x) { end(); return x; };
+        var wrapErr = function (e) { end(); throw e; };
+        return p && typeof p.then === 'function' ? p.then(wrap, wrapErr) : (end(), p);
+      };
+    }
+  } catch (e) {}
+  try {
+    var _send = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.send = function () {
+      begin();
+      this.addEventListener('loadend', end);
+      this.addEventListener('progress', function () { touch(); });
+      return _send.apply(this, arguments);
+    };
+  } catch (e) {}
+
+  function trackEl(el) {
+    if (!el || el.__bootHooked) return;
+    var tag = el.tagName;
+    if (!tag || !/^(IMG|SCRIPT|LINK|SOURCE|VIDEO|AUDIO)$/.test(tag)) return;
+    if (tag === 'LINK' && el.rel && !/^(stylesheet|preload|modulepreload)$/i.test(el.rel)) return;
+    if (!(el.src || el.href)) return;
+    el.__bootHooked = true;
+    begin();
+    function settle() {
+      if (el.__bootSettled) return;
+      el.__bootSettled = true;
+      end();
+    }
+    el.addEventListener('load', settle);
+    el.addEventListener('error', function () {
+      settle();
+      if (tag === 'SCRIPT' && /index-[A-Za-z0-9_-]+\.js/.test(el.src || el.getAttribute('src') || '')) {
+        showFail('Failed to load the game script', 'error');
+      }
+    });
+    if (tag === 'IMG' && el.complete) settle();
+  }
+  function scan(root) {
+    if (!root || !root.querySelectorAll) return;
+    var list = root.querySelectorAll('script[src], link[href], img[src], source[src]');
+    for (var i = 0; i < list.length; i++) trackEl(list[i]);
+  }
+  function watchLoader() {
+    var txt = document.getElementById('loadTxt');
+    var bar = document.getElementById('loadBar');
+    if (!txt && !bar) return;
+    var mo = new MutationObserver(function () { touch(); });
+    if (txt) mo.observe(txt, { characterData: true, childList: true, subtree: true, attributes: true });
+    if (bar) mo.observe(bar, { attributes: true, childList: true, subtree: true, characterData: true });
+  }
+  function checkWebGL2() {
+    if (done || window.__bootFailed) return;
+    try {
+      var c = document.createElement('canvas');
+      var gl = c.getContext && c.getContext('webgl2');
+      if (!gl) showFail('WebGL2 is not available', 'error');
+    } catch (e) { showFail(e, 'error'); }
+  }
+  function onReady() {
+    scan(document);
+    watchLoader();
+    checkWebGL2();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onReady);
+    try {
+      var moDoc = new MutationObserver(function (recs) {
+        for (var i = 0; i < recs.length; i++) {
+          var nodes = recs[i].addedNodes;
+          for (var j = 0; j < nodes.length; j++) {
+            var n = nodes[j];
+            if (n.nodeType !== 1) continue;
+            trackEl(n);
+            if (n.querySelectorAll) scan(n);
+          }
+        }
+      });
+      moDoc.observe(document.documentElement, { childList: true, subtree: true });
+    } catch (e) {}
+  } else onReady();
+
+  armTimer();
+
+  try {
+    if (new URLSearchParams(location.search).has('failtest')) {
+      setTimeout(function () { showFail('failtest: forced boot error', 'error'); }, 0);
+    }
+  } catch (e) {}
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target;
+    if (!t || (t.id !== 'loadRetry' && t.id !== 'loadRetryTxt' && !(t.classList && t.classList.contains('loadRetry')))) return;
+    ev.preventDefault();
+    if (!window.__bootFailed) return;
+    var u = new URL(location.href);
+    u.searchParams.delete('failtest');
+    u.searchParams.set('_', String(Date.now()));
+    location.replace(u.toString());
+  });
+})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#f6c4d8">
 <title>Pollinator Meadow</title>
@@ -820,7 +1060,8 @@ body:not(.inRound) #bFlag{display:none!important}
 
 
 #load.fail{pointer-events:auto}
-#load.fail .lsBar,#load.fail .lsTxt{visibility:hidden}
+#load.fail .lsBar{visibility:hidden}
+#loadTxt .loadRetry,#loadRetryTxt{pointer-events:auto;cursor:pointer;margin:8px 0 0;border:2px solid #3b2614;border-radius:12px;background:#ffd23f;color:#3b2614;font:800 16px ui-rounded,system-ui,sans-serif;padding:8px 16px;box-shadow:0 2px 0 #3b2614;display:inline-block}
 #loadFail{display:none;position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);z-index:2;width:min(420px,calc(100% - 32px));box-sizing:border-box;padding:18px 16px 14px;background:#fff3d8;color:#3b2614;border:3px solid #3b2614;border-radius:18px;box-shadow:0 4px 0 #3b2614,0 12px 28px rgba(59,38,20,.35);text-align:center;pointer-events:auto}
 #load.fail #loadFail{display:block}
 #loadFail p{margin:0 0 14px;font-size:18px;font-weight:800;line-height:1.25}
@@ -1088,76 +1329,7 @@ body:not(.inRound) #bFlag{display:none!important}
   <div class="ksHead"><button class="ksIco ksBack" id="crClose" type="button" aria-label="Back"></button><h2>Credits</h2></div>
   <div class="ksPanel"><div class="ksScroll" id="crBody"><p>Thanks to everyone whose work is in this game.</p></div></div>
 </div></div>
-<script>
-(function () {
-  var LIMIT = 20000;
-  var done = false, shown = false, errors = [];
-  function textOf(x) {
-    if (!x) return '';
-    if (typeof x === 'string') return x;
-    if (x.stack) return String(x.stack);
-    if (x.message) return String(x.message);
-    return String(x);
-  }
-  function fmt(ev, typ) {
-    if (ev && ev.reason) return typ + ': ' + textOf(ev.reason);
-    if (ev && ev.error) return typ + ': ' + textOf(ev.error);
-    if (ev && ev.message) return typ + ': ' + ev.message + (ev.filename ? ' (' + ev.filename + ':' + ev.lineno + ')' : '');
-    return typ + ': ' + textOf(ev);
-  }
-  function details() {
-    return errors.length ? errors.join('\n\n') : 'The meadow took too long to load.';
-  }
-  function showFail(reason) {
-    if (done) return;
-    window.__bootFailed = true;
-    if (reason) {
-      var line = textOf(reason);
-      if (line && errors.indexOf(line) < 0) errors.push(line);
-    }
-    var L = document.getElementById('load');
-    var box = document.getElementById('loadFail');
-    var pre = document.getElementById('loadFailText');
-    if (pre) pre.textContent = details();
-    if (L) { L.classList.add('fail'); L.style.opacity = '1'; L.style.pointerEvents = 'auto'; }
-    if (box) box.hidden = false;
-    shown = true;
-  }
-  window.__bootOk = function () {
-    if (window.__bootFailed) return;
-    done = true;
-    window.__bootReady = true;
-    if (timer) clearTimeout(timer);
-  };
-  window.__bootFail = showFail;
-  window.addEventListener('error', function (ev) { if (!done) showFail(fmt(ev, 'Error')); });
-  window.addEventListener('unhandledrejection', function (ev) { if (!done) showFail(fmt(ev, 'Unhandled promise rejection')); });
-  var timer = setTimeout(function () {
-    if (done || window.__bootFailed) return;
-    var title = document.getElementById('title');
-    var load = document.getElementById('load');
-    var titleOn = title && title.classList.contains('on');
-    var loadGone = !load || !load.isConnected || load.style.opacity === '0';
-    var playable = document.body.classList.contains('inRound') || document.body.classList.contains('inValley');
-    if ((titleOn || playable) && loadGone) { window.__bootOk(); return; }
-    showFail('Timed out after 20 seconds waiting for the title.');
-  }, LIMIT);
-  try {
-    if (new URLSearchParams(location.search).has('failtest')) {
-      setTimeout(function () { showFail('failtest: forced boot error'); }, 0);
-    }
-  } catch (e) {}
-  document.addEventListener('click', function (ev) {
-    var t = ev.target;
-    if (!t || t.id !== 'loadRetry') return;
-    ev.preventDefault();
-    var u = new URL(location.href);
-    u.searchParams.delete('failtest');
-    u.searchParams.set('_', String(Date.now()));
-    location.replace(u.toString());
-  });
-})();
-</script>
+
 <script type="module" src="/src/main.js" onerror="window.__bootFail&&window.__bootFail('Failed to load the game script')"></script>
 </body>
 </html>

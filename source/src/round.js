@@ -1,4 +1,5 @@
 import { FEATURES } from './features.js';
+import { onlineDefaults } from './net/flags.js';
 // The timed round: clock, score breakdown, round resources, best scores and the round save.
 export const LENGTHS = [3, 5, 10, 15, 20];
 const ROUND_KEY = 'pollinator-meadow-round-v1', BEST_KEY = 'pollinator-meadow-best-v1', SET_KEY = 'pollinator-meadow-settings-v1';
@@ -6,7 +7,7 @@ export const CATS = [['gather', '🌼', 'Gathering'], ['building', '🔨', 'Buil
 const j = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
 
 /** POLISH accessibility: textSize 's'|'m'|'l'|'xl'; reduceMotion null = follow the device until the player touches it */
-export function loadSettings() { const s = Object.assign({ len: 10, vol: 0.7, mute: false, textSize: 'm', reduceMotion: null, easyMode: false, colorBlind: false, readAloud: false }, j(SET_KEY, {})); const o = s.online; s.online = { allow: !!(o && o.allow === true), direct: !!(o && o.direct) }; return s; }
+export function loadSettings() { const s = Object.assign({ len: 10, vol: 0.7, mute: false, textSize: 'm', reduceMotion: null, easyMode: false, colorBlind: false, readAloud: false }, j(SET_KEY, {})); s.online = onlineDefaults(s); return s; }
 export function saveSettings(s) { try { localStorage.setItem(SET_KEY, JSON.stringify(s)); } catch (e) {} }
 export const bests = () => j(BEST_KEY, {});
 export function setBest(len, score) { const b = bests(); if (score > (b[len] || 0)) { b[len] = score; try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch (e) {} return true; } return false; }

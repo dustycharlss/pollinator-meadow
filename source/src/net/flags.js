@@ -9,9 +9,11 @@ export function isDebugFlag(search = typeof location !== 'undefined' ? location.
 }
 
 export function onlineDefaults(raw) {
+  const fallback = { allow: true, direct: false };
   const o = raw && raw.online;
-  if (!o || typeof o !== 'object') return { allow: false, direct: false };
-  return { allow: o.allow === true, direct: !!o.direct };
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return { ...fallback };
+  if (typeof o.allow !== 'boolean' || typeof o.direct !== 'boolean') return { ...fallback };
+  return { allow: o.allow, direct: o.direct };
 }
 
 /** Station + lobby entry: N2 is behind ?online=dev, and never when Allow is off. */
