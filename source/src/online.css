@@ -105,6 +105,7 @@
 .olClass.taken { opacity: 1; cursor: default; filter: none; }
 
 .olStart { width: 100%; max-width: 280px; margin: 8px auto 0; display: block; }
+.olRoomActions { display: flex; flex-direction: column; align-items: center; width: 100%; }
 
 .olChoiceRow { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 .olChoiceCard { width: 148px; background: none; border: 0; padding: 0; cursor: pointer; color: #3b2614; font: 800 14px system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -221,7 +222,13 @@ body:has(#pause.on) .olBar { display: none !important; }
   .olRosterSlot .olSlotGlyph { width: 52px; height: 52px; }
   .olClass { width: 80px; min-width: 80px; height: auto; min-height: 0; }
   .olClass img { width: 80px; height: 80px; min-width: 80px; min-height: 80px; }
-  .olStart { max-width: 140px; min-height: 48px; margin: 6px auto 0; }
+  .olRoomActions { flex-direction: row; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 8px; margin-top: 4px; width: auto; }
+  .olRoomActions .olStart { width: auto; max-width: 140px; min-width: 112px; min-height: 44px; margin: 0; flex: 0 0 auto; }
+  .olRoomActions button.olLeave { margin: 0; flex: 0 0 auto; height: 48px; min-height: 48px; width: 140px; }
+  .olRoster { margin: 4px 0 6px; }
+  .olCard:has(.olRoster) { max-height: calc(100dvh - 8px); overflow: hidden; }
+  .olCard:has(.olRoster) .olHead { padding: 6px 12px 4px; }
+  .olCard:has(.olRoster) .olBody { padding: 4px 12px 12px; overflow: hidden; }
   .olChoiceCard img { width: 120px; height: 130px; }
 }
 
