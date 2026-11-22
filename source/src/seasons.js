@@ -1,6 +1,7 @@
 // Day/night clock + four gentle seasons. Everything visual is driven by a handful of shared uniforms (SU) that the
 // ground, grass and flower/tree materials read, so a season change is one smooth blend, not a pile of swaps.
 import * as THREE from 'three';
+import { skipCustomShaders, cullWorldFx } from './l20-fallback.js';
 
 /** t159u: seasons are off for now — one fixed, pleasant summer; no season UI, no transitions. */
 export const SEASONS_ENABLED = false;
@@ -69,6 +70,7 @@ const FRAG = {
 
 /** Make a material season-aware. kind: 'prop' (flowers/trees/rocks), 'ground', 'grass'. Safe to call twice. */
 export function patchSeason(mat, kind = 'prop') {
+  if (skipCustomShaders() || cullWorldFx()) return mat;
   if (mat.userData.seas) return mat;
   mat.userData.seas = kind;
   const prev = mat.onBeforeCompile;

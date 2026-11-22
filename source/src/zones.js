@@ -11,6 +11,7 @@ import { loadGLB, lambertFrom } from './models.js';
 import { lodify, lodFor } from './lod.js';
 import { canShowFriendsStation } from './net/flags.js';
 import { waterSurface, FOAM_MAT } from './water.js';
+import { setCaveLevel, installFallbackHooks, isShaderFallback, fallbackMaterial, applyGhostMaterial, refreshFallbackMaterials } from './l20-fallback.js';
 import { MAPS2 } from './act2-maps.js';
 import { MAPS3 } from './act3-maps.js';
 import { BANTER, HUB_BANTER } from './banter-data.js';
@@ -48,6 +49,11 @@ function terrainFrom(spec) {
     for (const r of spec.deep || []) {
       const dx = Math.max(r[0] - lx, 0, lx - r[2]), dz = Math.max(r[1] - lz, 0, lz - r[3]), d = Math.hypot(dx, dz);
       if (d === 0) h = -1.6; else if (d < 1) h = Math.min(h, -1.6 + d * 1.9);
+    }
+    // Soft leaf-net chasms (L20): dip the floor, not a water tile.
+    for (const r of spec.pits || []) {
+      const dx = Math.max(r[0] - lx, 0, lx - r[2]), dz = Math.max(r[1] - lz, 0, lz - r[3]), d = Math.hypot(dx, dz);
+      if (d === 0) h = -2; else if (d < 1) h = Math.min(h, -2 + d * 2);
     }
     if (lx < x0 || lx > x1 || lz < z0 || lz > z1) h -= 0.6;
     return h;
@@ -545,7 +551,7 @@ export function createZones(scene, host) {
   // POLISH §3 second cue: class rings take the class shape (Scout circle · Trickster rounded square · Bruiser hex), not just its colour
   const SHAPE_SEG = { circle: 28, square: 4, hex: 6 };
   function shapeRingGeo(c, r0, r1) { const sh = CLASSES[c]?.shape || 'circle', g = new THREE.RingGeometry(sh === 'square' ? r0 * 1.2 : r0, sh === 'square' ? r1 * 1.2 : r1, SHAPE_SEG[sh] || 28); if (sh === 'square') g.rotateZ(Math.PI / 4); if (sh === 'hex') g.rotateZ(Math.PI / 6); return g.rotateX(-Math.PI / 2); }
-  const LOOK = { hedge: COL.hedge, stone: COL.stone, cliff: COL.cliff, wood: COL.wood, bark: 0x8a5a4a, leaf: 0x6fd39a, dirt: COL.dirt, log: 0xb08a6a, cream: COL.cream, glass: 0xbfe8ff, gold: 0xffc94a };
+  const LOOK = { hedge: COL.hedge, stone: COL.stone, cliff: COL.cliff, wood: COL.wood, bark: 0x8a5a4a, leaf: 0x6fd39a, dirt: COL.dirt, log: 0xb08a6a, cream: COL.cream, glass: 0xbfe8ff, gold: 0xffc94a, cave: 0x9c8cc6 };
 
   function buildTerrainMesh(fn, bounds) {
     const { x0, x1, z0, z1 } = bounds;
@@ -558,8 +564,17 @@ export function createZones(scene, host) {
       let rel = fn(lx, lz); if (rel == null) rel = -4;
       // visual-only roll (~8 cm). sampleH / terrainFrom stay the walk-route source of truth
       pos.setY(i, rel + 0.08 * Math.sin(lx * 0.17 + 0.4) * Math.cos(lz * 0.13));
-      if (rel < -1.2) { col[i * 3] = lem ? 0.9 : 0.08; col[i * 3 + 1] = lem ? 0.75 : 0.32; col[i * 3 + 2] = lem ? 0.3 : 0.72; }
-      else if (rel < 0.05) { col[i * 3] = 0.62; col[i * 3 + 1] = 0.36; col[i * 3 + 2] = 0.26; } // peach mud bank so the shore reads (art pass: B mud #e8b8a0, a touch darker)
+      if (rel < -1.2) {
+        if (recipe.pits) { col[i * 3] = 0.725; col[i * 3 + 1] = 0.788; col[i * 3 + 2] = 0.541; } // leaf-net #b9c98a
+        else { col[i * 3] = lem ? 0.9 : 0.08; col[i * 3 + 1] = lem ? 0.75 : 0.32; col[i * 3 + 2] = lem ? 0.3 : 0.72; }
+      }
+      else if (rel < 0.05) {
+        if (recipe.caveFloor) { col[i * 3] = 0.369; col[i * 3 + 1] = 0.322; col[i * 3 + 2] = 0.533; } // caveShadow #5e5288
+        else { col[i * 3] = 0.62; col[i * 3 + 1] = 0.36; col[i * 3 + 2] = 0.26; } // peach mud bank so the shore reads (art pass: B mud #e8b8a0, a touch darker)
+      }
+      else if (recipe.caveFloor) { const n = 0.5 + 0.5 * Math.sin(lx * 0.21 + 0.4) * Math.cos(lz * 0.17); // CVD caveStone #9c8cc6 -> caveShadow
+        const k = 0.35 + 0.65 * n;
+        col[i * 3] = 0.369 + (0.612 - 0.369) * k; col[i * 3 + 1] = 0.322 + (0.549 - 0.322) * k; col[i * 3 + 2] = 0.533 + (0.776 - 0.533) * k; }
       else { const n = 0.5 + 0.5 * Math.sin(lx * 0.23 + 1.7) * Math.cos(lz * 0.19), j = 1 + 0.025 * Math.sin(lx * 0.7) * Math.cos(lz * 0.6); // B grass tones #98d8a0..#cdeeb8 (linear), large-scale mix
         col[i * 3] = (0.31 + 0.3 * n * n) * j; col[i * 3 + 1] = (0.69 + 0.17 * n) * j; col[i * 3 + 2] = (0.35 + 0.12 * n) * j; }
     }
@@ -1338,6 +1353,8 @@ export function createZones(scene, host) {
       } else if (e.kind === 'spider') {
         if (e.look && t > e.look.until) e.look = null;
         const L = e.look || e.watch, want = L ? Math.atan2(L.x - e.x, L.z - e.z) : e.baseYaw; e.yaw += Math.atan2(Math.sin(want - e.yaw), Math.cos(want - e.yaw)) * Math.min(1, dt * 4);
+        const go = (e.look && e.look.go) ? e.look : ((!e.look && Math.hypot(e.x - e.home.x, e.z - e.home.z) > 0.35) ? e.home : null);
+        if (go) { const d = Math.hypot(go.x - e.x, go.z - e.z); if (d > 0.35) { const v = Math.min(d, 2.8 * dt); e.x += (go.x - e.x) / d * v; e.z += (go.z - e.z) / d * v; } }
       } else if (e.kind === 'crow') {
         const o = e.o, shiny = (S.shots || []).find(s => s.kind === 'shiny' && !s.dead && t - s.t0 < 8 && flatD(e, s) < 16);
         if (shiny) e.swoop = { x: shiny.x, z: shiny.z, until: t + 5 };
@@ -1566,6 +1583,22 @@ export function createZones(scene, host) {
     },
     /** decor model on the ground (no collider) */
     deco(key, x, z, size = 1, o = {}) { const w = L2W(x, z, o.h || 0), H = new THREE.Group(); H.position.set(w.x, w.y, w.z); H.rotation.y = o.yaw || 0; group.add(H); if (!decoBatching) { decoInto(H, key, size, o); return H; } const job = { H, size, o }; const L = decoJobs.get(key) || []; L.push(job); decoJobs.set(key, L); return H; },
+    fillLight(x, z, h, o = {}) { const w = L2W(x, z, h), L = new THREE.PointLight(o.color || 0xffe2c4, o.intensity ?? 1.55, o.dist ?? 14, o.decay ?? 2); L.position.set(w.x, w.y, w.z); group.add(L); return L; },
+    scatterRocks(pts, o = {}) {
+      if (!pts || !pts.length) return null;
+      const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mat(o.c || 0x5e5288), pts.length), M = new THREE.Matrix4();
+      const P = new THREE.Vector3(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0);
+      pts.forEach((pt, i) => { const w = L2W(pt[0], pt[1]), sy = pt[3] || 1; P.set(w.x, w.y + sy / 2, w.z); Q.setFromAxisAngle(Y, pt[5] || 0); S.set(pt[2] || 1, sy, pt[4] || 1); M.compose(P, Q, S); im.setMatrixAt(i, M); });
+      im.instanceMatrix.needsUpdate = true; im.castShadow = false; group.add(im); return im;
+    },
+    scatterStalactites(pts, o = {}) {
+      if (!pts || !pts.length) return null;
+      const im = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 6), mat(o.c || 0x8a7cb8), pts.length), M = new THREE.Matrix4();
+      const P = new THREE.Vector3(), Q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI), S = new THREE.Vector3();
+      const y0 = o.y != null ? o.y : 9.2;
+      pts.forEach((pt, i) => { const w = L2W(pt[0], pt[1]), h = pt[3] || 1.4; P.set(w.x, baseY + y0 - h / 2, w.z); S.set(pt[2] || 0.45, h, pt[2] || 0.45); M.compose(P, Q, S); im.setMatrixAt(i, M); });
+      im.instanceMatrix.needsUpdate = true; im.castShadow = false; im.receiveShadow = true; group.add(im); return im;
+    },
     sprinkler(id, x, z, o = {}) { const e = enemy('sprinkler', id, x, z, { r: o.r || 7, beam: o.beam || 0.22, ...o }); e.cone = coneMesh(e.o.r, e.o.beam, 0x7fd8ff); e.F.add(e.cone); e.F.rotation.y = e.baseYaw; e.grace = o.grace ?? 0.45; if (o.high) { const H = Math.min(o.high, 8), cg = new THREE.PlaneGeometry(e.o.r, H).rotateY(Math.PI / 2); cg.translate(0, H / 2, e.o.r / 2); const cur = new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ color: 0x9fe4ff, transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide })); e.cone.add(cur); for (let i = 0; i < 9; i++) { const k = (i + 1) / 10, d = bx(0.34, 0.34, 0.34, 0xbfeeff, 0, 0.6 + H * 0.9 * Math.sin(Math.PI * k * 0.85), e.o.r * k); d.material = new THREE.MeshBasicMaterial({ color: 0xbfeeff, transparent: true, opacity: 0.8 }); e.cone.add(d); } } return e; },
     mower(id, x0, x1, z, o = {}) { const e = enemy('mower', id, x0, z, { x0, x1, period: o.period || 9, dur: o.dur || 3.2, yaw: Math.PI / 2, ...o }); e.grace = 0.05; const L = Math.abs(x1 - x0), m = new THREE.Mesh(new THREE.PlaneGeometry(L + 2, 2.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff6a3a, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); const w = L2W((x0 + x1) / 2, z); m.position.set(w.x, w.y + 0.1, w.z); group.add(m); e.lane = m; return e; },
     gravel(x0, z0, x1, z1) { const S = AA(); S.gravel.push({ x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1 }); const w = L2W((x0 + x1) / 2, (z0 + z1) / 2); const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.08, z1 - z0), mat(0xb8b0a0)); m.position.set(w.x, w.y + 0.05, w.z); group.add(m); for (let i = 0; i < 14; i++) { const s = bx(0.3, 0.15, 0.3, 0x8a8478, w.x + (Math.sin(i * 7.1) * 0.5) * (x1 - x0), w.y + 0.1, w.z + (Math.cos(i * 3.3) * 0.5) * (z1 - z0)); group.add(s); } },
@@ -1573,17 +1606,17 @@ export function createZones(scene, host) {
     sunlamp(id, x, z, h, o = {}) { const w = L2W(x, z, h); this.cyl(x, z, 0.9, h - 0.4, 0x8b6a45); const cr = new THREE.Mesh(new THREE.OctahedronGeometry(0.6), mat(0xffe680, 0.9)); cr.position.set(w.x, w.y + 0.2, w.z); group.add(cr); AA().srcs.push({ id, x: w.x, y: w.y + 0.2, z: w.z, need: o.need, to: o.to, cr, shade: o.shade }); },
     mirror(id, x, z, h, aims, o = {}) {
       const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
-      const post = bx(0.2, h, 0.2, 0x8b6a45, 0, -h / 2, 0); G.add(post); const F = new THREE.Group(); G.add(F); F.add(bx(1.3, 1.3, 0.12, 0xdff4ff, 0, 0.3, 0, 0.5), bx(1.5, 0.15, 0.2, 0xffd23f, 0, 1.0, 0), bx(1.5, 0.15, 0.2, 0xffd23f, 0, -0.4, 0));
-      const m = { id, x: w.x, y: w.y + 0.3, z: w.z, aims: aims.map(a => ({ ...a, pt: Array.isArray(a.to) ? L2W(a.to[0], a.to[1], a.to[2] ?? 0.6) : null })), k: o.k || 0, F };
+      const post = bx(0.2, h, 0.2, 0x8b6a45, 0, -h / 2, 0); G.add(post); const F = new THREE.Group(); G.add(F); F.add(bx(1.3, 1.3, 0.12, o.dummy ? 0xf4a6d0 : 0x88eff8, 0, 0.3, 0, 0.5), bx(1.5, 0.15, 0.2, 0xffd27a, 0, 1.0, 0), bx(1.5, 0.15, 0.2, 0xffd27a, 0, -0.4, 0));
+      const m = { id, x: w.x, y: w.y + 0.3, z: w.z, aims: aims.map(a => ({ ...a, pt: Array.isArray(a.to) ? L2W(a.to[0], a.to[1], a.to[2] ?? 0.6) : null })), k: o.k || 0, F, dummy: !!o.dummy };
       AA().mirrors.push(m);
       props.push({ kind: 'mirror', act: 'aim', cls: 'scout', sig: 'mir:' + id, x: w.x, y: w.y, z: w.z, r: 2.8, re: true, label: o.label || 'Sun mirror', mir: m, G, icon: badge('scout', w.x, w.y + 1.9, w.z, 0.9) });
     },
     /** ghost platform: solid only while the sunbeam lands on it (shadow:true → while Bear's shadow covers it) */
     ghost(id, x, z, w, d, top, o = {}) {
-      const r = this.wall(x, z, w, d, top, { bot: o.bot ?? top - 0.6, c: o.shadow ? 0x6a5a9a : 0xfff0a0 }); r.s.off = true;
-      r.m.material = new THREE.MeshLambertMaterial({ color: o.shadow ? 0x8a7ad0 : 0xfff3b0, transparent: true, opacity: 0.25, emissive: o.shadow ? 0x2a2050 : 0x806a20, emissiveIntensity: 0.3, depthWrite: false });
+      const r = this.wall(x, z, w, d, top, { bot: o.bot ?? top - 0.6, c: o.shadow ? 0x6a5a9a : 0xcfe8ff }); r.s.off = true;
+      r.m.material = new THREE.MeshLambertMaterial({ color: o.shadow ? 0x8a7ad0 : 0xcfe8ff, transparent: true, opacity: 0.25, emissive: o.shadow ? 0x2a2050 : 0x8fc0f0, emissiveIntensity: 0.45, depthWrite: false });
       const gh = { id, r, shadow: !!o.shadow, on: false, sig: (o.shadow ? 'shade:' : 'lit:') + id };
-      if (o.cross) { gh.cr = { x0: A.x + x - w / 2, z0: A.z + z - d / 2, x1: A.x + x + w / 2, z1: A.z + z + d / 2, on: false, thin: false }; crossings.push(gh.cr); }
+      if (o.cross) { gh.cr = { x0: A.x + x - w / 2, z0: A.z + z - d / 2, x1: A.x + x + w / 2, z1: A.z + z + d / 2, on: false, thin: false, boost: o.boost || 0 }; crossings.push(gh.cr); }
       AA().ghosts.push(gh);
     },
     // ---- M2 Water Level ----
@@ -1877,7 +1910,7 @@ export function createZones(scene, host) {
   function a2Act(pr, p) {
     const S = AA();
     switch (pr.act) {
-      case 'aim': { const m = pr.mir; m.k = (m.k + 1) % m.aims.length; m.F.rotation.y = m.k * 0.9; tst('🪞 Mirror turned', 900); ctx.audio?.sample?.('ui2/lantern-click', 0.4); return true; }
+      case 'aim': { aimMirror(pr.mir); tst('🪞 Mirror turned', 900); return true; }
       case 'sluice': { const pd = S.ponds.find(q => q.id === pr.pond); if (pd) setPond(pd, pr.level); pr.arm.rotation.z = pr.arm.rotation.z > 0 ? -0.5 : 0.5; ctx.audio?.sample?.('act3/sluice-water', 0.55); return true; }
       case 'plant': { const sd = pr.seed; if (sd.planted) { say('🌱 Planted! Now a Scout brings a 💧 dewdrop from a drip leaf', 2200); return true; } sd.planted = true; sd.sprout.visible = true; pr.done = true; setSig(pr.sig); tst('🌰 Seed planted! A Scout must water it with a dewdrop 💧', 2400); return true; }
       case 'cut': { const sp = pr.spider; if (sp && !sp.look && !pr.web.free) { sp.alertT = t; bonk(sp); return true; } pr.done = true; pr.web.s.off = true; pr.web.G.visible = false; setSig(pr.sig); tst('✂️ Snip! The web is cut', 1600); return true; }
@@ -1896,7 +1929,7 @@ export function createZones(scene, host) {
   }
   function acornBack() { const ac = (AA().acorns || []).find(a => a.by === ctx.cur()); if (!ac) return; ac.by = null; ac.at = ac.last; tst(`${ac.em || '🌰'} The ${ac.noun || 'acorn'} floats back to its ring`, 1600); }
   function smokeCloud(x, y, z, r) { const G = new THREE.Group(); G.position.set(x, y, z); for (let i = 0; i < 9; i++) { const a = i / 9 * 6.28, s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.32, 8, 6), new THREE.MeshLambertMaterial({ color: 0xf4f0ff, transparent: true, opacity: 0.45, depthWrite: false })); s.position.set(Math.cos(a) * r * 0.55, 0.8 + (i % 3) * 0.6, Math.sin(a) * r * 0.55); G.add(s); } group.add(G); return G; }
-  function beamSeg(i, a, b) { const S = AA(); let m = S.beamPool[i]; if (!m) { m = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff27a, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })); m.renderOrder = 6; group.add(m); S.beamPool[i] = m; }
+  function beamSeg(i, a, b) { const S = AA(); let m = S.beamPool[i]; if (!m) { const bm = (isShaderFallback() && fallbackMaterial('lampBeam')) || new THREE.MeshBasicMaterial({ color: 0xfff1c4, transparent: true, opacity: 0.32, depthWrite: false, blending: THREE.AdditiveBlending }); m = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1, 8, 1, true), bm); m.renderOrder = (bm.userData && bm.userData.renderOrder) || 6; group.add(m); S.beamPool[i] = m; }
     const d = new THREE.Vector3(b.x - a.x, b.y - a.y, b.z - a.z), L = d.length(); m.visible = L > 0.05; m.scale.set(1, L, 1); m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
 
   // ===== S2 gear (Act 3 P3) runtime =====
@@ -1918,6 +1951,14 @@ export function createZones(scene, host) {
     return true;
   }
   /** Interact with nothing in reach: use the slotted gear (🫧 bubble shot, 🪨 sling pebble) */
+  function aimMirror(m) {
+    if (!m || !m.aims || !m.aims.length) return;
+    m.k = (m.k + 1) % m.aims.length;
+    if (m.F) m.F.rotation.y = m.k * 0.9;
+    setSig('mir:' + m.id);
+    setSig(m.id);
+    ctx.audio?.sample?.('act3/mirror-turn', 0.4);
+  }
   function useGear(p) {
     if (ctx.isNetClient?.()) { emitNet('intent', { intent: 'gear', body: ctx.cur() }); return true; }
     const S = a2, c = clsOfCur(); if (!S || tw) return false;
@@ -1934,7 +1975,9 @@ export function createZones(scene, host) {
     if (c === 'bruiser' && gearOn('sling')) {
       if (t - S.slingT < 0.9) return true; S.slingT = t; ctx.audio?.sample?.('act3/sling-twang', 0.5);
       const tg = gearTarget(p, 'sling'), yaw = p.yaw || 0, to = tg || { x: p.x + Math.sin(yaw) * 11, z: p.z + Math.cos(yaw) * 11 };
-      return throwTool('pebble', to.x, to.z, p, { src: 'sling', ty: tg && tg.ty, dur: 0.25, msg: tg ? `🪨 Sling! A shiny pebble flies at the ${tg.label}` : '🪨 Sling! A shiny pebble flies' });
+      if (tg && tg.kind === 'mirror' && tg.ref) aimMirror(tg.ref);
+      return throwTool('pebble', to.x, to.z, p, { src: 'sling', ty: tg && tg.ty, hitMir: !!(tg && tg.kind === 'mirror'), dur: 0.25, msg: tg ? `🪨 Sling! A shiny pebble flies at the ${tg.label}` : '🪨 Sling! A shiny pebble flies' });
+
     }
     return false;
   }
@@ -1948,6 +1991,7 @@ export function createZones(scene, host) {
       for (const sd of S.seeds) if (sd.planted && !sd.grown) add(sd, 'planted seed', undefined, 16);
     } else {
       for (const q of S.targets) if (!q.done) add(q, q.label.toLowerCase(), q.y, 20);
+      for (const m of S.mirrors || []) { const q = { x: m.x, z: m.z }; const d = (typeof flatD === 'function') ? flatD(q, p) : Math.hypot(m.x - p.x, m.z - p.z); if (d >= 0.5 && d <= 20) { const dot = ((m.x - p.x) * fx0 + (m.z - p.z) * fz0) / d; out.push({ x: m.x, z: m.z, ty: m.y, label: 'crystal', kind: 'mirror', ref: m, sc: dot > 0.5 ? d : d * 4 + 20 }); } }
       for (const e of S.en) if (['crow', 'fox', 'spider', 'owl', 'turtle'].includes(e.kind)) add(e, e.name || e.kind, undefined, 16);
     }
     out.sort((a, b) => a.sc - b.sc); return out[0] || null;
@@ -1968,9 +2012,11 @@ export function createZones(scene, host) {
       return true; // the bubble pops on the grass
     }
     if (sh.kind === 'shiny' && sh.src === 'sling') {
+      const mir = (S.mirrors || []).find(m => Math.hypot(m.x - sh.x, m.z - sh.z) < 1.8 && Math.abs((m.y || sh.y) - sh.y) < 2.5);
+      if (mir) { if (!sh.hitMir) { aimMirror(mir); fx(mir.x, mir.y, mir.z); tst('🪞 The pebble turned the crystal!', 1600); } return true; }
       ctx.audio?.sample?.('act3/pebble-hit', 0.5);
       const q = S.targets.find(g => !g.done && Math.hypot(g.x - sh.x, g.z - sh.z) < 1.8 && Math.abs(g.y - sh.y) < 2.5);
-      if (q) { q.done = true; q.gem.material = mat(0xffd23f, 0.9); q.tg.visible = false; setSig(q.sig); q.onHit?.(); fx(q.x, q.y, q.z); ctx.audio?.sample?.('contest/win-jingle', 0.4); tst(`🎯 Ding! The pebble rang the ${q.label.toLowerCase()}`, 1800); return true; }
+      if (q) { q.done = true; q.gem.material = mat(0xffd23f, 0.9); q.tg.visible = false; setSig(q.sig); q.onHit?.(t); fx(q.x, q.y, q.z); ctx.audio?.sample?.('contest/win-jingle', 0.4); tst(`🎯 Ding! The pebble rang the ${q.label.toLowerCase()}`, 1800); return true; }
       for (const e of S.en) { const d = flatD(e, sh); if (d > 9) continue;
         if (e.kind === 'fox' && !e.pingLure) { e.pingLure = { x: sh.x, z: sh.z, phase: 'go' }; tst('🦊 The fox trots off to sniff the pebble…', 1600); ctx.audio?.sample?.('act3/fox-sniff', 0.45); }
         else if ((e.kind === 'spider' || e.kind === 'turtle') && !e.look) { e.look = { x: sh.x, z: sh.z, until: t + 6 }; tst(`👀 The ${e.name || e.kind} turns to look at the pebble`, 1600); } }
@@ -2050,7 +2096,8 @@ export function createZones(scene, host) {
       : new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.28), mat(0xffe680, 0.7));
     m.position.set(p.x, p.y + 1.1, p.z); group.add(m);
     if (o.ty != null) by = o.ty;
-    S.shots.push({ kind: k, m, ax: p.x, ay: p.y + 1.1, az: p.z, bx: bx2, by, bz, x: p.x, y: p.y + 1.1, z: p.z, t: 0, t0: t, dur: o.dur || 0.55, landed: false, dead: false, src: o.src || 'tool' });
+    S.shots.push({ kind: k, m, ax: p.x, ay: p.y + 1.1, az: p.z, bx: bx2, by, bz, x: p.x, y: p.y + 1.1, z: p.z, t: 0, t0: t, dur: o.dur || 0.55, landed: false, dead: false, src: o.src || 'tool', hitMir: !!o.hitMir });
+
     if (!o.src) S.heldTool = null; tst(o.msg || (k === 'bubble' ? '🫧 Bubble shot!' : '✨ Shiny pebble thrown!'), 1200); ctx.audio?.blip?.(3);
     return true;
   }
@@ -2070,7 +2117,11 @@ export function createZones(scene, host) {
         sh.y = sh.ay + (sh.by - sh.ay) * k + Math.sin(k * Math.PI) * 1.8;
         sh.m.position.set(sh.x, sh.y, sh.z);
         if (sh.kind === 'bubble' && cutWebAt(sh.x, sh.z)) { sh.dead = true; continue; }
-        if (sh.kind === 'shiny' && sh.src === 'sling' && k > 0.45 && shotLand(sh)) { sh.dead = true; continue; }
+        if (sh.kind === 'shiny' && sh.src === 'sling') {
+          const near = (S.mirrors || []).some(m => Math.hypot(m.x - sh.x, m.z - sh.z) < 1.8) || (S.targets || []).some(g => !g.done && Math.hypot(g.x - sh.x, g.z - sh.z) < 1.8);
+          if ((near || k > 0.45) && shotLand(sh)) { sh.landed = true; sh.dead = true; continue; }
+        }
+
         if (k >= 1) { sh.landed = true; sh.t = 0; sh.y = sh.by; sh.m.position.y = sh.y; if (sh.kind === 'bubble') cutWebAt(sh.x, sh.z); if (shotLand(sh)) { sh.dead = true; continue; } }
       } else if (sh.t > 7) sh.dead = true;
     }
@@ -2325,6 +2376,13 @@ export function createZones(scene, host) {
     }
     for (const gf of S.gifts) { if (gf.got) continue; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; const GI = GEAR_INFO[gf.kind], gc = GI.cls; gear[gf.kind] = true; gear[eqK(gf.kind)] = true; (gear.slot ||= {})[gc] = gf.kind; if (S.borrow && S.borrow.slot) S.borrow.slot[gc] = gf.kind; gearSave(); if (gf.kind === 'whistle') S.pingNext = t; setSig('gift:' + gf.kind); if (ALIAS_OF[gf.kind]) setSig('gift:' + ALIAS_OF[gf.kind]); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GI.em} You found the ${GI.name}! Tap ${GI.em} on the ${CLASSES[gc].name}'s picture (or G) to switch it on/off${GEAR_BY_CLS[gc].length > 1 ? ' · swap gear at a 🧰 gear stump' : ''}`, 4200); } }
     for (const pr of props) if (pr.kind === 'web' && !pr.done && c === 'scout' && !S.stuck && t > S.safeT && Math.abs(p.x - pr.x) < pr.ww / 2 + 0.6 && Math.abs(p.z - pr.z) < 1.3 && p.y - pr.y < pr.wh) { S.stuck = { who: cur, x: p.x, y: p.y, z: p.z, until: t + 3 }; if (pr.spider) pr.spider.look = { x: pr.x, z: pr.z, until: t + 3.5 }; tst('🕸️ Stuck in the web for 3 seconds!', 1800); }
+    if (recipe.pits && t > S.safeT) {
+      for (const r of recipe.pits) {
+        const rect = { x0: A.x + r[0], z0: A.z + r[1], x1: A.x + r[2], z1: A.z + r[3] };
+        if (inRect(p.x, p.z, rect) && p.y < baseY + 0.25 && !crossings.some(c => c.on && inRect(p.x, p.z, c))) { bonk({ name: 'leaf net' }, 'pit'); break; }
+      }
+    }
+    for (const c of crossings) if (c.on && c.boost && inRect(p.x, p.z, c)) { p.z += c.boost * dt; break; }
   }
   function a2Update(dt, cam, p, cur) {
 
@@ -2350,7 +2408,7 @@ export function createZones(scene, host) {
         }
       }
       for (let i = n; i < S.beamPool.length; i++) S.beamPool[i].visible = false;
-      for (const g of S.ghosts) { const want = g.shadow ? shade.has(g.id) : lit.has(g.id); if (want !== g.on) { g.on = want; g.r.s.off = !want; if (g.cr) g.cr.on = want; g.r.m.material.opacity = want ? 0.95 : 0.25; g.r.m.material.depthWrite = want; g.r.m.material.emissiveIntensity = want ? 0.6 : 0.3; if (want) { fx(g.r.m.position.x, g.r.m.position.y, g.r.m.position.z); tst(g.shadow ? '🌑 Bear\'s shadow made the bridge solid!' : '✨ The sunbeam made the ghost step solid!', 1500); } } setSig(g.sig, want); }
+      for (const g of S.ghosts) { const want = g.shadow ? shade.has(g.id) : lit.has(g.id); if (want !== g.on) { g.on = want; g.r.s.off = !want; if (g.cr) g.cr.on = want; if (!applyGhostMaterial(g.r.m, want)) { g.r.m.material.opacity = want ? 0.72 : 0.25; g.r.m.material.depthWrite = want; g.r.m.material.emissiveIntensity = want ? 0.45 : 0.3; } if (want) { fx(g.r.m.position.x, g.r.m.position.y, g.r.m.position.z); tst(g.shadow ? '🌑 Bear\'s shadow made the bridge solid!' : '✨ The sunbeam made the ghost step solid!', 1500); ctx.audio?.sample?.('act3/beam-lit', 0.5); } } setSig(g.sig, want); }
     }
     // ---- water level: logs + turtle naps handled in enemies ----
     for (const L of S.logs) {
@@ -2413,7 +2471,7 @@ export function createZones(scene, host) {
     const tid = idOfCls('trickster'), tq = tid && posOfId(tid);
     if (gearOn('whistle') && tq && ctx.driven().includes(tid) && t >= S.pingNext) { S.pingNext = t + 8; S.pingT = t; S.pingAt = { x: tq.x, z: tq.z, t }; a2Burst(tq.x, tq.z, 7); ctx.audio?.sample?.('ui2/item-produced', 0.4); const ring = ringMesh(1, 0xc9b6ff); ring.position.set(tq.x, tq.y + 0.2, tq.z); group.add(ring); S.outlines.push({ m: ring, t0: t });
       let found = 0; for (const h of S.hidden) { if (Math.hypot(h.x - tq.x, h.z - tq.z) > (h.range || 16)) continue; h.showT = t; if (h.kind === 'switch' && !h.pr.found) { h.pr.found = true; h.pr.act = h.pr._act; h.pr.G.visible = true; h.pr.icon.visible = true; found++; } }
-      tst(found ? '🎶 Echo-ping! A hidden switch appeared' : '🎶 Echo-ping! Hidden paths glow for 5 s', 1600); setSig('ping'); }
+      tst(found ? '🎶 Echo-ping! A hidden switch appeared' : '🎶 Echo-ping! Hidden paths glow for 5 s', 1600); setSig('ping'); setSig('pinged'); }
     for (const h of S.hidden) if (h.kind === 'step') { const on = t - (h.showT ?? -99) < 5; h.r.m.material.opacity = on ? 0.55 + 0.25 * Math.sin(t * 6) : 0; }
     for (let i = S.outlines.length - 1; i >= 0; i--) { const o = S.outlines[i], k = (t - o.t0) / 1.2; o.m.scale.set(1 + k * 14, 1, 1 + k * 14); o.m.userData.mats[0].opacity = Math.max(0, 0.8 * (1 - k)); if (k >= 1) { o.m.removeFromParent(); S.outlines.splice(i, 1); } }
     for (const gf of S.gifts) { if (gf.got) continue; if (!still()) { gf.G.rotation.y += dt; gf.G.position.y = gf.y + Math.sin(t * 2) * 0.15; } }
@@ -2524,6 +2582,7 @@ export function createZones(scene, host) {
   }
   const say = (s, d = 2200) => { if (t - msgT > 1.6) { msgT = t; tst(s, d); } };
   function clear() {
+    setCaveLevel(false);
     WATER_RECTS.length = 0; setZoneHeight(null);
     sampleH = null; waterMeshes = [];
     for (const s of solids) s.off = true;
@@ -2542,13 +2601,16 @@ export function createZones(scene, host) {
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
   function load(pid, anchor) {
-    clear(); recipe = MAPS[pid]; if (!recipe) return; id = pid; babyMixers.length = 0; pipDone = new Set(); pipPend = null; pipSigT = {}; picked = 0; petalV = 0; keyDone = false; t = 0; lastProg = 0; hintT = 0;
+    clear(); recipe = MAPS[pid]; if (!recipe) return; id = pid; recipe.id = recipe.id || pid;
+    setCaveLevel(!!(recipe.caveFloor || recipe.id === 'mirror_caves' || pid === 'mirror_caves'));
+    installFallbackHooks({ zoneGroup: group, scene }); babyMixers.length = 0; pipDone = new Set(); pipPend = null; pipSigT = {}; picked = 0; petalV = 0; keyDone = false; t = 0; lastProg = 0; hintT = 0;
     if (recipe.ambience) ctx.audio?.levelAmb?.(recipe.ambience);
     A = { x: anchor.x, z: anchor.z };
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
     decoBatching = true; recipe.build(B); decoBatching = false;
     flushDecos();
+    refreshFallbackMaterials();
     if (!recipe.hub) { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); } else hubInit();
     buildLeafyBackdrop(recipe.bounds);
     decorateProps();
@@ -2572,7 +2634,9 @@ export function createZones(scene, host) {
     const S = a2; if (!S || !recipe || S.borrow) return;
     const want = recipe.loanGear === 'all' || recipe.loanGear === true || (recipe.loanGear === 'test' && typeof window !== 'undefined' && window.T);
     if (!want) return;
-    S.borrow = recipe.loanGear === 'all' ? { lantern: true, whistle: true, pouch: true, glider: true, sling: true, eqL: true, eqW: false, eqP: true, eqG: true, eqS: true, slot: { scout: 'lantern', trickster: 'whistle', bruiser: 'sling' } } : { lantern: true, whistle: true, eqL: false, eqW: false, slot: { scout: 'lantern', trickster: 'whistle' } };
+    const testLoan = { lantern: true, whistle: true, eqL: false, eqW: false, slot: { scout: 'lantern', trickster: 'whistle' } };
+    if (recipe.loanPouch) { testLoan.pouch = true; testLoan.eqP = false; }
+    S.borrow = recipe.loanGear === 'all' ? { lantern: true, whistle: true, pouch: true, glider: true, sling: true, eqL: true, eqW: false, eqP: true, eqG: true, eqS: true, slot: { scout: 'lantern', trickster: 'whistle', bruiser: 'sling' } } : testLoan;
     ctx.onGear?.();
   }
   function a2Init() {
@@ -3392,6 +3456,11 @@ export function createZones(scene, host) {
       (S.shots || []).forEach((s, i) => movers.push({ id: 16 + i, kind: 'shot', x: s.x - A.x, y: (s.y || 0) - baseY, z: s.z - A.z, yaw: s.yaw || 0 }));
       (S.movers || []).forEach((m, i) => { const q = m.q || m; movers.push({ id: 32 + i, kind: 'mover', x: (q.x || 0) - A.x, y: (q.y || 0) - baseY, z: (q.z || 0) - A.z, yaw: q.yaw || 0 }); });
     }
+    const cave = S && (S.ghosts.length || S.mirrors.length || S.targets.length) ? {
+      ghosts: S.ghosts.map(g => ({ id: g.id, on: !!g.on })),
+      mirrors: S.mirrors.map(m => ({ id: m.id, k: m.k || 0 })),
+      targets: S.targets.map(q => ({ sig: q.sig, done: !!q.done })),
+    } : null;
     const mill = S && (S.wheels.length || S.grates.length || S.ponds.length) ? {
       ponds: S.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })),
       wheels: S.wheels.map(w => ({ id: w.id, spin: !!(w.spin && sig[w.spin]), rot: w.G ? w.G.rotation.z : 0 })),
@@ -3412,7 +3481,7 @@ export function createZones(scene, host) {
       cps: S ? S.cps.map((c, i) => ({ i, x: +(c.x - A.x).toFixed(2), z: +(c.z - A.z).toFixed(2), on: !!c.on, active: S.cp === c })) : [],
       world: S ? { night: !!S.night, season: S.season, wind: S.wind, time: S.time || (S.night ? 'night' : 'day'), windMag: S.windMag ?? (S.wind ? 6 : 0), pouch: !!(S.pouch && S.pouch.full), heldTool: S.heldTool || null } : null,
       gear: { ...gear },
-      mill, bell, master,
+      mill, cave, bell, master,
       A: { ...A }, baseY,
     };
   }
@@ -3475,6 +3544,22 @@ export function createZones(scene, host) {
           if (s.following != null) b.following = !!s.following;
           if (s.hide != null) b.hide = !!s.hide;
           if (b.G) b.G.position.set(b.x, b.y, b.z);
+        }
+      }
+      if (state.cave && a2) {
+        for (const s of state.cave.ghosts || []) {
+          const g = a2.ghosts.find(q => q.id === s.id); if (!g || s.on == null) continue;
+          g.on = !!s.on; g.r.s.off = !g.on; if (g.cr) g.cr.on = g.on;
+          if (!applyGhostMaterial(g.r.m, g.on)) { g.r.m.material.opacity = g.on ? 0.72 : 0.25; g.r.m.material.depthWrite = g.on; }
+          if (g.sig) { if (g.on) sig[g.sig] = true; else delete sig[g.sig]; }
+        }
+        for (const s of state.cave.mirrors || []) {
+          const m = a2.mirrors.find(q => q.id === s.id); if (!m || s.k == null) continue;
+          m.k = s.k; if (m.F) m.F.rotation.y = m.k * 0.9;
+        }
+        for (const s of state.cave.targets || []) {
+          const q = a2.targets.find(g => g.sig === s.sig); if (!q) continue;
+          if (s.done && !q.done) { q.done = true; if (q.gem) q.gem.material = mat(0xffd23f, 0.9); if (q.tg) q.tg.visible = false; }
         }
       }
       if (state.movers && a2) {

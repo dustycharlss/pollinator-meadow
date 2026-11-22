@@ -8,6 +8,7 @@
 // tune() blends the day share of that toward preset B every frame.
 import * as THREE from 'three';
 import { PRESET_B as B, pastelize, createComposerB, cssOverlayB, sunDirectionB } from './preset-B.js';
+import { skipCustomShaders, cullWorldFx } from './l20-fallback.js';
 import { initPerf } from './perf.js';
 import LOOK_L20 from './look-targets/L20-mirror-caves.json';
 import LOOK_L21 from './look-targets/L21-storm-orchard.json';
@@ -131,9 +132,14 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
 
   // ---- composer + shadows per tier ----
   let L = LOOKS.med, tierName = null, composer = null, bloomPass = null;
+  let postLockedOff = false;
+  function disablePost() {
+    postLockedOff = true;
+    if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); composer = null; bloomPass = null; }
+  }
   function buildComposer() {
     if (composer) { composer.renderTarget1.dispose(); composer.renderTarget2.dispose(); composer = null; }
-    if (!L.post) return;
+    if (postLockedOff || !L.post) return;
     const fx = { quality: { bloom: L.bloom, bloomScale: L.bloomScale || 0.5, grade: L.grade, msaa: L.msaa } };
     composer = createComposerB(renderer, scene, camera, fx);
     bloomPass = composer && composer.passes.find(p => p.name === 'presetB-bloom');
@@ -159,6 +165,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   // ---- per-material pastel lift (props 1, animals 0.5, level terrain 0.8; water / glow / UI sprites skipped) ----
   const OK = m => m && (m.isMeshLambertMaterial || m.isMeshStandardMaterial || m.isMeshPhongMaterial || m.isMeshToonMaterial || m.isMeshBasicMaterial) && !(m.transparent && m.opacity < 0.97) && m.blending === THREE.NormalBlending && !m.userData.noPastel;
   function styleMat(m, s) {
+    if (skipCustomShaders()) return;
     if (!OK(m) || m.userData.presetB) return;
     const pk = m.customProgramCacheKey ? m.customProgramCacheKey() : ''; pastelize(m, s); const nk = m.customProgramCacheKey();
     m.customProgramCacheKey = () => pk + '|' + nk;
@@ -274,7 +281,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
       f.light.intensity = fillIntensity(f.spec, masterLetter);
       if (f.follow && p) f.light.position.set(p.x, p.y + 2.2, p.z + 1.6);
     }
-    motes.visible = k > 0.25 && motes.count > 0; moteMat.opacity = 0.9 * Math.min(1, k * 1.5); if (motes.visible) updateMotes(t, heightAt);
+    motes.visible = !cullWorldFx() && k > 0.25 && motes.count > 0; moteMat.opacity = 0.9 * Math.min(1, k * 1.5); if (motes.visible) updateMotes(t, heightAt);
   }
   renderer.info.autoReset = false; // count every pass of a frame (composer + shadow), reset once per frame below
   function render() { renderer.info.reset(); if (composer) composer.render(); else renderer.render(scene, camera); }
@@ -289,5 +296,5 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   // Tier is applied last: applyLookBloom reads patchLook/qBucket declared above (TDZ crash on High/Ultra otherwise).
   perf.onTierChange(t => applyTier(t.name));
   applyTier(perf.getTier());
-  return { perf, tune, render, frame, start, resize, styleScene, status, setPatch, setMaster, sky, motes, get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
+  return { perf, tune, render, frame, start, resize, styleScene, status, setPatch, setMaster, disablePost, sky, motes, get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
 }

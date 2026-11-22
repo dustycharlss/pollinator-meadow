@@ -1,0 +1,735 @@
+{
+  "id": "l20-fallback",
+  "level": 20,
+  "recipeKey": "mirror_caves",
+  "title": "Mirror Caves \u2014 phone-safe fallback materials",
+  "live_build": {
+    "url": "https://dustycharlss.github.io/pollinator-meadow/",
+    "commit_note": "Live index recorded Sunday Nov 15, 2026, 12:35 AM America/Chicago (last-modified 2026-11-15T06:35:13Z).",
+    "bundle": "index-I0EnmJvo.js",
+    "css": "index-cTAVNTNj.css",
+    "previous_bundle_same_day": "index-B71T2L5a.js (deployed 12:16 AM America/Chicago)"
+  },
+  "rule": "If a custom shader fails to compile or link on the device (ShaderMaterial, RawShaderMaterial, onBeforeCompile hook, MeshPhysicalMaterial / transmission / clearcoat, KTX2 decoder, or a post ShaderPass), swap the named mesh's material for the MeshStandardMaterial or MeshBasicMaterial below. Do not keep the broken program. Do not attach onBeforeCompile. Pastel is already baked into these colours (palette B / L20 look-target extras). Prefer these shared instances; do not allocate a new material per mesh.",
+  "constraints": {
+    "allowed_types": [
+      "MeshStandardMaterial",
+      "MeshBasicMaterial"
+    ],
+    "forbidden": [
+      "ShaderMaterial",
+      "RawShaderMaterial",
+      "onBeforeCompile",
+      "MeshPhysicalMaterial",
+      "transmission",
+      "thickness",
+      "clearcoat",
+      "sheen",
+      "iridescence",
+      "anisotropy",
+      "ior as physical transmission",
+      "KTX2",
+      "PMREM / CubeCamera reflection renders",
+      "SpriteMaterial (use a MeshBasic plane + glow-soft.png instead)"
+    ],
+    "phone": "WebGL1-ish: no antialias, pixelRatio 1, no float colour buffers, no logarithmic depth, shadow map <= 1024 or off, no bloom composer. One directional + one hemi + one crew point light. Mediump precision is enough. Android GPUs with low uniform limits should stay on MeshStandard/Basic with these few uniforms.",
+    "textures": "Four PNG files in textures/, all 64px or smaller. Share them. Total decoded RGBA is well under 100 KB."
+  },
+  "textures": {
+    "env-cave-gradient": {
+      "path": "textures/env-cave-gradient.png",
+      "size": [
+        64,
+        32
+      ],
+      "mapping": "EquirectangularReflectionMapping",
+      "colorSpace": "SRGBColorSpace",
+      "usedBy": [
+        "mirror",
+        "panel"
+      ],
+      "note": "Baked cave lighting + a warm ceiling-shaft highlight. Assign as envMap only. Do not generate a CubeCamera or reflection render target."
+    },
+    "beam-falloff": {
+      "path": "textures/beam-falloff.png",
+      "size": [
+        32,
+        128
+      ],
+      "colorSpace": "NoColorSpace",
+      "usedBy": [
+        "lampBeam",
+        "beamPool"
+      ],
+      "note": "Optional alpha/colour multiply on the beam cylinder. The material still reads if the texture fails to load (solid colour + opacity)."
+    },
+    "glow-soft": {
+      "path": "textures/glow-soft.png",
+      "size": [
+        64,
+        64
+      ],
+      "colorSpace": "NoColorSpace",
+      "usedBy": [
+        "lampGlow",
+        "bridgeGlow"
+      ],
+      "note": "Soft radial for additive halo planes (MeshBasic, depthWrite false). Replaces the look-target Sprite halo."
+    },
+    "hud-ring": {
+      "path": "textures/hud-ring.png",
+      "size": [
+        64,
+        64
+      ],
+      "colorSpace": "NoColorSpace",
+      "usedBy": [
+        "carryRing",
+        "stamRing"
+      ],
+      "note": "Annulus used as an alpha map on a MeshBasic ground plane, replacing main.js ShaderMaterial rings."
+    }
+  },
+  "materials": {
+    "crystal-cyan": {
+      "source": [
+        "GLB material name crystal-cyan on act3/levels/mirror-caves/built-crystal-cluster-{cyan,pink,gold}.glb",
+        "look-target extras.emissive.crystalCyan"
+      ],
+      "meshes": [
+        "built-crystal-cluster-cyan (crystal primitives)",
+        "any mesh whose material.name is crystal-cyan"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#88eff8",
+      "emissive": "#3fb8c8",
+      "emissiveIntensity": 0.6,
+      "metalness": 0.08,
+      "roughness": 0.22,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": true,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "note": "No transmission, no refraction. Flat shading plus a capped emissive stands in for a faceted crystal shader. Emissive value stays <= 75% so bloom (if still on) does not blow out."
+    },
+    "crystal-pink": {
+      "source": [
+        "GLB material name crystal-pink on built-crystal-cluster-pink.glb",
+        "look-target extras.emissive.crystalPink (dummy crystal)"
+      ],
+      "meshes": [
+        "built-crystal-cluster-pink (pink primitives)"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#f4a6d0",
+      "emissive": "#d06aa0",
+      "emissiveIntensity": 0.55,
+      "metalness": 0.08,
+      "roughness": 0.22,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": true,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null
+    },
+    "crystal-gold": {
+      "source": [
+        "GLB material name crystal-gold on built-crystal-cluster-gold.glb",
+        "look-target extras.emissive.crystalGold (lamp / beam crystal)",
+        "zones.js sunlamp cr uses mat(0xffe680, 0.9) \u2014 swap to this shared material"
+      ],
+      "meshes": [
+        "built-crystal-cluster-gold (gold primitives)",
+        "sunlamp crystal octahedron"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#ffd27a",
+      "emissive": "#e0a040",
+      "emissiveIntensity": 0.7,
+      "metalness": 0.1,
+      "roughness": 0.2,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": true,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null
+    },
+    "stone": {
+      "source": [
+        "GLB material name stone on built-crystal-cluster-*.glb and built-reflective-panel.glb",
+        "look-target caveStone #9c8cc6 (approved CVD, Chaz 14 Nov 2026)"
+      ],
+      "meshes": [
+        "crystal cluster bases",
+        "reflective-panel stone surround",
+        "generic cave rock if it used a custom shader"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#9c8cc6",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 0.9,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "note": "GLB stone is a warm grey #73706b. On L20 retint to the approved caveStone so crystal vs rock stays readable. Terrain/ceiling use caveFloor / caveCeiling instead (vertex colours)."
+    },
+    "mirror": {
+      "source": [
+        "GLB material name mirror on built-framed-mirror.glb",
+        "zones.js B.mirror face bx(..., 0xdff4ff, ..., 0.5) \u2014 the glass pane"
+      ],
+      "meshes": [
+        "built-framed-mirror pane",
+        "procedural B.mirror face"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#e4f6ff",
+      "emissive": "#7ad8e8",
+      "emissiveIntensity": 0.42,
+      "metalness": 0.45,
+      "roughness": 0.22,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0.55,
+      "map": null,
+      "envMap": "textures/env-cave-gradient.png",
+      "note": "Fake reflection only: metalness/roughness + the baked cave gradient. Metalness is 0.45 (not 0.9) so the pane stays a readable light-cyan in a dark cave \u2014 a chrome-dark env would make it disappear against the wall (gray \u0394E 0.4). No CubeCamera, no transmission."
+    },
+    "dark-wood": {
+      "source": [
+        "GLB material name dark-wood on built-framed-mirror.glb"
+      ],
+      "meshes": [
+        "built-framed-mirror posts"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#6a4a32",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 0.85,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "note": "Slightly lifted from the GLB #522e14 so the frame stays readable in the dark cave."
+    },
+    "frame": {
+      "source": [
+        "GLB material name frame on built-framed-mirror.glb"
+      ],
+      "meshes": [
+        "built-framed-mirror gold trim"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#c9a04a",
+      "emissive": "#6a4a18",
+      "emissiveIntensity": 0.12,
+      "metalness": 0.35,
+      "roughness": 0.4,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0.3,
+      "map": null,
+      "envMap": "textures/env-cave-gradient.png"
+    },
+    "panel": {
+      "source": [
+        "GLB material name panel on built-reflective-panel.glb"
+      ],
+      "meshes": [
+        "built-reflective-panel face"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#e4f6ff",
+      "emissive": "#7ad8e8",
+      "emissiveIntensity": 0.42,
+      "metalness": 0.45,
+      "roughness": 0.22,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0.55,
+      "map": null,
+      "envMap": "textures/env-cave-gradient.png",
+      "note": "Same fake-reflection recipe as mirror, slightly cleaner (the loose panel)."
+    },
+    "lampBeam": {
+      "source": [
+        "look-target extras.emissive.lampBeam",
+        "zones.js beamSeg / AA().beamPool MeshBasicMaterial color 0xfff27a, opacity 0.75, Additive, depthWrite false"
+      ],
+      "meshes": [
+        "beam cylinder (look-target beam(), engine S.beamPool[i])"
+      ],
+      "type": "MeshBasicMaterial",
+      "color": "#ffd27a",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 1,
+      "opacity": 0.48,
+      "transparent": true,
+      "blending": "AdditiveBlending",
+      "depthWrite": false,
+      "side": "DoubleSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "toneMapped": false,
+      "fog": false,
+      "renderOrder": 6,
+      "note": "Engine path is already MeshBasic additive (0xfff27a @ 0.75). Without bloom, a slightly stronger gold (#ffd27a) at opacity 0.48 plus the falloff as alphaMap (not as a colour map \u2014 a white colour map blew the beam to white) stays readable vs the cave. Open-ended cylinder. If the texture is missing, leave alphaMap null and keep colour/opacity.",
+      "alphaMap": "textures/beam-falloff.png"
+    },
+    "ghostBridgeLit": {
+      "source": [
+        "look-target extras.emissive.ghostBridge",
+        "zones.js ghost() g.r.m.material when on === true: opacity 0.95, depthWrite true, emissiveIntensity 0.6"
+      ],
+      "meshes": [
+        "ghost / beam-lit bridge plank (g.r.m) in the lit state"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#cfe8ff",
+      "emissive": "#8fc0f0",
+      "emissiveIntensity": 0.45,
+      "metalness": 0.05,
+      "roughness": 0.3,
+      "opacity": 0.88,
+      "transparent": true,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "note": "Solid-enough to walk. Engine currently uses MeshLambertMaterial; swap to this Standard. Toggle with ghostBridgeUnlit on the same mesh \u2014 do not clone."
+    },
+    "ghostBridgeUnlit": {
+      "source": [
+        "zones.js ghost() default / when on === false: opacity 0.25, depthWrite false, emissiveIntensity 0.3",
+        "look-target does not ship an unlit variant; this is the phone-safe unlit state"
+      ],
+      "meshes": [
+        "ghost / beam-lit bridge plank (g.r.m) in the unlit state"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#6e7ea0",
+      "emissive": "#243048",
+      "emissiveIntensity": 0.08,
+      "metalness": 0,
+      "roughness": 0.7,
+      "opacity": 0.32,
+      "transparent": true,
+      "blending": "NormalBlending",
+      "depthWrite": false,
+      "side": "FrontSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "note": "Must read as not-solid against the lit plank and against the cave. Darker and duller, not just more transparent. Swap fields in place (or use two shared materials and assign .material)."
+    },
+    "caveFloor": {
+      "source": [
+        "look-target terrain MeshStandardMaterial vertexColors, stone #9c8cc6 \u2192 shadow #5e5288, leaf net #b9c98a in the chasm"
+      ],
+      "meshes": [
+        "level heightfield / floor"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#ffffff",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 0.9,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": false,
+      "vertexColors": true,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "note": "Vertex colours carry the stone/shadow/leaf-net variation. No terrain texture."
+    },
+    "caveCeiling": {
+      "source": [
+        "look-target ceiling: vertex colour >= 65% stone, stalactites #8a7cb8"
+      ],
+      "meshes": [
+        "cave ceiling shell"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#ffffff",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 0.95,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "DoubleSide",
+      "flatShading": false,
+      "vertexColors": true,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null
+    },
+    "stalactite": {
+      "source": [
+        "look-target InstancedMesh std('#8a7cb8')"
+      ],
+      "meshes": [
+        "stalactite instances"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#8a7cb8",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 0.92,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": true,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null
+    },
+    "web": {
+      "source": [
+        "look-target / quaternius-cobweb and pixor-cobweb materials; swatch #eef0ff"
+      ],
+      "meshes": [
+        "cobweb meshes (Cobweb material on pixor/quaternius GLBs)"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#eef0ff",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 0.55,
+      "opacity": 0.85,
+      "transparent": true,
+      "blending": "NormalBlending",
+      "depthWrite": false,
+      "side": "DoubleSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null
+    },
+    "lampPost": {
+      "source": [
+        "look-target lamp box #6a5a82"
+      ],
+      "meshes": [
+        "crystal lamp post / pedestal"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#6a5a82",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 0.8,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null
+    },
+    "lampGlow": {
+      "source": [
+        "look-target halo('#ffd27a') Sprite \u2014 SpriteMaterial is not allowed in the fallback"
+      ],
+      "meshes": [
+        "additive plane at the lamp (and optional small planes along the beam)"
+      ],
+      "type": "MeshBasicMaterial",
+      "color": "#ffd27a",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 1,
+      "opacity": 0.55,
+      "transparent": true,
+      "blending": "AdditiveBlending",
+      "depthWrite": false,
+      "side": "DoubleSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": "textures/glow-soft.png",
+      "envMap": null,
+      "toneMapped": false,
+      "fog": false
+    },
+    "slingGem": {
+      "source": [
+        "zones.js slingTarget gem: mat(o.col || 0x9fe8ff, 0.45) MeshLambertMaterial"
+      ],
+      "meshes": [
+        "far-crystal / sling target octahedron"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": "#88eff8",
+      "emissive": "#3fb8c8",
+      "emissiveIntensity": 0.45,
+      "metalness": 0.08,
+      "roughness": 0.22,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "FrontSide",
+      "flatShading": true,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "note": "Same recipe as crystal-cyan at a slightly lower emissive. Reuse crystal-cyan if you need to cut a material."
+    },
+    "skyFallback": {
+      "source": [
+        "tc/source/src/look.js sky ShaderMaterial",
+        "tc/source/src/preset-B.js sky ShaderMaterial (makeSkyB)",
+        "L20 extras.background #3c3466 \u2014 the sky dome is never visible inside the shell"
+      ],
+      "meshes": [
+        "sky dome, if it was created"
+      ],
+      "type": "MeshBasicMaterial",
+      "color": "#3c3466",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 1,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": false,
+      "side": "BackSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "fog": false,
+      "note": "Preferred swap: do not draw a dome at all. Set scene.background and scene.fog.color to #3c3466."
+    },
+    "carryRing": {
+      "source": [
+        "tc/source/src/main.js buildRing() ShaderMaterial (carry progress)"
+      ],
+      "meshes": [
+        "ground carry ring plane"
+      ],
+      "type": "MeshBasicMaterial",
+      "color": "#ffd23f",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 1,
+      "opacity": 0.85,
+      "transparent": true,
+      "blending": "NormalBlending",
+      "depthWrite": false,
+      "side": "DoubleSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": "textures/hud-ring.png",
+      "alphaMap": "textures/hud-ring.png",
+      "envMap": null,
+      "toneMapped": false,
+      "fog": false,
+      "polygonOffset": true,
+      "polygonOffsetFactor": -6,
+      "polygonOffsetUnits": -6,
+      "note": "Static annulus. Fill amount can be approximated by opacity or by scaling; do not add a custom fill shader."
+    },
+    "stamRing": {
+      "source": [
+        "tc/source/src/main.js buildStamRing() ShaderMaterial (stamina hoop)"
+      ],
+      "meshes": [
+        "ground stamina ring plane"
+      ],
+      "type": "MeshBasicMaterial",
+      "color": "#7fd8ff",
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 1,
+      "opacity": 0.8,
+      "transparent": true,
+      "blending": "NormalBlending",
+      "depthWrite": false,
+      "side": "DoubleSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": "textures/hud-ring.png",
+      "alphaMap": "textures/hud-ring.png",
+      "envMap": null,
+      "toneMapped": false,
+      "fog": false,
+      "polygonOffset": true,
+      "polygonOffsetFactor": -5,
+      "polygonOffsetUnits": -5
+    },
+    "flapWings": {
+      "source": [
+        "tc/source/src/models.js makeFlapMaterial() \u2014 Lambert + onBeforeCompile vertex flap (bee / bat)"
+      ],
+      "meshes": [
+        "bee or bat wing meshes that used the flap hook"
+      ],
+      "type": "MeshStandardMaterial",
+      "color": null,
+      "emissive": "#000000",
+      "emissiveIntensity": 0,
+      "metalness": 0,
+      "roughness": 0.7,
+      "opacity": 1,
+      "transparent": false,
+      "blending": "NormalBlending",
+      "depthWrite": true,
+      "side": "DoubleSide",
+      "flatShading": false,
+      "vertexColors": false,
+      "envMapIntensity": 0,
+      "map": null,
+      "envMap": null,
+      "note": "Keep the source colour (or a baked pastel of it). Do not inject flap uniforms. Wings stay in the posed rest clip. L20's bat pup uses this if the flap shader is what failed."
+    }
+  },
+  "shared_shaders_found_in_tc_and_live": {
+    "note": "Current tc source and the live bundle index-I0EnmJvo.js do not contain an L20-only ShaderMaterial or MeshPhysicalMaterial for crystals, mirrors, the beam or the ghost bridge. The built GLBs are ordinary glTF PBR (no KHR_materials_transmission). The engine beam is already MeshBasic additive; the ghost bridge is MeshLambertMaterial with an opacity/emissive toggle; B.mirror is a MeshLambert pane. The custom shaders that would still run inside L20 \u2014 and that can fail on Android GPUs with low uniform limits \u2014 are the shared ones listed here. This kit still specifies phone-safe Standard/Basic stand-ins for every L20 set-piece, so Noodle can swap if a later crystal/mirror/beam shader is what crashed, or if pastelize / sky / bloom / flap / HUD rings fail.",
+    "files": [
+      {
+        "file": "tc/source/src/preset-B.js",
+        "what": "pastelize() onBeforeCompile (saturation/lift/warm into MeshStandard); makeSkyB() ShaderMaterial dome"
+      },
+      {
+        "file": "tc/source/src/look.js",
+        "what": "sky ShaderMaterial dome (same role as makeSkyB)"
+      },
+      {
+        "file": "tc/source/src/models.js",
+        "what": "makeFlapMaterial() onBeforeCompile vertex animation for bee/bat wings"
+      },
+      {
+        "file": "tc/source/src/main.js",
+        "what": "buildRing() and buildStamRing() ShaderMaterials (carry + stamina). Not L20-specific but drawn while playing L20."
+      },
+      {
+        "file": "tc/source/src/world.js",
+        "what": "grass onBeforeCompile + a ShaderMaterial. Meadow grass should not be in the cave; skip it on L20."
+      },
+      {
+        "file": "tc/source/src/seasons.js",
+        "what": "onBeforeCompile season tint. L20 has no seasons (Fern)."
+      },
+      {
+        "file": "tc/source/src/weather.js",
+        "what": "rain + rainbow ShaderMaterials. L20 has no weather."
+      }
+    ],
+    "live_bundle": "index-I0EnmJvo.js bundles the L20 look-target JSON (crystalCyan, lampBeam, ghostBridge extras) and the valley / card entries, but not a playable act3-maps mirror_caves recipe and not an L20-only shader. MeshPhysicalMaterial / transmission hits in the bundle are three.js library code, not game constructors."
+  },
+  "material_counts": {
+    "setpiece_shared": 12,
+    "setpiece_list": [
+      "crystal-cyan",
+      "crystal-pink",
+      "crystal-gold",
+      "stone",
+      "mirror",
+      "dark-wood",
+      "frame",
+      "lampBeam",
+      "ghostBridgeLit",
+      "ghostBridgeUnlit",
+      "caveFloor",
+      "caveCeiling"
+    ],
+    "optional_shared": [
+      "stalactite",
+      "web",
+      "lampPost",
+      "lampGlow",
+      "panel",
+      "slingGem",
+      "skyFallback",
+      "carryRing",
+      "stamRing",
+      "flapWings"
+    ],
+    "budget": "Look-target instancing guide: <= 12 distinct materials on Low, <= 20 on High. The 12 set-piece materials cover Low if you reuse crystal-cyan for slingGem, skip panel when the framed mirror is in use, skip skyFallback (use a solid background), and keep HUD rings off until needed. High may use the full optional set (20)."
+  }
+}

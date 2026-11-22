@@ -52,6 +52,7 @@ const SPECIAL = FEATURES.teamFoods ? SPECIAL0 : [];
 import { ANIMAL_FACTS, MOMENTS } from './moments.js';
 import { SEASONS_ENABLED, SEASONS, SEASON_INFO, SU, LOOK, patchSeason, createClock, nightOf, warmOf, NIGHT_T, DAY_T, DUSK_T } from './seasons.js';
 import { buildWeather } from './weather.js';
+import { armShaderFallback, installFallbackHooks, skipCustomShaders } from './l20-fallback.js';
 import { createGear, GEAR, SLOTS, SLOT_LABEL, RANGE_M, SPEED_M, DRAIN_M, RECH_M, capBonus, costOf, ringMult } from './gear.js';
 import { buildBabies } from './babies.js';
 import { ACT } from './creatures.js';
@@ -94,7 +95,8 @@ renderer.debug.onShaderError = (gl, program, vs, fs) => {
     'fragment: ' + (gl.getShaderInfoLog(fs) || '').trim(),
   ].filter(Boolean).join('\n');
   console.error(msg);
-  window.__bootFail?.(msg);
+  // Safety net: swap to Squid's phone-safe kit and keep booting instead of failing the loader.
+  armShaderFallback(msg);
 };
 canvas.addEventListener('webglcontextlost', ev => {
   ev.preventDefault();
@@ -196,6 +198,15 @@ let ringK = 1, ringR = 1.4;
 function viewTiers(id) { return shopOpen && id === cur ? shopPv : save.gear[id].t; }
 function updateRing(p, sp, t, dt) {
   if (!ringMesh) return;
+  if (skipCustomShaders() || !ringMesh.material.uniforms) {
+    const target = Math.min(1, p.carried / abOf(cur).cap);
+    ringShown += (target - ringShown) * Math.min(1, dt * 9);
+    ringK += (ringMult(viewTiers(cur)[0]) - ringK) * Math.min(1, dt * 8);
+    const R = (0.3 * sp.size + 1.05) * ringK, Q = R * 1.45; ringR = R;
+    ringMesh.visible = playing; ringMesh.position.set(p.x, (p.floorY ?? p.y) + 0.1, p.z); ringMesh.scale.setScalar(Q);
+    ringMesh.material.opacity = 0.45 + 0.4 * ringShown;
+    return;
+  }
   const u = ringMesh.material.uniforms, target = Math.min(1, p.carried / abOf(cur).cap), full = p.carried >= abOf(cur).cap ? 1 : 0;
   ringShown += (target - ringShown) * Math.min(1, dt * 9); if (Math.abs(target - ringShown) < 0.002) ringShown = target;
   ringK += (ringMult(viewTiers(cur)[0]) - ringK) * Math.min(1, dt * 8); const R = (0.3 * sp.size + 1.05) * ringK, Q = R * 1.45; ringR = R;
@@ -222,6 +233,16 @@ function buildStamRing() {
 }
 function updateStamRing(p, sp, t, dt) {
   if (!stamMesh) return;
+  if (skipCustomShaders() || !stamMesh.material.uniforms) {
+    const fly = !!(sp.mv && sp.mv.fly);
+    const target = fly ? Math.max(0, Math.min(1, p.stam)) : 1;
+    stamShown += (target - stamShown) * Math.min(1, dt * 10);
+    const R = ringR + 0.28, Q = R * 1.45;
+    stamMesh.visible = playing && fly;
+    stamMesh.position.set(p.x, (p.floorY ?? p.y) + 0.08, p.z); stamMesh.scale.setScalar(Q);
+    stamMesh.material.opacity = 0.35 + 0.5 * stamShown;
+    return;
+  }
   const fly = !!(sp.mv && sp.mv.fly);
   const target = fly ? Math.max(0, Math.min(1, p.stam)) : 1;
   stamShown += (target - stamShown) * Math.min(1, dt * 10); if (Math.abs(target - stamShown) < 0.002) stamShown = target;
@@ -1409,7 +1430,7 @@ function beginRound() {
   if (!swapOK() && cur !== lead && SPECIES[lead]) selectSpecies(lead, true);
   $('title').classList.remove('on'); document.body.classList.add('inRound'); playing = true; syncPause(); audio.start(); renderCrewDock();
   cam.zoomT = 1; cam.pitch = 0.35; { const p = P[cur]; cam.yaw = p.yaw; cam.swoop = 1.4; }
-  setHint(isMobile ? 'Drag left to move · hold Jump in the air to fly · hold a big button for its wheel' : 'WASD move · Space jump (hold in air = fly) · E action · B build · Esc menu'); setTimeout(() => setHint(''), 10000);
+  setHint(isMobile ? 'Drag left to move · hold Jump in the air to fly · hold a big button for its wheel' : 'WASD move · Space jump (hold in air = fly) · E action · Esc menu'); setTimeout(() => setHint(''), 10000);
   if (rivals && !rivals.active) rivals.resetRound(lead);
   if (hazards && !(hazards.list && hazards.list.length)) hazards.resetRound();
   if (goals) goals.resetRound();
@@ -2264,6 +2285,7 @@ async function boot() {
   babies = buildBabies(scene, riders, nests); DCL.HELP[1] = scene.children.length; babies.sync(); if (babies.list.length) { save.journal['m:baby'] = save.journal['m:baby'] || { t: Date.now() }; }
   selectSpecies(SPECIES.hasOwnProperty(save.species) ? save.species : 'bee', true);
   weather = buildWeather(scene);
+  installFallbackHooks({ scene, look, sky: look.sky, grass: world && world.grass, motes: look.motes, renderer, ringMesh, stamMesh, weather });
   if (SPECIES[cur].nocturnal !== (nightOf(clock.t) > 0.5)) setNight(SPECIES[cur].nocturnal, true);
   curNight = nightOf(clock.t) > 0.5; $('bNight').textContent = curNight ? '☀️ Switch to day' : '🌙 Switch to night'; $('bSeason').textContent = SEASON_INFO[clock.season].emoji + ' Season: ' + SEASON_INFO[clock.season].name; night = nightOf(clock.t); updateNight(0.01);
   state.musicLive = true; look.start(); setLoad(1, 'Ready');

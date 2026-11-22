@@ -246,7 +246,7 @@ export async function buildWorld(scene, { quality = 1, nests = [], renderer, lit
       im.setMatrixAt(n, dummy.matrix); cc.multiplyScalar(0.95 + R() * 0.25).addScalar(0.05); im.setColorAt(n, cc); n++;
     }
     im.count = n; im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; im.frustumCulled = false;
-    scene.add(im);
+    scene.add(im); world.grass = im;
   }
 
   // ---------- bloom registry, grid, sparkles ----------

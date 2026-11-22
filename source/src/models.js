@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { skipCustomShaders } from './l20-fallback.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
@@ -99,6 +100,7 @@ export function makeFlapMaterial(base, { amp = 0.5, body = 0.07, span = 1, tint,
   const uPh = { value: 0 }, uA = { value: amp };
   const styleId = FLAP_STYLE[style] ?? FLAP_STYLE.sine;
   m.userData.uPh = uPh; m.userData.uAmp = uA; m.userData.baseAmp = amp; m.userData.flapStyle = style;
+  if (skipCustomShaders()) return m;
   m.onBeforeCompile = (sh) => {
     sh.uniforms.uPh = uPh; sh.uniforms.uAmp = uA;
     sh.uniforms.uBody = { value: body * span }; sh.uniforms.uSpan = { value: span * 0.5 };

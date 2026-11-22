@@ -1,6 +1,7 @@
 // Gentle weather. Nothing here ever blocks, slows or harms you: it only changes mood - mist, soft rain, snowfall and a rainbow
 // after the rain. States ease in and out and last a minute or two.
 import * as THREE from 'three';
+import { cullWorldFx } from './l20-fallback.js';
 
 const RAIN_N = 520;
 export function buildWeather(scene) {
@@ -43,6 +44,7 @@ export function buildWeather(scene) {
     v: { clear: 1, mist: 0, rain: 0, snow: 0 }, rainbow: 0, rbT: 0, rbBearing: 0,
     events: [], // moments to record: 'rain' | 'snow' | 'mist' | 'rainbow'
     force(kind, dur = 90) { W.kind = kind; W.timer = dur; },
+    cull() { W.v.rain = W.v.snow = 0; W.rainbow = 0; W.rbT = 0; rain.visible = false; rainbow.visible = false; },
     mist() { return W.v.mist; }, rainV() { return W.v.rain; }, snowV() { return W.v.snow; },
     pick(season, hour) {
       const r = Math.random();
@@ -52,6 +54,11 @@ export function buildWeather(scene) {
       return r < 0.3 + rainP ? 'rain' : 'clear';
     },
     update(dt, t, o) { // o: {season, hour, night, cam}
+      if (cullWorldFx()) {
+        W.v.rain = W.v.snow = 0; W.rainbow = 0; W.rbT = 0;
+        rain.visible = false; rainbow.visible = false;
+        return;
+      }
       const wasRain = W.v.rain;
       W.timer -= dt;
       if (W.timer <= 0) {

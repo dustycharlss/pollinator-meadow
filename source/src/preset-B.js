@@ -10,6 +10,7 @@
 //
 // Needs three r170+ (NeutralToneMapping). Tested headless with three 0.170.
 import * as THREE from 'three';
+import { skipCustomShaders } from './l20-fallback.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -69,6 +70,7 @@ export function sunDirectionB(camera, P = PRESET_B) {
 
 /** Pastel colour lift on any built-in material (same GLSL as the frame builder). strength 1 = props, 0.5 = animals. */
 export function pastelize(material, strength = 1, P = PRESET_B) {
+  if (skipCustomShaders()) return material;
   const mats = Array.isArray(material) ? material : [material];
   const a = P.materialAdjust, sat = 1 + (a.saturation - 1) * strength, li = a.lighten * strength, pa = a.pastel * strength, wa = a.warm * strength;
   for (const m of mats) {
