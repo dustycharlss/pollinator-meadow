@@ -70,6 +70,7 @@ export function createNet(hooks = {}) {
   let lastInAt = 0;
   let lastWorldSent = null;
   const evq = [];
+  let readyGen = 0;
 
   const room = LOCAL_ROOM;
   const net = {
@@ -681,6 +682,7 @@ export function createNet(hooks = {}) {
 
   function beginReadyWait(id) {
     if (role !== 'host' || isHubMap(id)) return;
+    readyGen += 1;
     const name = hooks.levelName?.(id) || id;
     const selfId = hooks.peerId?.() || 'host';
     const readySet = new Set([selfId, 'host']);
@@ -691,7 +693,8 @@ export function createNet(hooks = {}) {
     if (hooks.onHold) hooks.onHold(true);
     hooks.levelFlow?.showReady?.({ map: id, name, roster });
     sendEvt({ type: 'readywait', map: id, name, roster, from: 'host' });
-    readyWait.timer = setTimeout(() => finishReadyWait(true), 15000);
+    const gen = readyGen;
+    readyWait.timer = setTimeout(() => { if (gen !== readyGen) return; finishReadyWait(true); }, 15000);
     setTimeout(() => maybeFinishReady(), 400);
   }
 
@@ -737,8 +740,10 @@ export function createNet(hooks = {}) {
     if (!readyWait) return;
     readyWait.counting = true;
     const { map, name } = readyWait;
+    const gen = readyGen;
     let n = 3;
     const go = () => {
+      if (gen !== readyGen || !readyWait || readyWait.map !== map) return;
       holding = false;
       if (hooks.onHold) hooks.onHold(false);
       hooks.levelFlow?.hideReady?.();
@@ -747,6 +752,7 @@ export function createNet(hooks = {}) {
       readyWait = null;
     };
     const tick = () => {
+      if (gen !== readyGen || !readyWait || readyWait.map !== map) return;
       hooks.levelFlow?.showCountdown?.(n, name, map);
       sendEvt({ type: 'countdown', map, name, n, from: 'host' });
       if (n <= 1) { setTimeout(go, 1000); return; }
@@ -769,12 +775,14 @@ export function createNet(hooks = {}) {
     hooks.levelFlow?.hideComplete?.();
   }
 
-  function abortReadyWait() {
+  function abortReadyWait(opts = {}) {
+    readyGen += 1;
     if (readyWait?.timer) { try { clearTimeout(readyWait.timer); } catch (e) {} }
     readyWait = null;
     holding = false;
     hooks.levelFlow?.hideReady?.();
-    hooks.levelFlow?.hideComplete?.();
+    if (!opts.keepComplete) hooks.levelFlow?.hideComplete?.();
+    if (hooks.onHold) hooks.onHold(false);
   }
 
   let snapClock = null, nextSnapAt = 0;
