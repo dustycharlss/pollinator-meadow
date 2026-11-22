@@ -700,6 +700,7 @@ export function createLobby(hooks = {}) {
       right.append(renderRoster());
       right.append(renderClassCards());
       if (copiedOn) right.append(el('div', 'olCopied', 'Copied!'));
+      const actions = el('div', 'olRoomActions');
       if (role === 'host') {
         const go = el('button', 'olBtn olStart', 'Start');
         go.type = 'button';
@@ -708,14 +709,15 @@ export function createLobby(hooks = {}) {
         go.setAttribute('aria-disabled', ready ? 'false' : 'true');
         if (!ready) go.title = 'Waiting for a friend';
         go.onclick = () => startPlay();
-        right.append(go);
+        actions.append(go);
       }
       if (role) {
         const leaveBtn = el('button', 'olLeave', 'Leave game');
         leaveBtn.type = 'button';
         leaveBtn.onclick = () => leave('lobby');
-        right.append(leaveBtn);
+        actions.append(leaveBtn);
       }
+      if (actions.childNodes.length) right.append(actions);
       body.append(left, right);
       return;
     }
