@@ -199,23 +199,32 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   }
   let warmRT = null;
   function compileScene(root = scene) {
-    const hidden = [];
-    root.traverse(o => { if (o !== root && o.visible === false) { hidden.push(o); o.visible = true; } });
+    const hidden = [], culled = [];
+    root.traverse(o => {
+      if (o !== root && o.visible === false) { hidden.push(o); o.visible = true; }
+      if (o.frustumCulled) { culled.push(o); o.frustumCulled = false; }
+    });
     try {
       warmLateMaterials();
       styleScene(root);
       if (typeof renderer.compile === 'function') renderer.compile(root, camera);
-      // Shadow-map programs only link on a real render. Do it offscreen so
-      // hidden warmup meshes (kid trails, critter templates) don't flash.
+      // Shadow-map + composer programs only link on a real render. Keep
+      // hidden warmup meshes un-culled, but don't present this frame.
       const prev = renderer.getRenderTarget();
       if (!warmRT) warmRT = new THREE.WebGLRenderTarget(4, 4);
       renderer.setRenderTarget(warmRT);
       renderer.render(root, camera);
       renderer.setRenderTarget(prev);
+      if (composer) {
+        const toScreen = composer.renderToScreen;
+        composer.renderToScreen = false;
+        try { composer.render(); } finally { composer.renderToScreen = toScreen; }
+      } else {
+        renderer.render(root, camera);
+      }
     } catch (e) {}
+    for (const o of culled) o.frustumCulled = true;
     for (const o of hidden) o.visible = false;
-    // Present once so EffectComposer (grade/bloom) programs link too.
-    try { render(); } catch (e) {}
   }
 
   // ---- per-level look targets (values/<id>.json). Global High/Low presets stay as written above. ----
