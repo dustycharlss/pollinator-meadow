@@ -552,6 +552,18 @@ export function createZones(scene, host) {
   const SHAPE_SEG = { circle: 28, square: 4, hex: 6 };
   function shapeRingGeo(c, r0, r1) { const sh = CLASSES[c]?.shape || 'circle', g = new THREE.RingGeometry(sh === 'square' ? r0 * 1.2 : r0, sh === 'square' ? r1 * 1.2 : r1, SHAPE_SEG[sh] || 28); if (sh === 'square') g.rotateZ(Math.PI / 4); if (sh === 'hex') g.rotateZ(Math.PI / 6); return g.rotateX(-Math.PI / 2); }
   const LOOK = { hedge: COL.hedge, snow: COL.snow, stone: COL.stone, cliff: COL.cliff, wood: COL.wood, bark: 0x8a5a4a, leaf: 0x6fd39a, dirt: COL.dirt, log: 0xb08a6a, cream: COL.cream, glass: 0xbfe8ff, gold: 0xffc94a, cave: 0x9c8cc6 };
+  // Cave-mouth GLBs (pixor entrance moss / light stone) otherwise leak khaki/olive into the spawn foreground.
+  function cavePaletteMat(src) {
+    if (!(recipe && recipe.caveFloor) || !src || !src.color) return src;
+    const n = (src.name || '').toLowerCase();
+    const { r, g, b } = src.color;
+    const moss = /moss|grass|leaf|turf/.test(n) || (g > r * 1.2 && g > b * 1.2);
+    const khaki = /light stone|dirt|sand|soil|bank/.test(n) || (r > 0.28 && g > 0.25 && Math.abs(r - g) < 0.12 && b < r * 0.95 && b < g * 0.95);
+    if (moss || khaki) return mat(LOOK.cave);
+    if (/^stone$|rock face|boulder/.test(n)) return mat(0x5e5288);
+    return src;
+  }
+
 
   function buildTerrainMesh(fn, bounds) {
     const { x0, x1, z0, z1 } = bounds;
@@ -1067,7 +1079,7 @@ export function createZones(scene, host) {
   function decoInto(holder, key, size, o = {}) {
     loadGLB(key).then(g => {
       if (!g || !holder.parent) return;
-      const night = !!(recipe && recipe.night); const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material, night ? { caveNight: true } : {}); n.castShadow = false; } });
+      const night = !!(recipe && recipe.night); const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = cavePaletteMat(lambertFrom(n.material, night ? { caveNight: true } : {})); n.castShadow = false; } });
       const bb = new THREE.Box3().setFromObject(m), sz = bb.getSize(new THREE.Vector3()), L = o.byLong ? Math.max(sz.x, sz.y, sz.z) : sz.y; if (L < 1e-4) return;
       const k = size / L; m.scale.setScalar(k); const bb2 = new THREE.Box3().setFromObject(m), c = bb2.getCenter(new THREE.Vector3()); m.position.set(-c.x, -bb2.min.y + (o.sink || 0), -c.z);
       holder.add(m); lodify(m, key); if (o.fallback) o.fallback.forEach(f => { f.visible = false; }); o.onLoad?.(m);
@@ -1089,7 +1101,7 @@ export function createZones(scene, host) {
         src.traverse(n => {
           if (!n.isMesh || !n.geometry) return;
           const geo = n.geometry.clone(); geo.applyMatrix4(n.matrixWorld);
-          const mat0 = lambertFrom(n.material, night ? { caveNight: true } : {});
+          const mat0 = cavePaletteMat(lambertFrom(n.material, night ? { caveNight: true } : {}));
           parts.push({ geo, mat: mat0 });
         });
         if (cave && parts.length > 1) {
@@ -2349,11 +2361,6 @@ export function createZones(scene, host) {
         // Once the baby has reached the escort goal, don't follow the lead back
         // through hazards behind it (holders may leave; collect-all teleports the crew).
         if (b.atGoal && goal && goal.z != null) tz = Math.max(tz, A.z + goal.z);
-        // N3 leadBody follows the caller, not the swapped body. If the pup is already
-        // at an open exit, keep it there so fail-star session C (and a real flag wait) can complete.
-        if (exitOpen && exitAt && Math.hypot(b.x - exitAt.x, b.z - exitAt.z) < (exitAt.r || 3) + 0.8) b.atExit = true;
-        if (b.atExit && exitOpen && exitAt) { tx = exitAt.x; tz = exitAt.z; }
-        if (!(exitOpen && exitAt)) b.atExit = false;
         const d = Math.hypot(tx - b.x, tz - b.z);
         if (d > 0.12) {
           // Walk each frame and honor hazards. Do not teleport onto the lead when d > 4
@@ -2726,7 +2733,7 @@ export function createZones(scene, host) {
     group.traverse(m => {
       if (skip.has(m)) return;
       if (!(m.isMesh || m.isInstancedMesh) || !m.visible || !m.geometry) return;
-      if (m.isSkinnedMesh || m.userData.caveChunk || m.userData.noMerge || m.userData.isAnimal) return;
+      if (m.isSkinnedMesh || m.userData.caveChunk || m.userData.noMerge || m.userData.isAnimal || m.userData.terrain) return;
       const mat = Array.isArray(m.material) ? null : m.material; if (!mat) return;
       if (m.isInstancedMesh) {
         const W = m.matrixWorld;
@@ -3889,7 +3896,7 @@ export function createZones(scene, host) {
     getA2: () => a2,
     aimMirror: (id) => { const m = a2 && a2.mirrors.find(q => q.id === id); if (!m) return null; aimMirror(m); return m.k; },
     flagBack, callEscort, throwToolAt: (kind, lx, lz) => throwTool(kind, A.x + lx, A.z + lz),
-    placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); b.hide = false; b.atExit = false; b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
+    placeEscort(i, lx, lz) { const b = a2 && a2.escorts[i]; if (!b) return false; b.x = A.x + lx; b.z = A.z + lz; b.y = ctx.heightAt(b.x, b.z); b.hide = false; b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); return true; },
     escort: () => a2 ? a2.escorts.map(b => ({ kind: b.kind, glb: b.G.userData.babyGlb || null, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), y: +b.y.toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })) : [], escortLead: () => a2 ? a2.escorts.map(b => ({ x: b.x, y: b.y, z: b.z, called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })) : [], heldTool: () => a2 ? a2.heldTool : null,
     moody() { return !!(a2 && recipe && recipe.moody) ? !!AA().night : null; },
     timeLocked: () => !!(a2 && a2.master), // S4: Master Bell owns clock.t (dusk/night/day) until clear()
