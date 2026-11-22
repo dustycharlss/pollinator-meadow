@@ -34,7 +34,7 @@ const GLB = {
 };
 
 // art pass (Golden Hour Pastel, STYLE-GUIDE §1): mint hedges, rose-brown wood, lavender stone, peach mud. was hedge 0x4f9a3e hedgeTop 0x5fae4a wood 0x8b6a45 bark 0x6b4a30 stone 0x9a968c cliff 0x8a8578 dirt 0x8a6a3e
-const COL = { hedge: 0x58b878, hedgeTop: 0x79cf8c, wood: 0xb07a5e, bark: 0xa06a5a, stone: 0xb4a4cc, cliff: 0xa898bc, dirt: 0xeec4a6, cream: 0xf3eee0, gold: 0xffd23f };
+const COL = { hedge: 0x58b878, hedgeTop: 0x79cf8c, snow: 0xb3b2cd, snowTop: 0xeef0fb, wood: 0xb07a5e, bark: 0xa06a5a, stone: 0xb4a4cc, cliff: 0xa898bc, dirt: 0xeec4a6, cream: 0xf3eee0, gold: 0xffd23f };
 
 // ---- cosmetic terrain spec → height fn (walls/ledges are solids, not terrain) ------------
 function terrainFrom(spec) {
@@ -529,7 +529,7 @@ export function createZones(scene, host) {
   let hubPads = [], hubFr = [], friendsSpec = null;
   let exitAt = null, exitOpen = false, exitMesh = null, exitLabel = null, starGot = false;
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
-  let sampleH = null, waterMeshes = [], terrMesh = null, instWalls = [], decoJobs = new Map(), decoBatching = false;
+  let sampleH = null, waterMeshes = [], terrMesh = null, instWalls = [], decoJobs = new Map(), decoBatching = false, camRooms = [];
   // three-class puzzle state
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
@@ -545,7 +545,7 @@ export function createZones(scene, host) {
   // POLISH §3 second cue: class rings take the class shape (Scout circle · Trickster rounded square · Bruiser hex), not just its colour
   const SHAPE_SEG = { circle: 28, square: 4, hex: 6 };
   function shapeRingGeo(c, r0, r1) { const sh = CLASSES[c]?.shape || 'circle', g = new THREE.RingGeometry(sh === 'square' ? r0 * 1.2 : r0, sh === 'square' ? r1 * 1.2 : r1, SHAPE_SEG[sh] || 28); if (sh === 'square') g.rotateZ(Math.PI / 4); if (sh === 'hex') g.rotateZ(Math.PI / 6); return g.rotateX(-Math.PI / 2); }
-  const LOOK = { hedge: COL.hedge, stone: COL.stone, cliff: COL.cliff, wood: COL.wood, bark: 0x8a5a4a, leaf: 0x6fd39a, dirt: COL.dirt, log: 0xb08a6a, cream: COL.cream, glass: 0xbfe8ff, gold: 0xffc94a };
+  const LOOK = { hedge: COL.hedge, snow: COL.snow, stone: COL.stone, cliff: COL.cliff, wood: COL.wood, bark: 0x8a5a4a, leaf: 0x6fd39a, dirt: COL.dirt, log: 0xb08a6a, cream: COL.cream, glass: 0xbfe8ff, gold: 0xffc94a };
 
   function buildTerrainMesh(fn, bounds) {
     const { x0, x1, z0, z1 } = bounds;
@@ -626,7 +626,8 @@ export function createZones(scene, host) {
   let bloomGeo = null;
   function bloomMesh() {
     if (!bloomGeo) { const parts = [new THREE.OctahedronGeometry(0.55 * 1.4)]; for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, g = new THREE.OctahedronGeometry(0.3 * 1.4); g.translate(Math.cos(a) * 0.62, 0.05, Math.sin(a) * 0.62); parts.push(g); } bloomGeo = mergeGeos(parts); }
-    const G = new THREE.Group(); G.add(new THREE.Mesh(bloomGeo, mat(0xffb7d6, 0.22))); const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.34), mat(0xffe08a, 0.28)); c.position.y = 0.28; G.add(c); return G;
+    const petal = (recipe && recipe.petalCol) || 0xffb7d6, centre = (recipe && recipe.petalCenter) || 0xffe08a;
+    const G = new THREE.Group(); G.add(new THREE.Mesh(bloomGeo, mat(petal, 0.22))); const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.34), mat(centre, 0.28)); c.position.y = 0.28; G.add(c); return G;
   }
   const B = {
     water(c = 0x8fc8e8) {
@@ -646,7 +647,7 @@ export function createZones(scene, host) {
     wall(x, z, w, d, top, o = {}) {
       const g = gy(x, z), bot = o.bot ?? -1.5, T = top - bot, col = o.c ?? LOOK[o.look] ?? COL.stone;
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, T, d), mat(col));
-      m.position.set(A.x + x, g + bot + T / 2, A.z + z); m.rotation.y = o.yaw || 0;
+      m.position.set(A.x + x, g + bot + T / 2, A.z + z); m.rotation.y = o.yaw || 0; m.userData.noCast = true; m.castShadow = false;
       if (!o.hidden) {
         group.add(m);
         if (o.look === 'hedge' || o.look === 'leaf') { const cap = new THREE.Mesh(new THREE.BoxGeometry(w + 0.12, 0.25, d + 0.12), mat(o.look === 'leaf' ? 0x4f9a3e : COL.hedgeTop)); cap.position.set(A.x + x, g + top + 0.08, A.z + z); group.add(cap); }
@@ -662,22 +663,29 @@ export function createZones(scene, host) {
      *  Use this for Act 3 corridor sides instead of a 2 m B.wall loop — same walk routes, far fewer draws. */
     hedgeRun(x, z0, z1, o = {}) {
       const look = o.look || 'hedge', h = o.h ?? 2.4, thick = o.w ?? 0.6, col = LOOK[look] ?? COL.hedge;
-      const topC = look === 'leaf' ? 0x4f9a3e : COL.hedgeTop;
+      const topC = look === 'leaf' ? 0x4f9a3e : look === 'snow' ? COL.snowTop : COL.hedgeTop;
       const boxes = [], caps = [], fadeEs = [];
+      // collision stays on 2 m segments so walk routes do not change; visuals use 0.5 m instances so terrace steps disappear
       for (let z = z0; z < z1 - 0.01; z += 2) {
         const L = Math.min(2, z1 - z), zc = z + L / 2, g = gy(x, zc), ww = thick, dd = L + 0.05;
         const s = addSolid({ type: 'box', x: A.x + x, z: A.z + zc, hx: ww / 2, hz: dd / 2, yaw: 0, y0: g - 1.5, top: g + h, kind: 'zone' });
         const capS = addSolid({ type: 'box', x: A.x + x, z: A.z + zc, hx: ww / 2, hz: dd / 2, yaw: 0, y0: g + h - 0.1, top: g + 30, kind: 'zone' });
         capS.off = false;
-        const T = h + 1.5, ca = 1, sa = 0, hx = ww / 2, hz = dd / 2;
+        s.fadeM = true; // instanced visuals fade via the 0.5 m entries below; pull-in still skips this solid
+      }
+      const vis = 0.5;
+      for (let z = z0; z < z1 - 0.01; z += vis) {
+        const L = Math.min(vis, z1 - z), zc = z + L / 2, g = gy(x, zc), ww = thick, dd = L + 0.02, T = h + 1.5;
+        const hx = ww / 2, hz = dd / 2;
         boxes.push({ x: A.x + x, y: g - 1.5 + T / 2, z: A.z + zc, w: ww, T, d: dd });
         caps.push({ x: A.x + x, y: g + h + 0.08, z: A.z + zc, w: ww + 0.12, T: 0.25, d: dd + 0.12 });
         const e = { inst: true, i: boxes.length - 1, x0: A.x + x - hx, x1: A.x + x + hx, z0: A.z + zc - hz, z1: A.z + zc + hz, y0: g - 1.5, y1: g + h + 0.3, a: 1, want: 1 };
-        fades.push(e); fadeEs.push(e); s.fadeM = e;
+        fades.push(e); fadeEs.push(e);
       }
       const mk = (list, c) => {
         const n = list.length; if (!n) return null;
         const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mat(c), n);
+        im.userData.noCast = true; im.castShadow = false;
         const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), P = new THREE.Vector3(), S = new THREE.Vector3();
         list.forEach((b, i) => { P.set(b.x, b.y, b.z); S.set(b.w, b.T, b.d); M.compose(P, Q, S); im.setMatrixAt(i, M); b.base = M.clone(); });
         im.instanceMatrix.needsUpdate = true; group.add(im);
@@ -937,7 +945,8 @@ export function createZones(scene, host) {
     pickup(tier, x, z, h, o = {}) {
       if (tier === 'dew') tier = 'petal'; // adventure: Petals are the only score
       const T = TIER[tier], val = tier === 'petal' ? Math.max(1, o.value || 1) : 1, bloom = val > 1;
-      const m = bloom ? bloomMesh() : new THREE.Mesh(T.geo(), mat(T.col, T.col === 0xffb7d6 ? 0.22 : 0.8));
+      const petalCol = (tier === 'petal' && recipe && recipe.petalCol) || T.col;
+      const m = bloom ? bloomMesh() : new THREE.Mesh(T.geo(), mat(petalCol, petalCol === 0xffb7d6 || (recipe && recipe.petalCol) ? 0.22 : 0.8));
       m.position.set(A.x + x, gy(x, z) + h, A.z + z); group.add(m);
       const rec = { tier, m, y: m.position.y, got: false, nightOnly: false, show: o.show, set: o.set, who: o.who, whyNot: o.whyNot, value: val, bloom };
       if (o.show) m.visible = false;
@@ -1451,9 +1460,16 @@ export function createZones(scene, host) {
     orb(x, z, h, r = 0.4, col = 0xffe066) { const w = L2W(x, z, h), m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mat(col, 0.9)); m.position.set(w.x, w.y, w.z); group.add(m); return m; },
     /** POLISH: one Pip line the first time a signal (or all of a list) turns on */
     pipOn(s, line) { let said = false; steps.push({ sig: s, fn: on => { if (on && !said) { said = true; msgT = t; tst('🐦 Pip: ' + line, 4200); } } }); },
+    camRoom(x0, z0, x1, z1, o = {}) {
+      const a = o.anchor;
+      camRooms.push({ x0: A.x + Math.min(x0, x1), z0: A.z + Math.min(z0, z1), x1: A.x + Math.max(x0, x1), z1: A.z + Math.max(z0, z1), mix: o.mix, anchor: a ? { x: A.x + a[0], z: A.z + a[1], y: a[2] } : null });
+    },
     lane(x0, x1, z0, z1, o = {}) { // tall invisible walls with a low visible hedge: keeps everyone on the trail
       const h = o.h ?? 2.2, look = o.look || 'hedge';
-      for (const [x, z, w, d] of [[x0 - 0.5, (z0 + z1) / 2, 1, z1 - z0 + 1], [x1 + 0.5, (z0 + z1) / 2, 1, z1 - z0 + 1], [(x0 + x1) / 2, z0 - 0.5, x1 - x0 + 2, 1], [(x0 + x1) / 2, z1 + 0.5, x1 - x0 + 2, 1]]) {
+      // long sides follow the ground as instanced runs so they do not step down terraces as one beige box
+      this.hedgeRun(x0 - 0.5, z0, z1, { look, h, w: 1 });
+      this.hedgeRun(x1 + 0.5, z0, z1, { look, h, w: 1 });
+      for (const [x, z, w, d] of [[(x0 + x1) / 2, z0 - 0.5, x1 - x0 + 2, 1], [(x0 + x1) / 2, z1 + 0.5, x1 - x0 + 2, 1]]) {
         const r = this.wall(x, z, w, d, h, { look }); const g = r.g;
         addSolid({ type: 'box', x: A.x + x, z: A.z + z, hx: w / 2, hz: d / 2, yaw: 0, y0: g + h - 0.1, top: g + 30, kind: 'zone', fadeM: true });
       }
@@ -1588,16 +1604,24 @@ export function createZones(scene, host) {
     },
     // ---- M2 Water Level ----
     pond(id, x0, z0, x1, z1, o = {}) {
-      const S = AA(), w = L2W((x0 + x1) / 2, (z0 + z1) / 2), W2 = x1 - x0, D2 = z1 - z0;
-      const mud = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2).rotateX(-Math.PI / 2), mat(0x6a5030)); mud.position.set(w.x, w.y + 0.04, w.z); group.add(mud);
-      const wm = waterSurface(new THREE.PlaneGeometry(W2 + 0.4, D2 + 0.4).rotateX(-Math.PI / 2), { color: o.color || 0x8fc8e8, repeat: [W2 / 6, D2 / 6], emissive: o.emissive, emissiveIntensity: o.emissiveIntensity, opacity: o.opacity }); wm.position.set(w.x, w.y + 0.2, w.z); group.add(wm); waterMeshes.push(wm);
-      if (recipe && (recipe.id === 'thaw_valley' || recipe.id === 'grand_garden')) {
+      const S = AA(), w = L2W((x0 + x1) / 2, (z0 + z1) / 2);
+      const holes = (o.holes || []).map(([hx0, hz0, hx1, hz1]) => ({ x0: A.x + hx0, z0: A.z + hz0, x1: A.x + hx1, z1: A.z + hz1 }));
+      const parts = splitPondRects(x0, z0, x1, z1, o.holes || []);
+      const wms = [], muds = [];
+      const tint = (wm) => {
+        if (!(recipe && (recipe.id === 'thaw_valley' || recipe.id === 'grand_garden'))) return;
         wm.material.emissive.setHex(0x000000); wm.material.emissiveIntensity = 0; wm.material.opacity = recipe.id === 'grand_garden' ? 0.6 : 0.8;
         if (wm.children[0] && wm.children[0].material) wm.children[0].material.opacity = 0.08;
+      };
+      for (const [px0, pz0, px1, pz1] of parts) {
+        const W2 = px1 - px0, D2 = pz1 - pz0, cx = (px0 + px1) / 2, cz = (pz0 + pz1) / 2, g = gy(cx, cz);
+        const mud = new THREE.Mesh(new THREE.PlaneGeometry(W2, D2).rotateX(-Math.PI / 2), mat(0x6a5030)); mud.position.set(A.x + cx, g + 0.04, A.z + cz); group.add(mud); muds.push(mud);
+        const wm = waterSurface(new THREE.PlaneGeometry(W2 + 0.4, D2 + 0.4).rotateX(-Math.PI / 2), { color: o.color || 0x8fc8e8, repeat: [W2 / 6, D2 / 6], emissive: o.emissive, emissiveIntensity: o.emissiveIntensity, opacity: o.opacity });
+        wm.position.set(A.x + cx, g + 0.2, A.z + cz); group.add(wm); waterMeshes.push(wm); wms.push(wm); tint(wm);
       }
       const rect = { x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1, off: false };
       deep.push(rect);
-      const pd = { id, rect, wm, mud, gy: w.y, level: o.level || 'mid', wr: [], heights: o.heights || null };
+      const pd = { id, rect, wm: wms[0] || null, wms, mud: muds[0] || null, muds, holes, gy: w.y, level: o.level || 'mid', wr: [], heights: o.heights || null };
       S.ponds.push(pd); setPond(pd, pd.level, true); return pd;
     },
     sluice(pondId, x, z, level, o = {}) { this.lever(`${pondId}:${level}:lv`, x, z, { label: o.label || `Sluice · ${level} water` }); const pr = props[props.length - 1]; pr.act = 'sluice'; pr.re = true; pr.pond = pondId; pr.level = level; },
@@ -1864,12 +1888,33 @@ export function createZones(scene, host) {
     if (level === 'high') return pd.gy + (H.high != null ? H.high : 0.55);
     return pd.gy + (H.mid != null ? H.mid : 0.2);
   }
+  function inPondHole(pd, x, z) {
+    return (pd.holes || []).some(h => x >= h.x0 && x <= h.x1 && z >= h.z0 && z <= h.z1);
+  }
+  function splitPondRects(x0, z0, x1, z1, holes) {
+    let parts = [[x0, z0, x1, z1]];
+    for (const [hx0, hz0, hx1, hz1] of holes) {
+      const next = [];
+      for (const [px0, pz0, px1, pz1] of parts) {
+        if (hx1 <= px0 || hx0 >= px1 || hz1 <= pz0 || hz0 >= pz1) { next.push([px0, pz0, px1, pz1]); continue; }
+        const ix0 = Math.max(px0, hx0), iz0 = Math.max(pz0, hz0), ix1 = Math.min(px1, hx1), iz1 = Math.min(pz1, hz1);
+        if (pz0 < iz0) next.push([px0, pz0, px1, iz0]);
+        if (iz1 < pz1) next.push([px0, iz1, px1, pz1]);
+        if (px0 < ix0) next.push([px0, iz0, ix0, iz1]);
+        if (ix1 < px1) next.push([ix1, iz0, px1, iz1]);
+      }
+      parts = next.filter(r => r[2] - r[0] > 0.05 && r[3] - r[1] > 0.05);
+    }
+    return parts;
+  }
   function setPond(pd, level, quiet) {
     pd.level = level; const dry = level === 'low' || level === 'ice';
     pd.rect.off = dry; pd.rect.y = dry ? null : pondSurf(pd);
     for (const r of pd.wr) { const i = WATER_RECTS.indexOf(r); if (i >= 0) WATER_RECTS.splice(i, 1); } pd.wr = [];
-    if (!dry) { const R = pd.rect, st = 1.4, wy = pondSurf(pd); for (let x = R.x0 + 0.7; x < R.x1; x += st) for (let z = R.z0 + 0.7; z < R.z1; z += st) { const r = { x, z, hw: st * 0.55, hd: st * 0.55, y: wy }; WATER_RECTS.push(r); pd.wr.push(r); } }
-    pd.wm.visible = !dry; pd.wm.position.y = pondSurf(pd); if (pd.ice) pd.ice.visible = level === 'ice';
+    if (!dry) { const R = pd.rect, st = 1.4, wy = pondSurf(pd); for (let x = R.x0 + 0.7; x < R.x1; x += st) for (let z = R.z0 + 0.7; z < R.z1; z += st) { if (inPondHole(pd, x, z)) continue; const r = { x, z, hw: st * 0.55, hd: st * 0.55, y: wy }; WATER_RECTS.push(r); pd.wr.push(r); } }
+    const wy = pondSurf(pd);
+    for (const wm of (pd.wms || (pd.wm ? [pd.wm] : []))) { wm.visible = !dry; wm.position.y = wy; }
+    if (pd.ice) pd.ice.visible = level === 'ice';
     for (const k of ['low', 'mid', 'high']) setSig(`${pd.id}:${k}`, level === k);
     if (!quiet) tst({ low: '🚰 Water down — the pond bed is dry!', mid: '🚰 Water at the middle', high: pd.heights ? '🌊 Water up high — the mill floods!' : '🌊 Water up high — logs float!', ice: '❄️ The creek froze solid' }[level], 1800);
   }
@@ -2531,7 +2576,7 @@ export function createZones(scene, host) {
     fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady');
     sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
-    instWalls = []; decoJobs = new Map();
+    instWalls = []; decoJobs = new Map(); camRooms = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
     tutorI = 0; tutorT = -99; endLines = []; result = null;
     for (const h of hubPads) h.el.remove(); hubPads = []; hubFr = []; document.body.classList.remove('inHub');
@@ -3199,9 +3244,11 @@ export function createZones(scene, host) {
       sp.userData.baseS = s;
       sp.onBeforeRender = (_r, _sc, cam) => {
         const d = cam.position.distanceTo(sp.getWorldPosition(_spPos));
-        // leave .visible to the gate; hide a too-close lock by opacity so it does not cover Interact
-        sp.material.opacity = d < 1.15 ? 0 : 1;
-        const sc = THREE.MathUtils.clamp(sp.userData.baseS * (d / 10), 0.4, 0.95);
+        _spPos.project(cam);
+        // leave .visible to the gate; hide a too-close or bottom-of-frame lock so it does not sit on Buzz Boost
+        const atBottom = _spPos.y < -0.42, tooClose = d < 2.2;
+        sp.material.opacity = (tooClose || atBottom) ? 0 : 1;
+        const sc = THREE.MathUtils.clamp(sp.userData.baseS * (d / 12), 0.28, 0.7);
         sp.scale.set(sc, sc, 1);
       };
     }
@@ -3587,6 +3634,7 @@ export function createZones(scene, host) {
   return {
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
+    camRoomAt: (x, z) => camRooms.find(r => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1) || null,
     act, actAs: id => withFocus(id, () => act()), useGearAs: id => withFocus(id, () => useGear(ctx.getP())), callAs: id => withFocus(id, () => callEscort()),
     wheelOpts, deepRects: () => deep.filter(r => !r.off).map(r => ({ ...r })), status, kidState,
     /** test hook: finish the level as if the exit was reached (used by the POLISH result tests) */
