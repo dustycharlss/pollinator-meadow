@@ -258,20 +258,67 @@ body:has(#pause.on) .olBar { display: none !important; }
 .olReadyCount b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 800 44px system-ui, sans-serif; color: #3b2614; }
 .olComplete { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(40, 24, 16, .45); }
 .olCompleteCard {
+  position: relative;
   width: min(360px, calc(100vw - 24px));
-  padding: 20px 18px 22px;
-  background: #fff3d8;
-  border: 3px solid #3b2614;
-  border-radius: 18px;
-  box-shadow: 0 8px 0 #3b2614;
+  height: 252px;
+  padding: 0;
+  box-sizing: border-box;
+  border-style: solid;
+  border-width: 24px;
+  border-image: var(--ol-chrome-card) 24 24 24 24 fill / 24px 24px 24px 24px;
+  background: none;
+  box-shadow: none;
   text-align: center;
   color: #3b2614;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
-.olCompleteCard h2 { margin: 0 0 8px; font-size: 1.25rem; }
-.olCompleteStars { font: 800 18px/1.35 system-ui, sans-serif; margin: 0 0 8px; }
-.olCompleteWait { font: 700 14px system-ui, sans-serif; margin: 8px 0 0; }
-.olCompleteGo { margin-top: 12px; min-height: 48px; min-width: 180px; padding: 8px 20px; border: 3px solid #3b2614; border-radius: 14px; background: #ffd23f; font: 800 16px system-ui, sans-serif; cursor: pointer; color: #3b2614; }
+.olCompleteCard h2 {
+  position: absolute; left: 12px; right: 12px; top: 18px;
+  margin: 0;
+  font: 700 18px/1.2 system-ui, sans-serif;
+  text-align: center;
+}
+.olCompleteStars {
+  position: absolute; left: 50%; top: 46px;
+  width: 192px; height: 56px;
+  margin: 0;
+  transform: translateX(-50%);
+  font: 800 16px/56px system-ui, sans-serif;
+  display: flex; align-items: center; justify-content: center;
+}
+.olCompleteStars img { width: 192px; height: 56px; display: block; }
+.olCompleteStars img[hidden] { display: none !important; }
+.olCompleteWait {
+  position: absolute; left: 50%; top: 142px;
+  width: 270px; height: 48px;
+  margin: 0;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  border-style: solid;
+  border-width: 16px 24px 20px 44px;
+  border-image: var(--ol-chip-wait-host) 16 24 20 44 fill / 16px 24px 20px 44px;
+  background: none;
+  padding: 0 0 0 8px;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 14px/1.2 system-ui, sans-serif;
+  color: #3b2614;
+}
+.olCompleteWait[hidden] { display: none !important; }
+.olCompleteGo {
+  position: absolute; left: 50%; top: 142px;
+  width: 240px; height: 56px;
+  margin: 0;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  border-style: solid;
+  border-width: 20px 28px 24px 28px;
+  border-image: var(--ol-btn-primary) 20 28 24 28 fill / 20px 28px 24px 28px;
+  background: none;
+  padding: 0;
+  font: 800 16px system-ui, sans-serif;
+  cursor: pointer;
+  color: #3b2614;
+}
 .olCompleteGo[hidden] { display: none !important; }
 .olCatchup {
   position: absolute; top: max(12px, env(safe-area-inset-top)); left: 50%;
@@ -288,7 +335,47 @@ body:has(#pause.on) .olBar { display: none !important; }
 .olCatchup img { width: 36px; height: 36px; }
 @media (orientation: landscape) and (max-height: 420px) {
   .olReadyCard { width: min(520px, calc(100vw - 16px)); display: flex; flex-direction: row; align-items: center; gap: 16px; }
-  .olCompleteCard { width: min(480px, calc(100vw - 16px)); }
+  .olCompleteCard { width: min(480px, calc(100vw - 16px)); height: 252px; }
+}
+
+/* Host-only toast badge (40 CSS at x 14, y 10; text from x 64, 14px bold) */
+#toast.olToastHost {
+  display: flex; align-items: center; gap: 10px;
+  width: min(358px, calc(100vw - 16px));
+  max-width: 358px;
+  min-height: 64px;
+  height: 64px;
+  padding: 10px 20px 10px 14px;
+  box-sizing: border-box;
+  border: 0; border-radius: 0; box-shadow: none;
+  background: var(--ol-banner-toast) no-repeat center / 100% 100%;
+  font: 700 14px/1.2 system-ui, sans-serif;
+  text-align: left;
+  color: #3b2614;
+}
+#toast.olToastHost .olToastBadge { width: 40px; height: 40px; flex: none; }
+
+/* Host-only badge on #vGo / level pads */
+.olHostOnlyCtrl { position: relative; }
+.olHostOnlyBadge {
+  position: absolute;
+  left: -8px; top: -8px;
+  width: 40px; height: 40px;
+  pointer-events: none;
+  z-index: 3;
+}
+.hubLbl.olHostOnlyCtrl .olHostOnlyBadge { left: -12px; top: -16px; }
+#vGo.olHostOnlyCtrl, .msPlay.olHostOnlyCtrl { overflow: visible; }
+
+/* Escort lead marker: 40×48, tail points down */
+.olLeadMark {
+  position: fixed;
+  width: 40px; height: 48px;
+  margin-left: -20px;
+  margin-top: -48px;
+  pointer-events: none;
+  z-index: 8;
+  display: none;
 }
 
 /* 360×740-class phones: 3×100px cards overflow the 312px body and labels collide. */

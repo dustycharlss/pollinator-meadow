@@ -39,7 +39,10 @@ export function createLevelFlow(hooks = {}) {
   const cCard = el('div', 'olCompleteCard');
   const cTitle = el('h2', '', 'Level cleared!');
   const cStars = el('p', 'olCompleteStars');
-  const cWait = el('p', 'olCompleteWait');
+  const cStarsImg = document.createElement('img');
+  cStarsImg.alt = '';
+  cStars.append(cStarsImg);
+  const cWait = el('p', 'olCompleteWait', 'Waiting for the host…');
   const cGo = el('button', 'olCompleteGo', 'Continue');
   cGo.type = 'button';
   cCard.append(cTitle, cStars, cWait, cGo);
@@ -60,8 +63,17 @@ export function createLevelFlow(hooks = {}) {
   function sfx(name, vol = 0.5) {
     try { hooks.audio?.sample?.('online/n3n4/' + name, vol); } catch (e) {}
   }
+  function sfxN3(name, vol = 0.5) {
+    try { hooks.audio?.sample?.('online/n3/' + name, vol); } catch (e) {}
+  }
   function speak(id) {
     try { hooks.audio?.speak?.(id); } catch (e) {}
+  }
+  function speakSeq(steps) {
+    try {
+      if (hooks.audio?.speakSeq) hooks.audio.speakSeq(steps);
+      else if (steps && steps[0]) hooks.audio?.speak?.(steps[0]);
+    } catch (e) {}
   }
   function showRoot() { root.hidden = false; }
   function hideIfIdle() {
@@ -127,8 +139,9 @@ export function createLevelFlow(hooks = {}) {
     if (n === 3) {
       stopLoop();
       sfx('all-ready-chime', 0.55);
-      if (map) speak('lobby.starting.' + map);
+      speak(['lobby.starting.' + (map || 'level'), 'lobby.starting.level']);
     } else {
+      // 2 and 1 stay ticks only (no voice).
       sfx('ready-tick', 0.45);
     }
   }
@@ -147,6 +160,7 @@ export function createLevelFlow(hooks = {}) {
     count.hidden = true;
     stopLoop();
     msg.textContent = "Couldn't load, try again";
+    sfxN3('load-timeout', 0.6);
     speak('lobby.loadTimeout');
   }
 
@@ -156,15 +170,30 @@ export function createLevelFlow(hooks = {}) {
     readyBox.hidden = true;
     onContinue = fn || null;
     completeIsHost = !!isHost;
-    cTitle.textContent = title || (result?.name ? `${result.name} cleared!` : 'Level cleared!');
+    const name = result?.name;
+    cTitle.textContent = title || (name ? `🏆 ${name} cleared!` : 'Level cleared!');
     const st = result?.stars || result || {};
-    const n = result?.n != null ? result.n : (st.n != null ? st.n : 0);
-    if (result?.noStars) cStars.textContent = '🏅 Trailhead badge!';
-    else cStars.textContent = '⭐'.repeat(Math.max(0, n)) + '☆'.repeat(Math.max(0, 3 - n));
+    const n = Math.max(0, Math.min(3, result?.n != null ? result.n : (st.n != null ? st.n : 0)));
+    // Keep the img node; only swap the no-stars text.
+    const extra = [...cStars.childNodes].filter(n => n !== cStarsImg);
+    for (const n of extra) n.remove();
+    if (result?.noStars) {
+      cStarsImg.hidden = true;
+      cStars.append(document.createTextNode('🏅 Trailhead badge!'));
+    } else {
+      cStarsImg.hidden = false;
+      cStarsImg.src = ICON('complete', 'stars-' + n);
+    }
     cGo.hidden = !isHost;
     cWait.hidden = !!isHost;
     cWait.textContent = isHost ? '' : 'Waiting for the host…';
-    if (isHost) speak('ui.vFree.continue');
+    const map = result?.id || result?.map || lastMap;
+    const steps = [
+      [map ? 'lobby.cleared.' + map : null, 'lobby.cleared'].filter(Boolean),
+      isHost ? 'ui.vFree.continue' : 'lobby.waitingHost',
+    ];
+    if (result?.noStars) steps.push('ui.tsH.badge');
+    speakSeq(steps);
   }
 
   function hideComplete() {
@@ -175,10 +204,14 @@ export function createLevelFlow(hooks = {}) {
   }
 
   function showCatchup() {
+    const fresh = catchup.hidden;
     showRoot();
     catchup.hidden = false;
     cTx.textContent = 'Catching up…';
-    speak('lobby.catchingUp');
+    if (fresh) {
+      sfxN3('catchup-blip', 0.55);
+      speak('lobby.catchingUp');
+    }
   }
   function hideCatchup() {
     catchup.hidden = true;
@@ -188,6 +221,7 @@ export function createLevelFlow(hooks = {}) {
   cGo.onclick = () => {
     // Host-only: do not trust a client un-hiding .olCompleteGo (N3-COMPLETE).
     if (!completeIsHost) return;
+    sfxN3('continue-tap', 0.6);
     const fn = onContinue;
     hideComplete();
     if (fn) fn();

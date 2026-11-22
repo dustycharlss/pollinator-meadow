@@ -448,6 +448,7 @@ export function createNet(hooks = {}) {
       if (hooks.onHold) hooks.onHold(false);
       hooks.levelFlow?.hideReady?.();
       hooks.levelFlow?.hideCatchup?.();
+            try { hooks.audio?.sample?.('online/sfx-n2/room-start-whoosh', 0.55); } catch (e) {}
       hooks.onGo?.(data.map);
       return;
     }
@@ -747,6 +748,7 @@ export function createNet(hooks = {}) {
       holding = false;
       if (hooks.onHold) hooks.onHold(false);
       hooks.levelFlow?.hideReady?.();
+            try { hooks.audio?.sample?.('online/sfx-n2/room-start-whoosh', 0.55); } catch (e) {}
       sendEvt({ type: 'go', map, from: 'host' });
       hooks.onGo?.(map);
       readyWait = null;

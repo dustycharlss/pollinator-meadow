@@ -180,6 +180,37 @@ export function createAudio() {
         el.play().catch(() => {});
       });
     },
+    /** Play lines in order. A new speak() or speakSeq() cancels the chain. */
+    speakSeq(steps) {
+      const list = (steps || []).map(s => Array.isArray(s) ? s.filter(Boolean) : (s ? [s] : [])).filter(s => s.length);
+      if (!readAloud || muted || !list.length) return;
+      api.start();
+      const token = 'seq:' + Math.random().toString(36).slice(2);
+      voiceWant = token;
+      api.stopVoice();
+      voiceWant = token;
+      const playAt = (i) => {
+        if (voiceWant !== token) return;
+        if (i >= list.length) { if (voiceWant === token) voiceWant = null; return; }
+        loadVoiceLines().then(() => {
+          if (voiceWant !== token) return;
+          const id = firstVoiceId(list[i]);
+          if (!id) { playAt(i + 1); return; }
+          const url = voiceUrl(id, EXT); if (!url) { playAt(i + 1); return; }
+          const el = withFallback(new Audio(url));
+          el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.muted = muted;
+          voiceEl = el;
+          if (ctx && bus.voice) {
+            try { const src = ctx.createMediaElementSource(el); src.connect(bus.voice); }
+            catch (e) { el.volume = Math.min(1, gainOf('voice') * gainOf('master')); }
+          } else el.volume = Math.min(1, gainOf('voice') * gainOf('master'));
+          el.addEventListener('ended', () => { if (voiceEl === el) { voiceEl = null; playAt(i + 1); } });
+          el.addEventListener('error', () => { if (voiceEl === el) { voiceEl = null; playAt(i + 1); } });
+          el.play().catch(() => { if (voiceEl === el) { voiceEl = null; playAt(i + 1); } });
+        });
+      };
+      playAt(0);
+    },
     preloadVoice(ids) {
       if (!ids || !ids.length) return;
       loadVoiceLines().then(() => {

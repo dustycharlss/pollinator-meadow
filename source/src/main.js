@@ -331,7 +331,7 @@ function holdClock(on) {
 function syncNightFlag() { const v = nightOf(clock.t) > 0.5; if (v === curNight) return; if (state.musicLive) { moodOver = v ? 'dusk' : 'morning'; moodOverT = performance.now() / 1000 + 26; } curNight = v; $('bNight').textContent = v ? '☀️ Switch to day' : '🌙 Switch to night'; }
 
 // ---------- HUD ----------
-let toastT = 0; function toast(msg, ms = 2400) { const t = $('toast'); t.textContent = skinText(msg); t.classList.add('on'); const obj = $('objT'); const h = obj && obj.style.display !== 'none' && obj.offsetParent !== null ? obj.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+let toastT = 0; function toast(msg, ms = 2400) { const t = $('toast'); const hostOnly = msg === 'Only the host can start a level'; t.replaceChildren(); if (hostOnly) { t.classList.add('olToastHost'); const im = document.createElement('img'); im.className = 'olToastBadge'; im.src = (import.meta.env.BASE_URL || './') + 'ui/online/host/badge-host-only.png'; im.alt = ''; t.append(im, document.createTextNode(skinText(msg))); } else { t.classList.remove('olToastHost'); t.textContent = skinText(msg); } t.classList.add('on'); /* #objT is position:fixed, so offsetParent is always null */ const measure = () => { const o = $('objT'); const h = o && getComputedStyle(o).display !== 'none' ? o.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); }; measure(); requestAnimationFrame(measure); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
 function setHint(s) { $('hint').textContent = s; }
 function updateHud() {
   const sp = SPECIES[cur], p = P[cur], n = nests[cur];
@@ -1989,7 +1989,7 @@ function worldTick(dt, st) {
       if (net && net.isClient) {
         // Host sends complete + Continue; clients credit in onLevelComplete.
       } else {
-      valleySession.ending = true; audio.music?.jingle?.('win');
+      valleySession.ending = true; audio.music?.jingle?.(net && net.role ? 'coop' : 'win');
       const res = zones.result?.() || null, lines = [];
       creditLevelResult(res, valleySession, lines);
       if (res && !res.noStars && !res.kid && res.end) {
@@ -2084,6 +2084,59 @@ function releaseHelper() {
 function setSelection(list, own) {
   for (const h of rts.sel) h.sel = false; rts.sel = list.filter(h => !h.possessed); for (const h of rts.sel) h.sel = true; rts.own = own || null; if (list.length || own) rts.bsel = null; rts.cardT = 0; renderSelCard();
 }
+
+const LEAD_ICON = s => (import.meta.env.BASE_URL || './') + `ui/online/lead/lead-${s}.png`;
+function styleOfBody(id) {
+  const cls = CLASS_OF[id];
+  const pl = (lobby && lobby.players || []).find(p => p.cls === cls);
+  if (pl && pl.style) return pl.style;
+  return id === 'bear' ? 'p1' : id === 'raccoon' ? 'p2' : 'p3';
+}
+function syncHostOnlyBadges() {
+  const on = !!(net && net.isClient);
+  const src = (import.meta.env.BASE_URL || './') + 'ui/online/host/badge-host-only.png';
+  const place = (el) => {
+    if (!el) return;
+    let b = el.querySelector(':scope > .olHostOnlyBadge');
+    if (!on) { if (b) b.remove(); el.classList.remove('olHostOnlyCtrl'); return; }
+    if (!b) {
+      b = document.createElement('img');
+      b.className = 'olHostOnlyBadge';
+      b.alt = 'Only the host can start a level';
+      el.appendChild(b);
+    }
+    if (b.getAttribute('src') !== src) b.src = src;
+    el.classList.add('olHostOnlyCtrl');
+  };
+  place($('vGo'));
+}
+const escortLeadEls = [];
+function tickEscortLead() {
+  const online = !!(net && net.role);
+  const list = (online && zones && zones.escortLead) ? (zones.escortLead() || []) : [];
+  let n = 0;
+  for (const b of list) {
+    if (!b || !b.following || b.hide || !b.leadBody) continue;
+    let el = escortLeadEls[n];
+    if (!el) {
+      el = document.createElement('img');
+      el.className = 'olLeadMark';
+      el.alt = '';
+      document.body.appendChild(el);
+      escortLeadEls[n] = el;
+    }
+    const style = styleOfBody(b.leadBody);
+    const src = LEAD_ICON(style);
+    if (el.getAttribute('src') !== src) el.src = src;
+    const y = (b.y != null ? b.y : 0) + 1.6;
+    const s = worldToScreen(b.x, y, b.z);
+    el.style.display = s.ok ? 'block' : 'none';
+    if (s.ok) { el.style.left = s.x + 'px'; el.style.top = s.y + 'px'; }
+    n++;
+  }
+  for (let i = n; i < escortLeadEls.length; i++) if (escortLeadEls[i]) escortLeadEls[i].style.display = 'none';
+}
+
 function worldToScreen(x, y, z) { rtsV.set(x, y, z).project(camera); return { x: (rtsV.x + 1) / 2 * innerWidth, y: (1 - rtsV.y) / 2 * innerHeight, ok: rtsV.z < 1 }; }
 function groundAt(sx, sy) {
   rtsN.set(sx / innerWidth * 2 - 1, 1 - sy / innerHeight * 2); rtsRay.setFromCamera(rtsN, camera); const o = rtsRay.ray.origin, d = rtsRay.ray.direction;
@@ -2462,6 +2515,7 @@ async function boot() {
     },
     onLevelComplete: (data) => {
       if (valleySession && !valleySession.ending) valleySession.ending = true;
+      try { if (net && net.role) audio.music?.jingle?.('coop'); } catch (e) {}
       const res = data?.result || data || null;
       const lines = [];
       if (res) creditLevelResult(res, valleySession, lines);
@@ -2545,7 +2599,7 @@ async function boot() {
   } else if (NEWFLAG && NEWFLAG.patch && valley) { const pid = NEWFLAG.patch; if (valley.get(pid)?.state === 'wilted') valley.setState(pid, 'in_progress'); startValleyPatch(pid); } else if (NEWFLAG) startNew(NEWFLAG.len || settings.len);
   else if (/[?&]lab=act3\b/.test(location.search) && valley) startValleyPatch('act3_lab');
   else if (/[?&](?:lab=bell|bell=1)\b/.test(location.search) && valley) startValleyPatch('act3_bell');
-  window.__game = { FEATURES: Object.assign({}, FEATURES, lobby ? { n2: true, n3: true, lobby: true, directAllowed: true, iceTransportPolicy: 'all', relayOnly: false, signalling: 'dev-nostr', nostrAllowed: true } : { n2: false, n3: false, directAllowed: false, iceTransportPolicy: 'relay', relayOnly: true, signalling: 'cloudflare-signalroom', nostrAllowed: false, nostrFallback: false }), look, DCL, slots, stepPlayer, net, lobby, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, levelFlow, creditLevelResult, hostContinueLevel, applyHostContinue, forceLevelComplete: (res) => { try { net?.abortReadyWait?.({ keepComplete: true }); } catch (e) {} const r = res || (zones && zones.result && zones.result()) || { id: zones?.status?.()?.id, n: 1, petals: 0, petalsTotal: 0, stars: {}, time: 0, end: [] }; if (valleySession) valleySession.ending = true; creditLevelResult(r, valleySession, []); const def = valley?.def?.(r.id); levelFlow?.showComplete?.({ result: { ...r, name: def?.name }, isHost: !!(net && net.isHost), onContinue: () => hostContinueLevel() }); if (net && net.isHost) net.onHostEvent?.({ type: 'complete', kind: 'complete', result: r, id: r.id }); }, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, presentLevelTips, fillHowTips, openHow, dismissLevelTips, speak: id => audio.speak(id), openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
+  window.__game = { FEATURES: Object.assign({}, FEATURES, lobby ? { n2: true, n3: true, lobby: true, directAllowed: true, iceTransportPolicy: 'all', relayOnly: false, signalling: 'dev-nostr', nostrAllowed: true } : { n2: false, n3: false, directAllowed: false, iceTransportPolicy: 'relay', relayOnly: true, signalling: 'cloudflare-signalroom', nostrAllowed: false, nostrFallback: false }), look, DCL, slots, stepPlayer, net, lobby, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, levelFlow, creditLevelResult, hostContinueLevel, applyHostContinue, forceLevelComplete: (res) => { try { net?.abortReadyWait?.({ keepComplete: true }); } catch (e) {} try { if (net && net.role) audio.music?.jingle?.('coop'); } catch (e) {} const r = res || (zones && zones.result && zones.result()) || { id: zones?.status?.()?.id, n: 1, petals: 0, petalsTotal: 0, stars: {}, time: 0, end: [] }; if (valleySession) valleySession.ending = true; creditLevelResult(r, valleySession, []); const def = valley?.def?.(r.id); levelFlow?.showComplete?.({ result: { ...r, name: def?.name }, isHost: !!(net && net.isHost), onContinue: () => hostContinueLevel() }); if (net && net.isHost) net.onHostEvent?.({ type: 'complete', kind: 'complete', result: r, id: r.id }); }, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, presentLevelTips, fillHowTips, openHow, dismissLevelTips, speak: id => audio.speak(id), openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
     tp: (x, z, up = 0) => { const p = P[cur]; p.x = x; p.z = z; p.y = world.phys.floor(x, z, 99, 99).y + up; p.vx = p.vz = p.vy = 0; },
     teleportNearFlower: () => { const B = world.blooms; const arr = B.byPol[polOf(cur)]; const i = arr[0]; const p = P[cur]; p.x = B.x[i] - 1; p.z = B.z[i]; p.y = Math.max(heightAt(p.x, p.z), B.y[i] - 0.5); p.vy = 0; } };
 }
@@ -2751,7 +2805,7 @@ function loop(now) {
   { const AB = abOf(cur), pp = P[cur]; gearFx.update(dt, t, cur, paused ? 0 : Math.min(1, (pp.speed || 0) / AB.mv.run), shopOpen ? 0.65 : Math.min(1, pp.carried / AB.cap)); }
   if (shopOpen) { shopT += dt; cam.yaw = shopBase + Math.sin(shopT * 0.55) * 0.95; }
   state.gT = (state.gT || 0) - dt; if (state.gT <= 0) { state.gT = 0.4; updateShopChip(); }
-  fx.update(dt); tickOnlineEmotes(); if (playing) rtsUpdate(rdt); updateCamera(rdt); if (build.active) updateBuildUi(rdt, t);
+  fx.update(dt); tickOnlineEmotes(); tickEscortLead(); syncHostOnlyBadges(); if (playing) rtsUpdate(rdt); updateCamera(rdt); if (build.active) updateBuildUi(rdt, t);
   state.hT = (state.hT || 0) - rdt; if (state.hT <= 0) { state.hT = 0.2; if (playing) updateRoundHud(); }
   state.rT = (state.rT || 0) - rdt; if (state.rT <= 0 && playing) { state.rT = 3; saveRound(); }
   if (admin) admin.update(rdt);

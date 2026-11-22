@@ -24,6 +24,10 @@ export function installOnlineArt() {
   r.setProperty('--ol-closet-panel', url('act3/ui/closet/panel.png'));
   r.setProperty('--ol-closet-equipped', url('act3/ui/closet/card-equipped.png'));
   r.setProperty('--ol-closet-unequipped', url('act3/ui/closet/card-unequipped.png'));
+  r.setProperty('--ol-chrome-card', url('ui/online/chrome/card.png'));
+  r.setProperty('--ol-btn-primary', url('ui/online/chrome/btn-primary.png'));
+  r.setProperty('--ol-chip-wait-host', url('ui/online/host/chip-wait-host.png'));
 }
+
 
 export { BASE };
