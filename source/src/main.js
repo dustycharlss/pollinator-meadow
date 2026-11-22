@@ -2490,6 +2490,14 @@ async function boot() {
     isHub: (id) => id === HUB_ID || !!(zones?.MAPS?.[id]?.hub),
     levelName: (id) => valley?.def?.(id)?.name || id,
     getRoster: () => {
+      // ?nettest uses BroadcastChannel roles, not lobby UUIDs. Shared Playwright
+      // sessionStorage can make host and client lobby.self collide, so a lobby-id
+      // roster would wait forever for a ready the client never sends under that id.
+      if (net && net.mode === 'nettest') {
+        const r = [{ id: 'host', label: '🐻', cls: 'bruiser' }];
+        if (net.isClient || (net.peers && net.peers.length)) r.push({ id: 'client', label: '🐝', cls: 'scout' });
+        return r;
+      }
       if (lobby && lobby.players && lobby.players.length) {
         return lobby.players.map(p => ({
           id: p.id, cls: p.cls, style: p.style,
@@ -2542,7 +2550,7 @@ async function boot() {
     },
     pollLocalFrame: () => input && input.pollFrame ? input.pollFrame() : null,
     localBody: () => cur,
-    peerId: () => (lobby && lobby.self) || (net && net.isClient ? 'client' : 'host'),
+    peerId: () => (net && net.mode === 'nettest') ? (net.isClient ? 'client' : 'host') : ((lobby && lobby.self) || (net && net.isClient ? 'client' : 'host')),
     pulseWorld: (() => { let last = 0; return () => { const n = performance.now(); if (n - last < 45) return; last = n; try { if (zones && zones.update) zones.update(0, camera); } catch (e) {} }; })(),
     applyRemoteFrame: (frame, body) => {
       if (!zones || !frame) return;
