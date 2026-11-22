@@ -2150,7 +2150,8 @@ export function createZones(scene, host) {
   function callEscort() {
     if (ctx.isNetClient?.()) { emitNet('intent', { intent: 'call', body: ctx.cur() }); return true; }
     const S = a2; if (!S || !S.escorts.length) return false;
-    const leadId = ctx.cur(); for (const b of S.escorts) { b.called = true; b.following = true; b.hide = false; b.leadBody = leadId; }
+    const multi = ctx.driven().filter(Boolean).length > 1; const leadBody = multi ? ctx.cur() : null;
+    for (const b of S.escorts) { b.called = true; b.following = true; b.hide = false; b.leadBody = leadBody; }
     setSig('called'); tst('📣 Come on, little one! The baby follows you', 2200); ctx.audio?.sample?.('act3/baby-call-chirp', 0.5); setTimeout(() => ctx.audio?.sample?.('act3/baby-follow-happy', 0.45), 420);
     return true;
   }
