@@ -71,6 +71,25 @@ export function createCritters(scene, { heightAt, tier = () => 'med' } = {}) {
   const group = new THREE.Group(); group.name = 'critters'; scene.add(group);
   let list = [], token = 0;
   function clear() { token++; for (const c of list) { c.mixer.stopAllAction(); c.obj.removeFromParent(); } list = []; }
+  let warmList = [];
+  /** Load every critter template onto a hidden group and leave them parented for a boot compile. */
+  async function preload() {
+    endPreload();
+    const kinds = Object.keys(CRITTERS);
+    await Promise.all(kinds.map(k => template(k).catch(() => null)));
+    for (const kind of kinds) {
+      const T = await template(kind).catch(() => null);
+      if (!T || !T.root) continue;
+      T.root.visible = false;
+      if (!T.root.parent) group.add(T.root);
+      warmList.push(T.root);
+    }
+    return warmList.length;
+  }
+  function endPreload() {
+    for (const o of warmList) o.removeFromParent();
+    warmList = [];
+  }
   /** Spawn for a level. rect = world {x0,x1,z0,z1}; deep = water rects; avoid(x,z) true near the start / paths; waterY for fish. */
   async function spawn(patchId, { rect, deep = [], waterY = null, start = null } = {}) {
     clear(); const my = token; if (!rect) return;
@@ -125,5 +144,5 @@ export function createCritters(scene, { heightAt, tier = () => 'med' } = {}) {
       place(c, t);
     }
   }
-  return { spawn, clear, update, get list() { return list; }, group };
+  return { spawn, clear, preload, endPreload, update, get list() { return list; }, group };
 }

@@ -180,10 +180,28 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   /** Style everything currently visible (call after a level or skin is built; cheap when nothing is new). */
   function styleScene(root = scene) { for (const c of root.children) if (c.visible && c.layers.isEnabled(0)) walk(c, 1, true); }
   /** Style, then compile programs (including currently hidden meshes) before the first play frame. */
+  let lateWarmed = false;
+  function warmLateMaterials() {
+    if (lateWarmed) return;
+    lateWarmed = true;
+    const geo = new THREE.PlaneGeometry(0.2, 0.2);
+    const mats = [
+      new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+      new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }),
+    ];
+    const g = new THREE.Group(); g.name = 'shaderWarm';
+    for (const m of mats) { const mesh = new THREE.Mesh(geo, m); mesh.frustumCulled = false; g.add(mesh); }
+    scene.add(g);
+    try { styleScene(g); if (typeof renderer.compile === 'function') renderer.compile(g, camera); } catch (e) {}
+    g.removeFromParent(); geo.dispose();
+    // keep the materials; disposing them is fine — the GL programs stay cached
+    for (const m of mats) m.dispose();
+  }
   function compileScene(root = scene) {
     const hidden = [];
     root.traverse(o => { if (o !== root && o.visible === false) { hidden.push(o); o.visible = true; } });
     try {
+      warmLateMaterials();
       styleScene(root);
       if (typeof renderer.compile === 'function') renderer.compile(root, camera);
     } catch (e) {}
