@@ -1295,7 +1295,7 @@ export function createZones(scene, host) {
       warpTo(p, cp, 0.6, -0.6);
     }
     S.stuck = null;
-    S.bonks++; S.safeT = t + 1.6 * EZ('safe'); (S.bonkLog ||= []).push({ t: +t.toFixed(1), src: src || (e && e.name) || '?', who: ctx.cur(), x: at.x, z: at.z }); e.alertT = t; e.sus = 0;
+    S.bonks++; S.safeT = t + 1.6 * EZ('safe'); S.safeWho = ctx.cur(); (S.bonkLog ||= []).push({ t: +t.toFixed(1), src: src || (e && e.name) || '?', who: ctx.cur(), x: at.x, z: at.z }); e.alertT = t; e.sus = 0;
     resetEscorts(cp);
     if (S.master) S.master.coolUntil = 0; // S4 §1.6: bonk does not reset the Master Bell; cooldown clears so they can ring at once
     if ((S.acorns || []).some(a => a.by === ctx.cur())) acornBack();
@@ -2350,7 +2350,7 @@ export function createZones(scene, host) {
       for (const cp of S.cps) { if (cp.show && !isOn(cp.show)) continue; if (flatD(cp, p) < 2.55 && Math.abs(p.y - cp.y) < 3.5) cp.armT = t + 2.2; }
     }
     S._lastP = { x: p.x, z: p.z }; S._lastDt = dt;
-    for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; const ad = flatD(cp, p); const onPad = ad < 2.2 && Math.abs(p.y - cp.y) < 3; const standOn = ad < 1.15 && Math.abs(p.y - cp.y) < 3; if (standOn && spd < 1.15) cp.stillT = (cp.stillT || 0) + dt; else cp.stillT = 0; const take = (onPad && cp.armT && t < cp.armT) || (standOn && cp.stillT > 0.3); if (take && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; } if (onPad && !cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); emitNet('checkpoint', { x: +(cp.x - A.x).toFixed(2), z: +(cp.z - A.z).toFixed(2) }); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
+    for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; const ad = flatD(cp, p); const onPad = ad < 2.2 && Math.abs(p.y - cp.y) < 3; const standOn = ad < 1.15 && Math.abs(p.y - cp.y) < 3; if (standOn && spd < 1.15) cp.stillT = (cp.stillT || 0) + dt; else cp.stillT = 0; const fwd = !S.cp || S.cps.indexOf(cp) > S.cps.indexOf(S.cp); const take = (onPad && !cp.on && fwd) || (onPad && cp.armT && t < cp.armT) || (standOn && cp.stillT > 0.3); if (take && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; } if (onPad && !cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); emitNet('checkpoint', { x: +(cp.x - A.x).toFixed(2), z: +(cp.z - A.z).toFixed(2) }); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
     if (cur === host.cur()) flagBackUpd(S, p, cur);
     if (S.stuck) { if (t > S.stuck.until || !ctx.driven().includes(S.stuck.who)) S.stuck = null; else if (S.stuck.who === cur) { p.x = S.stuck.x; p.z = S.stuck.z; p.y = S.stuck.y; p.vx = p.vz = p.vy = 0; } }
     for (const d of S.drips) { if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
@@ -2365,7 +2365,7 @@ export function createZones(scene, host) {
       // thaw_valley (recipe.windWalk): a north wind also nudges grounded walkers up the valley
       if (inZ && p.grounded && recipe && recipe.windWalk && S.wind) { p.x += wv.dx * w.push * 0.28 * dt; p.z += wv.dz * w.push * 0.28 * dt; }
     }
-    if (S.cp && S.safeT && t < S.safeT) { // settle on the flag after a poof; a held walk key must not run off it
+    if (S.cp && S.safeT && t < S.safeT && cur === S.safeWho) { // settle on the flag after a poof; a held walk key must not run off it
       p.vx = p.vz = p.vy = 0; p.grounded = true;
       const pin = { x: S.cp.x + 0.6, z: S.cp.z - 0.6 };
       if (flatD(p, pin) < 4.5) { p.x = pin.x; p.z = pin.z; p.y = S.cp.y + 0.8; } // a teleport farther away must stick
