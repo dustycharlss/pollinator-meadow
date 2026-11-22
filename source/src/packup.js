@@ -74,7 +74,7 @@ export function createPackUp(ctx) {
     P.target = b;
     if (P.cool > 0) return true;
     P.prog += 0.14; P.cool = 0.16;
-    ctx.audio?.sample?.('build/place-thud', 0.28);
+    ctx.audio?.sample?.('build/place-thunk', 0.28);
     ensureRing();
     updateRing(p);
     if (P.prog >= P.need) completeOne(b);

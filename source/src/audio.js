@@ -83,7 +83,7 @@ export function createAudio() {
         master = bus.master = ctx.createGain(); master.gain.value = gainOf('master'); master.connect(ctx.destination);
         for (const k of ['music', 'sfx', 'amb', 'rain', 'voice']) { bus[k] = ctx.createGain(); bus[k].gain.value = gainOf(k); bus[k].connect(master); }
         bus.ui = ctx.createGain(); bus.ui.gain.value = gainOf('ui'); bus.ui.connect(bus.sfx); // UI sounds: child of the Gameplay (sfx) slider
-        music.start(ctx, bus.music); setTimeout(() => music.warm(), 4000);
+        music.start(ctx, bus.music);
         // iOS: a silent one-sample buffer inside the gesture fully unlocks output
         try { const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0); } catch (e) {}
       }

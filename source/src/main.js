@@ -569,10 +569,21 @@ function updateMusic(t) {
   else if (playing && !$('menu').classList.contains('on') && !$('results').classList.contains('on')) {
     if (moodOver && t < moodOverT) m = moodOver;
     else {
-      moodOver = null; let near = 1e9; const p = P[cur];
-      for (const z of coop.puzzles) if (!z.done) near = Math.min(near, Math.hypot(z.hintPos.x - p.x, z.hintPos.z - p.z));
-      inZone = inZone ? near < 40 : near < 26;
-      m = night > 0.5 ? 'night' : inZone ? 'puzzle' : SEASONS[clock.season];
+      moodOver = null;
+      const pid = valleySession && valleySession.patchId, rec = pid && zones && zones.MAPS && zones.MAPS[pid], def = pid && valley && valley.def(pid);
+      if ((rec && rec.hub) || pid === HUB_ID) m = 'hub';
+      else if (pid === 'starheart_summit') m = 'finale';
+      else if (pid === 'mirror_caves' || (rec && rec.moody && pid && pid.indexOf('cave') >= 0)) m = 'cave';
+      else if (rec && (rec.night || (rec.moody && (night > 0.5 || (zones.moody && zones.moody()))))) m = 'night';
+      else if (def && (def.act === 3 || def.act === 'lab')) m = 'act3';
+      else if ((def && def.act === 2) || (rec && rec.act2)) m = 'act2';
+      else if (pid && def) m = 'act1';
+      else {
+        let near = 1e9; const p = P[cur];
+        for (const z of coop.puzzles) if (!z.done) near = Math.min(near, Math.hypot(z.hintPos.x - p.x, z.hintPos.z - p.z));
+        inZone = inZone ? near < 40 : near < 26;
+        m = night > 0.5 ? 'night' : inZone ? 'puzzle' : SEASONS[clock.season];
+      }
     }
     if (round.running && !round.free && round.left <= 60) m = 'final'; // faster, higher take of the day song for the last minute
     if (round.running && !round.free) { const sec = Math.ceil(round.left); if (sec !== lastTick && sec >= 1 && sec <= 10) audio.sample(sec <= 3 ? 'round/countdown-final-tick' : 'round/countdown-tick', 0.45); lastTick = sec; }
@@ -2371,17 +2382,11 @@ async function boot() {
     onPackStart: () => {
       document.body.classList.remove('packReady');
       onb?.note?.('packup');
-      // loop bed while packing
-      try {
-        if (!window.__packLoop) {
-          const el = new Audio((import.meta.env.BASE_URL || './') + 'audio/sfx/valley/packup-loop.ogg');
-          el.loop = true; el.volume = 0.35; window.__packLoop = el;
-        }
-        window.__packLoop.currentTime = 0; window.__packLoop.play().catch(() => {});
-      } catch (e) {}
+      // loop bed while packing (EXT_SFX + AAC fallback via audio.startLoop)
+      try { audio.startLoop?.('valley/packup-loop', 0.35); } catch (e) {}
     },
     onPackDone: () => {
-      try { window.__packLoop && window.__packLoop.pause(); } catch (e) {}
+      try { audio.stopLoop?.('valley/packup-loop'); } catch (e) {}
       audio.sample?.('valley/packup-done-chime', 0.55);
       audio.sample?.('valley/patch-complete-wild', 0.6);
       endValleyPatchWild();

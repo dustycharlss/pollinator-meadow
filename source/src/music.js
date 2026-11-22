@@ -64,7 +64,8 @@ export function createMusic() {
       if (!o) { const el = withFallback(new Audio()); el.preload = 'auto'; el.crossOrigin = 'anonymous'; el.src = BASE + J.f + '.' + EXT; const g = ctx.createGain(); g.gain.value = J.g; try { ctx.createMediaElementSource(el).connect(g); g.connect(jbus); } catch (e) { return; } o = jcache[name] = { el }; }
       try { o.el.currentTime = 0; } catch (e) {} o.el.play().catch(() => {}); api.duck(J.len);
     },
-    warm() { for (const k in JINGLES) fetch(BASE + JINGLES[k].f + '.' + EXT).catch(() => {}); },
+    // Jingles load on first jingle() play; do not prefetch the set at boot (was 8 files at t=4s).
+    warm() {},
     hide(h) { hidden = h; if (!cur) return; if (h) cur.el.pause(); else cur.el.play().catch(() => {}); },
     debug() { return { want, mood, ext: EXT, track: cur && cur.tr.f, t: cur && +cur.el.currentTime.toFixed(1), dur: cur && cur.el.duration, gain: cur && +cur.g.gain.value.toFixed(2), paused: cur && cur.el.paused, master: master && +master.gain.value.toFixed(2), muted }; },
   };

@@ -344,7 +344,7 @@ export async function createRivals(scene, ctx) {
     if (D.prog >= 0.75) setStage(b.mesh, 'dismantle-25');
     else if (D.prog >= 0.5) setStage(b.mesh, 'dismantle-50');
     else if (D.prog >= 0.25) setStage(b.mesh, 'dismantle-75');
-    audio?.sample?.('build/place-thud', 0.3);
+    audio?.sample?.('build/place-thunk', 0.3);
     if (D.prog >= D.need) completeDismantle();
   };
   function completeDismantle() {
