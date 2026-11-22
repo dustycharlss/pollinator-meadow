@@ -5,6 +5,7 @@ function assetUrl(p) {
   catch (e) { return base + p; }
 }
 const url = (p) => `url("${assetUrl(p)}")`;
+const BASE = import.meta.env.BASE_URL || './';
 
 export function installOnlineArt() {
   const r = document.documentElement.style;
@@ -24,3 +25,5 @@ export function installOnlineArt() {
   r.setProperty('--ol-closet-equipped', url('act3/ui/closet/card-equipped.png'));
   r.setProperty('--ol-closet-unequipped', url('act3/ui/closet/card-unequipped.png'));
 }
+
+export { BASE };

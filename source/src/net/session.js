@@ -37,7 +37,7 @@ export function snapshotFromHooks(hooks) {
 }
 
 export function createNet(hooks = {}) {
-  const role = readNetRole();
+  let role = readNetRole();
   const onlineDev = typeof location !== 'undefined' && /(?:\?|&)online=dev(?:&|$)/.test(location.search || '');
   const active = !!(role || onlineDev);
 
@@ -46,6 +46,13 @@ export function createNet(hooks = {}) {
   let connected = false;
   let ready = false;
   let peers = [];
+  let holding = false;
+  let readyWait = null;
+  let listened = false;
+  let inSeq = 0;
+  let lastInSeq = 0;
+  let predictBlend = null;
+  let remoteBodies = {};
   let tick = 0;
   let lastSnapAt = 0;
   let lastFullAt = 0;
@@ -373,7 +380,42 @@ export function createNet(hooks = {}) {
       }
       if (!far) st = interp;
     }
-    if (st) applyState(st, { respectLocal: true });
+    if (st) {
+      const localId = hooks.localBody?.();
+      const tweening = hooks.isTweening?.(localId);
+      if (localId && st.bodies && st.bodies[localId] && !tweening) {
+        const cur = hooks.getPose?.(localId);
+        const snap = st.bodies[localId];
+        if (cur && snap) {
+          const d = bodyDist(cur, snap);
+          if (d < 0.5) {
+            const bodies = { ...st.bodies };
+            delete bodies[localId];
+            st = { ...st, bodies };
+          } else if (d < 4) {
+            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+            predictBlend = { id: localId, from: { ...cur }, to: { ...snap }, at: now, dur: 150 };
+            const bodies = { ...st.bodies };
+            delete bodies[localId];
+            st = { ...st, bodies };
+          } else {
+            predictBlend = null;
+          }
+        }
+      }
+      applyState(st, { respectLocal: true });
+      if (predictBlend && hooks.blendPose) {
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const k = Math.min(1, (now - predictBlend.at) / predictBlend.dur);
+        const a = predictBlend.from, b = predictBlend.to;
+        hooks.blendPose(predictBlend.id, {
+          x: a.x + (b.x - a.x) * k,
+          y: a.y + (b.y - a.y) * k,
+          z: a.z + (b.z - a.z) * k,
+        });
+        if (k >= 1) predictBlend = null;
+      }
+    }
   }
 
   function onEvt(data) {
@@ -382,6 +424,46 @@ export function createNet(hooks = {}) {
     if (typ === 'hello') {
       markPeer(data.from || data.role || 'peer');
       if (role === 'host' && !ready) sendWelcome();
+      return;
+    }
+    if (typ === 'ready') {
+      markPeer(data.from || 'client');
+      if (role === 'host') onPeerReady(data.from || 'client', data.map);
+      return;
+    }
+    if (typ === 'readywait' && role === 'client') {
+      hooks.levelFlow?.showReady?.({ map: data.map, name: data.name, roster: data.roster });
+      holding = true;
+      if (hooks.onHold) hooks.onHold(true);
+      return;
+    }
+    if (typ === 'countdown' && role === 'client') {
+      hooks.levelFlow?.showCountdown?.(data.n, data.name, data.map);
+      holding = true;
+      return;
+    }
+    if (typ === 'go' && role === 'client') {
+      holding = false;
+      if (hooks.onHold) hooks.onHold(false);
+      hooks.levelFlow?.hideReady?.();
+      hooks.levelFlow?.hideCatchup?.();
+      hooks.onGo?.(data.map);
+      return;
+    }
+    if (typ === 'loadtimeout' && role === 'client') {
+      holding = false;
+      if (hooks.onHold) hooks.onHold(false);
+      hooks.levelFlow?.showTimeout?.();
+      hooks.onLoadTimeout?.(data.map);
+      return;
+    }
+    if (typ === 'continue' && role === 'client') {
+      hooks.levelFlow?.hideComplete?.();
+      hooks.onHostContinue?.(data);
+      return;
+    }
+    if (typ === 'complete' && role === 'client') {
+      hooks.onLevelComplete?.(data);
       return;
     }
     if (typ === 'welcome' || typ === 'load') {
@@ -406,6 +488,7 @@ export function createNet(hooks = {}) {
       markPeer(data.from || 'client');
       const zones = hooks.getZones?.();
       if (data.bodies && zones?.applyNetState) {
+        for (const id of Object.keys(data.bodies)) remoteBodies[id] = true;
         zones.applyNetState({ bodies: data.bodies, poseOnly: true });
         // Plate / hold checks live in zones.update, which may not run if the
         // host tab's rAF is throttled. Pulse so setSig fires from a guest sit.
@@ -461,6 +544,8 @@ export function createNet(hooks = {}) {
       frame = decodeInput(data);
     }
     if (!frame) return;
+    if (frame.s != null) lastInSeq = frame.s;
+    if (body) remoteBodies[body] = true;
     hooks.applyRemoteFrame?.(frame, body);
   }
 
@@ -471,6 +556,8 @@ export function createNet(hooks = {}) {
   }
 
   function listen() {
+    if (listened) return;
+    listened = true;
     channel.onMessage(msg => {
       if (!msg) return;
       const ch = msg.ch;
@@ -508,7 +595,7 @@ export function createNet(hooks = {}) {
   }
 
   function snapRate() {
-    if (hooks.isPaused?.()) return 1;
+    if (hooks.isPaused?.() || holding) return 1;
     if (!hooks.isPlaying?.() || !hooks.isInLevel?.()) return 10;
     return 20;
   }
@@ -528,7 +615,10 @@ export function createNet(hooks = {}) {
       if (now - lastInAt >= 50) {
         lastInAt = now;
         const frame = hooks.pollLocalFrame?.();
-        if (frame) broadcast('in', { bin: encodeInput(frame), body: hooks.localBody?.() || null });
+        if (frame) {
+          inSeq = (inSeq + 1) & 65535;
+          broadcast('in', { bin: encodeInput(frame, inSeq), body: hooks.localBody?.() || null, s: inSeq });
+        }
       }
       applyClientView();
       tryApplyPending();
@@ -552,11 +642,139 @@ export function createNet(hooks = {}) {
   }
 
   function onMapLoaded(id) {
-    if (role === 'host') sendEvt({ type: 'load', map: id, id, state: currentSnapState(), from: 'host' });
+    if (role === 'host') {
+      sendEvt({ type: 'load', map: id, id, state: currentSnapState(), from: 'host' });
+      beginReadyWait(id);
+    }
     if (role === 'client') {
       tryApplyPending();
       sendEvt({ type: 'join', from: 'client', map: id });
+      sendReady(id);
+      hooks.levelFlow?.hideCatchup?.();
     }
+  }
+  function onMapReady(id) {
+    if (role === 'client') sendReady(id);
+  }
+
+  function isHubMap(id) {
+    return !id || id === 'meadow_hub' || hooks.isHub?.(id);
+  }
+
+  function rosterSnapshot(readySet) {
+    const raw = hooks.getRoster?.() || [];
+    const list = raw.length ? raw : defaultRoster();
+    return list.map(p => ({
+      id: p.id,
+      label: p.label || p.em || p.style || '',
+      cls: p.cls || null,
+      ready: !!(readySet && readySet.has(p.id)) || p.id === 'host' && role === 'host' && readySet && readySet.has('host'),
+    }));
+  }
+  function defaultRoster() {
+    const out = [{ id: 'host', label: '🐻', cls: 'bruiser' }];
+    if (peers.includes('client') || role === 'client' || (hooks.peerCount?.() || peers.length) >= 1) {
+      out.push({ id: 'client', label: '🐝', cls: 'scout' });
+    }
+    return out;
+  }
+
+  function beginReadyWait(id) {
+    if (role !== 'host' || isHubMap(id)) return;
+    const name = hooks.levelName?.(id) || id;
+    const selfId = hooks.peerId?.() || 'host';
+    const readySet = new Set([selfId, 'host']);
+    // Auto-ready any already-connected peer that is already on this map.
+    const roster = rosterSnapshot(readySet);
+    readyWait = { map: id, name, ready: readySet, started: (typeof performance !== 'undefined' ? performance.now() : Date.now()), timer: null, counting: false };
+    holding = true;
+    if (hooks.onHold) hooks.onHold(true);
+    hooks.levelFlow?.showReady?.({ map: id, name, roster });
+    sendEvt({ type: 'readywait', map: id, name, roster, from: 'host' });
+    readyWait.timer = setTimeout(() => finishReadyWait(true), 15000);
+    setTimeout(() => maybeFinishReady(), 400);
+  }
+
+  function onPeerReady(from, map) {
+    if (!readyWait || readyWait.counting) return;
+    if (map && readyWait.map && map !== readyWait.map) return;
+    readyWait.ready.add(from);
+    hooks.levelFlow?.tickSfx?.('ready');
+    const roster = rosterSnapshot(readyWait.ready);
+    hooks.levelFlow?.showReady?.({ map: readyWait.map, name: readyWait.name, roster });
+    sendEvt({ type: 'readywait', map: readyWait.map, name: readyWait.name, roster, from: 'host' });
+    maybeFinishReady();
+  }
+
+  function maybeFinishReady() {
+    if (!readyWait || readyWait.counting) return;
+    const needed = (hooks.getRoster?.() || defaultRoster()).map(p => p.id);
+    const ids = needed.length ? needed : ['host', 'client'];
+    const all = ids.every(id => readyWait.ready.has(id));
+    // A solo host (no peers yet) should still wait a beat only if someone is connecting;
+    // if the only roster id is host, go.
+    const onlyHost = ids.length === 1 && ids[0] === 'host';
+    if (all || onlyHost) finishReadyWait(false);
+  }
+
+  function finishReadyWait(timedOut) {
+    if (!readyWait || readyWait.counting) return;
+    if (readyWait.timer) { try { clearTimeout(readyWait.timer); } catch (e) {} readyWait.timer = null; }
+    if (timedOut) {
+      const map = readyWait.map;
+      readyWait = null;
+      holding = false;
+      if (hooks.onHold) hooks.onHold(false);
+      hooks.levelFlow?.showTimeout?.();
+      sendEvt({ type: 'loadtimeout', map, from: 'host' });
+      hooks.onLoadTimeout?.(map);
+      return;
+    }
+    startCountdown();
+  }
+
+  function startCountdown() {
+    if (!readyWait) return;
+    readyWait.counting = true;
+    const { map, name } = readyWait;
+    let n = 3;
+    const go = () => {
+      holding = false;
+      if (hooks.onHold) hooks.onHold(false);
+      hooks.levelFlow?.hideReady?.();
+      sendEvt({ type: 'go', map, from: 'host' });
+      hooks.onGo?.(map);
+      readyWait = null;
+    };
+    const tick = () => {
+      hooks.levelFlow?.showCountdown?.(n, name, map);
+      sendEvt({ type: 'countdown', map, name, n, from: 'host' });
+      if (n <= 1) { setTimeout(go, 1000); return; }
+      n -= 1;
+      setTimeout(tick, 1000);
+    };
+    tick();
+  }
+
+  function sendReady(id) {
+    if (role !== 'client') return;
+    holding = true;
+    if (hooks.onHold) hooks.onHold(true);
+    sendEvt({ type: 'ready', map: id, from: hooks.peerId?.() || 'client' });
+  }
+
+  function sendContinue(payload = {}) {
+    if (role !== 'host') return;
+    sendEvt({ type: 'continue', ...payload, from: 'host' });
+    hooks.levelFlow?.hideComplete?.();
+  }
+
+  function abortReadyWait() {
+    if (readyWait?.timer) { try { clearTimeout(readyWait.timer); } catch (e) {} }
+    readyWait = null;
+    holding = false;
+    hooks.levelFlow?.hideReady?.();
+    hooks.levelFlow?.hideComplete?.();
   }
 
   let snapClock = null, nextSnapAt = 0;
@@ -594,13 +812,57 @@ export function createNet(hooks = {}) {
     ready = !!role;
   }
 
+  function syncRoleFlags() {
+    net.isClient = role === 'client';
+    net.isHost = role === 'host';
+    net.amHost = role === 'host';
+    net.role = role;
+  }
+
+  function bindRoom(opts = {}) {
+    // ?nettest keeps the local BroadcastChannel; lobby runs beside it.
+    if (readNetRole()) return;
+    const r = opts.role;
+    if (!r) return;
+    role = r;
+    syncRoleFlags();
+    net.kind = opts.transport?.kind || opts.transport?.name || 'trystero';
+    net.mode = 'dev';
+    net.transport = opts.transport || net.transport;
+    if (opts.transport) {
+      transport = opts.transport;
+      channel = opts.channel || createChannel(opts.transport);
+      net.channel = channel;
+      listened = false;
+      listen();
+    }
+    if (role === 'host') armSnapClock();
+    if (typeof setTimeout !== 'undefined') setTimeout(() => { try { sendHello(); if (role === 'client') sendEvt({ type: 'join', from: 'client' }); } catch (e) {} }, 50);
+  }
+
+  function unbindRoom() {
+    if (readNetRole()) return;
+    abortReadyWait();
+    if (snapClock) { try { clearInterval(snapClock); } catch (e) {} snapClock = null; }
+    role = null;
+    syncRoleFlags();
+    connected = false;
+  }
+
   net.tick = tickNet;
   net.onHostEvent = onHostEvent;
   net.onMapLoaded = onMapLoaded;
+  net.onMapReady = onMapReady;
   net.sendSnap = sendSnap;
-  net.isClient = role === 'client';
-  net.isHost = role === 'host';
-  net.role = role;
+  net.bindRoom = bindRoom;
+  net.unbindRoom = unbindRoom;
+  net.beginReadyWait = beginReadyWait;
+  net.sendContinue = sendContinue;
+  net.abortReadyWait = abortReadyWait;
+  net.remoteBodies = () => Object.keys(remoteBodies);
+  net.markRemote = (id) => { if (id) remoteBodies[id] = true; };
+  Object.defineProperty(net, 'holding', { get: () => holding, set: v => { holding = !!v; } });
+  syncRoleFlags();
   net.active = active;
   net.tryApplyPending = tryApplyPending;
   net.sizes = () => ({ lastFull: lastFullAt, tick });

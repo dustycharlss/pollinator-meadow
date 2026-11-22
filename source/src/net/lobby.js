@@ -1048,6 +1048,7 @@ export function createLobby(hooks = {}) {
     letIn: () => approve(true),
     deny: () => approve(false),
     lock: lockRoom,
+    get self() { return me; },
     get role() { return role; },
     get code() { return code && formatCode(code, '-'); },
     get roomCode() { return code && formatCode(code, '-'); },

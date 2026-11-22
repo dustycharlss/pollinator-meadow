@@ -230,6 +230,65 @@ body:has(#pause.on) .olBar { display: none !important; }
   .olCard:has(.olRoster) .olHead { padding: 6px 12px 4px; }
   .olCard:has(.olRoster) .olBody { padding: 4px 12px 12px; overflow: hidden; }
   .olChoiceCard img { width: 120px; height: 130px; }
+/* N3 ready-wait / complete / catchup */
+#olLevel { position: fixed; inset: 0; z-index: 85; pointer-events: none; }
+#olLevel:not([hidden]) { pointer-events: auto; }
+#olLevel[hidden] { display: none !important; }
+.olReady {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(40, 24, 16, .35);
+}
+.olReady[hidden], .olComplete[hidden], .olCatchup[hidden] { display: none !important; }
+.olReadyBg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; opacity: .92; }
+.olReadyCard {
+  position: relative; z-index: 1;
+  width: min(350px, calc(100vw - 24px));
+  padding: 20px 16px 24px;
+  text-align: center;
+  color: #3b2614;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.olReadyMsg { font: 800 20px/1.3 system-ui, sans-serif; margin: 0 0 12px; }
+.olReadyRoster { list-style: none; display: flex; gap: 12px; justify-content: center; padding: 0; margin: 0 0 12px; }
+.olReadyRoster li { display: flex; flex-direction: column; align-items: center; gap: 4px; font: 700 12px system-ui, sans-serif; }
+.olReadyRoster img { width: 48px; height: 48px; }
+.olReadyCount { position: relative; width: 120px; height: 120px; margin: 8px auto 0; }
+.olReadyCount img { width: 120px; height: 120px; display: block; }
+.olReadyCount b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 800 44px system-ui, sans-serif; color: #3b2614; }
+.olComplete { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(40, 24, 16, .45); }
+.olCompleteCard {
+  width: min(360px, calc(100vw - 24px));
+  padding: 20px 18px 22px;
+  background: #fff3d8;
+  border: 3px solid #3b2614;
+  border-radius: 18px;
+  box-shadow: 0 8px 0 #3b2614;
+  text-align: center;
+  color: #3b2614;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.olCompleteCard h2 { margin: 0 0 8px; font-size: 1.25rem; }
+.olCompleteStars { font: 800 18px/1.35 system-ui, sans-serif; margin: 0 0 8px; }
+.olCompleteWait { font: 700 14px system-ui, sans-serif; margin: 8px 0 0; }
+.olCompleteGo { margin-top: 12px; min-height: 48px; min-width: 180px; padding: 8px 20px; border: 3px solid #3b2614; border-radius: 14px; background: #ffd23f; font: 800 16px system-ui, sans-serif; cursor: pointer; color: #3b2614; }
+.olCompleteGo[hidden] { display: none !important; }
+.olCatchup {
+  position: absolute; top: max(12px, env(safe-area-inset-top)); left: 50%;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  background: #fff3d8;
+  border: 3px solid #3b2614;
+  border-radius: 16px;
+  font: 800 14px system-ui, sans-serif;
+  color: #3b2614;
+  pointer-events: none;
+}
+.olCatchup img { width: 36px; height: 36px; }
+@media (orientation: landscape) and (max-height: 420px) {
+  .olReadyCard { width: min(520px, calc(100vw - 16px)); display: flex; flex-direction: row; align-items: center; gap: 16px; }
+  .olCompleteCard { width: min(480px, calc(100vw - 16px)); }
 }
 
 /* 360×740-class phones: 3×100px cards overflow the 312px body and labels collide. */

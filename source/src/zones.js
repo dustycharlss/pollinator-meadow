@@ -3146,6 +3146,12 @@ export function createZones(scene, host) {
     if (t - lastProg > 45 && t - hintT > 45) { const nx = reqLeft()[0] || puzzles.find(q => !q.done); const pl = nx && pipStuck(nx.id); if (pl) { hintT = t; pipSay(pl); } else if (nx && nx.hint) { hintT = t; tst(`🐦 ${nx.hint}`, 4200); } }
   }
   function update(dt, cam) {
+    if (ctx.isNetClient?.()) {
+      // Host is authoritative for pickups, pads, sigs, carries, escorts, and complete.
+      // Clients still tick mixers so babies and decorations don't freeze.
+      for (const mx of babyMixers) try { mx.update(dt); } catch (e) {}
+      return;
+    }
     updateWorld(dt, cam);
     if (!recipe || recipe.hub) return;
     const ids = [...new Set((ctx.driven() || []).filter(Boolean))];
@@ -3717,7 +3723,7 @@ export function createZones(scene, host) {
     }
   }
   return {
-    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
+    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, complete, tweening: () => !!tw, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
     camRoomAt: (x, z) => camRooms.find(r => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1) || null,
     act, actAs: id => withFocus(id, () => act()), useGearAs: id => withFocus(id, () => useGear(ctx.getP())), callAs: id => withFocus(id, () => callEscort()),

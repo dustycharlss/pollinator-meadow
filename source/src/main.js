@@ -12,6 +12,7 @@ import { createSlots } from './slots.js';
 import { createNet } from './net/session.js';
 import { isOnlineDev, canShowFriendsStation } from './net/flags.js';
 import { createLobby } from './net/lobby.js';
+import { createLevelFlow } from './net/level-flow.js';
 import { installOnlineArt } from './net/art.js';
 import { emoteOf, EMOTE_SHOW } from './net/emotes.js';
 import './online.css';
@@ -389,7 +390,7 @@ async function showCredits() {
 }
 $('bInfo').onclick = () => showCredits(); $('startCredits').onclick = showCredits;
 $('crClose').onclick = () => closeOv('credits');
-let playing = false, paused = true, lobby = null;
+let playing = false, paused = true, lobby = null, levelFlow = null;
 function swapNext(d = 1) {
   const hl = helpers ? helpers.list : [], L = [...SPECIES_ORDER, ...hl], n = L.length;
   const i = rts.possessed ? SPECIES_ORDER.length + hl.indexOf(rts.possessed) : SPECIES_ORDER.indexOf(cur); const nx = L[(i + d + n) % n];
@@ -1153,7 +1154,12 @@ function followerIds() { if (!crew || !playing || rts.on || (valleySession && cl
 function classStay() { return true; }
 function followSlot(id) { const f = followerIds(), k = f.indexOf(id); return k < 0 ? null : { side: k ? 1 : -1, back: 3.2 + k * 1.6 }; }
 function placeFollowers(snap) { const L = P[cur]; if (!L) return; const F = snap ? crewOthers() : followerIds(); for (const id of F) { const k = F.indexOf(id), s = { side: k ? 1 : -1, back: 3.2 + k * 1.6 }, p = P[id]; const tx = L.x - Math.sin(L.yaw) * s.back + Math.cos(L.yaw) * s.side * 2.4, tz = L.z - Math.cos(L.yaw) * s.back - Math.sin(L.yaw) * s.side * 2.4; if (snap || Math.hypot(p.x - L.x, p.z - L.z) > 45) { p.x = tx; p.z = tz; p.y = Math.max(heightAt(tx, tz), L.y) + 0.5; p.vy = 0; p.grounded = false; p.goto = null; } } }
-function startValleyPatch(patchId) {
+function startValleyPatch(patchId, opts = {}) {
+  const fromNet = !!(opts && opts.fromNet);
+  if (net && net.isClient && !fromNet) {
+    toast('Only the host can start a level', 2400);
+    return;
+  }
   if (!valley || !crew) return;
   // Never load an unbuilt valley id (nextPlayable, ensureMap, or a direct call) as an empty map.
   if (zones && !zones.MAPS?.[patchId]) { toast('🗺️ That trail is not ready yet', 2600); return; }
@@ -1206,8 +1212,11 @@ function startValleyPatch(patchId) {
   onb?.note?.('valleyIn');
   if (patchId === HUB_ID) { toast('🏡 Meadow Hub · walk to a station! 🪧 Trail Board picks a level', 3200); hubArrived(); } else toast(ADVENTURE ? `${def.emoji} ${def.name} · solve it with your crew!` : `${def.emoji} ${def.name} · heal the meadow with your crew!`, 3200);
   preloadTips(patchId);
-  showIntroCard(patchId);
-  if (!hasIntroCard(patchId)) presentLevelTips(patchId);
+  const onlineLevel = !!(net && net.role && patchId !== HUB_ID);
+  if (!onlineLevel) {
+    showIntroCard(patchId);
+    if (!hasIntroCard(patchId)) presentLevelTips(patchId);
+  }
   try { net?.onMapLoaded?.(patchId); } catch (e) {}
 }
 // ---------- class skins (cosmetic only: physics/hitbox/abilities stay on bee · raccoon · bear) ----------
@@ -1248,14 +1257,26 @@ async function skinThumb(c, sk) {
   g2.putImageData(im, 0, 0);
   return (skinThumbs[sk] = cv.toDataURL());
 }
-let skinAfter = null;
-function openSkinPick(after) { skinAfter = after || null; renderSkinPick(); openOv('skinPick'); }
+let skinAfter = null, skinTab = null;
+function openSkinPick(after, cls) { skinAfter = after || null; if (cls) skinTab = cls; if (!skinTab) skinTab = CLASS_ORDER[0]; renderSkinPick(); openOv('skinPick'); }
 function renderSkinPick() {
-  $('spRows').innerHTML = CLASS_ORDER.map(c => { const C = CLASSES[c], on = skinOfCls(c);
-    return `<div class="spRow" style="--cc:${C.color}"><div class="spH"><img src="${C.badge}" alt=""><b>${C.name}</b><small>${C.tag}</small></div><div class="spCards">` +
-      SKINS[c].map(k => `<button class="spc ${k === on ? 'on' : ''}" data-c="${c}" data-s="${k}"><span class="spI">${skinThumbs[k] ? `<img src="${skinThumbs[k]}" alt="">` : `<i>${SKIN_INFO[k].em}</i>`}</span><b>${SKIN_INFO[k].name}</b>${k === SKIN_BASE[c] ? '<small>default</small>' : ''}</button>`).join('') + '</div></div>'; }).join('');
-  (async () => { for (const c of CLASS_ORDER) for (const k of SKINS[c]) { if (skinThumbs[k]) continue; try { const u = await skinThumb(c, k); const el = $('spRows').querySelector(`.spc[data-s="${k}"] .spI`); if (el) el.innerHTML = `<img src="${u}" alt="">`; } catch (e) { console.warn('skin thumb', k, e); } } })();
+  const base = import.meta.env.BASE_URL || './';
+  const tab = (skinTab && CLASS_ORDER.includes(skinTab)) ? skinTab : CLASS_ORDER[0];
+  skinTab = tab;
+  const tabs = $('spTabs');
+  if (tabs) {
+    tabs.innerHTML = CLASS_ORDER.map(c => {
+      const on = c === tab;
+      const src = base + 'act3/ui/closet/tab-' + c + (on ? '-selected' : '') + '.png';
+      return `<button type="button" class="spTab${on ? ' on' : ''}" data-c="${c}" aria-pressed="${on}" aria-label="${CLASSES[c].name}"><img src="${src}" alt="${CLASSES[c].name}"></button>`;
+    }).join('');
+  }
+  const C = CLASSES[tab], on = skinOfCls(tab);
+  $('spRows').innerHTML = `<div class="spRow" style="--cc:${C.color}"><div class="spCards">` +
+    SKINS[tab].map(k => `<button class="spc closet ${k === on ? 'on equipped' : ''}" data-c="${tab}" data-s="${k}"><span class="spCardFace"><span class="spI">${skinThumbs[k] ? `<img src="${skinThumbs[k]}" alt="">` : `<i>${SKIN_INFO[k].em}</i>`}</span></span><b>${SKIN_INFO[k].name}</b>${k === SKIN_BASE[tab] ? '<small>default</small>' : ''}</button>`).join('') + '</div></div>';
+  (async () => { for (const k of SKINS[tab]) { if (skinThumbs[k]) continue; try { const u = await skinThumb(tab, k); const el = $('spRows').querySelector(`.spc[data-s="${k}"] .spI`); if (el) el.innerHTML = `<img src="${u}" alt="">`; } catch (e) { console.warn('skin thumb', k, e); } } })();
 }
+if ($('spTabs')) $('spTabs').addEventListener('click', e => { const b = e.target.closest('.spTab'); if (!b) return; audio.blip(2); skinTab = b.dataset.c; renderSkinPick(); });
 $('spRows').addEventListener('click', async e => { const b = e.target.closest('.spc'); if (!b) return; audio.blip(2); setSkin(b.dataset.c, b.dataset.s); renderSkinPick(); await applySkins(); if ($('valley').classList.contains('on')) renderValleyMap(); });
 $('spDone').onclick = () => { closeOv('skinPick'); const f = skinAfter; skinAfter = null; f && f(); };
 if ($('vSkins')) $('vSkins').onclick = () => openSkinPick();
@@ -1310,7 +1331,45 @@ function updateHealUi() {
   setHealArt(healAmt);
   document.body.classList.toggle('packReady', !!(valleySession && packup && !packup.active && packup.canStart()));
 }
-function endValleyPatchWild() {
+function creditLevelResult(res, sess, lines) {
+  if (!res || !valley) return;
+  const was1 = valley.act1Done();
+  valley.markBeaten(res.id);
+  if (sess) {
+    sess.newAct2 = !was1 && valley.act1Done() && !valley.data.act2Seen;
+    sess.trailDone = res.id === 'trailhead_trials' && !valley.data.trailBadge;
+  }
+  if (res.noStars) {
+    if (lines) lines.push('🏅 Trailhead badge! Level 9 is open.');
+  } else if (res.kid) {
+    const S = (valley.data.stars = valley.data.stars || {});
+    S[res.id] = { n: 3, petals: true, star: true, par: true, best: Math.min(S[res.id]?.best || 1e9, res.time) };
+    valley.save();
+    if (lines) lines.push('⭐⭐⭐ Great job, friends!');
+  } else {
+    const st = res.stars || {};
+    if (lines) {
+      lines.push(`🌸 Petals ${res.petals}/${res.petalsTotal} ${st.petals ? '⭐' : '☆'} · ⭐ Starseed ${st.star ? '⭐' : '☆'} · ⏱ ${fmtT(res.time)}${res.par ? ' / par ' + fmtT(res.par) : ''} ${res.easy ? '· 🌱 Easy mode — time star not used' : st.par ? '⭐' : '☆'}`);
+      if (res.end) lines.push(...res.end.map(skinText));
+    }
+    const S = (valley.data.stars = valley.data.stars || {}), old = S[res.id] || { n: 0 };
+    S[res.id] = { n: Math.max(old.n || 0, res.n), petals: !!(old.petals || st.petals), star: !!(old.star || st.star), seed: !!(old.seed || (res.hasStar && res.star)), par: !!(old.par || st.par), best: Math.min(old.best || 1e9, res.time) };
+    valley.save();
+  }
+}
+
+function hostContinueLevel() {
+  const dest = endValleyPatchWild({ fromContinue: true });
+  net?.sendContinue?.({ to: dest || 'hub' });
+}
+
+function applyHostContinue(data) {
+  levelFlow?.hideComplete?.();
+  if (valleySession && !data?.skipEnd) endValleyPatchWild({ fromNet: true, forceTo: data?.to });
+  else if (data?.to === 'hub' || !data?.to) enterHub();
+}
+
+function endValleyPatchWild(opts = {}) {
   if (!valleySession) return;
   const id = valleySession.patchId;
   valley.markWild(id, { at: Date.now(), heal: 1 });
@@ -1326,24 +1385,37 @@ function endValleyPatchWild() {
   if (def && def.neighbor && def.neighbor !== 'all') {
     if (valley.friendship(def.neighbor) < 1) valley.addFriendship(def.neighbor, 1);
   }
-  if (newAct2) { valley.data.act2Seen = true; valley.save(); vActPage = 2; vSelPatch = 'trailhead_trials'; openTrailSign('unlock'); return; }
-  if (trailDone) { valley.data.trailBadge = true; valley.save(); vActPage = 2; vSelPatch = 'sunbeam_grove'; openTrailSign('badge'); return; }
-  if (id === 'backyard_split' && !valley.data.act3Seen) { valley.data.act3Seen = true; valley.save(); try { sessionStorage.setItem('pm-hubcut', '1'); } catch (e) {} vActPage = 3; enterHub(); return; }
-  { const fr = zones?.MAPS?.[id]?.friend; if (fr && HUB_FRIENDS) { const added = [].concat(fr).filter(f => valley.addFriend(f)); if (added.length) { try { sessionStorage.setItem('pm-friendcut', added.join(',')); } catch (e) {} vActPage = 3; enterHub(); return; } } } // S1: the rescued friend moves into the hub
-  if (valley.checkFestival() && !valley.data.festivalSeen) {
-    valley.data.festivalSeen = true; valley.save();
-    openFestival();
-  } else {
-    enterHub();
+  let dest = opts.forceTo || null;
+  if (!dest) {
+    if (newAct2) dest = 'trail-unlock';
+    else if (trailDone) dest = 'trail-badge';
+    else if (id === 'backyard_split' && !valley.data.act3Seen) dest = 'act3-cut';
+    else {
+      const fr = zones?.MAPS?.[id]?.friend;
+      if (fr && HUB_FRIENDS) {
+        const added = [].concat(fr).filter(f => valley.addFriend(f));
+        if (added.length) { try { sessionStorage.setItem('pm-friendcut', added.join(',')); } catch (e) {} dest = 'friend-cut'; }
+      }
+    }
+    if (!dest && valley.checkFestival() && !valley.data.festivalSeen) dest = 'festival';
+    if (!dest) dest = 'hub';
   }
+  const goHub = () => enterHub({ fromNet: !!opts.fromNet || !!opts.fromContinue });
+  if (dest === 'trail-unlock') { valley.data.act2Seen = true; valley.save(); vActPage = 2; vSelPatch = 'trailhead_trials'; openTrailSign('unlock'); }
+  else if (dest === 'trail-badge') { valley.data.trailBadge = true; valley.save(); vActPage = 2; vSelPatch = 'sunbeam_grove'; openTrailSign('badge'); }
+  else if (dest === 'act3-cut') { valley.data.act3Seen = true; valley.save(); try { sessionStorage.setItem('pm-hubcut', '1'); } catch (e) {} vActPage = 3; goHub(); }
+  else if (dest === 'friend-cut') { vActPage = 3; goHub(); }
+  else if (dest === 'festival') { valley.data.festivalSeen = true; valley.save(); openFestival(); }
+  else goHub();
+  return dest;
 }
 // ---------- S1 Meadow Hub: the home glade between levels (replaces the level menu as the main screen) ----------
 function inHub() { return !!valleySession && valleySession.patchId === HUB_ID; }
-function enterHub() {
+function enterHub(opts = {}) {
   closeOv('results'); closeOv('festival'); closeOv('trailSign');
   if (!valley || !crew || !zones?.MAPS?.[HUB_ID]) { openValleyMap(); return; }
   if (inHub()) { closeValleyMap(); closeOv('title'); return; }
-  startValleyPatch(HUB_ID);
+  startValleyPatch(HUB_ID, { fromNet: !!opts.fromNet });
 }
 const emoteBubbles = [];
 function showOnlineEmote(from, id) {
@@ -1468,7 +1540,7 @@ function startNew(len) {
   // NEWFLAG is a one-shot: after a pm-auto reload, skip one startNew so a
   // client tab's shared save cannot loop us. Consume it immediately so a
   // later startNew (Hub lab pad, next patch) can still reload when dirty.
-  if (!NEWFLAG && (dirty || savedRound())) { try { sessionStorage.setItem('pm-auto', JSON.stringify({ len, lead: settings.lead, mode: settings.mode, patch: valleySession ? valleySession.patchId : null })); } catch (e) {} clearRound(); noSave = true; location.reload(); return; }
+  if (!NEWFLAG && (dirty || savedRound()) && !(net && net.role)) { try { sessionStorage.setItem('pm-auto', JSON.stringify({ len, lead: settings.lead, mode: settings.mode, patch: valleySession ? valleySession.patchId : null })); } catch (e) {} clearRound(); noSave = true; location.reload(); return; }
   NEWFLAG = null;
   round.reset(len); round.mode = settings.mode === 'relaxed' ? 'relaxed' : 'challenge'; setLead(settings.lead && SPECIES[settings.lead] ? settings.lead : 'bee', true); selectSpecies(lead, true); if (!valleySession) unifyHomes(null, null, lead); if (hazards) hazards.resetRound(); if (rivals) rivals.resetRound(lead); tech.reset(); if (tiers) tiers.reset(); for (const k in convAcc) delete convAcc[k]; if (crew) crew.arcade = !valleySession; if (valleySession) { updateHealUi(); } else { document.body.classList.remove('packReady'); } beginRound();
 }
@@ -1476,8 +1548,10 @@ function toTitle() { persist(); saveRound(); noSave = true; try { sessionStorage
 function openPause() { $('bPause').classList.remove('pulse');
   if (shopOpen) closeShop();
   if (!playing || round.over || $('pause').classList.contains('on')) return;
-  if ($('pLeave')) $('pLeave').hidden = !lobby?.role;
-  $('pauseInfo').textContent = `${round.free ? '∞ Free play (no stars)' : `⏱ ${fmtT(round.left)} left`} `; openOv('pause'); hubSet('game');
+  $('pauseInfo').textContent = `${round.free ? '∞ Free play (no stars)' : `⏱ ${fmtT(round.left)} left`} `;
+  const leave = $('pLeave');
+  if (leave) leave.hidden = !(lobby && lobby.role);
+  openOv('pause'); hubSet('game');
 }
 // title: Challenge / Relaxed set mode then open Valley Map (overhaul primary path)
 for (const [id, mode] of [['tChallenge', 'challenge'], ['tRelaxed', 'relaxed']]) $(id).onclick = () => { settings.mode = mode; saveSettings(settings); openValleyMap(); };
@@ -1495,7 +1569,7 @@ fdTrack($('title'), 'title', C => {
 });
 $('play').onclick = () => { audio.start(); if (savedRound()) confirmDlg('Start a new round?', 'You have a round in progress. A new round will replace it.', 'New round', openPick); else openPick(); };
 
-function startValleyIn(mode) { if (!vSelPatch) return; settings.mode = mode; saveSettings(settings); startValleyPatch(vSelPatch); }
+function startValleyIn(mode) { if (!vSelPatch) return; if (net && net.isClient) { toast('Only the host can start a level', 2400); return; } settings.mode = mode; saveSettings(settings); startValleyPatch(vSelPatch); }
 // map Back / Play / Timed are wired inside map-screen.js (createMapScreen ctx.onBack / onPlay)
 if ($('vEditCrew')) $('vEditCrew').onclick = () => openCrewTent();
 if ($('festOk')) $('festOk').onclick = () => { closeOv('festival'); openValleyMap(); };
@@ -1506,6 +1580,12 @@ addEventListener('resize', () => { if (document.body.classList.contains('inValle
 
 $('cont').onclick = () => { audio.start(); beginRound(); };
 $('bPause').onclick = openPause; $('pResume').onclick = () => closeOv('pause');
+if ($('pLeave')) $('pLeave').onclick = () => {
+  if (!(lobby && lobby.role)) return;
+  closeOv('pause');
+  try { lobby.leave('pause'); } catch (e) {}
+  toast('You left the game', 2400);
+};
 $('pRestart').onclick = () => confirmDlg('Restart round?', 'Everything built or collected this round will be reset. Your gear and journal are kept.', 'Restart', () => startNew(round.len));
 $('pQuit').onclick = () => confirmDlg('Quit to title?', 'Your round is saved. You can pick it up again with “Continue round”.', 'Quit', toTitle);
 if ($('pLeave')) $('pLeave').onclick = () => {
@@ -1864,8 +1944,17 @@ function withCur(id, fn) {
 }
 function worldTick(dt, st) {
   try { net?.tick?.(0); } catch (e) {}
-  if (net && net.isClient) {
-    // Client: don't simulate bodies (host is authoritative). T.tpL still writes P; snaps apply in net.tick.
+  if (net && net.holding) {
+    // Ready-wait / countdown: freeze simulation for everyone.
+  } else if (net && net.isClient) {
+    // Own-animal prediction; other bodies come from interpolated snaps.
+    const local = cur;
+    const tweening = zones && zones.tweening && zones.tweening();
+    if (!tweening && P[local]) {
+      const src = input;
+      const frame = src.pollFrame ? src.pollFrame() : { sx: 0, sy: 0, jump: false, cy: cam.yaw };
+      stepPlayer(dt, st, local, frame);
+    }
   } else if (rts.on) { for (const id of SPECIES_ORDER) stepParked(id, dt, st); }
   else {
     const driven = new Set();
@@ -1896,25 +1985,29 @@ function worldTick(dt, st) {
     // Heal comes from zone pickups / team lifts / contests — territory bloom retired (t135u).
     if (zones) { zones.update(dt, camera); if (!zones.keyGoalMet()) healAmt = Math.min(healAmt, HEAL_PACKUP - 0.01); }
     if (ADVENTURE && zones && zones.keyGoalMet() && valleySession && !valleySession.ending) {
+      if (net && net.isClient) {
+        // Host sends complete + Continue; clients credit in onLevelComplete.
+      } else {
       valleySession.ending = true; audio.music?.jingle?.('win');
       const res = zones.result?.() || null, lines = [];
-      if (res) { const was1 = valley.act1Done(); valley.markBeaten(res.id); valleySession.newAct2 = !was1 && valley.act1Done() && !valley.data.act2Seen; valleySession.trailDone = res.id === 'trailhead_trials' && !valley.data.trailBadge; }
-      if (res && res.noStars) {
-        lines.push('🏅 Trailhead badge! Level 9 is open.');
-      } else if (res && res.kid) {
-        const S = (valley.data.stars = valley.data.stars || {}); S[res.id] = { n: 3, petals: true, star: true, par: true, best: Math.min(S[res.id]?.best || 1e9, res.time) }; valley.save();
-        lines.push('⭐⭐⭐ Great job, friends!');
-      } else if (res) {
-        const st = res.stars; lines.push(`🌸 Petals ${res.petals}/${res.petalsTotal} ${st.petals ? '⭐' : '☆'} · ⭐ Starseed ${st.star ? '⭐' : '☆'} · ⏱ ${fmtT(res.time)}${res.par ? ' / par ' + fmtT(res.par) : ''} ${res.easy ? '· 🌱 Easy mode — time star not used' : st.par ? '⭐' : '☆'}`);
-        lines.push(...res.end.map(skinText));
+      creditLevelResult(res, valleySession, lines);
+      if (res && !res.noStars && !res.kid && res.end) {
         (res.endVoice || res.end.map((_, i) => `${res.id}.end.${String(i + 1).padStart(2, '0')}`)).forEach((vid, i) => {
           if (vid) setTimeout(() => audio.speak(vid), 2600 + (i + 1) * 2600);
         });
-        const S = (valley.data.stars = valley.data.stars || {}), old = S[res.id] || { n: 0 };
-        S[res.id] = { n: Math.max(old.n || 0, res.n), petals: !!(old.petals || st.petals), star: !!(old.star || st.star), seed: !!(old.seed || (res.hasStar && res.star)), par: !!(old.par || st.par), best: Math.min(old.best || 1e9, res.time) }; valley.save();
       }
-      lines.forEach((l, i) => setTimeout(() => toast(l, 2800), 2600 + i * 2600));
-      setTimeout(() => endValleyPatchWild(), 2600 + lines.length * 2600 + 400);
+      if (net && net.role) {
+        const def = valley.def(res?.id || valleySession.patchId);
+        levelFlow?.showComplete?.({
+          result: { ...(res || {}), name: def?.name },
+          isHost: true,
+          onContinue: () => hostContinueLevel(),
+        });
+      } else {
+        lines.forEach((l, i) => setTimeout(() => toast(l, 2800), 2600 + i * 2600));
+        setTimeout(() => endValleyPatchWild(), 2600 + lines.length * 2600 + 400);
+      }
+      }
     }
     if (valley) valley.setHeal(valleySession.patchId, healAmt);
     updateHealUi();
@@ -2150,7 +2243,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { look, easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => slots.driven(), crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, isNetClient: () => !!(net && net.isClient), swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { look, easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => { const d = (slots.driven() || []).slice(); if (net && net.isHost && net.remoteBodies) { for (const id of net.remoteBodies()) if (id && !d.includes(id)) d.push(id); } return d; }, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, isNetClient: () => !!(net && net.isClient), swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
   critters = createCritters(scene, { heightAt, tier: () => look.tier });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
@@ -2325,11 +2418,13 @@ async function boot() {
     tech, openTech: () => openTech(lead), speciesList: () => SPECIES_ORDER.map(id => `${SPECIES[id].emoji} ${SPECIES[id].name}${id === lead ? ' ★' : ''}`), setLead: i => setLead(SPECIES_ORDER[i]), leadText: () => `${SPECIES[lead].emoji} ${SPECIES[lead].name} (pays ${payIcons(lead)})`, statsTable };
   admin = createAdmin(X);
   if (/[?&]admin=1/.test(location.search)) admin.showButton(true);
+  installOnlineArt();
+  levelFlow = createLevelFlow({ audio, toast });
   net = createNet({
     getZones: () => zones,
     getCrew: () => crew ? crew.get() : ['bee', 'raccoon', 'bear'],
     isPlaying: () => !!playing || !!(zones && zones.active?.()),
-    isPaused: () => !!paused,
+    isPaused: () => !!paused || !!(net && net.holding),
     isInLevel: () => {
       const id = zones && zones.status && zones.status()?.id;
       if (!id) return false;
@@ -2337,16 +2432,61 @@ async function boot() {
       if ((rec && rec.hub) || id === 'meadow_hub') return false;
       return !!(zones.active?.() || (rec && !rec.hub));
     },
+    isHub: (id) => id === HUB_ID || !!(zones?.MAPS?.[id]?.hub),
+    levelName: (id) => valley?.def?.(id)?.name || id,
+    getRoster: () => {
+      if (lobby && lobby.players && lobby.players.length) {
+        return lobby.players.map(p => ({
+          id: p.id, cls: p.cls, style: p.style,
+          label: ({ bruiser: '🐻', trickster: '🦝', scout: '🐝' })[p.cls] || (p.style || ''),
+        }));
+      }
+      const r = [{ id: 'host', label: '🐻', cls: 'bruiser' }];
+      if (net && (net.isClient || (net.peers && net.peers.length))) r.push({ id: 'client', label: '🐝', cls: 'scout' });
+      return r;
+    },
+    get levelFlow() { return levelFlow; },
+    onHold: () => {},
+    onGo: (map) => {
+      if (map && map !== HUB_ID) {
+        showIntroCard(map);
+        if (!hasIntroCard(map)) presentLevelTips(map);
+      }
+    },
+    onLoadTimeout: (map) => {
+      toast("Couldn't load, try again", 3200);
+      if (net && net.isHost) enterHub();
+      else enterHub({ fromNet: true });
+    },
+    onLevelComplete: (data) => {
+      if (valleySession && !valleySession.ending) valleySession.ending = true;
+      const res = data?.result || data || null;
+      const lines = [];
+      if (res) creditLevelResult(res, valleySession, lines);
+      const def = valley?.def?.(res?.id || valleySession?.patchId);
+      levelFlow?.showComplete?.({ result: { ...(res || {}), name: def?.name }, isHost: false });
+    },
+    onHostContinue: (data) => applyHostContinue(data),
+    getPose: (id) => {
+      const q = P[id]; return q ? { x: q.x, y: q.y, z: q.z, yaw: q.yaw } : null;
+    },
+    blendPose: (id, pos) => {
+      const q = P[id]; if (!q || !pos) return;
+      if (pos.x != null) q.x = pos.x; if (pos.y != null) q.y = pos.y; if (pos.z != null) q.z = pos.z;
+    },
+    isTweening: () => !!(zones && zones.tweening && zones.tweening()),
     now: () => performance.now(),
     toast: (a, b) => toast(a, b),
     ensureMap: (id) => {
       if (!id || !valley) return;
       const curId = zones && zones.status && zones.status()?.id;
-      if (curId === id) return;
-      startValleyPatch(id);
+      if (curId === id) { try { net?.onMapReady?.(id); } catch (e) {} return; }
+      if (curId && curId !== id) levelFlow?.showCatchup?.();
+      startValleyPatch(id, { fromNet: true });
     },
     pollLocalFrame: () => input && input.pollFrame ? input.pollFrame() : null,
     localBody: () => cur,
+    peerId: () => (lobby && lobby.self) || (net && net.isClient ? 'client' : 'host'),
     pulseWorld: (() => { let last = 0; return () => { const n = performance.now(); if (n - last < 45) return; last = n; try { if (zones && zones.update) zones.update(0, camera); } catch (e) {} }; })(),
     applyRemoteFrame: (frame, body) => {
       if (!zones || !frame) return;
@@ -2376,12 +2516,14 @@ async function boot() {
     },
     onEmote: (from, id) => showOnlineEmote(from, id),
     hubMood: () => 'hub',
-    openSkinPick: (cls) => openSkinPick(),
+    openSkinPick: (cls) => openSkinPick(null, cls),
     onStartPlay: () => {
       try { audio.start(); } catch (e) {}
       try { closeOv('title'); } catch (e) {}
       if (!playing) enterHub();
     },
+    onRoomReady: (info) => { try { net?.bindRoom?.(info); } catch (e) {} },
+    onLeave: () => { try { net?.unbindRoom?.(); } catch (e) {} },
   }) : null;
   if (lobby) {
     lobby.settings.mount();
@@ -2401,7 +2543,7 @@ async function boot() {
   } else if (NEWFLAG && NEWFLAG.patch && valley) { const pid = NEWFLAG.patch; if (valley.get(pid)?.state === 'wilted') valley.setState(pid, 'in_progress'); startValleyPatch(pid); } else if (NEWFLAG) startNew(NEWFLAG.len || settings.len);
   else if (/[?&]lab=act3\b/.test(location.search) && valley) startValleyPatch('act3_lab');
   else if (/[?&](?:lab=bell|bell=1)\b/.test(location.search) && valley) startValleyPatch('act3_bell');
-  window.__game = { FEATURES: Object.assign({}, FEATURES, lobby ? { n2: true, lobby: true, directAllowed: true, iceTransportPolicy: 'all', relayOnly: false, signalling: 'dev-nostr', nostrAllowed: true } : { n2: false, directAllowed: false, iceTransportPolicy: 'relay', relayOnly: true, signalling: 'cloudflare-signalroom', nostrAllowed: false, nostrFallback: false }), look, DCL, slots, stepPlayer, net, lobby, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, presentLevelTips, fillHowTips, openHow, dismissLevelTips, speak: id => audio.speak(id), openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
+  window.__game = { FEATURES: Object.assign({}, FEATURES, lobby ? { n2: true, n3: true, lobby: true, directAllowed: true, iceTransportPolicy: 'all', relayOnly: false, signalling: 'dev-nostr', nostrAllowed: true } : { n2: false, n3: false, directAllowed: false, iceTransportPolicy: 'relay', relayOnly: true, signalling: 'cloudflare-signalroom', nostrAllowed: false, nostrFallback: false }), look, DCL, slots, stepPlayer, net, lobby, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, levelFlow, creditLevelResult, hostContinueLevel, applyHostContinue, forceLevelComplete: (res) => { const r = res || (zones && zones.result && zones.result()) || { id: zones?.status?.()?.id, n: 1, petals: 0, petalsTotal: 0, stars: {}, time: 0, end: [] }; if (valleySession) valleySession.ending = true; creditLevelResult(r, valleySession, []); const def = valley?.def?.(r.id); levelFlow?.showComplete?.({ result: { ...r, name: def?.name }, isHost: !!(net && net.isHost), onContinue: () => hostContinueLevel() }); if (net && net.isHost) net.onHostEvent?.({ type: 'complete', kind: 'complete', result: r, id: r.id }); }, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, presentLevelTips, fillHowTips, openHow, dismissLevelTips, speak: id => audio.speak(id), openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
     tp: (x, z, up = 0) => { const p = P[cur]; p.x = x; p.z = z; p.y = world.phys.floor(x, z, 99, 99).y + up; p.vx = p.vz = p.vy = 0; },
     teleportNearFlower: () => { const B = world.blooms; const arr = B.byPol[polOf(cur)]; const i = arr[0]; const p = P[cur]; p.x = B.x[i] - 1; p.z = B.z[i]; p.y = Math.max(heightAt(p.x, p.z), B.y[i] - 0.5); p.vy = 0; } };
 }
