@@ -40,22 +40,34 @@ export function createOnlineSettings(hooks = {}) {
     sync();
   }
 
+  function ringStep(p) {
+    if (p >= 1) return 100;
+    if (p >= 2 / 3) return 66;
+    if (p >= 1 / 3) return 33;
+    return 0;
+  }
+  function setRing(kind) {
+    const ring = document.getElementById('sOnlineGateRing');
+    if (!ring) return;
+    const step = kind === 100 || kind === 66 || kind === 33 ? kind : 0;
+    ring.style.backgroundImage = `var(--ol-gate-ring-${step})`;
+    ring.dataset.ring = String(step);
+  }
   function cancelHold() {
     if (!hold) return;
     try { hold.target.releasePointerCapture?.(hold.pointerId); } catch (e) {}
     if (hold.raf) cancelAnimationFrame(hold.raf);
     hold = null;
-    const ring = document.getElementById('sOnlineGateRing');
-    if (ring) ring.style.setProperty('--ol-p', '0%');
+    setRing(unlocked ? 100 : 0);
   }
   function startHold(target, pointerId, fromKey) {
     if (hold) return;
     hold = { target, pointerId, fromKey, t0: performance.now(), raf: 0 };
+    setRing(0);
     const step = (now) => {
       if (!hold) return;
       const p = Math.min(1, (now - hold.t0) / HOLD_MS);
-      const ring = document.getElementById('sOnlineGateRing');
-      if (ring) ring.style.setProperty('--ol-p', (p * 100).toFixed(1) + '%');
+      setRing(ringStep(p));
       if (p >= 1) { cancelHold(); unlock(); return; }
       hold.raf = requestAnimationFrame(step);
     };
@@ -86,6 +98,7 @@ export function createOnlineSettings(hooks = {}) {
     if (hint) hint.hidden = unlocked;
     const gate = document.getElementById('sOnlineGate');
     if (gate) gate.setAttribute('aria-pressed', unlocked ? 'true' : 'false');
+    if (!hold) setRing(unlocked ? 100 : 0);
   }
 
   function confirmDirect() {
@@ -115,10 +128,10 @@ export function createOnlineSettings(hooks = {}) {
     wrap.hidden = !isOnlineDev();
     wrap.innerHTML = `
       <div class="ksSec">Online</div>
-      <p class="ksNote">For grown-ups: press and hold for 3 seconds.</p>
-      <button type="button" class="olGate" id="sOnlineGate" aria-label="For grown-ups: press and hold for 3 seconds.">
-        <span class="olGateRing" id="sOnlineGateRing"></span>
-      </button>
+      <div class="olGateRow">
+        <span class="olGateRing" id="sOnlineGateRing" aria-hidden="true"></span>
+        <button type="button" class="olGate" id="sOnlineGate" aria-label="For grown-ups: press and hold for 3 seconds.">For grown-ups: press and hold for 3 seconds.</button>
+      </div>
       <p class="ksNote" id="sOnlineHint">More online settings appear after the hold.</p>
       <label class="ksChk" id="sAllowRow" hidden><input type="checkbox" id="sAllow"><span>Allow playing with friends (online)</span></label>
       <div id="sDirectRow" hidden>

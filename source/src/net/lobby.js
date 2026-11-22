@@ -727,12 +727,36 @@ export function createLobby(hooks = {}) {
     return row;
   }
 
+  function styleTag(style) {
+    const tag = document.createElement('img');
+    tag.className = 'olRosterTag';
+    tag.src = ICON('players', PLAYER_STYLE.find(s => s.id === style)?.tag || ('tag-' + style));
+    tag.alt = style;
+    return tag;
+  }
+  function composeSeat(slot, im, style, cls) {
+    // Glyph + colour tag so a seated player is never a blank well if a
+    // baked slot-pN-animal (or taken-class) asset 404s.
+    im.onerror = () => { im.onerror = null; im.src = ICON('lobby', 'slot-empty'); };
+    im.src = ICON('lobby', 'slot-empty');
+    im.alt = (cls ? `${style} ${cls}` : style + ' seated');
+    slot.classList.add('composed');
+    if (cls && !slot.querySelector('.olSlotGlyph')) {
+      const glyph = document.createElement('img');
+      glyph.className = 'olSlotGlyph';
+      glyph.src = ICON('lobby', `class-${cls}`);
+      glyph.alt = cls;
+      glyph.onerror = () => { glyph.remove(); };
+      slot.append(glyph);
+    }
+    if (!slot.querySelector('.olRosterTag')) slot.append(styleTag(style));
+  }
   function renderRoster() {
     const row = el('div', 'olRoster');
     for (let i = 0; i < 3; i++) {
       const pl = players[i];
       const style = (pl && pl.style) || PLAYER_STYLE[i].id;
-      const slot = el('button', 'olRosterSlot' + (!pl ? '' : '') + (pl && !pl.cls ? ' empty' : ''));
+      const slot = el('button', 'olRosterSlot' + (pl && !pl.cls ? ' empty' : ''));
       slot.type = 'button';
       slot.style.setProperty('--ol-fill', (pl && pl.fill) || PLAYER_STYLE[i].fill);
       const im = document.createElement('img');
@@ -741,17 +765,12 @@ export function createLobby(hooks = {}) {
         const animal = ANIMAL_OF[pl.cls] || 'bear';
         im.src = PICKS(`slot-${style}-${animal}`);
         im.alt = `${style} ${animal}`;
-        im.onerror = () => { im.onerror = null; im.src = ICON('lobby', 'slot-empty'); };
+        im.onerror = () => composeSeat(slot, im, style, pl.cls);
         if (pl.id === me) slot.onclick = () => hooks.openSkinPick?.(pl.cls);
       } else if (pl) {
-        // Seated but no class yet — still show colour + shape so P3 is visible.
-        im.src = ICON('lobby', 'slot-empty');
-        im.alt = style + ' seated';
-        const tag = document.createElement('img');
-        tag.className = 'olRosterTag';
-        tag.src = ICON('players', PLAYER_STYLE.find(s => s.id === style)?.tag || ('tag-' + style));
-        tag.alt = style;
-        slot.append(im, tag);
+        // Seated but no class yet — colour + shape tag so the seat is visible.
+        slot.append(im);
+        composeSeat(slot, im, style, null);
         row.append(slot);
         continue;
       } else {
@@ -775,7 +794,10 @@ export function createLobby(hooks = {}) {
       if (holder) {
         im.src = PICKS(`class-${c.id}-taken-${holder.style || 'p1'}`);
         im.alt = c.label;
-        im.onerror = () => { im.onerror = null; im.src = ICON('lobby', `class-${c.id}-taken`); };
+        im.onerror = () => {
+          im.onerror = () => { im.onerror = null; im.src = ICON('lobby', `class-${c.id}`); };
+          im.src = ICON('lobby', `class-${c.id}-taken`);
+        };
       } else {
         im.src = ICON('lobby', `class-${c.id}`);
         im.alt = c.label;
