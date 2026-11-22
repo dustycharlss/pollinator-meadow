@@ -2722,7 +2722,7 @@ export function createZones(scene, host) {
     if (ctx.isNetClient?.()) { emitNet('intent', { intent: 'act', body: ctx.cur() }); return true; }
     if (pr.act === 'gear') return stumpSwap(pr);
     const c = clsOfCur(), C = CLASSES[pr.cls];
-    if (pr.cls && pr.cls !== c) { say(`${C.em} Only a ${C.name} can ${ACTS[pr.act].verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
+    if (pr.cls && pr.cls !== c) { say(`${C.em} Only a ${C.name} can ${(ACTS[pr.act] || { verb: 'Act' }).verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
     if (pr.need && !isOn(pr.need)) { say('🔒 ' + (pr.needWhy || 'Not yet — something else has to happen first'), 2600); return true; }
     const atB = pr._atB;
     if (a2 && a2Act(pr, p)) { if (pr.icon && pr.done && !pr.two) pr.icon.visible = false; return true; }
@@ -3181,7 +3181,7 @@ export function createZones(scene, host) {
     const findFor = (k, depth) => { // what produces signal k? follows "needs X first" chains back to the first doable step
       if (sig[k] || depth > 5 || seen.has(k)) return null; seen.add(k);
       const cands = props.filter(q => q.sig === k && q.act && !q.done);
-      for (const pr of cands) if (isOn(pr.need)) { if (!pr.cls) return { text: `Anyone: ${VERB[pr.act] || 'use'} the ${lc(pr.label)}`, cls: null, color: '#ffd23f', x: pr.x, y: pr.y, z: pr.z, pr, verb: (ACTS[pr.act] || { verb: 'Act' }).verb }; const C = CLASSES[pr.cls]; return { text: `${C.name}: ${pr.act === 'bell' && pr.lantern ? 'light' : VERB[pr.act]} the ${lc(pr.label)}`, cls: pr.cls, color: C.color, x: pr.x, y: pr.y, z: pr.z, pr, verb: ACTS[pr.act].verb }; }
+      for (const pr of cands) if (isOn(pr.need)) { if (!pr.cls) return { text: `Anyone: ${VERB[pr.act] || 'use'} the ${lc(pr.label)}`, cls: null, color: '#ffd23f', x: pr.x, y: pr.y, z: pr.z, pr, verb: (ACTS[pr.act] || { verb: 'Act' }).verb }; const C = CLASSES[pr.cls]; return { text: `${C.name}: ${pr.act === 'bell' && pr.lantern ? 'light' : VERB[pr.act]} the ${lc(pr.label)}`, cls: pr.cls, color: C.color, x: pr.x, y: pr.y, z: pr.z, pr, verb: (ACTS[pr.act] || { verb: 'Act' }).verb }; }
       const pl = plates.find(q => q.sig === k && !q.holder);
       if (pl) { const c = pl.heavy ? 'bruiser' : 'trickster'; return { text: `${pl.heavy ? 'Bruiser' : 'A friend'}: stand on the ${lc(pl.label)}`, cls: c, color: CLASSES[c].color, x: pl.x, y: pl.y, z: pl.z, pr: props.find(q => q.plate === pl) }; }
       const h = hoops.find(q => q.sig === k && !q.got);
@@ -3218,7 +3218,7 @@ export function createZones(scene, host) {
     if (t - hlT > 0.25 || !objCache) {
       hlT = t; objCache = objective();
       const pets = picks.filter(k => k.tier === 'petal' && !k.nightOnly), got = pets.reduce((a, k) => a + (k.got ? k.value || 1 : 0), 0), totV = pets.reduce((a, k) => a + (k.value || 1), 0);
-      const sub = [nearOwn ? `🤝 Tap Interact: ${ACTS[nearOwn.act].verb}` : '', pets.length ? `🌸 ${got}/${totV}` : '', starGot ? '⭐ found' : ''].filter(Boolean).join(' · ');
+      const sub = [nearOwn ? `🤝 Tap Interact: ${(ACTS[nearOwn.act] || { verb: 'Act' }).verb}` : '', pets.length ? `🌸 ${got}/${totV}` : '', starGot ? '⭐ found' : ''].filter(Boolean).join(' · ');
       const txt = objCache ? objCache.text : '', key = txt + '|' + sub + '|' + (objCache?.color || '');
       if (key !== E.key) { E.key = key; E.tx.textContent = skinText(txt); E.sub.textContent = sub; E.T.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.Ar.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.T.dataset.shape = CLASSES[objCache?.cls]?.shape || ''; }
       E.T.style.display = txt ? 'flex' : 'none'; E.T.classList.toggle('go', !!nearOwn);

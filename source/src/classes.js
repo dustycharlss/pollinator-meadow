@@ -62,6 +62,7 @@ export const ACTS = {
   plank: { cls: 'trickster', verb: 'Build Bridge', icon: '🪵' },
   shove: { cls: 'bruiser', verb: 'Shove', icon: '💪' },
   smash: { cls: 'bruiser', verb: 'Smash', icon: '💥' },
+  sling: { cls: 'bruiser', verb: 'Sling', icon: '🪨' },
   // Act 2 kit
   aim: { cls: 'scout', verb: 'Turn Mirror', icon: '🪞' },
   sluice: { cls: 'trickster', verb: 'Turn Sluice', icon: '🚰' },
