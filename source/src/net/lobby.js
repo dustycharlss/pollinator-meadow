@@ -20,6 +20,7 @@ const BASE = import.meta.env.BASE_URL;
 const ICON = (folder, name) => BASE + `ui/online/${folder}/${name}.png`;
 const WORD_ICON = w => ICON('words', w);
 const MAX_PLAYERS = 3;
+const MIN_PLAYERS = 2; // host can Start once this many people are in the room
 const CLASSES = [
   { id: 'bruiser', em: '🐻', label: 'Bruiser' },
   { id: 'trickster', em: '🦝', label: 'Trickster' },
@@ -295,6 +296,7 @@ export function createLobby(hooks = {}) {
       render();
       return;
     }
+    if (typ === 'start' && role === 'client') { goPlay(); return; }
     if (typ === 'emote' && d.emote) hooks.onEmote?.(d.from, d.emote);
     if (typ === 'pin-room-lock') { stopFind(); stopHello(); toast('Someone keeps guessing the PIN. Try a new code.', 3000); speak('lobby.pin.guessing'); showScreen('choice'); }
     if (typ === 'host-left' || typ === 'ended') {
@@ -461,6 +463,21 @@ export function createLobby(hooks = {}) {
       stopHello();
       if (screen === 'asking') { toast("Couldn't find that game. Check the code.", 3000); speak('lobby.failed.title'); showScreen('join'); render(); }
     }, 15000);
+  }
+
+  function startPlay() {
+    if (role !== 'host') return;
+    if (players.length < MIN_PLAYERS) {
+      toast('Waiting for a friend', 2200);
+      return;
+    }
+    send('start', { from: 'host' });
+    goPlay();
+  }
+  function goPlay() {
+    closeUi();
+    if (bar) bar.hidden = false;
+    try { hooks.onStartPlay?.({ role, players: players.slice() }); } catch (e) {}
   }
 
   function leave(why) {
@@ -678,11 +695,21 @@ export function createLobby(hooks = {}) {
           left.append(renderCodeWells(pinWords, { badges: false }));
           left.append(iconTool((import.meta.env.BASE_URL || './') + 'ui/online/pin/btn-reroll.png', 'New PIN', freshPin));
         }
-        left.append(el('p', 'olHint', 'Waiting for friends'));
+        left.append(el('p', 'olHint', players.length < MIN_PLAYERS ? 'Waiting for friends' : 'Friends are in!'));
       }
       right.append(renderRoster());
       right.append(renderClassCards());
       if (copiedOn) right.append(el('div', 'olCopied', 'Copied!'));
+      if (role === 'host') {
+        const go = el('button', 'olBtn olStart', 'Start');
+        go.type = 'button';
+        const ready = players.length >= MIN_PLAYERS;
+        go.disabled = !ready;
+        go.setAttribute('aria-disabled', ready ? 'false' : 'true');
+        if (!ready) go.title = 'Waiting for a friend';
+        go.onclick = () => startPlay();
+        right.append(go);
+      }
       if (role) {
         const leaveBtn = el('button', 'olLeave', 'Leave game');
         leaveBtn.type = 'button';
@@ -1000,6 +1027,7 @@ export function createLobby(hooks = {}) {
     openChoice,
     maybeAutoJoin,
     startHosting,
+    startPlay,
     beginJoin,
     copyLink,
     approve,

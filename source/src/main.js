@@ -2369,6 +2369,11 @@ async function boot() {
     onEmote: (from, id) => showOnlineEmote(from, id),
     hubMood: () => 'hub',
     openSkinPick: (cls) => openSkinPick(),
+    onStartPlay: () => {
+      try { audio.start(); } catch (e) {}
+      try { closeOv('title'); } catch (e) {}
+      if (!playing) enterHub();
+    },
   }) : null;
   if (lobby) {
     lobby.settings.mount();
