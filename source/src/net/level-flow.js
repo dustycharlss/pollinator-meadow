@@ -55,7 +55,7 @@ export function createLevelFlow(hooks = {}) {
 
   root.append(readyBox, completeBox, catchup);
 
-  let loopEl = null, onContinue = null, lastMap = null;
+  let loopEl = null, onContinue = null, lastMap = null, completeIsHost = false;
 
   function sfx(name, vol = 0.5) {
     try { hooks.audio?.sample?.('online/n3n4/' + name, vol); } catch (e) {}
@@ -151,6 +151,7 @@ export function createLevelFlow(hooks = {}) {
     completeBox.hidden = false;
     readyBox.hidden = true;
     onContinue = fn || null;
+    completeIsHost = !!isHost;
     cTitle.textContent = title || (result?.name ? `${result.name} cleared!` : 'Level cleared!');
     const st = result?.stars || result || {};
     const n = result?.n != null ? result.n : (st.n != null ? st.n : 0);
@@ -165,6 +166,7 @@ export function createLevelFlow(hooks = {}) {
   function hideComplete() {
     completeBox.hidden = true;
     onContinue = null;
+    completeIsHost = false;
     hideIfIdle();
   }
 
@@ -180,7 +182,8 @@ export function createLevelFlow(hooks = {}) {
   }
 
   cGo.onclick = () => {
-    if (cGo.hidden) return;
+    // Host-only: do not trust a client un-hiding .olCompleteGo (N3-COMPLETE).
+    if (!completeIsHost) return;
     const fn = onContinue;
     hideComplete();
     if (fn) fn();
