@@ -81,11 +81,16 @@ if (new URLSearchParams(location.search).has('failtest')) {
 let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
-  if (!renderer.getContext()) throw new Error('WebGL context was not created');
+  const gl = renderer.getContext();
+  if (!gl) throw new Error('WebGL context was not created');
+  if (typeof WebGL2RenderingContext !== 'undefined' && !(gl instanceof WebGL2RenderingContext)) {
+    throw new Error('WebGL2 is not available');
+  }
 } catch (e) {
   window.__bootFail?.(e);
   throw e;
 }
+window.__bootProgress?.();
 // During boot, surface shader compile/link failures in the loader fail UI.
 renderer.debug.checkShaderErrors = true;
 renderer.debug.onShaderError = (gl, program, vs, fs) => {
@@ -146,7 +151,7 @@ let ldP = 0, ldStage = 0, ldNext = 0.05;
 const ldShow = p => { ldP = Math.max(ldP, Math.min(1, p)); const b = $('loadBar'); if (!b) return; b.style.width = (18 + ldP * 214) + 'px'; b.parentNode.setAttribute('aria-valuenow', Math.round(ldP * 100)); };
 const LD_STAGES = [0, 0.05, 0.25, 0.3, 0.7, 0.85, 1];
 THREE.DefaultLoadingManager.onProgress = (url, done, total) => { if (total > 0) ldShow(ldStage + (ldNext - ldStage) * 0.9 * done / total); };
-function setLoad(p, txt) { ldStage = Math.max(ldStage, p); ldNext = LD_STAGES.find(v => v > ldStage + 1e-6) ?? 1; ldShow(p); if (txt) $('loadTxt').textContent = txt; }
+function setLoad(p, txt) { ldStage = Math.max(ldStage, p); ldNext = LD_STAGES.find(v => v > ldStage + 1e-6) ?? 1; ldShow(p); if (txt) $('loadTxt').textContent = txt; window.__bootProgress?.(); }
 let critters = null; // art pass: ambient critters per level (critters.js)
 let shopBase = 0, shopT = 0, gearFx, shopOpen = false, shopPv = [0, 0, 0], shopSel = 0, world, riders, nests, ambient, groundAmb, stars, moon, shadow, fx, coop, meadow; const shadows = {}, marks = {};
 const state = {};

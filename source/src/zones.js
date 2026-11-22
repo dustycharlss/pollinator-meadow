@@ -2633,7 +2633,7 @@ export function createZones(scene, host) {
     sampleH = null; waterMeshes = [];
     for (const s of solids) s.off = true;
     solids = []; picks = []; hoops = []; nightDews = []; star = null;
-    fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady');
+    fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady'); syncObjH();
     sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
     instWalls = []; decoJobs = new Map(); camRooms = [];
@@ -3265,6 +3265,11 @@ export function createZones(scene, host) {
     if (fb) return { text: `${fb.cls.map(c => CLASSES[c].name).join(' + ')}: ${fb.label}`, cls: fb.cls[0], color: CLASSES[fb.cls[0]].color, x: null };
     return null;
   }
+  function syncObjH() {
+    const el = (objEl && objEl.T) || document.getElementById('objT');
+    const h = el && getComputedStyle(el).display !== 'none' ? el.getBoundingClientRect().height : 0;
+    document.body.style.setProperty('--objH', Math.round(h) + 'px');
+  }
   function ensureObjEl() {
     if (objEl) return objEl;
     const T = document.createElement('div'); T.id = 'objT'; T.innerHTML = '<i id="objDot"></i><div><b id="objTx"></b><small id="objSub"></small></div>'; document.body.appendChild(T);
@@ -3281,6 +3286,7 @@ export function createZones(scene, host) {
       const txt = objCache ? objCache.text : '', key = txt + '|' + sub + '|' + (objCache?.color || '');
       if (key !== E.key) { E.key = key; E.tx.textContent = skinText(txt); E.sub.textContent = sub; E.T.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.Ar.style.setProperty('--oc', objCache?.color || '#ffd23f'); E.T.dataset.shape = CLASSES[objCache?.cls]?.shape || ''; }
       E.T.style.display = txt ? 'flex' : 'none'; E.T.classList.toggle('go', !!nearOwn);
+      syncObjH();
       document.body.classList.toggle('intReady', !!nearOwn);
     }
     const o = objCache;

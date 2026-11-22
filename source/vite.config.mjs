@@ -14,4 +14,25 @@ const slimLodMap = {
     return { code: JSON.stringify({ slim: 1, entries }), map: null };
   },
 };
-export default { base: './', build: { chunkSizeWarningLimit: 1500, target: 'es2020' }, server: { host: true }, plugins: [slimLodMap] };
+
+const bootGuardEarly = {
+  name: 'boot-guard-early',
+  transformIndexHtml: {
+    order: 'post',
+    handler(html) {
+      const re = /<script data-boot-guard>[\s\S]*?<\/script>\n?/;
+      const m = html.match(re);
+      if (!m) return html;
+      const script = m[0].endsWith('\n') ? m[0] : m[0] + '\n';
+      let out = html.replace(re, '');
+      out = out.replace(
+        /<script type="module" crossorigin src="([^"]+)"><\/script>/,
+        '<script type="module" crossorigin src="$1" onerror="window.__bootFail&&window.__bootFail(\'Failed to load the game script\')"><\/script>'
+      );
+      const idx = out.search(/<script[^>]*type=["']module["']/);
+      if (idx < 0) return script + out;
+      return out.slice(0, idx) + script + out.slice(idx);
+    },
+  },
+};
+export default { base: './', build: { chunkSizeWarningLimit: 1500, target: 'es2020' }, server: { host: true }, plugins: [slimLodMap, bootGuardEarly] };
