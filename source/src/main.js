@@ -1198,8 +1198,9 @@ function startValleyPatch(patchId, opts = {}) {
       p.y = heightAt(p.x, p.z) + 1.0; p.grounded = true; p.coyote = 0.2;
     }
     placeFollowers(true);
-    if (critters) { const s0 = zones.status ? zones.status() : null; critters.spawn(patchId, { rect: zones.rect(), deep: zones.deepRects ? zones.deepRects() : [], waterY: s0 ? s0.baseY - 0.9 : null, start: P[cur] ? { x: P[cur].x, z: P[cur].z } : null }).catch(e => console.warn('critters', e)); }
-    state.styT = 0.3; // art pass: pastel-style the new level soon after it is built
+    if (critters) { const s0 = zones.status ? zones.status() : null; critters.spawn(patchId, { rect: zones.rect(), deep: zones.deepRects ? zones.deepRects() : [], waterY: s0 ? s0.baseY - 0.9 : null, start: P[cur] ? { x: P[cur].x, z: P[cur].z } : null }).then(() => { try { look.compileScene(); } catch (e) {} }).catch(e => console.warn('critters', e)); }
+    try { look.compileScene(); } catch (e) {}
+    state.styT = 1.5; // already compiled at load; periodic restyle stays cheap
   }
   if (lead0 !== members[0]) crew.swapById(lead0);
   renderCrewDock();
@@ -1940,8 +1941,10 @@ function withCur(id, fn) {
 }
 function worldTick(dt, st) {
   try { net?.tick?.(0); } catch (e) {}
-  if (net && net.holding) {
-    // Ready-wait / countdown: freeze simulation for everyone.
+  const holding = !!(net && net.holding);
+  const simLive = playing && !paused && !holding;
+  if (holding) {
+    // Ready-wait / countdown: freeze simulation (and the level timer) for everyone.
   } else if (net && net.isClient) {
     // Own-animal prediction; other bodies come from interpolated snaps.
     const local = cur;
@@ -1971,13 +1974,13 @@ function worldTick(dt, st) {
     }
     for (const id of SPECIES_ORDER) if (!driven.has(id)) stepParked(id, dt, st);
   }
-  coop.update(dt, st, cur);
-  if (helpers) helpers.update(playing && !paused ? dt : 0, st, playing && !paused && round.running && !round.over);
-  if (tiers) tiers.update(playing && !paused ? dt : 0, st, playing && !paused && round.running && !round.over);
-  if (hazards) hazards.update(playing && !paused ? dt : 0, st, { playing, paused, p: P[cur], sp: SPECIES[cur], elapsed: round.len * 60 - (round.left || 0), len: round.len });
-  if (rivals) rivals.update(playing && !paused ? dt : 0, st, { playing, paused, p: P[cur], lead });
+  coop.update(simLive ? dt : 0, st, cur);
+  if (helpers) helpers.update(simLive ? dt : 0, st, simLive && round.running && !round.over);
+  if (tiers) tiers.update(simLive ? dt : 0, st, simLive && round.running && !round.over);
+  if (hazards) hazards.update(simLive ? dt : 0, st, { playing, paused, p: P[cur], sp: SPECIES[cur], elapsed: round.len * 60 - (round.left || 0), len: round.len });
+  if (rivals) rivals.update(simLive ? dt : 0, st, { playing, paused, p: P[cur], lead });
   // Valley heal meter ← bloom %; contests + pack-up
-  if (valleySession && playing && !paused && round.running && !round.over) {
+  if (valleySession && simLive && round.running && !round.over) {
     // Heal comes from zone pickups / team lifts / contests — territory bloom retired (t135u).
     if (zones) { zones.update(dt, camera); if (!zones.keyGoalMet()) healAmt = Math.min(healAmt, HEAL_PACKUP - 0.01); }
     if (ADVENTURE && zones && zones.keyGoalMet() && valleySession && !valleySession.ending) {
@@ -2017,11 +2020,11 @@ function worldTick(dt, st) {
     if (packup && !ADVENTURE) packup.update(dt, P[cur]);
   }
 
-  if (items) items.update(playing && !paused ? dt : 0);
-  if (looks) looks.update(playing && !paused ? dt : 0, riders[cur], P[cur]);
-  if (goals && !ADVENTURE && playing && !paused) goals.update();
-  if (onb && playing && !paused) { if (round.stats.builds && Object.keys(round.stats.builds).length) onb.flags.built = 1; if (helpers && helpers.perm && helpers.perm() > 0) onb.flags.hired = 1; onb.update(dt, st); }
-  if (playing && !paused && round.running && !round.over) { round.tick(dt); tech.update(dt); }
+  if (items) items.update(simLive ? dt : 0);
+  if (looks) looks.update(simLive ? dt : 0, riders[cur], P[cur]);
+  if (goals && !ADVENTURE && simLive) goals.update();
+  if (onb && simLive) { if (round.stats.builds && Object.keys(round.stats.builds).length) onb.flags.built = 1; if (helpers && helpers.perm && helpers.perm() > 0) onb.flags.hired = 1; onb.update(dt, st); }
+  if (simLive && round.running && !round.over) { round.tick(dt); tech.update(dt); }
 }
 function frameSim(sdt, t, st) {
   terr.growMul = 0; terr.update(sdt, camera.position, night);
@@ -2432,7 +2435,7 @@ async function boot() {
   weather = buildWeather(scene);
   if (SPECIES[cur].nocturnal !== (nightOf(clock.t) > 0.5)) setNight(SPECIES[cur].nocturnal, true);
   curNight = nightOf(clock.t) > 0.5; $('bNight').textContent = curNight ? '☀️ Switch to day' : '🌙 Switch to night'; $('bSeason').textContent = SEASON_INFO[clock.season].emoji + ' Season: ' + SEASON_INFO[clock.season].name; night = nightOf(clock.t); updateNight(0.01);
-  state.musicLive = true; look.start(); setLoad(1, 'Ready');
+  state.musicLive = true; look.start(); try { look.compileScene(); } catch (e) {} setLoad(1, 'Ready');
   try { look.render(); } catch (e) { window.__bootFail?.(e); throw e; }
   if (window.__bootFailed) return;
   window.__bootOk?.();

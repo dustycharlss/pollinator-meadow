@@ -179,6 +179,16 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   }
   /** Style everything currently visible (call after a level or skin is built; cheap when nothing is new). */
   function styleScene(root = scene) { for (const c of root.children) if (c.visible && c.layers.isEnabled(0)) walk(c, 1, true); }
+  /** Style, then compile programs (including currently hidden meshes) before the first play frame. */
+  function compileScene(root = scene) {
+    const hidden = [];
+    root.traverse(o => { if (o !== root && o.visible === false) { hidden.push(o); o.visible = true; } });
+    try {
+      styleScene(root);
+      if (typeof renderer.compile === 'function') renderer.compile(root, camera);
+    } catch (e) {}
+    for (const o of hidden) o.visible = false;
+  }
 
   // ---- per-level look targets (values/<id>.json). Global High/Low presets stay as written above. ----
   let patchLook = null, Pnow = B, masterLetter = null, lerpFromP = null, lerpToP = null, lerpU = 1, lastTuneT = 0;
@@ -322,5 +332,5 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   // Tier is applied last: applyLookBloom reads patchLook/qBucket declared above (TDZ crash on High/Ultra otherwise).
   perf.onTierChange(t => applyTier(t.name));
   applyTier(perf.getTier());
-  return { perf, tune, render, frame, start, resize, styleScene, status, setPatch, setMaster, sky, motes, get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
+  return { perf, tune, render, frame, start, resize, styleScene, compileScene, status, setPatch, setMaster, sky, motes, get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
 }
