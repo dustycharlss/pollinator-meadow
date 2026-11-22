@@ -1198,7 +1198,9 @@ function startValleyPatch(patchId, opts = {}) {
       p.y = heightAt(p.x, p.z) + 1.0; p.grounded = true; p.coyote = 0.2;
     }
     placeFollowers(true);
-    if (critters) { const s0 = zones.status ? zones.status() : null; critters.spawn(patchId, { rect: zones.rect(), deep: zones.deepRects ? zones.deepRects() : [], waterY: s0 ? s0.baseY - 0.9 : null, start: P[cur] ? { x: P[cur].x, z: P[cur].z } : null }).then(() => { try { look.compileScene(); } catch (e) {} }).catch(e => console.warn('critters', e)); }
+    // Programs were prewarmed at boot; compiling again when this promise
+    // settles would hitch the first 2.5 s of play (N2-SNAP window).
+    if (critters) { const s0 = zones.status ? zones.status() : null; critters.spawn(patchId, { rect: zones.rect(), deep: zones.deepRects ? zones.deepRects() : [], waterY: s0 ? s0.baseY - 0.9 : null, start: P[cur] ? { x: P[cur].x, z: P[cur].z } : null }).catch(e => console.warn('critters', e)); }
   }
   if (lead0 !== members[0]) crew.swapById(lead0);
   renderCrewDock();

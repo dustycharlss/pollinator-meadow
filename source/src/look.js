@@ -197,6 +197,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     // keep the materials; disposing them is fine — the GL programs stay cached
     for (const m of mats) m.dispose();
   }
+  let warmRT = null;
   function compileScene(root = scene) {
     const hidden = [];
     root.traverse(o => { if (o !== root && o.visible === false) { hidden.push(o); o.visible = true; } });
@@ -204,10 +205,16 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
       warmLateMaterials();
       styleScene(root);
       if (typeof renderer.compile === 'function') renderer.compile(root, camera);
+      // Shadow-map programs only link on a real render. Do it offscreen so
+      // hidden warmup meshes (kid trails, critter templates) don't flash.
+      const prev = renderer.getRenderTarget();
+      if (!warmRT) warmRT = new THREE.WebGLRenderTarget(4, 4);
+      renderer.setRenderTarget(warmRT);
+      renderer.render(root, camera);
+      renderer.setRenderTarget(prev);
     } catch (e) {}
     for (const o of hidden) o.visible = false;
-    // renderer.compile does not run the shadow map or EffectComposer passes;
-    // one real frame here (during load / ready-wait) is what actually links them.
+    // Present once so EffectComposer (grade/bloom) programs link too.
     try { render(); } catch (e) {}
   }
 
