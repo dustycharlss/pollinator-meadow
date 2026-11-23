@@ -1213,17 +1213,30 @@ function startValleyPatch(patchId, opts = {}) {
     if (!hasIntroCard(patchId)) presentLevelTips(patchId);
   }
   try { net?.onMapLoaded?.(patchId); } catch (e) {}
-  // Ready-wait freezes stepPlayer (and zones.update), so rings, kid-trail arrows
-  // and glow marks would otherwise first appear at GO and compile then.
+  // Shader warm-up for the new level, so nothing links at GO (online ready-wait) or in the
+  // first seconds of solo play. three links in compile(), but the blocking cost (driver
+  // compile, getProgramInfoLog) lands on a program's FIRST DRAW, so we draw once here:
+  // - ready-wait freezes stepPlayer/zones.update, so rings, kid-trail arrows, glow marks and
+  //   the objective pip would otherwise first appear at GO;
+  // - the objective pip/arrow (homeind.js) is otherwise created lazily on the first play frame;
+  // - off-camera level meshes (exit sparkles, far props) would first draw when the camera turns.
+  // Draw to the real canvas path (an offscreen target links different, linear-output keys).
   const restoreKid = zones?.primeReadyVisuals?.();
+  if (!homeInd) homeInd = createHomeInd(scene);
+  const indMats = [];
+  for (const g of [homeInd.pip, homeInd.arrow]) { g.visible = true; g.traverse(o => { if (o.material) { indMats.push([o.material, o.material.opacity]); o.material.opacity = 0; } }); }
   presentReadyVisuals();
+  const unculled = [];
   try {
     look.styleScene();
     updateCamera(0);
-    // compile() links programs even for off-camera primed meshes; render() covers rings in view
+    // Only the level's own content (not the hidden-away sandbox meadow, whose programs a level never uses).
+    zones?.root?.()?.traverse(o => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isSprite || o.isLine)) { o.frustumCulled = false; unculled.push(o); } });
     if (typeof renderer.compile === 'function') renderer.compile(scene, camera);
     look.render();
   } catch (e) {}
+  for (const o of unculled) o.frustumCulled = true;
+  homeInd.hide(); for (const [mt, op] of indMats) mt.opacity = op;
   try { restoreKid?.(); } catch (e) {}
 }
 // ---------- class skins (cosmetic only: physics/hitbox/abilities stay on bee · raccoon · bear) ----------
@@ -2323,7 +2336,9 @@ async function boot() {
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
   DCL.TERR[1] = scene.children.length; zones = createZones(scene, { look, easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => { const d = (slots.driven() || []).slice(); if (net && net.isHost && net.remoteBodies) { for (const id of net.remoteBodies()) if (id && !d.includes(id)) d.push(id); } return d; }, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, isNetClient: () => !!(net && net.isClient), swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
-  critters = createCritters(scene, { heightAt, tier: () => look.tier });
+  // Each critter is pastel-styled and linked before its first frame: unstyled it would link once,
+  // then again as |presetB when the periodic restyle reaches it (a double compile mid-play).
+  critters = createCritters(scene, { heightAt, tier: () => look.tier, prep: obj => { look.styleScene({ children: [obj] }); if (typeof renderer.compile === 'function') renderer.compile(obj, camera, scene); } });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,

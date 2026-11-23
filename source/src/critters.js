@@ -67,7 +67,8 @@ async function template(kind) {
   tmpl.set(kind, p); return p;
 }
 
-export function createCritters(scene, { heightAt, tier = () => 'med' } = {}) {
+/** prep(obj): optional hook run on each new critter before it joins the scene (main styles + compiles it there). */
+export function createCritters(scene, { heightAt, tier = () => 'med', prep = null } = {}) {
   const group = new THREE.Group(); group.name = 'critters'; scene.add(group);
   let list = [], token = 0;
   function clear() { token++; for (const c of list) { c.mixer.stopAllAction(); c.obj.removeFromParent(); } list = []; }
@@ -100,7 +101,7 @@ export function createCritters(scene, { heightAt, tier = () => 'med' } = {}) {
         const mixer = new THREE.AnimationMixer(obj); if (T.clip) { const a = mixer.clipAction(T.clip); a.time = rnd() * T.clip.duration; a.play(); }
         const c = { kind, D, obj, mixer, hx: x, hz: z, x, z, yaw: rnd() * 6.28, tx: x, tz: z, wait: rnd() * 2, h: D.fly ? D.fly[0] + rnd() * (D.fly[1] - D.fly[0]) : 0, ph: rnd() * 6.28 };
         if (D.swim) c.wy = waterY - 0.2 - rnd() * 0.4;
-        place(c, 0); group.add(obj); list.push(c); placed++;
+        place(c, 0); if (prep) { try { prep(obj); } catch (e) {} } group.add(obj); list.push(c); placed++;
       }
     }
     return placed;
