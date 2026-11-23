@@ -1232,7 +1232,8 @@ function startValleyPatch(patchId, opts = {}) {
     updateCamera(0);
     // Only the level's own content (not the hidden-away sandbox meadow, whose programs a level never uses).
     for (const R of [zones?.root?.(), critters?.group]) R?.traverse(o => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isSprite || o.isLine)) { o.frustumCulled = false; unculled.push(o); } });
-    if (typeof renderer.compile === 'function') renderer.compile(scene, camera);
+    // No renderer.compile(scene): it links every material in the scene, including the hidden sandbox meadow
+    // (~70 programs a level never draws), which then queue ahead of the level's own first draws.
     look.render();
   } catch (e) {}
   for (const o of unculled) o.frustumCulled = true;

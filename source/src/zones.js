@@ -596,6 +596,9 @@ export function createZones(scene, host) {
       deep.push({ x0: A.x + r[0], z0: A.z + r[1], x1: A.x + r[2], z1: A.z + r[3] });
     }
   }
+  // GLB set-dressing joins the level after its load promise resolves (after the level-start warm-up). Pastel-style it
+  // before it joins, so it links once with its final (|presetB) key instead of again when the periodic restyle reaches it.
+  const styleNew = o => { try { ctx.look?.styleScene?.({ children: [o] }); } catch (e) {} };
   // dress a blocky collider with a CC0 model once it loads (keeps the box if the model fails)
   function dress(holder, fallback, key, w, h, d, yaw = 0) {
     if (!key) return;
@@ -608,7 +611,7 @@ export function createZones(scene, host) {
       o.scale.set(w / sz.x, h / sz.y, d / sz.z);
       const bb2 = new THREE.Box3().setFromObject(o), c = bb2.getCenter(new THREE.Vector3());
       o.position.set(-c.x, -bb2.min.y, -c.z);
-      const wrap = new THREE.Group(); wrap.add(o); wrap.position.y = -h / 2; holder.add(wrap); lodify(o, key); // polish4: lod-map.json levels
+      const wrap = new THREE.Group(); wrap.add(o); wrap.position.y = -h / 2; styleNew(wrap); holder.add(wrap); lodify(o, key); // polish4: lod-map.json levels
       if (fallback) fallback.visible = false;
     });
   }
@@ -756,7 +759,7 @@ export function createZones(scene, host) {
             const n = (m.name || '').toLowerCase();
             if (n === 'highlight' || n === 'on') m.visible = false;
           });
-          holder.add(o3);
+          styleNew(o3); holder.add(o3);
           em.visible = false;
         });
       }
@@ -1055,7 +1058,7 @@ export function createZones(scene, host) {
       const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; if (recipe && recipe.night && n.material.emissive) { n.material.emissive = n.material.color.clone().multiplyScalar(0.18); n.material.emissiveIntensity = Math.max(n.material.emissiveIntensity || 0, 0.16); } } });
       const bb = new THREE.Box3().setFromObject(m), sz = bb.getSize(new THREE.Vector3()), L = o.byLong ? Math.max(sz.x, sz.y, sz.z) : sz.y; if (L < 1e-4) return;
       const k = size / L; m.scale.setScalar(k); const bb2 = new THREE.Box3().setFromObject(m), c = bb2.getCenter(new THREE.Vector3()); m.position.set(-c.x, -bb2.min.y + (o.sink || 0), -c.z);
-      holder.add(m); lodify(m, key); if (o.fallback) o.fallback.forEach(f => { f.visible = false; }); o.onLoad?.(m);
+      styleNew(m); holder.add(m); lodify(m, key); if (o.fallback) o.fallback.forEach(f => { f.visible = false; }); o.onLoad?.(m);
     });
   }
   /** Instance repeated static decos (dry-grass, trees, stalls). Unique or 1–2 copies still use decoInto. LOD1/2 stay with the polish lod-map loader — this only batches LOD0. */
@@ -1088,7 +1091,7 @@ export function createZones(scene, host) {
           const im = new THREE.InstancedMesh(part.geo, part.mat, n);
           im.castShadow = false;
           mats.forEach((m, i) => im.setMatrixAt(i, m));
-          im.instanceMatrix.needsUpdate = true; group.add(im);
+          im.instanceMatrix.needsUpdate = true; styleNew(im); group.add(im);
         }
         live.forEach(j => { if (j.o.fallback) j.o.fallback.forEach(f => { f.visible = false; }); });
       });
@@ -1100,7 +1103,7 @@ export function createZones(scene, host) {
       if (!g || !holder.parent) return;
       const o = g.scene.clone(true); o.traverse(m => { if (m.isMesh) { const tr = m.material && m.material.transparent; m.material = lambertFrom(m.material); if (tr) { m.material.transparent = true; m.material.opacity = 0.7; m.material.depthWrite = false; } m.castShadow = false; } });
       const sz = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3()), L = Math.max(sz.x, sz.y, sz.z); if (L < 1e-4) return;
-      o.scale.setScalar(I.size / L); holder.add(o); lodify(o, I.glb); if (fallback) fallback.visible = false; holder.userData.model = o; onLoad?.(o);
+      o.scale.setScalar(I.size / L); styleNew(o); holder.add(o); lodify(o, I.glb); if (fallback) fallback.visible = false; holder.userData.model = o; onLoad?.(o);
     });
   }
   // timed-window multiplier (default 1). A later easy mode sets it (e.g. 1.5 → the 6 s gusts last 9 s): zones.setTiming(k) or ctx.timing()
@@ -1187,7 +1190,7 @@ export function createZones(scene, host) {
       const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; } });
       const b2 = new THREE.Box3().setFromObject(m), h2 = b2.max.y - b2.min.y; if (h2 < 1e-4) return;
       const k = H / h2; m.scale.setScalar(k); m.position.y = -b2.min.y * k;
-      old.forEach(c => { if (!c.parent || c.parent === G) c.visible = false; }); G.add(m); G.userData.enGlb = key; lodify(m, key, { drop: true });
+      old.forEach(c => { if (!c.parent || c.parent === G) c.visible = false; }); styleNew(m); G.add(m); G.userData.enGlb = key; lodify(m, key, { drop: true });
       const clip = (g.animations || []).find(a => /idle/i.test(a.name)) || (g.animations || [])[0];
       if (clip) { const mx = new THREE.AnimationMixer(m); mx.clipAction(clip).play(); mx.setTime(Math.random() * 2); babyMixers.push(mx); }
     });
@@ -1203,7 +1206,7 @@ export function createZones(scene, host) {
       const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; } });
       const b2 = new THREE.Box3().setFromObject(m), h2 = b2.max.y - b2.min.y; if (h2 < 1e-4) return;
       const k = H / h2; m.scale.setScalar(k); m.position.y = -b2.min.y * k;
-      old.forEach(c => { c.visible = false; }); G.add(m); G.userData.babyGlb = key; lodify(m, 'act3/babies/' + key, { drop: true });
+      old.forEach(c => { c.visible = false; }); styleNew(m); G.add(m); G.userData.babyGlb = key; lodify(m, 'act3/babies/' + key, { drop: true });
       const clip = (g.animations || []).find(a => /idle/i.test(a.name)) || (g.animations || [])[0];
       if (clip) { const mx = new THREE.AnimationMixer(m); mx.clipAction(clip).play(); mx.setTime(Math.random() * 2); babyMixers.push(mx); }
     });
