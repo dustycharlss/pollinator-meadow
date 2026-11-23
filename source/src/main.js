@@ -1225,8 +1225,11 @@ function startValleyPatch(patchId, opts = {}) {
   if (fromNet) netLoadingMap = patchId;
   // Never load an unbuilt valley id (nextPlayable, ensureMap, or a direct call) as an empty map.
   if (zones && !zones.MAPS?.[patchId]) { toast('🗺️ That trail is not ready yet', 2600); return; }
-  const gate = valley.canStart(patchId, crew.tags());
-  if (!gate.ok) { toast('🔒 ' + gate.why, 2600); return; }
+  // Follow the host even when the guest's campaign has not unlocked this patch yet.
+  if (!fromNet) {
+    const gate = valley.canStart(patchId, crew.tags());
+    if (!gate.ok) { toast('🔒 ' + gate.why, 2600); return; }
+  }
   const def = valley.def(patchId);
   valleySession = { patchId, neighbor: def.neighbor, contest: def.contest };
   valley.data.activePatch = patchId;
