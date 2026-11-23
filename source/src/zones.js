@@ -538,7 +538,7 @@ export function createZones(scene, host) {
   // art pass: the few hard-coded forest greens / dark browns used by B.tree, hedges and logs map onto Golden Hour Pastel swatches
   const B_REMAP = { 0x3f8a35: 0x5cc48a, 0x4fa044: 0x6fd39a, 0x6b4a30: 0xa06a5a, 0x4f9a3e: 0x58b878, 0x5a3b22: 0x8a5a4a, 0x5fae4a: 0x79cf8c };
   const mat = (c, e = 0) => { if (typeof c === 'number' && B_REMAP[c] != null) c = B_REMAP[c]; const k = c + ':' + e; if (!mats.has(k)) { const m = new THREE.MeshLambertMaterial({ color: c, emissive: e ? c : 0, emissiveIntensity: e, flatShading: true }); mats.set(k, m); if (matLive) styleNew(new THREE.Mesh(STYLE_GEO, m)); } return mats.get(k); };
-  let matLive = false, warmSpr = null; const STYLE_GEO = new THREE.BufferGeometry();
+  let matLive = false, warmSpr = null, warmGlb = [], warmTex = null, warmBox = null; const STYLE_GEO = new THREE.BufferGeometry();
   const gy = (x, z) => { if (sampleH) { const h = sampleH(x, z); if (h != null) return h; } return (ctx.meadowHeightAt || ctx.heightAt)(A.x + x, A.z + z); };
   const W = (x, z) => ({ x: A.x + x, z: A.z + z });
   const texL = new THREE.TextureLoader(), badgeMat = {};
@@ -3670,8 +3670,31 @@ export function createZones(scene, host) {
       if (!warmSpr) { warmSpr = [];
         const ks = Object.keys(GEAR_INFO), ki = ks.find(k => GEAR_INFO[k].icon); if (ki) warmSpr.push(gearSprite(ki, 0.01));
         const cv = document.createElement('canvas'); cv.width = cv.height = 4; const tx = new THREE.CanvasTexture(cv), tx2 = new THREE.CanvasTexture(cv); tx2.colorSpace = THREE.SRGBColorSpace;
-        for (const tt of [tx, tx2]) for (const fog of [true, false]) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tt, transparent: true, depthWrite: false, fog })); sp.scale.set(0.01, 0.01, 1); warmSpr.push(sp); } }
+        for (const tt of [tx, tx2]) for (const fog of [true, false]) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tt, transparent: true, depthWrite: false, fog })); sp.scale.set(0.01, 0.01, 1); warmSpr.push(sp); }
+      }
       for (const sp of warmSpr) { group.add(sp); temp.push(sp); }
+    } catch (e) {}
+    // GLB set-dressing (lambertFrom materials: textured, flat, Front/Double side, alpha-tested, instanced decos) can
+    // finish loading after the level starts on a slow network: warm those program variants with tiny stand-ins, styled
+    // with this level's look (the pastel key follows the level preset), so a late prop finds its program linked.
+    try {
+      for (const o of warmGlb) o.material.dispose(); warmGlb = [];
+      if (!warmTex) { warmTex = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); warmTex.needsUpdate = true; warmTex.colorSpace = THREE.SRGBColorSpace; warmBox = new THREE.BoxGeometry(0.01, 0.01, 0.01); }
+      for (const side of [THREE.FrontSide, THREE.DoubleSide]) for (const at of [0, 0.5]) for (const inst of [false, true]) {
+        const m = new THREE.MeshLambertMaterial({ map: warmTex, flatShading: true, side, alphaTest: at });
+        const o = inst ? new THREE.InstancedMesh(warmBox, m, 1) : new THREE.Mesh(warmBox, m); if (inst) o.setMatrixAt(0, new THREE.Matrix4());
+        styleNew(o); warmGlb.push(o); group.add(o); temp.push(o);
+      }
+      // untextured GLB parts (plain colour materials), both sides
+      for (const side of [THREE.FrontSide, THREE.DoubleSide]) {
+        const o = new THREE.Mesh(warmBox, new THREE.MeshLambertMaterial({ flatShading: true, side }));
+        styleNew(o); warmGlb.push(o); group.add(o); temp.push(o);
+      }
+      // see-through GLB parts (opacity < 0.97 stays unstyled)
+      for (const side of [THREE.FrontSide, THREE.DoubleSide]) for (const map of [null, warmTex]) {
+        const o = new THREE.Mesh(warmBox, new THREE.MeshLambertMaterial({ map, flatShading: true, side, transparent: true, opacity: 0.5 }));
+        styleNew(o); warmGlb.push(o); group.add(o); temp.push(o);
+      }
     } catch (e) {}
     const undo = () => { for (const o of hidden) o.visible = false; for (const o of temp) o.parent?.remove(o); };
     if (!recipe.kid) return undo;
