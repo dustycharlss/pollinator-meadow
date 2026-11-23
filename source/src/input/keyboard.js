@@ -38,7 +38,7 @@ export function getKeyHub(hooksRef) {
   const edge = { jump: {}, act: {}, call: {}, gear: {}, sneak: {}, swap: 0, species: -1 };
   const hub = { keys, codes, edge, hooksRef: hooksRef || { hooks: {} }, useAllHooks: true, sneakOn: { 'kb-all': false, 'kb-left': false, 'kb-right': false } };
 
-  addEventListener('keydown', e => {
+  const onKeyDown = e => {
     const k = e.key.toLowerCase();
     const code = e.code || '';
     if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
@@ -71,11 +71,17 @@ export function getKeyHub(hooksRef) {
     if (k === 'c') hooks.call && hooks.call();
     if (k === 'g' && hub.useAllHooks) hooks.shop && hooks.shop();
     if (k === 'shift' && hub.useAllHooks) hooks.sneak && hooks.sneak();
-  });
-  addEventListener('keyup', e => {
+  };
+  const onKeyUp = e => {
     keys[e.key.toLowerCase()] = false;
     if (e.code) codes[e.code] = false;
-  });
+  };
+  // Capture on window + document so Playwright mobile keys reach the game even
+  // if a hidden lobby control is focused or a bubble listener stops the event.
+  addEventListener('keydown', onKeyDown, true);
+  addEventListener('keyup', onKeyUp, true);
+  document.addEventListener('keydown', onKeyDown, true);
+  document.addEventListener('keyup', onKeyUp, true);
   HUB = hub;
   return hub;
 }

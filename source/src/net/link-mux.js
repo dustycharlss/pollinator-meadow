@@ -11,7 +11,7 @@
  */
 
 const MAX_EVTS = 8;
-const FALLBACK_GAME_MS = 125; // cap snaps / poses / inputs at 8 Hz on the signalling fallback (5–10 Hz band)
+const FALLBACK_GAME_MS = 100; // cap snaps / poses / inputs at 10 Hz on the signalling fallback (5–10 Hz band; <120 ms snap-gap budget)
 const HANDSHAKE = new Set(['hello', 'join', 'joined', 'leave', 'pinok', 'pinfail', 'kick', 'approve', 'letIn', 'go', 'ready', 'readywait', 'countdown']);
 
 function evtType(msg) {
