@@ -537,7 +537,8 @@ export function createZones(scene, host) {
   const mats = new Map();
   // art pass: the few hard-coded forest greens / dark browns used by B.tree, hedges and logs map onto Golden Hour Pastel swatches
   const B_REMAP = { 0x3f8a35: 0x5cc48a, 0x4fa044: 0x6fd39a, 0x6b4a30: 0xa06a5a, 0x4f9a3e: 0x58b878, 0x5a3b22: 0x8a5a4a, 0x5fae4a: 0x79cf8c };
-  const mat = (c, e = 0) => { if (typeof c === 'number' && B_REMAP[c] != null) c = B_REMAP[c]; const k = c + ':' + e; if (!mats.has(k)) mats.set(k, new THREE.MeshLambertMaterial({ color: c, emissive: e ? c : 0, emissiveIntensity: e, flatShading: true })); return mats.get(k); };
+  const mat = (c, e = 0) => { if (typeof c === 'number' && B_REMAP[c] != null) c = B_REMAP[c]; const k = c + ':' + e; if (!mats.has(k)) { const m = new THREE.MeshLambertMaterial({ color: c, emissive: e ? c : 0, emissiveIntensity: e, flatShading: true }); mats.set(k, m); if (matLive) styleNew(new THREE.Mesh(STYLE_GEO, m)); } return mats.get(k); };
+  let matLive = false, warmSpr = null; const STYLE_GEO = new THREE.BufferGeometry();
   const gy = (x, z) => { if (sampleH) { const h = sampleH(x, z); if (h != null) return h; } return (ctx.meadowHeightAt || ctx.heightAt)(A.x + x, A.z + z); };
   const W = (x, z) => ({ x: A.x + x, z: A.z + z });
   const texL = new THREE.TextureLoader(), badgeMat = {};
@@ -2458,7 +2459,7 @@ export function createZones(scene, host) {
     applyLoan();
     // ---- night gear ----
     const sid = idOfCls('scout'), sq = sid && posOfId(sid), lantern = gearOn('lantern') && sq;
-    if (lantern) { if (!S.light) { S.light = new THREE.PointLight(0xffd27a, 3, 12); group.add(S.light); } S.light.visible = true; S.light.position.set(sq.x, sq.y + 1.6, sq.z); } else if (S.light) S.light.visible = false;
+    if (lantern) { if (!S.light) { S.light = new THREE.PointLight(0xffd27a, 3, 12); group.add(S.light); } S.light.intensity = 3; S.light.position.set(sq.x, sq.y + 1.6, sq.z); } else if (S.light) S.light.intensity = 0;
     for (const gs of S.glowSteps) { const want = !!lantern && flatD(gs, sq) < 6.5; if (want !== gs.on) { gs.on = want; gs.r.s.off = !want; } gs.r.m.material.opacity += ((gs.on ? 0.85 : 0) - gs.r.m.material.opacity) * Math.min(1, dt * 6); }
     const tid = idOfCls('trickster'), tq = tid && posOfId(tid);
     if (gearOn('whistle') && tq && ctx.driven().includes(tid) && t >= S.pingNext) { S.pingNext = t + 8; S.pingT = t; S.pingAt = { x: tq.x, z: tq.z, t }; a2Burst(tq.x, tq.z, 7); ctx.audio?.sample?.('ui2/item-produced', 0.4); const ring = ringMesh(1, 0xc9b6ff); ring.position.set(tq.x, tq.y + 0.2, tq.z); group.add(ring); S.outlines.push({ m: ring, t0: t });
@@ -2592,7 +2593,7 @@ export function createZones(scene, host) {
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
   function load(pid, anchor) {
-    clear(); recipe = MAPS[pid]; if (!recipe) return; id = pid; babyMixers.length = 0; pipDone = new Set(); pipPend = null; pipSigT = {}; picked = 0; petalV = 0; keyDone = false; t = 0; lastProg = 0; hintT = 0;
+    clear(); matLive = false; recipe = MAPS[pid]; if (!recipe) return; id = pid; babyMixers.length = 0; pipDone = new Set(); pipPend = null; pipSigT = {}; picked = 0; petalV = 0; keyDone = false; t = 0; lastProg = 0; hintT = 0;
     if (recipe.ambience) ctx.audio?.levelAmb?.(recipe.ambience);
     A = { x: anchor.x, z: anchor.z };
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
@@ -2627,7 +2628,11 @@ export function createZones(scene, host) {
     ctx.onGear?.();
   }
   function a2Init() {
-    const S = AA(); document.body.classList.add('a2'); sneak = false; ctx.onSneak?.(false);
+    const S = AA();
+    // Scout lantern light: exists (visible, intensity 0) from load, so turning the lantern on/off or a loan at GO
+    // never changes the scene's light count (which would recompile every lit program mid-play).
+    if (!S.light) { S.light = new THREE.PointLight(0xffd27a, 0, 12); group.add(S.light); }
+    document.body.classList.add('a2'); sneak = false; ctx.onSneak?.(false);
     if (S.escorts.length) document.body.classList.add('hasEscort');
     for (const k of ['summer', 'winter', 'spring']) setSig(k, k === S.season);
     setSig('day', true); setSig('night', false); setSig('wind:down', S.wind < 0); setSig('wind:up', S.wind > 0);
@@ -3646,15 +3651,37 @@ export function createZones(scene, host) {
 
   /** Unhide kid trails / glow marks so their programs compile during ready-wait, not at GO. */
   function primeReadyVisuals() {
-    if (!recipe || !recipe.kid) return null;
+    if (!recipe) return null;
+    matLive = true; // materials made by mat() from now on are styled at birth (no unstyled first draw mid-play)
+    const hidden = [], temp = [];
+    // exit open/closed + checkpoint flag materials: create (and so style) both looks before GO
+    for (const [c, e] of [[0xffc93c, 0.6], [0x9a8f7a, 0.6], [0xff5a5a, 0.8], [0xb0b0b0, 0.8], [0xff5a5a, 0.5]]) mat(c, e);
+    // Act 2 gear: the worn-gear models and the stump gear badges are built lazily by updGear (frozen until GO), so
+    // build them now and show them for the warm draw
+    if (a2) {
+      try {
+        const V = gearViz();
+        for (const k of ['pouch', 'glider', 'sling']) if (V[k] && !V[k].visible) { V[k].visible = true; hidden.push(V[k]); }
+      } catch (e) {}
+    }
+    // late sprites (gear / emoji / text badges, pops) that can first appear just after GO: warm the sprite program
+    // variants. Built once and reused; their materials are never disposed (dispose would release the warmed programs).
+    try {
+      if (!warmSpr) { warmSpr = [];
+        const ks = Object.keys(GEAR_INFO), ki = ks.find(k => GEAR_INFO[k].icon); if (ki) warmSpr.push(gearSprite(ki, 0.01));
+        const cv = document.createElement('canvas'); cv.width = cv.height = 4; const tx = new THREE.CanvasTexture(cv), tx2 = new THREE.CanvasTexture(cv); tx2.colorSpace = THREE.SRGBColorSpace;
+        for (const tt of [tx, tx2]) for (const fog of [true, false]) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tt, transparent: true, depthWrite: false, fog })); sp.scale.set(0.01, 0.01, 1); warmSpr.push(sp); } }
+      for (const sp of warmSpr) { group.add(sp); temp.push(sp); }
+    } catch (e) {}
+    const undo = () => { for (const o of hidden) o.visible = false; for (const o of temp) o.parent?.remove(o); };
+    if (!recipe.kid) return undo;
     if (!kid) kidInit();
-    const hidden = [];
     for (const G of kid.trails) { if (!G.visible) { G.visible = true; hidden.push(G); } }
     for (const f of kidObjs) {
       if (f.halo && !f.halo.visible) { f.halo.visible = true; hidden.push(f.halo); }
       if (f.ring && !f.ring.visible) { f.ring.visible = true; hidden.push(f.ring); }
     }
-    return () => { for (const o of hidden) o.visible = false; };
+    return undo;
   }
   function status() { return { id, t, exit: exitAt ? { x: exitAt.x - A.x, z: exitAt.z - A.z, open: exitOpen, n: crewAtExit() } : null, starGot, sig: { ...sig }, puzzles: puzzles.map(p => ({ id: p.id, done: p.done, req: p.req })), keyDone, picked, keyDew, props: props.filter(p => p.act).map(p => ({ act: p.act, cls: p.cls, sig: p.sig, label: p.label, x: p.x, y: p.y, z: p.z, done: !!p.done, b: p.b || null, from: p.from || null })), plates: plates.map(p => ({ sig: p.sig, x: p.x, y: p.y, z: p.z, heavy: p.heavy, holder: p.holder })), nodes: nodes.map(n => ({ kind: n.kind, x: n.m.position.x, y: n.m.position.y, z: n.m.position.z, done: n.done, sig: n.sig })), picks: picks.map(k => ({ tier: k.tier, x: k.m.position.x, y: k.y, z: k.m.position.z, got: k.got, show: k.show || null, who: k.who || null, night: k.nightOnly, value: k.value || 1, bloom: !!k.bloom })), hoops: hoops.map(h => ({ x: h.m.position.x, y: h.m.position.y, z: h.m.position.z, got: h.got })), A: { ...A }, baseY, petalValue: petalV, kid: kidState(), cps: a2 ? a2.cps.map(c => ({ x: +(c.x - A.x).toFixed(2), h: +(c.y - baseY).toFixed(2), z: +(c.z - A.z).toFixed(2), show: c.show, vis: c.G.visible, on: c.on })) : [], chains: (a2?.acorns || []).map(c => ({ id: c.id, timed: c.timed, win: c.win, ezWin: c.win * EZ('acorn') })), easy: !!ctx.easy?.() }; }
   /** kid-tutorial cursor (Fern regression §0.6): i = forward-only card index, max = high-water mark, n = station, slip = slipped hold step or -1 */

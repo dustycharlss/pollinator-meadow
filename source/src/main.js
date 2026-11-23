@@ -947,6 +947,13 @@ function updateArrow(dt, t) {
 }
 
 // ---------- day/night ----------
+// Mood lights stay in the scene (visible, intensity 0) for the whole of a moody level, not only while the mood is
+// ramped in: toggling their visibility changes the light count and recompiles every lit program mid-play.
+function syncMoodLights(md) {
+  const lit = md > 0 || (zones && zones.moody ? zones.moody() : null) != null;
+  if (lit && !MOOD_L.parent) scene.add(MOOD_L); if (lit && !MOOD_FILL.parent) scene.add(MOOD_FILL);
+  MOOD_L.visible = lit; MOOD_FILL.visible = lit; MOOD_L.intensity = 4.2 * md; MOOD_FILL.intensity = 0.55 * md;
+}
 function updateNight(dt) {
   const cdt = (!playing || paused) ? 0 : dt;
   const sp = SPECIES[cur], nF = nightOf(clock.t);
@@ -993,8 +1000,7 @@ function updateNight(dt) {
       scene.fog.color.lerp(wxCol.set(0x080d26), md); scene.fog.near = L(scene.fog.near, 20, md); scene.fog.far = L(scene.fog.far, 78, md);
       scene.backgroundIntensity *= 1 - 0.6 * md; if (!look.patch) renderer.toneMappingExposure = L(renderer.toneMappingExposure, 1.15, md);
     }
-    if (md > 0 && !MOOD_L.parent) scene.add(MOOD_L); if (md > 0 && !MOOD_FILL.parent) scene.add(MOOD_FILL);
-    MOOD_L.visible = md > 0; MOOD_FILL.visible = md > 0; MOOD_L.intensity = 4.2 * md; MOOD_FILL.intensity = 0.55 * md;
+    syncMoodLights(md);
     if (md > 0 && P[cur]) MOOD_L.position.set(P[cur].x, P[cur].y + 2.4, P[cur].z + 0.8); // soft moonlit halo; hemi fill keeps parked crew and stalls readable
   }
   if (Math.abs(n - (state.lastN ?? -1)) > 0.004 || !state.nightInit) { state.lastN = n; world.sparkle.setSpecies(cur, performance.now() / 1000); }
@@ -1221,22 +1227,28 @@ function startValleyPatch(patchId, opts = {}) {
   // - the objective pip/arrow (homeind.js) is otherwise created lazily on the first play frame;
   // - off-camera level meshes (exit sparkles, far props) would first draw when the camera turns.
   // Draw to the real canvas path (an offscreen target links different, linear-output keys).
+  try { syncMoodLights(state.mood || 0); } catch (e) {}
+  // One dt=0 level update (same as net pulseWorld): its first call builds lazy state (escort paths, stump icons) and
+  // costs ~100-170 ms on a slow phone; do it in the load hitch, not on the first frame after GO.
+  try { if (playing && zones && zones.update) zones.update(0, camera); } catch (e) {}
   const restoreKid = zones?.primeReadyVisuals?.();
   if (!homeInd) homeInd = createHomeInd(scene);
   const indMats = [];
   for (const g of [homeInd.pip, homeInd.arrow]) { g.visible = true; g.traverse(o => { if (o.material) { indMats.push([o.material, o.material.opacity]); o.material.opacity = 0; } }); }
   presentReadyVisuals();
-  const unculled = [];
+  const unculled = [], hiddenSpr = []; // hiddenSpr: scene-level pooled sprites (species marks, icons) shown later
   try {
     look.styleScene();
     updateCamera(0);
     // Only the level's own content (not the hidden-away sandbox meadow, whose programs a level never uses).
-    for (const R of [zones?.root?.(), critters?.group]) R?.traverse(o => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isSprite || o.isLine)) { o.frustumCulled = false; unculled.push(o); } });
+    for (const o of scene.children) if (o.isSprite && !o.visible) { o.visible = true; hiddenSpr.push(o); }
+    for (const R of [zones?.root?.(), critters?.group, ...hiddenSpr]) R?.traverse(o => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isSprite || o.isLine)) { o.frustumCulled = false; unculled.push(o); } });
     // No renderer.compile(scene): it links every material in the scene, including the hidden sandbox meadow
     // (~70 programs a level never draws), which then queue ahead of the level's own first draws.
     look.render();
   } catch (e) {}
   for (const o of unculled) o.frustumCulled = true;
+  for (const o of hiddenSpr) o.visible = false;
   homeInd.hide(); for (const [mt, op] of indMats) mt.opacity = op;
   try { restoreKid?.(); } catch (e) {}
 }
