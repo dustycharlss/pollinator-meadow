@@ -2669,7 +2669,10 @@ async function boot() {
       if (!id || !valley) return;
       const curId = zones && zones.status && zones.status()?.id;
       if (curId === id) { netLoadingMap = null; return; }
-      if (netLoadingMap === id) return;
+      // A typ load/welcome may force a new map; stale snaps must not pull us
+      // back to the previous id mid-load (N3-ACT3).
+      if (!extra?.force && netLoadingMap && netLoadingMap !== id) return;
+      if (netLoadingMap === id && !extra?.force) return;
       netLoadingMap = id;
       if (curId && curId !== id) levelFlow?.showCatchup?.();
       startValleyPatch(id, { fromNet: true, A: extra && extra.A, baseY: extra && extra.baseY });

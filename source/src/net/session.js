@@ -519,7 +519,7 @@ export function createNet(hooks = {}) {
       }
       if (role === 'client') {
         const map = data.map || data.id || data.state?.id;
-        if (map && hooks.ensureMap) hooks.ensureMap(map, { A: data.state && data.state.A, baseY: data.state && data.state.baseY });
+        if (map && hooks.ensureMap) hooks.ensureMap(map, { A: data.state && data.state.A, baseY: data.state && data.state.baseY, force: true });
         if (data.state) {
           // apply after the map is up; stash if not
           pendingLoad = { ...data.state, sigFull: true };
