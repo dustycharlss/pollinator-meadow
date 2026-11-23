@@ -1231,7 +1231,7 @@ function startValleyPatch(patchId, opts = {}) {
     look.styleScene();
     updateCamera(0);
     // Only the level's own content (not the hidden-away sandbox meadow, whose programs a level never uses).
-    zones?.root?.()?.traverse(o => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isSprite || o.isLine)) { o.frustumCulled = false; unculled.push(o); } });
+    for (const R of [zones?.root?.(), critters?.group]) R?.traverse(o => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isSprite || o.isLine)) { o.frustumCulled = false; unculled.push(o); } });
     if (typeof renderer.compile === 'function') renderer.compile(scene, camera);
     look.render();
   } catch (e) {}
@@ -2482,6 +2482,8 @@ async function boot() {
   try { look.render(); } catch (e) { window.__bootFail?.(e); throw e; }
   if (window.__bootFailed) return;
   window.__bootOk?.();
+  // Critter models (~250 KB) load in the background on the title screen, not awaited (boot time).
+  setTimeout(() => { try { critters?.prefetch?.(); } catch (e) {} }, 200);
   const loadEl = $('load'); if (loadEl) { loadEl.style.opacity = 0; setTimeout(() => { if (!window.__bootFailed) $('load')?.remove(); }, 700); }
   buildCards(); loop(performance.now());
   buildLens(); refreshTitle(); syncMixUi(); $('sMute').checked = !!settings.mute; applyMix(); applyAccess(); audio.setMute(settings.mute);

@@ -36,10 +36,11 @@ const BIOME = {
 export const CAPS = { low: 6, med: 12, high: 18, ultra: 26 };
 
 const tmpl = new Map();
+const ready = new Map(); // kind -> resolved template (or null), so spawn can place without awaiting
 async function template(kind) {
   if (tmpl.has(kind)) return tmpl.get(kind);
   const p = loadGLB('critters/' + kind).then(g => {
-    if (!g) return null;
+    if (!g) { ready.set(kind, null); return null; }
     const root = g.scene.clone(true), clip = g.animations[0] || null, anim = new Set((clip ? clip.tracks : []).map(t => t.name.split('.')[0]));
     root.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(root), sz = box.getSize(new THREE.Vector3()), k = CRITTERS[kind].size / Math.max(sz.x, sz.y, sz.z, 1e-3);
@@ -62,7 +63,7 @@ async function template(kind) {
     for (const [a, list] of groups) { const g2 = mergeGeometries(list, false); if (!g2) continue; const mesh = new THREE.Mesh(g2, mat); mesh.name = 'critterMerged'; a.add(mesh); }
     const drop = []; root.traverse(o => { if (o.userData._drop) drop.push(o); }); for (const o of drop) o.removeFromParent();
     for (const o of keep) { const m = o.material; if (m && m.emissive) m.userData.noPastel = true; }
-    const T = { root, clip, scale: k }; return T;
+    const T = { root, clip, scale: k }; ready.set(kind, T); return T;
   });
   tmpl.set(kind, p); return p;
 }
@@ -83,7 +84,8 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
     const inW = (x, z, m = 0) => deep.some(r => x > r.x0 - m && x < r.x1 + m && z > r.z0 - m && z < r.z1 + m);
     let placed = 0;
     for (const [kind, n] of kinds) {
-      const T = await template(kind); if (my !== token) return; if (!T) continue; const D = CRITTERS[kind];
+      // Prefetched templates place synchronously, so the critters are in the level's warm-up draw.
+      const T = ready.has(kind) ? ready.get(kind) : await template(kind); if (my !== token) return; if (!T) continue; const D = CRITTERS[kind];
       const flockX = rect.x0 + 3 + rnd() * (rect.x1 - rect.x0 - 6), flockZ = rect.z0 + 3 + rnd() * (rect.z1 - rect.z0 - 6);
       for (let i = 0; i < n && placed < cap; i++) {
         let x = 0, z = 0, ok = false;
@@ -126,5 +128,7 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
       place(c, t);
     }
   }
-  return { spawn, clear, update, get list() { return list; }, group };
+  /** Background-load every template (no scene, no compile) so later spawns are synchronous. */
+  function prefetch() { for (const k of Object.keys(CRITTERS)) template(k).catch(() => {}); }
+  return { spawn, clear, update, prefetch, get list() { return list; }, group };
 }
