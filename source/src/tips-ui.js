@@ -110,15 +110,20 @@ function ensureTray() {
   addEventListener('resize', () => placeTray());
   try { new ResizeObserver(() => { if (!placing) requestAnimationFrame(placeTray); }).observe(tray.querySelector('.tipsMount')); } catch (e) {}
   // Pressing any action button (Interact, Boost, Jump, ...) puts the tips away so they never sit on the controls in use.
-  document.addEventListener('pointerdown', ev => { if (tray && !tray.hidden && ev.target?.closest?.('#btns, #crewDock')) dismissLevelTips(); }, true);
+  // So does the first joystick / move touch (left half, outside the tray) or a movement key.
+  document.addEventListener('pointerdown', ev => {
+    if (!tray || tray.hidden || tray.contains(ev.target)) return;
+    if (ev.target?.closest?.('#btns, #crewDock') || (ev.pointerType !== 'mouse' && ev.clientX < innerWidth * 0.5)) dismissLevelTips();
+  }, true);
+  addEventListener('keydown', ev => { if (tray && !tray.hidden && /^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(ev.code)) dismissLevelTips(); }, true);
   return tray;
 }
 
 // Tray placement (Fern DXV, Nov 23): never cover a HUD control in portrait, phone landscape or desktop. Measure the
 // visible controls, then take the lowest band (screen bottom, or just above a control) whose widest free span fits the
 // tray; phone landscape left-aligns in that span, everything else centres. Pure layout: no gameplay input is touched.
-const HUD_SEL = 'button, [role=button], #btns > *, #bJump, .port, .portrait, [class*=hud], [id*=obj], #menuBtn, #pauseBtn, #crewDock > *, #tr';
-const TRAY_M = 8, TRAY_XO = 16, TRAY_MAXW = 560, TRAY_MINW = 300;
+const HUD_SEL = 'button, [role=button], #btns > *, #bJump, .port, .portrait, [class*=hud], [id*=obj], #menuBtn, #pauseBtn, #crewDock > *, #tr, #crewDock, #btns, #joy, #menu, [id^=menuBtn]';
+const TRAY_M = 8, TRAY_XO = 16, TRAY_MAXW = 560, TRAY_MINW = 240;
 let placing = false;
 function hudRects() {
   const out = [];
@@ -127,8 +132,16 @@ function hudRects() {
     const r = e.getBoundingClientRect(); if (r.width < 8 || r.height < 8) continue;
     if (r.right < 0 || r.bottom < 0 || r.left > innerWidth || r.top > innerHeight) continue;
     const c = getComputedStyle(e); if (c.display === 'none' || c.visibility === 'hidden' || +c.opacity === 0) continue;
-    out.push(r);
+    out.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom });
   }
+  return out;
+}
+// Free horizontal spans of the band [top, b] between obstacles (each padded by the margin).
+function spans(obs, top, b, vw, M) {
+  const xs = obs.filter(r => r.bottom > top && r.top < b).map(r => [r.left - M, r.right + M]).sort((p, q) => p[0] - q[0]);
+  const out = []; let cur = M;
+  for (const [l, r] of xs) { if (l > cur) out.push([cur, l]); cur = Math.max(cur, r); }
+  if (vw - M > cur) out.push([cur, vw - M]);
   return out;
 }
 function placeTray() {
@@ -140,22 +153,37 @@ function placeTray() {
     tray.classList.add('placed');
     tray.style.left = M + 'px'; tray.style.width = minW + 'px'; tray.style.bottom = M + 'px';
     const H = inner.offsetHeight + TRAY_XO; // tallest case: narrowest width
-    const obs = hudRects();
-    const bottoms = [vh - M, ...obs.map(r => r.top - M)].filter(b => b - H >= M && b <= vh - M).sort((a, b) => b - a);
-    for (const b of bottoms) {
-      const top = b - H;
-      const xs = obs.filter(r => r.bottom > top && r.top < b).map(r => [r.left - M, r.right + M]).sort((p, q) => p[0] - q[0]);
-      let cur = M, best = null;
-      for (const [l, r] of xs) { if (l > cur && (!best || l - cur > best[1] - best[0])) best = [cur, l]; cur = Math.max(cur, r); }
-      if (vw - M > cur && (!best || vw - M - cur > best[1] - best[0])) best = [cur, vw - M];
-      if (!best || best[1] - best[0] < minW) continue;
-      const span = best[1] - best[0], w = Math.min(maxW, span);
-      const left = vw > vh && vh <= 500 ? best[0] : best[0] + (span - w) / 2;
-      tray.style.left = Math.round(left) + 'px'; tray.style.width = Math.round(w) + 'px'; tray.style.bottom = Math.round(vh - b) + 'px';
-      tray.dataset.place = 'ok';
-      return;
+    const hud = hudRects();
+    const dbg = { vw, vh, H, minW, hud: hud.map(r => [r.left, r.top, r.right, r.bottom].map(Math.round)), tried: [] }; window.__trayPlace = dbg;
+    // Joystick zone: any touch in the left half starts the stick (input/touch.js); thumbs live in its lower half and the
+    // tutorial's 'drag here' hint sits at (26% W, H-150).
+    const joy = { left: 0, top: vh * 0.5, right: vw * 0.5, bottom: vh };
+    const hp = { x: vw * 0.26, y: vh - 150 }, hint = { left: hp.x - 44, top: hp.y - 44, right: hp.x + 44, bottom: hp.y + 44 };
+    const joyCover = (l, t, w, h) => Math.max(0, Math.min(l + w, joy.right) - Math.max(l, joy.left)) * Math.max(0, Math.min(t + h, joy.bottom) - Math.max(t, joy.top));
+    const landscape = vw > vh && vh <= 500;
+    const apply = c => { tray.style.left = Math.round(c.l) + 'px'; tray.style.width = Math.round(c.w) + 'px'; tray.style.bottom = Math.round(vh - c.b) + 'px'; tray.dataset.place = c.pass; };
+    // Pass 1: clear of every control AND the whole joystick zone (lowest band wins).
+    // Pass 2 (small phones, e.g. iPhone SE): clear of every control and the hint spot; narrowest width, pushed away from
+    // the stick, choosing the band that covers the least of the joystick zone. Never an overlapping fallback.
+    for (const pass of ['clear', 'tight']) {
+      const obs = pass === 'clear' ? [...hud, joy] : [...hud, hint];
+      const bottoms = [vh - M, ...obs.map(r => r.top - M)].filter(b => b - H >= M && b <= vh - M).sort((p, q) => q - p);
+      let best = null;
+      for (const b of bottoms) {
+        const sp = spans(obs, b - H, b, vw, M); dbg.tried.push([pass, Math.round(b), sp.map(x => x.map(Math.round))]);
+        for (const [l0, r0] of sp) {
+          const span = r0 - l0; if (span < minW - 1) continue; // sub-pixel slack
+          let w, l;
+          if (pass === 'clear') { w = Math.min(maxW, span); l = landscape ? l0 : l0 + (span - w) / 2; }
+          else { w = Math.min(minW, span); l = r0 - w; } // hug the far side of the span, away from the stick
+          const cost = pass === 'clear' ? 0 : joyCover(l, b - H, w, H);
+          if (!best || cost < best.cost - 1) best = { l, w, b, cost, pass };
+        }
+        if (best && pass === 'clear') break;
+      }
+      if (best) { apply(best); return; }
     }
-    tray.dataset.place = 'fallback'; // no free band: keep the narrow bottom-left spot
+    tray.dataset.place = 'none'; placing = false; dismissLevelTips(); return;
   } finally { placing = false; }
 }
 
