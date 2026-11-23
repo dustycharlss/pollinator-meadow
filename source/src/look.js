@@ -206,7 +206,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     });
     try {
       warmLateMaterials();
-      styleScene(root);
+      walk(root, 1, true); // every mesh, including ones styleScene would skip as hidden root children
       if (typeof renderer.compile === 'function') renderer.compile(root, camera);
       // Shadow-map + composer programs only link on a real render. Keep
       // hidden warmup meshes un-culled, but don't present this frame.
@@ -225,6 +225,8 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     } catch (e) {}
     for (const o of culled) o.frustumCulled = true;
     for (const o of hidden) o.visible = false;
+    // Present path after re-hide, so this frame cannot flash warmup meshes.
+    try { render(); } catch (e) {}
   }
 
   // ---- per-level look targets (values/<id>.json). Global High/Low presets stay as written above. ----
