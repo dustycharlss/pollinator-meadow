@@ -1217,7 +1217,7 @@ function startValleyPatch(patchId, opts = {}) {
   // and glow marks would otherwise first appear at GO and compile then.
   const restoreKid = zones?.primeReadyVisuals?.();
   presentReadyVisuals();
-  try { updateCamera(0); look.render(); } catch (e) {}
+  try { look.styleScene(); updateCamera(0); look.render(); } catch (e) {}
   try { restoreKid?.(); } catch (e) {}
 }
 // ---------- class skins (cosmetic only: physics/hitbox/abilities stay on bee · raccoon · bear) ----------
