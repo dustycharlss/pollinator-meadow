@@ -179,55 +179,6 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   }
   /** Style everything currently visible (call after a level or skin is built; cheap when nothing is new). */
   function styleScene(root = scene) { for (const c of root.children) if (c.visible && c.layers.isEnabled(0)) walk(c, 1, true); }
-  /** Style, then compile programs (including currently hidden meshes) before the first play frame. */
-  let lateWarmed = false;
-  function warmLateMaterials() {
-    if (lateWarmed) return;
-    lateWarmed = true;
-    const geo = new THREE.PlaneGeometry(0.2, 0.2);
-    const mats = [
-      new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
-      new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }),
-    ];
-    const g = new THREE.Group(); g.name = 'shaderWarm';
-    for (const m of mats) { const mesh = new THREE.Mesh(geo, m); mesh.frustumCulled = false; g.add(mesh); }
-    scene.add(g);
-    try { styleScene(g); if (typeof renderer.compile === 'function') renderer.compile(g, camera); } catch (e) {}
-    g.removeFromParent(); geo.dispose();
-    // keep the materials; disposing them is fine — the GL programs stay cached
-    for (const m of mats) m.dispose();
-  }
-  let warmRT = null;
-  function compileScene(root = scene) {
-    const hidden = [], culled = [];
-    root.traverse(o => {
-      if (o !== root && o.visible === false) { hidden.push(o); o.visible = true; }
-      if (o.frustumCulled) { culled.push(o); o.frustumCulled = false; }
-    });
-    try {
-      warmLateMaterials();
-      walk(root, 1, true); // every mesh, including ones styleScene would skip as hidden root children
-      if (typeof renderer.compile === 'function') renderer.compile(root, camera);
-      // Shadow-map + composer programs only link on a real render. Keep
-      // hidden warmup meshes un-culled, but don't present this frame.
-      const prev = renderer.getRenderTarget();
-      if (!warmRT) warmRT = new THREE.WebGLRenderTarget(4, 4);
-      renderer.setRenderTarget(warmRT);
-      renderer.render(root, camera);
-      renderer.setRenderTarget(prev);
-      if (composer) {
-        const toScreen = composer.renderToScreen;
-        composer.renderToScreen = false;
-        try { composer.render(); } finally { composer.renderToScreen = toScreen; }
-      } else {
-        renderer.render(root, camera);
-      }
-    } catch (e) {}
-    for (const o of culled) o.frustumCulled = true;
-    for (const o of hidden) o.visible = false;
-    // Present path after re-hide, so this frame cannot flash warmup meshes.
-    try { render(); } catch (e) {}
-  }
 
   // ---- per-level look targets (values/<id>.json). Global High/Low presets stay as written above. ----
   let patchLook = null, Pnow = B, masterLetter = null, lerpFromP = null, lerpToP = null, lerpU = 1, lastTuneT = 0;
@@ -371,5 +322,5 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   // Tier is applied last: applyLookBloom reads patchLook/qBucket declared above (TDZ crash on High/Ultra otherwise).
   perf.onTierChange(t => applyTier(t.name));
   applyTier(perf.getTier());
-  return { perf, tune, render, frame, start, resize, styleScene, compileScene, status, setPatch, setMaster, sky, motes, get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
+  return { perf, tune, render, frame, start, resize, styleScene, status, setPatch, setMaster, sky, motes, get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
 }

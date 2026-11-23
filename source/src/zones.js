@@ -2614,9 +2614,6 @@ export function createZones(scene, host) {
       ...startBanter.map((s, i) => ({ say: s, voice: `${pid}.start.${String(i + 1).padStart(2, '0')}` })),
       ...(recipe.intro || []),
     ]; // the goal lives in the objective tracker now
-    // Build hidden tutorial trails now so startValleyPatch can compile their programs
-    // before the first play frame (updateKid used to create them mid-step).
-    if (recipe.kid) kidInit();
   }
   function applyLoan() {
     const S = a2; if (!S || !recipe || S.borrow) return;
@@ -3315,12 +3312,11 @@ export function createZones(scene, host) {
       const col = new THREE.Color(st.color ? CLASSES[st.color].color : '#ffd23f');
       const shp = new THREE.Shape(); shp.moveTo(0, 0.55); shp.lineTo(0.6, -0.1); shp.lineTo(0.3, -0.1); shp.lineTo(0, 0.22); shp.lineTo(-0.3, -0.1); shp.lineTo(-0.6, -0.1); shp.closePath();
       const geo = new THREE.ShapeGeometry(shp).rotateX(-Math.PI / 2);
-      const mat0 = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
       for (let k = 0; k < st.trail.length - 1; k++) {
         const [ax, az] = st.trail[k], [bx, bz] = st.trail[k + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.floor(L / 1.3)), yaw = Math.atan2(bx - ax, bz - az);
         for (let j = 0; j <= n; j++) {
           const x = ax + (bx - ax) * j / n, z = az + (bz - az) * j / n;
-          const m = new THREE.Mesh(geo, mat0.clone());
+          const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
           m.position.set(A.x + x, gy(x, z) + 0.1, A.z + z); m.rotation.y = yaw + Math.PI; m.userData.k = G.children.length; m.renderOrder = 3; G.add(m);
         }
       }
