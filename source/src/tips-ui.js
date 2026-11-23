@@ -96,19 +96,31 @@ function ensureTray() {
   tray.id = 'tipsTray';
   tray.hidden = true;
   tray.innerHTML = '<div class="tipsInner"><button type="button" class="tipsX" aria-label="Close tips">×</button><div class="tipsMount"></div></div>';
-  tray.querySelector('.tipsX').addEventListener('click', ev => { ev.stopPropagation(); dismissLevelTips(); });
+  const x = tray.querySelector('.tipsX');
+  x.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); dismissLevelTips(); });
+  for (const k of ['pointerdown', 'touchstart']) x.addEventListener(k, ev => ev.stopPropagation(), { passive: true });
+  // Reading hold: no auto-hide while a finger or the mouse is on the tray; re-arm the full time after it leaves.
+  const inner = tray.querySelector('.tipsInner');
+  inner.addEventListener('pointerenter', () => { trayHold = true; if (trayTimer) { clearTimeout(trayTimer); trayTimer = 0; } });
+  inner.addEventListener('pointerdown', () => { trayHold = true; if (trayTimer) { clearTimeout(trayTimer); trayTimer = 0; } });
+  inner.addEventListener('pointerleave', () => { trayHold = false; if (!tray.hidden) armTrayHide(); });
+  inner.addEventListener('pointerup', ev => { if (ev.pointerType !== 'mouse') { trayHold = false; if (!tray.hidden) armTrayHide(); } });
   document.body.appendChild(tray);
   return tray;
 }
 
+// New-move tips stay up twice as long as before (8 s → 16 s) and never hide while held (see ensureTray); the big X closes them.
+export const TRAY_MS = 16000;
+let trayHold = false;
 function armTrayHide() {
   if (trayTimer) clearTimeout(trayTimer);
-  trayTimer = setTimeout(() => dismissLevelTips(), 8000);
+  trayTimer = 0; if (trayHold) return;
+  trayTimer = setTimeout(() => dismissLevelTips(), TRAY_MS);
 }
 
 export function dismissLevelTips() {
   if (trayTimer) { clearTimeout(trayTimer); trayTimer = 0; }
-  shownLevel = null;
+  trayHold = false; shownLevel = null;
   if (tray) { tray.hidden = true; tray.classList.remove('on'); const m = tray.querySelector('.tipsMount'); if (m) m.innerHTML = ''; }
   const slot = document.querySelector('#introCard .icTips');
   if (slot) { slot.hidden = true; slot.innerHTML = ''; }

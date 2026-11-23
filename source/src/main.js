@@ -1228,9 +1228,9 @@ function startValleyPatch(patchId, opts = {}) {
   // - off-camera level meshes (exit sparkles, far props) would first draw when the camera turns.
   // Draw to the real canvas path (an offscreen target links different, linear-output keys).
   try { syncMoodLights(state.mood || 0); } catch (e) {}
-  // One dt=0 level update (same as net pulseWorld): its first call builds lazy state (escort paths, stump icons) and
-  // costs ~100-170 ms on a slow phone; do it in the load hitch, not on the first frame after GO.
-  try { if (playing && zones && zones.update) zones.update(0, camera); } catch (e) {}
+  // Escort follow logic's first call costs ~100 ms on a slow phone (lazy path state). Run just that, with dt 0, in the
+  // load hitch: no full zones.update here, so no pickups, triggers, timers or sounds happen before frame 1.
+  try { zones?.warmTick?.(camera); } catch (e) {}
   const restoreKid = zones?.primeReadyVisuals?.();
   if (!homeInd) homeInd = createHomeInd(scene);
   const indMats = [];

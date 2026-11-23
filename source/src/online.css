@@ -230,6 +230,7 @@ body:has(#pause.on) .olBar { display: none !important; }
   .olCard:has(.olRoster) .olHead { padding: 6px 12px 4px; }
   .olCard:has(.olRoster) .olBody { padding: 4px 12px 12px; overflow: hidden; }
   .olChoiceCard img { width: 120px; height: 130px; }
+}
 /* N3 ready-wait / complete / catchup */
 #olLevel { position: fixed; inset: 0; z-index: 85; pointer-events: none; }
 #olLevel:not([hidden]) { pointer-events: auto; }
