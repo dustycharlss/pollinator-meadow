@@ -106,7 +106,57 @@ function ensureTray() {
   inner.addEventListener('pointerleave', () => { trayHold = false; if (!tray.hidden) armTrayHide(); });
   inner.addEventListener('pointerup', ev => { if (ev.pointerType !== 'mouse') { trayHold = false; if (!tray.hidden) armTrayHide(); } });
   document.body.appendChild(tray);
+  // Re-place when the viewport turns or the tray's content changes size (images load, tip switch).
+  addEventListener('resize', () => placeTray());
+  try { new ResizeObserver(() => { if (!placing) requestAnimationFrame(placeTray); }).observe(tray.querySelector('.tipsMount')); } catch (e) {}
+  // Pressing any action button (Interact, Boost, Jump, ...) puts the tips away so they never sit on the controls in use.
+  document.addEventListener('pointerdown', ev => { if (tray && !tray.hidden && ev.target?.closest?.('#btns, #crewDock')) dismissLevelTips(); }, true);
   return tray;
+}
+
+// Tray placement (Fern DXV, Nov 23): never cover a HUD control in portrait, phone landscape or desktop. Measure the
+// visible controls, then take the lowest band (screen bottom, or just above a control) whose widest free span fits the
+// tray; phone landscape left-aligns in that span, everything else centres. Pure layout: no gameplay input is touched.
+const HUD_SEL = 'button, [role=button], #btns > *, #bJump, .port, .portrait, [class*=hud], [id*=obj], #menuBtn, #pauseBtn, #crewDock > *, #tr';
+const TRAY_M = 8, TRAY_XO = 16, TRAY_MAXW = 560, TRAY_MINW = 300;
+let placing = false;
+function hudRects() {
+  const out = [];
+  for (const e of document.querySelectorAll(HUD_SEL)) {
+    if (tray.contains(e)) continue;
+    const r = e.getBoundingClientRect(); if (r.width < 8 || r.height < 8) continue;
+    if (r.right < 0 || r.bottom < 0 || r.left > innerWidth || r.top > innerHeight) continue;
+    const c = getComputedStyle(e); if (c.display === 'none' || c.visibility === 'hidden' || +c.opacity === 0) continue;
+    out.push(r);
+  }
+  return out;
+}
+function placeTray() {
+  if (!tray || tray.hidden || placing) return;
+  placing = true;
+  try {
+    const vw = innerWidth, vh = innerHeight, M = TRAY_M, inner = tray.querySelector('.tipsInner');
+    const maxW = Math.min(TRAY_MAXW, vw - 2 * M), minW = Math.min(TRAY_MINW, maxW);
+    tray.classList.add('placed');
+    tray.style.left = M + 'px'; tray.style.width = minW + 'px'; tray.style.bottom = M + 'px';
+    const H = inner.offsetHeight + TRAY_XO; // tallest case: narrowest width
+    const obs = hudRects();
+    const bottoms = [vh - M, ...obs.map(r => r.top - M)].filter(b => b - H >= M && b <= vh - M).sort((a, b) => b - a);
+    for (const b of bottoms) {
+      const top = b - H;
+      const xs = obs.filter(r => r.bottom > top && r.top < b).map(r => [r.left - M, r.right + M]).sort((p, q) => p[0] - q[0]);
+      let cur = M, best = null;
+      for (const [l, r] of xs) { if (l > cur && (!best || l - cur > best[1] - best[0])) best = [cur, l]; cur = Math.max(cur, r); }
+      if (vw - M > cur && (!best || vw - M - cur > best[1] - best[0])) best = [cur, vw - M];
+      if (!best || best[1] - best[0] < minW) continue;
+      const span = best[1] - best[0], w = Math.min(maxW, span);
+      const left = vw > vh && vh <= 500 ? best[0] : best[0] + (span - w) / 2;
+      tray.style.left = Math.round(left) + 'px'; tray.style.width = Math.round(w) + 'px'; tray.style.bottom = Math.round(vh - b) + 'px';
+      tray.dataset.place = 'ok';
+      return;
+    }
+    tray.dataset.place = 'fallback'; // no free band: keep the narrow bottom-left spot
+  } finally { placing = false; }
 }
 
 // New-move tips stay up twice as long as before (8 s → 16 s) and never hide while held (see ensureTray); the big X closes them.
@@ -155,7 +205,7 @@ export function parkIntroTips() {
     selectTip(mount, +btn.dataset.i, { play: true });
     armTrayHide();
   });
-  t.hidden = false; t.classList.add('on');
+  t.hidden = false; t.classList.add('on'); placeTray();
   armTrayHide();
 }
 
@@ -166,7 +216,7 @@ export function showTipsTray(id, opts = {}) {
   shownLevel = id;
   const t = ensureTray();
   mountTips(t.querySelector('.tipsMount'), pack, { play: opts.play !== false, label: pack.level.name + ' tips' });
-  t.hidden = false; t.classList.add('on');
+  t.hidden = false; t.classList.add('on'); placeTray();
   armTrayHide();
   return true;
 }
