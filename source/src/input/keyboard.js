@@ -38,8 +38,26 @@ export function getKeyHub(hooksRef) {
   const edge = { jump: {}, act: {}, call: {}, gear: {}, sneak: {}, swap: 0, species: -1 };
   const hub = { keys, codes, edge, hooksRef: hooksRef || { hooks: {} }, useAllHooks: true, sneakOn: { 'kb-all': false, 'kb-left': false, 'kb-right': false } };
 
+  // Android / Playwright mobile often sets e.key to "Unidentified" (or empty)
+  // and only fills e.code (KeyW, ArrowUp, …). Movement poll looks at keys['w'].
+  const CODE_TO_KEY = {
+    KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd',
+    KeyQ: 'q', KeyE: 'e', KeyR: 'r', KeyC: 'c', KeyG: 'g', KeyX: 'x',
+    KeyM: 'm', KeyJ: 'j', KeyT: 't', KeyN: 'n', KeyB: 'b', KeyH: 'h',
+    ArrowUp: 'arrowup', ArrowDown: 'arrowdown', ArrowLeft: 'arrowleft', ArrowRight: 'arrowright',
+    Space: ' ', Enter: 'enter', NumpadEnter: 'enter', Escape: 'escape', Tab: 'tab',
+    ShiftLeft: 'shift', ShiftRight: 'shift', Comma: ',',
+    Digit0: '0', Digit1: '1', Digit2: '2', Digit3: '3', Digit4: '4',
+    Digit5: '5', Digit6: '6', Digit7: '7', Digit8: '8', Digit9: '9',
+  };
+  const keyName = e => {
+    const raw = (e && e.key != null) ? String(e.key).toLowerCase() : '';
+    if (raw && raw !== 'unidentified') return raw;
+    return CODE_TO_KEY[e && e.code] || raw;
+  };
+
   const onKeyDown = e => {
-    const k = e.key.toLowerCase();
+    const k = keyName(e);
     const code = e.code || '';
     if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
     if (keys[k] && (k !== 'shift' || codes[code])) return; // ignore repeats (shift can flip sides)
@@ -73,8 +91,12 @@ export function getKeyHub(hooksRef) {
     if (k === 'shift' && hub.useAllHooks) hooks.sneak && hooks.sneak();
   };
   const onKeyUp = e => {
-    keys[e.key.toLowerCase()] = false;
+    const k = keyName(e);
+    if (k) keys[k] = false;
     if (e.code) codes[e.code] = false;
+    // Also clear the code-mapped name if e.key was Unidentified on down but present on up, or vice versa.
+    const mapped = CODE_TO_KEY[e && e.code];
+    if (mapped) keys[mapped] = false;
   };
   // Capture on window + document so Playwright mobile keys reach the game even
   // if a hidden lobby control is focused or a bubble listener stops the event.
