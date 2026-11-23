@@ -1213,10 +1213,12 @@ function startValleyPatch(patchId, opts = {}) {
     if (!hasIntroCard(patchId)) presentLevelTips(patchId);
   }
   try { net?.onMapLoaded?.(patchId); } catch (e) {}
-  // Ready-wait freezes stepPlayer, so rings / blob shadows would otherwise
-  // stay hidden until GO and compile in the first play frames. Present them now.
+  // Ready-wait freezes stepPlayer (and zones.update), so rings, kid-trail arrows
+  // and glow marks would otherwise first appear at GO and compile then.
+  const restoreKid = zones?.primeReadyVisuals?.();
   presentReadyVisuals();
   try { updateCamera(0); look.render(); } catch (e) {}
+  try { restoreKid?.(); } catch (e) {}
 }
 // ---------- class skins (cosmetic only: physics/hitbox/abilities stay on bee · raccoon · bear) ----------
 const baseRiders = {}, skinRiderP = {}, skinThumbs = {};
