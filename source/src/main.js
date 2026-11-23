@@ -2671,9 +2671,10 @@ async function boot() {
     ensureMap: (id, extra = {}) => {
       if (!id || !valley) return;
       const curId = zones && zones.status && zones.status()?.id;
-      if (curId === id) { netLoadingMap = null; return; }
-      // A typ load/welcome may force a new map; stale snaps must not pull us
-      // back to the previous id mid-load (N3-ACT3).
+      if (curId === id) return;
+      // typ load/welcome forces a new map. Keep preferring that id even after
+      // the load finishes, so a stale snap with the previous map cannot
+      // startValleyPatch us back (N3-ACT3: guest snapped back to trailhead).
       if (!extra?.force && netLoadingMap && netLoadingMap !== id) return;
       if (netLoadingMap === id && !extra?.force) return;
       netLoadingMap = id;

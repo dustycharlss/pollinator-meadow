@@ -71,6 +71,7 @@ export function createNet(hooks = {}) {
   let pendingLoad = null;
   let loading = false;
   let recvBuf = []; // { tHost, wall, state }
+  let wantedMap = null;
   let snapRecv = 0;
   let lastSnapErr = null;
   let lastWelcomeAt = 0;
@@ -263,6 +264,7 @@ export function createNet(hooks = {}) {
   function applyState(st, { interpolate = false, respectLocal = false } = {}) {
     const zones = hooks.getZones?.();
     if (!st || !zones) return;
+    if (st.id && wantedMap && st.id !== wantedMap) return;
     if (st.id && hooks.ensureMap) hooks.ensureMap(st.id);
     let toApply = st;
     if (respectLocal && st.bodies) {
@@ -519,6 +521,10 @@ export function createNet(hooks = {}) {
       }
       if (role === 'client') {
         const map = data.map || data.id || data.state?.id;
+        if (map) {
+          wantedMap = map;
+          recvBuf.length = 0;
+        }
         if (map && hooks.ensureMap) hooks.ensureMap(map, { A: data.state && data.state.A, baseY: data.state && data.state.baseY, force: true });
         if (data.state) {
           // apply after the map is up; stash if not
