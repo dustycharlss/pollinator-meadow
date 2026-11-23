@@ -3367,6 +3367,21 @@ export function createZones(scene, host) {
     if (pt === 'exit' && exitAt && crewIn(ctx.getP())) { for (const c of ['scout', 'trickster', 'bruiser']) { const id = crewOfCls(c); if (id && id !== ctx.cur() && !crewIn(ctx.parked(id))) return R(document.querySelector('#crewDock button.cls-' + c)); } }
     return null;
   }
+  // the step card: icons, words, dots, trail. Split out so the level-start warm can draw step 0 in the load hitch
+  // (its first forced style/layout costs ~80 ms on phone-class CPUs if it lands in frame 1).
+  function kidCard(i, D) {
+    const st = kid.steps[i];
+    kid.i = i; kid.kd = keyDone;
+      const icons = keyDone ? ['⭐', '⭐', '⭐'] : st.icons, words = keyDone ? 'You did it!' : st.say;
+      D.ic.innerHTML = icons.map(x => `<span>${x}</span>`).join('');
+      D.w.textContent = skinText(words);
+      const N = kid.steps[kid.steps.length - 1].n;
+      D.dots.innerHTML = Array.from({ length: N }, (_, k) => `<i class="${k + 1 < st.n || keyDone ? 'ok' : k + 1 === st.n ? 'now' : ''}"></i>`).join('');
+      D.C.style.setProperty('--kc', st.color ? CLASSES[st.color].color : '#ffd23f');
+      D.C.classList.remove('pop'); void D.C.offsetWidth; D.C.classList.add('pop');
+      kid.trails.forEach((G, k) => G.visible = k === i && !keyDone);
+      kid.glow = new Set(keyDone ? [] : st.glow || []);
+  }
   function updateKid(dt) {
     if (!kid) kidInit();
     const p = ctx.getP(), D = kidDom();
@@ -3405,18 +3420,7 @@ export function createZones(scene, host) {
     const slip = raw < i && !keyDone ? raw : -1;
     if (slip !== kid.slip) { kid.slip = slip; if (D.nudge) { D.nudge.textContent = slip >= 0 ? '↩ ' + skinText(kid.steps[slip].say) : ''; D.nudge.style.display = slip >= 0 ? 'block' : 'none'; } }
     const st = kid.steps[i];
-    if (i !== kid.i || keyDone !== kid.kd) {
-      kid.i = i; kid.kd = keyDone;
-      const icons = keyDone ? ['⭐', '⭐', '⭐'] : st.icons, words = keyDone ? 'You did it!' : st.say;
-      D.ic.innerHTML = icons.map(x => `<span>${x}</span>`).join('');
-      D.w.textContent = skinText(words);
-      const N = kid.steps[kid.steps.length - 1].n;
-      D.dots.innerHTML = Array.from({ length: N }, (_, k) => `<i class="${k + 1 < st.n || keyDone ? 'ok' : k + 1 === st.n ? 'now' : ''}"></i>`).join('');
-      D.C.style.setProperty('--kc', st.color ? CLASSES[st.color].color : '#ffd23f');
-      D.C.classList.remove('pop'); void D.C.offsetWidth; D.C.classList.add('pop');
-      kid.trails.forEach((G, k) => G.visible = k === i && !keyDone);
-      kid.glow = new Set(keyDone ? [] : st.glow || []);
-    }
+    if (i !== kid.i || keyDone !== kid.kd) kidCard(i, D);
     // ground arrows: a wave of light running toward the goal
     const G = kid.trails[i]; if (G && G.visible) G.children.forEach(m => { m.material.opacity = 0.35 + 0.55 * Math.max(0, Math.sin(t * 5 - m.userData.k * 0.7)); });
     for (const f of kidObjs) { const on = kid.glow.has(f.key) && !f.got; f.halo.visible = on; f.ring.visible = on; if (on) { const s = 2.6 + 0.5 * Math.sin(t * 4); f.halo.scale.set(s, s, 1); } }
@@ -3726,7 +3730,7 @@ export function createZones(scene, host) {
     }
   }
   return {
-    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, warmTick: cam => { try { if (a2 && a2.escorts.length) updEscort(0, cam, ctx.getP(), ctx.cur()); } catch (e) {} }, primeReadyVisuals, root: () => group, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, complete, tweening: () => !!tw, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
+    homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, warmTick: cam => { try { if (recipe && recipe.kid) { if (!kid) kidInit(); if (kid.i < 0) kidCard(0, kidDom()); } /* tutorial: build trails + draw the step-0 card in the load hitch (UI only: no pickups, herding, signals or timers) */ /* build-only: hidden trail meshes + body class, no pickups/herding/timers */ if (a2 && a2.escorts.length) updEscort(0, cam, ctx.getP(), ctx.cur()); } catch (e) {} }, primeReadyVisuals, root: () => group, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, complete, tweening: () => !!tw, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
     camRoomAt: (x, z) => camRooms.find(r => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1) || null,
     act, actAs: id => withFocus(id, () => act()), useGearAs: id => withFocus(id, () => useGear(ctx.getP())), callAs: id => withFocus(id, () => callEscort()),
