@@ -3,7 +3,7 @@
  "level": 23,
  "recipeKey": "grand_garden",
  "name": "Grand Garden",
- "setting": "A big human garden at bug height: sprinklers, a greenhouse, wasp nests, a gnome statue climb, a push mower; full gear set (Fern act3-levels-22-24.md \u00a73). Day, golden hour. Baby: snail. Enemy: wasps.",
+ "setting": "A big human garden at bug height: sprinklers, a greenhouse, wasp nests, a gnome statue climb, a push mower; full gear set (Fern act3-levels-22-24.md §3). Day, golden hour. Baby: snail. Enemy: wasps.",
  "state": "day (golden hour, base B)",
  "setpiece": "Bug-height crew in the flower bed, the giant garden gnome and the greenhouse behind, a sprinkler arc with soft (non-glowing) water, a wasp nest hanging off the fence.",
  "how_to_apply": "import PRESET_B from preset-B.json; const P = deepMerge(structuredClone(PRESET_B), presetB_override); const fx = applyPresetB(scene, renderer, { quality, camera, target, sky: true }, P); const composer = createComposerB(renderer, scene, camera, fx, P); then add extras.fills, materials from extras.emissive / water / ice.",
@@ -54,12 +54,7 @@
  },
  "extras": {
   "background": "sky dome (base B)",
-  "fills": [
-   {
-    "name": "none",
-    "note": "day; base B lights"
-   }
-  ],
+  "fills": [],
   "emissive": {
    "rule": "None on gameplay surfaces. Wasp-nest warning is shape/colour, not glow.",
    "flowerPetalsAndBushes": {
