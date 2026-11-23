@@ -32,7 +32,7 @@ const PLAYER_STYLE = [
   { id: 'p2', fill: '#6db4d6', shape: 'square-chevron', tag: 'tag-p2' },
   { id: 'p3', fill: '#d45890', shape: 'hex-dots', tag: 'tag-p3' },
 ];
-const ANIMAL_OF = { bruiser: 'bear', trickster: 'raccoon', scout: 'bee' };
+export const ANIMAL_OF = { bruiser: 'bear', trickster: 'raccoon', scout: 'bee' };
 const BADGE_TAB = { animals: 'animals', food: 'food-plants', outside: 'outside', home: 'home-toys' };
 const PICKS = (name) => ICON('picks', name);
 
@@ -63,12 +63,6 @@ export function createLobby(hooks = {}) {
     },
     audio: hooks.audio,
   });
-  mountDebugOverlay({
-    measureTile: () => document.querySelector('.olTile')?.getBoundingClientRect?.().width || 0,
-    getWake: () => wakeState,
-    getPath: () => pathInfo(),
-  });
-
   let root = null, bar = null, screen = 'closed';
   let transport = null, channel = null;
   installSlowLinkHint({
@@ -85,6 +79,13 @@ export function createLobby(hooks = {}) {
   let pendingAsk = null, askQueue = [];
   let lastEmoteAt = 0;
   let wakeLock = null, wakeState = 'off';
+  mountDebugOverlay({
+    measureTile: () => document.querySelector('.olTile')?.getBoundingClientRect?.().width || 0,
+    getWake: () => wakeState,
+    getPath: () => pathInfo(),
+    getNet: () => hooks.getNet?.() || null,
+    getIce: () => { try { return transport?.getIcePair?.() || hooks.getNet?.()?.link?.ice || null; } catch (e) { return null; } },
+  });
   let lobbyMusic = false;
   let helloTimer = null, helloOff = null, findTimer = null;
   let pinHint = '';

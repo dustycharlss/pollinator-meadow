@@ -235,7 +235,20 @@ export function encodeDelta(state, prev, meta = {}) {
   return w.buf;
 }
 
+export function isEmptyNetPayload(buf) {
+  if (buf == null) return true;
+  if (buf instanceof ArrayBuffer) return buf.byteLength < 1;
+  if (ArrayBuffer.isView(buf)) return buf.byteLength < 1;
+  if (typeof buf === 'object') {
+    const keys = Object.keys(buf);
+    if (!keys.length) return true;
+    if (buf.bin != null && isEmptyNetPayload(buf.bin) && buf.frame == null && buf.data == null) return true;
+  }
+  return false;
+}
+
 export function decodeSnap(buf, expect = {}) {
+  if (isEmptyNetPayload(buf)) return null;
   const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   const v = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
   if (u8.byteLength < 8) return null;
@@ -313,6 +326,7 @@ export function encodeInput(frame = {}, seq = 0) {
 }
 
 export function decodeInput(buf) {
+  if (isEmptyNetPayload(buf)) return null;
   const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   if (u8.byteLength < 14 || u8[0] !== TYPE_INPUT) return null;
   const v = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
@@ -335,3 +349,41 @@ export function decodeInput(buf) {
 }
 
 export function snapBytes(buf) { return buf ? (buf.byteLength || buf.length || 0) : 0; }
+
+
+/** Wire wrapper so body/from survive a top-level binary Trystero action
+ *  even if action metadata is dropped. Magic 0xA1, then body/from utf8, then the 14-byte input. */
+const IN_WRAP = 0xA1;
+export function packNetInput(bin, { body = '', from = '' } = {}) {
+  const raw = bin instanceof Uint8Array ? bin : new Uint8Array(bin instanceof ArrayBuffer ? bin : bin);
+  const enc = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
+  const bodyU = enc ? enc.encode(String(body || '')) : new Uint8Array(0);
+  const fromU = enc ? enc.encode(String(from || '')) : new Uint8Array(0);
+  if (bodyU.length > 255 || fromU.length > 255) return raw.buffer;
+  const packed = new Uint8Array(4 + bodyU.length + fromU.length + raw.length);
+  packed[0] = IN_WRAP;
+  packed[1] = bodyU.length;
+  packed[2] = fromU.length;
+  packed[3] = 0;
+  packed.set(bodyU, 4);
+  packed.set(fromU, 4 + bodyU.length);
+  packed.set(raw, 4 + bodyU.length + fromU.length);
+  return packed.buffer;
+}
+export function unpackNetInput(buf) {
+  if (buf == null) return null;
+  const u = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  if (u.byteLength < 4 || u[0] !== IN_WRAP) {
+    const bin = u.byteLength ? u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) : buf;
+    return { bin, body: null, from: null };
+  }
+  const bodyLen = u[1], fromLen = u[2];
+  const hdr = 4 + bodyLen + fromLen;
+  if (u.byteLength < hdr) return { bin: buf, body: null, from: null };
+  const dec = typeof TextDecoder !== 'undefined' ? new TextDecoder() : null;
+  const body = bodyLen && dec ? dec.decode(u.subarray(4, 4 + bodyLen)) : null;
+  const from = fromLen && dec ? dec.decode(u.subarray(4 + bodyLen, hdr)) : null;
+  const raw = u.subarray(hdr);
+  const bin = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
+  return { bin, body: body || null, from: from || null };
+}

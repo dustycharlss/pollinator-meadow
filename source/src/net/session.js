@@ -5,6 +5,7 @@ import { createChannel } from './channel.js';
 import { createLocalTransport, LOCAL_ROOM } from './local.js';
 import {
   encodeFull, encodeDelta, decodeSnap, encodeInput, decodeInput, TYPE_FULL, TYPE_DELTA, snapBytes,
+  isEmptyNetPayload, packNetInput, unpackNetInput,
 } from './codec.js';
 
 const ANIMAL_IDS = ['bee', 'raccoon', 'bear'];
@@ -53,6 +54,10 @@ export function createNet(hooks = {}) {
   let listened = false;
   let inSeq = 0;
   let lastInSeq = 0;
+  let bodyOwners = {};
+  let lastReadyKey = null;
+  let readySent = 0;
+  let clientLoadGen = 0;
   let predictBlend = null;
   let remoteBodies = {};
   let tick = 0;
@@ -67,6 +72,7 @@ export function createNet(hooks = {}) {
   let recvBuf = []; // { tHost, wall, state }
   let snapRecv = 0;
   let lastSnapErr = null;
+  let lastWelcomeAt = 0;
   let lastApplied = null;
   let lastPoseSent = {};
   let pendingPoses = {};
@@ -233,8 +239,11 @@ export function createNet(hooks = {}) {
   }
 
   function sendWelcome() {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (ready && lastWelcomeAt && (now - lastWelcomeAt) < 2500) return;
+    lastWelcomeAt = now;
     const st = currentSnapState();
-    sendEvt({ type: 'welcome', role: 'host', map: st?.id || null, state: st, from: 'host' });
+    sendEvt({ type: 'welcome', role: 'host', map: st?.id || null, state: st, from: 'host', owners: { ...bodyOwners, ...(hooks.getOwners?.() || {}) } });
     sendSnap(true);
   }
 
@@ -313,6 +322,7 @@ export function createNet(hooks = {}) {
 
   function onSnap(data) {
     if (role === 'host') return;
+    if (isEmptyNetPayload(data)) { lastSnapErr = 'empty-or-json-object'; return; }
     const buf = data;
     let dec = null;
     try {
@@ -323,6 +333,7 @@ export function createNet(hooks = {}) {
       return;
     }
     if (!dec) { lastSnapErr = lastSnapErr || 'decode-null'; return; }
+    lastSnapErr = null;
     snapRecv++;
     const st = mergeSnap(dec);
     const wall = typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -415,18 +426,16 @@ export function createNet(hooks = {}) {
         const stale = snapAge > LOCAL_REWIND_MAX_AGE_MS;
         if (cur && snap) {
           const d = bodyDist(cur, snap);
-          if (d < 0.5 || stale) {
-            // Keep local control when we are close, or when the host snap is
-            // stale (a lagged correction would yank the guest back ~seconds).
+          const pend = pendingPoses[localId];
+          const hasPend = !!(pend && (now - pend.at) < 2000);
+          // Keep local prediction while the guest is driving (pending pose)
+          // or when the snap is close / stale. Only hard-correct a large,
+          // fresh snap with no pending pose (teleport / rescue).
+          if (hasPend || d < 4 || stale) {
             const bodies = { ...st.bodies };
             delete bodies[localId];
             st = { ...st, bodies };
-            if (stale) predictBlend = null;
-          } else if (d < 4) {
-            predictBlend = { id: localId, from: { ...cur }, to: { ...snap }, at: now, dur: 150 };
-            const bodies = { ...st.bodies };
-            delete bodies[localId];
-            st = { ...st, bodies };
+            predictBlend = null;
           } else {
             predictBlend = null;
           }
@@ -453,6 +462,11 @@ export function createNet(hooks = {}) {
     if (typ === 'hello') {
       markPeer(data.from || data.role || 'peer');
       if (role === 'host' && !ready) sendWelcome();
+      return;
+    }
+    if (typ === 'owners' && data.owners && typeof data.owners === 'object') {
+      bodyOwners = { ...data.owners };
+      hooks.onOwners?.(bodyOwners);
       return;
     }
     if (typ === 'ready') {
@@ -498,9 +512,13 @@ export function createNet(hooks = {}) {
     }
     if (typ === 'welcome' || typ === 'load') {
       markPeer(data.from || 'host');
+      if (data.owners && typeof data.owners === 'object') {
+        bodyOwners = { ...data.owners };
+        hooks.onOwners?.(bodyOwners);
+      }
       if (role === 'client') {
         const map = data.map || data.id || data.state?.id;
-        if (map && hooks.ensureMap) hooks.ensureMap(map);
+        if (map && hooks.ensureMap) hooks.ensureMap(map, { A: data.state && data.state.A, baseY: data.state && data.state.baseY });
         if (data.state) {
           // apply after the map is up; stash if not
           pendingLoad = { ...data.state, sigFull: true };
@@ -517,9 +535,17 @@ export function createNet(hooks = {}) {
     if (typ === 'pose' && role === 'host') {
       markPeer(data.from || 'client');
       const zones = hooks.getZones?.();
+      const from = data.from || 'client';
       if (data.bodies && zones?.applyNetState) {
-        for (const id of Object.keys(data.bodies)) remoteBodies[id] = true;
-        zones.applyNetState({ bodies: data.bodies, poseOnly: true });
+        const owned = {};
+        for (const id of Object.keys(data.bodies)) {
+          if (bodyOwners[id] && bodyOwners[id] !== from) continue;
+          if (!bodyOwners[id]) bodyOwners[id] = from;
+          owned[id] = data.bodies[id];
+          remoteBodies[id] = true;
+        }
+        if (!Object.keys(owned).length) return;
+        zones.applyNetState({ bodies: owned, poseOnly: true });
         // Plate / hold checks live in zones.update, which may not run if the
         // host tab's rAF is throttled. Pulse so setSig fires from a guest sit.
         try { hooks.pulseWorld?.(); } catch (e) {}
@@ -565,15 +591,33 @@ export function createNet(hooks = {}) {
 
   function onIn(data) {
     if (role !== 'host') return;
-    let frame = data, body = null;
+    if (isEmptyNetPayload(data)) return;
+    let frame = data, body = null, who = (data && data.from) || null;
     if (data && typeof data === 'object' && !ArrayBuffer.isView(data) && !(data instanceof ArrayBuffer)) {
       body = data.body || data.id || null;
-      const raw = data.bin || data.frame || data.data;
+      who = data.from || who;
+      let raw = data.bin || data.frame || data.data;
+      if (raw && (raw instanceof ArrayBuffer || ArrayBuffer.isView(raw))) {
+        const unpacked = unpackNetInput(raw);
+        if (unpacked) {
+          raw = unpacked.bin;
+          if (!body && unpacked.body) body = unpacked.body;
+          if (!who && unpacked.from) who = unpacked.from;
+        }
+      }
+      if (isEmptyNetPayload(raw)) return;
       if (raw) frame = decodeInput(raw);
     } else if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
-      frame = decodeInput(data);
+      const unpacked = unpackNetInput(data);
+      if (unpacked) {
+        if (unpacked.body) body = unpacked.body;
+        if (unpacked.from) who = unpacked.from;
+        frame = decodeInput(unpacked.bin);
+      } else frame = decodeInput(data);
     }
-    if (!frame) return;
+    if (!frame || isEmptyNetPayload(frame)) return;
+    if (body && who && bodyOwners[body] && bodyOwners[body] !== who) return;
+    if (body && who && !bodyOwners[body]) bodyOwners[body] = who;
     if (frame.s != null) lastInSeq = frame.s;
     if (body) remoteBodies[body] = true;
     hooks.applyRemoteFrame?.(frame, body);
@@ -609,19 +653,15 @@ export function createNet(hooks = {}) {
   function posePayload() {
     const st = currentSnapState();
     if (!st || !st.bodies) return null;
-    const changed = {};
-    let n = 0;
-    for (const [id, b] of Object.entries(st.bodies)) {
-      const prev = lastPoseSent[id];
-      if (!prev || Math.hypot((b.x || 0) - (prev.x || 0), (b.y || 0) - (prev.y || 0), (b.z || 0) - (prev.z || 0)) > 0.04
-        || Math.abs((b.yaw || 0) - (prev.yaw || 0)) > 0.05) {
-        changed[id] = b;
-        lastPoseSent[id] = { x: b.x, y: b.y, z: b.z, yaw: b.yaw };
-        pendingPoses[id] = { x: b.x, y: b.y, z: b.z, yaw: b.yaw, at: typeof performance !== 'undefined' ? performance.now() : Date.now() };
-        n++;
-      }
-    }
-    return n ? changed : null;
+    const localId = hooks.localBody?.();
+    if (!localId || !st.bodies[localId]) return null;
+    const b = st.bodies[localId];
+    const prev = lastPoseSent[localId];
+    if (prev && Math.hypot((b.x || 0) - (prev.x || 0), (b.y || 0) - (prev.y || 0), (b.z || 0) - (prev.z || 0)) <= 0.04
+      && Math.abs((b.yaw || 0) - (prev.yaw || 0)) <= 0.05) return null;
+    lastPoseSent[localId] = { x: b.x, y: b.y, z: b.z, yaw: b.yaw };
+    pendingPoses[localId] = { x: b.x, y: b.y, z: b.z, yaw: b.yaw, at: typeof performance !== 'undefined' ? performance.now() : Date.now() };
+    return { [localId]: b };
   }
 
   function snapRate() {
@@ -645,20 +685,21 @@ export function createNet(hooks = {}) {
       // T.step is marked pending (the 50 ms input cadence used to skip it
       // and the latest host snap rewound the guest off the plate — N1-SIG).
       const poses = poseSeeded ? posePayload() : (seedPosesFrom(currentSnapState()), null);
-      if (poses) sendEvt({ type: 'pose', from: 'client', bodies: poses });
+      if (poses) sendEvt({ type: 'pose', from: hooks.peerId?.() || 'client', bodies: poses });
       if (now - lastInAt >= 50) {
         lastInAt = now;
         const frame = hooks.pollLocalFrame?.();
         if (frame) {
           inSeq = (inSeq + 1) & 65535;
-          broadcast('in', { bin: encodeInput(frame, inSeq), body: hooks.localBody?.() || null, s: inSeq });
+          broadcast('in', { bin: encodeInput(frame, inSeq), body: hooks.localBody?.() || null, s: inSeq, from: hooks.peerId?.() || 'client' });
         }
       }
       applyClientView();
       tryApplyPending();
       if (now - lastHelloAt > 4000) {
         sendHello();
-        sendEvt({ type: 'join', from: 'client' });
+        const live = hooks.getZones?.()?.status?.()?.id;
+        if (!live || !ready) sendEvt({ type: 'join', from: 'client', map: live || null });
       }
     }
   }
@@ -677,10 +718,12 @@ export function createNet(hooks = {}) {
 
   function onMapLoaded(id) {
     if (role === 'host') {
-      sendEvt({ type: 'load', map: id, id, state: currentSnapState(), from: 'host' });
+      sendEvt({ type: 'load', map: id, id, state: currentSnapState(), from: 'host', owners: { ...bodyOwners, ...(hooks.getOwners?.() || {}) } });
       beginReadyWait(id);
     }
     if (role === 'client') {
+      clientLoadGen += 1;
+      lastReadyKey = null;
       tryApplyPending();
       sendEvt({ type: 'join', from: 'client', map: id });
       sendReady(id);
@@ -732,7 +775,13 @@ export function createNet(hooks = {}) {
   }
 
   function onPeerReady(from, map) {
-    if (!readyWait || readyWait.counting) return;
+    if (!readyWait || readyWait.counting) {
+      const live = hooks.getZones?.()?.status?.()?.id;
+      if (role === 'host' && !readyWait && map && live && live === map && !isHubMap(live)) {
+        sendEvt({ type: 'go', map, from: 'host', late: true });
+      }
+      return;
+    }
     if (map && readyWait.map && map !== readyWait.map) return;
     readyWait.ready.add(from);
     hooks.levelFlow?.tickSfx?.('ready');
@@ -798,8 +847,12 @@ export function createNet(hooks = {}) {
 
   function sendReady(id) {
     if (role !== 'client') return;
+    const key = String(id || '') + ':' + clientLoadGen;
+    if (lastReadyKey === key) return;
+    lastReadyKey = key;
     holding = true;
     if (hooks.onHold) hooks.onHold(true);
+    readySent += 1;
     sendEvt({ type: 'ready', map: id, from: hooks.peerId?.() || 'client' });
   }
 
@@ -913,7 +966,14 @@ export function createNet(hooks = {}) {
     const local = !!(readNetRole() || (transport && (transport.stub || transport.kind === 'local' || transport.name === 'LocalTransport')));
     const path = local ? 'local' : (t?.path || (transport ? 'direct' : 'none'));
     const slow = !local && (path === 'fallback' || !!(t && t.slow) || (snapAge != null && snapAge > 400));
-    return { path, snapAge, rtt: t?.rtt ?? null, slow, direct: path === 'direct', recvBuf: recvBuf.length, snapRecv, lastSnapErr, sent: t?.sent || null, recv: t?.recv || null };
+    const owners = { ...bodyOwners, ...(hooks.getOwners?.() || {}) };
+    return {
+      path, snapAge, rtt: t?.rtt ?? null, slow, direct: path === 'direct',
+      recvBuf: recvBuf.length, snapRecv, lastSnapErr, sent: t?.sent || null, recv: t?.recv || null,
+      holding: !!holding, readySent, inSeq, lastInSeq, lastAckTick,
+      ownBody: hooks.localBody?.() || null, owners,
+      ice: (typeof transport?.getIcePair === 'function') ? transport.getIcePair() : null,
+    };
   }
   Object.defineProperty(net, 'link', { get: linkInfo });
   Object.defineProperty(net, 'holding', { get: () => holding, set: v => { holding = !!v; } });

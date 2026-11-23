@@ -109,6 +109,7 @@ export function createCrew(ctx) {
   C.swapTo = (i) => {
     if (i < 0 || i >= C.members.length) return false;
     if (i === C.active) return true;
+    if (ctx.canSwap && !ctx.canSwap(C.members[i])) return false;
     C.active = i;
     ctx.onSwap?.(C.members[i]);
     return true;

@@ -11,7 +11,7 @@ import { createInput, composeSources } from './input.js';
 import { createSlots } from './slots.js';
 import { createNet } from './net/session.js';
 import { isOnlineDev, canShowFriendsStation } from './net/flags.js';
-import { createLobby } from './net/lobby.js';
+import { createLobby, ANIMAL_OF } from './net/lobby.js';
 import { createLevelFlow } from './net/level-flow.js';
 import { installOnlineArt } from './net/art.js';
 import { emoteOf, EMOTE_SHOW } from './net/emotes.js';
@@ -1155,6 +1155,65 @@ function followerIds() { if (!crew || !playing || rts.on || (valleySession && cl
 function classStay() { return true; }
 function followSlot(id) { const f = followerIds(), k = f.indexOf(id); return k < 0 ? null : { side: k ? 1 : -1, back: 3.2 + k * 1.6 }; }
 function placeFollowers(snap) { const L = P[cur]; if (!L) return; const F = snap ? crewOthers() : followerIds(); for (const id of F) { const k = F.indexOf(id), s = { side: k ? 1 : -1, back: 3.2 + k * 1.6 }, p = P[id]; const tx = L.x - Math.sin(L.yaw) * s.back + Math.cos(L.yaw) * s.side * 2.4, tz = L.z - Math.cos(L.yaw) * s.back - Math.sin(L.yaw) * s.side * 2.4; if (snap || Math.hypot(p.x - L.x, p.z - L.z) > 45) { p.x = tx; p.z = tz; p.y = Math.max(heightAt(tx, tz), L.y) + 0.5; p.vy = 0; p.grounded = false; p.goto = null; } } }
+
+let netLoadingMap = null;
+function focusGameForInput() {
+  try {
+    if (typeof document === 'undefined') return;
+    const c = document.querySelector('canvas');
+    if (c && c.tabIndex < 0) c.tabIndex = 0;
+    (c || document.body).focus?.();
+    window.focus?.();
+  } catch (e) {}
+}
+
+function assignOnlineBody() {
+  if (!net || !net.role) return null;
+  const members = (crew && crew.get && crew.get()) || ['bee', 'raccoon', 'bear'];
+  const players = (lobby && lobby.players) || [];
+  const me = (lobby && lobby.self) || (net.mode === 'nettest' ? (net.isHost ? 'host' : 'client') : null);
+  const taken = new Set();
+  const assigned = {};
+  for (const pl of players) {
+    const a = ANIMAL_OF[pl.cls];
+    if (a && members.includes(a) && !taken.has(a)) { assigned[pl.id] = a; taken.add(a); }
+  }
+  for (const pl of players) {
+    if (assigned[pl.id]) continue;
+    const a = members.find(id => !taken.has(id)) || members[0];
+    assigned[pl.id] = a;
+    taken.add(a);
+  }
+  if (me && !assigned[me]) {
+    const fallback = net.isHost ? (ANIMAL_OF.bruiser || 'bear') : members.find(id => !taken.has(id)) || members[0];
+    assigned[me] = fallback;
+    taken.add(fallback);
+  }
+  if (!Object.keys(assigned).length && me) assigned[me] = members[0];
+  net.owners = assigned;
+  net.ownBody = (me && assigned[me]) || null;
+  if (net.isHost) {
+    try { net.onHostEvent?.({ type: 'owners', owners: { ...assigned } }); } catch (e) {}
+  }
+  const mine = net.ownBody;
+  if (mine && P[mine] && cur !== mine) {
+    try { crew.swapById(mine); } catch (e) {}
+    selectSpecies(mine, true);
+  }
+  return mine;
+}
+
+function onlineOwnsBody(id) {
+  if (!net || !net.role || !id) return true;
+  const owners = net.owners || {};
+  const me = (lobby && lobby.self) || (net.mode === 'nettest' ? (net.isHost ? 'host' : 'client') : null);
+  for (const [pid, bid] of Object.entries(owners)) {
+    if (bid === id && pid && pid !== me) return false;
+  }
+  if (typeof net.remoteBodies === 'function' && net.remoteBodies().includes(id)) return false;
+  return true;
+}
+
 function startValleyPatch(patchId, opts = {}) {
   const fromNet = !!(opts && opts.fromNet);
   if (net && net.isClient && !fromNet) {
@@ -1162,6 +1221,8 @@ function startValleyPatch(patchId, opts = {}) {
     return;
   }
   if (!valley || !crew) return;
+  if (fromNet && netLoadingMap === patchId && zones && zones.status && zones.status()?.id === patchId) return;
+  if (fromNet) netLoadingMap = patchId;
   // Never load an unbuilt valley id (nextPlayable, ensureMap, or a direct call) as an empty map.
   if (zones && !zones.MAPS?.[patchId]) { toast('🗺️ That trail is not ready yet', 2600); return; }
   const gate = valley.canStart(patchId, crew.tags());
@@ -1180,13 +1241,15 @@ function startValleyPatch(patchId, opts = {}) {
   closeValleyMap();
   // lead = first crew member for nest/tech defaults; swap free among crew
   const members = crew.get();
-  settings.lead = members[0]; saveSettings(settings);
-  setLead(members[0], true);
+  const onlineStart = (net && net.role) ? assignOnlineBody() : null;
+  const startId = onlineStart || members[0];
+  settings.lead = startId; saveSettings(settings);
+  setLead(startId, true);
   // ensure all crew animals exist as playable
   for (const id of members) if (!P[id]) initPlayer(id);
   // kids' Training Garden starts on the Trickster so the first swap lesson is "tap the Scout"
   const sc0 = zones?.MAPS?.[patchId]?.startCls, lead0 = (sc0 && members.find(id => CLASS_OF[id] === sc0)) || members[0];
-  selectSpecies(members[0], true);
+  selectSpecies(startId, true);
   crew.active = 0;
   healAmt = valley.get(patchId).heal || 0;
   if (contests) contests.resetRound();
@@ -1195,19 +1258,25 @@ function startValleyPatch(patchId, opts = {}) {
   if (zones) {
     const p0 = P[cur] || { x: 0, z: 0 };
     // Anchor the map so local (0,0) home sits on the player; then snap onto the new heightfield.
-    zones.load(patchId, { x: p0.x, z: p0.z });
+    const origin = (fromNet && opts.A && Number.isFinite(+opts.A.x) && Number.isFinite(+opts.A.z))
+      ? { x: +opts.A.x, z: +opts.A.z }
+      : { x: p0.x, z: p0.z };
+    zones.load(patchId, origin);
     document.body.classList.toggle('skipT', patchId === 'trailhead_trials' && !!valley.data.trailBadge);
-    { const h = zones.homePos ? zones.homePos() : p0; unifyHomes(h.x, h.z, members[0]); p0.x = h.x + 4; p0.z = h.z + 4; }
-    const p = P[cur];
-    if (p) {
-      p.x = p0.x; p.z = p0.z; p.vx = p.vz = p.vy = 0;
-      p.y = heightAt(p.x, p.z) + 1.0; p.grounded = true; p.coyote = 0.2;
+    if (!fromNet) {
+      { const h = zones.homePos ? zones.homePos() : p0; unifyHomes(h.x, h.z, members[0]); p0.x = h.x + 4; p0.z = h.z + 4; }
+      const p = P[cur];
+      if (p) {
+        p.x = p0.x; p.z = p0.z; p.vx = p.vz = p.vy = 0;
+        p.y = heightAt(p.x, p.z) + 1.0; p.grounded = true; p.coyote = 0.2;
+      }
+      placeFollowers(true);
     }
-    placeFollowers(true);
     if (critters) { const s0 = zones.status ? zones.status() : null; critters.spawn(patchId, { rect: zones.rect(), deep: zones.deepRects ? zones.deepRects() : [], waterY: s0 ? s0.baseY - 0.9 : null, start: P[cur] ? { x: P[cur].x, z: P[cur].z } : null }).catch(e => console.warn('critters', e)); }
     state.styT = 0.3; // art pass: pastel-style the new level soon after it is built
   }
-  if (lead0 !== members[0]) crew.swapById(lead0);
+  if (!onlineStart && lead0 !== members[0]) crew.swapById(lead0);
+  if (onlineStart) assignOnlineBody();
   renderCrewDock();
   updateHealUi();
   onb?.note?.('valleyIn');
@@ -2377,8 +2446,10 @@ async function boot() {
   crew = createCrew({
     valley,
     lead: () => lead,
+    canSwap: (id) => onlineOwnsBody(id),
     onSwap: (id) => {
       if (!playing || !swapOK()) return;
+      if (!onlineOwnsBody(id)) return;
       selectSpecies(id);
       lead = id; // portrait lead follows active crew member in valley
       renderCrewDock();
@@ -2560,10 +2631,14 @@ async function boot() {
     get levelFlow() { return levelFlow; },
     onHold: () => {},
     onGo: (map) => {
+      focusGameForInput();
       if (map && map !== HUB_ID) {
         showIntroCard(map);
         if (!hasIntroCard(map)) presentLevelTips(map);
       }
+      // Re-focus after the intro card mounts so Playwright mobile keys reach the game.
+      setTimeout(focusGameForInput, 50);
+      setTimeout(focusGameForInput, 400);
     },
     onLoadTimeout: (map) => {
       toast("Couldn't load, try again", 3200);
@@ -2590,15 +2665,19 @@ async function boot() {
     isTweening: () => !!(zones && zones.tweening && zones.tweening()),
     now: () => performance.now(),
     toast: (a, b) => toast(a, b),
-    ensureMap: (id) => {
+    ensureMap: (id, extra = {}) => {
       if (!id || !valley) return;
       const curId = zones && zones.status && zones.status()?.id;
-      if (curId === id) { try { net?.onMapReady?.(id); } catch (e) {} return; }
+      if (curId === id) { netLoadingMap = null; return; }
+      if (netLoadingMap === id) return;
+      netLoadingMap = id;
       if (curId && curId !== id) levelFlow?.showCatchup?.();
-      startValleyPatch(id, { fromNet: true });
+      startValleyPatch(id, { fromNet: true, A: extra && extra.A, baseY: extra && extra.baseY });
     },
     pollLocalFrame: () => input && input.pollFrame ? input.pollFrame() : null,
     localBody: () => cur,
+    getOwners: () => net?.owners || {},
+    onOwners: (owners) => { if (owners) net.owners = owners; },
     peerId: () => (net && net.mode === 'nettest') ? (net.isClient ? 'client' : 'host') : ((lobby && lobby.self) || (net && net.isClient ? 'client' : 'host')),
     pulseWorld: (() => { let last = 0; return () => { const n = performance.now(); if (n - last < 45) return; last = n; try { if (zones && zones.update) zones.update(0, camera); } catch (e) {} }; })(),
     applyRemoteFrame: (frame, body) => {

@@ -11,7 +11,8 @@
  */
 
 const MAX_EVTS = 8;
-const HANDSHAKE = new Set(['hello', 'join', 'joined', 'leave', 'pinok', 'pinfail', 'kick', 'approve', 'letIn']);
+const FALLBACK_GAME_MS = 125; // cap snaps / poses / inputs at 8 Hz on the signalling fallback (5–10 Hz band)
+const HANDSHAKE = new Set(['hello', 'join', 'joined', 'leave', 'pinok', 'pinfail', 'kick', 'approve', 'letIn', 'go', 'ready', 'readywait', 'countdown']);
 
 function evtType(msg) {
   const d = msg && Object.prototype.hasOwnProperty.call(msg, 'data') ? msg.data : msg;
@@ -38,13 +39,22 @@ export function createLinkMux({ directSend, fallbackSend, isDirectOpen, onMessag
   let pingPending = 0;
   const sent = { snap: 0, inn: 0, evt: 0, pose: 0 };
   const recv = { snap: 0, inn: 0, evt: 0, pose: 0 };
+  let lastFallbackGameAt = 0;
+  let fallbackTimer = null;
 
-  function takeBatch() {
+  function isGamePacket(msg) {
+    const ch = msg && msg.ch;
+    return ch === 'snap' || ch === 'in' || evtType(msg) === 'pose';
+  }
+
+  function takeBatch(includeGame) {
     const batch = [];
     while (pendingEvts.length && batch.length < MAX_EVTS) batch.push(pendingEvts.shift());
-    if (pendingPose) { batch.push(pendingPose); pendingPose = null; }
-    if (pendingIn) { batch.push(pendingIn); pendingIn = null; }
-    if (pendingSnap) { batch.push(pendingSnap); pendingSnap = null; }
+    if (includeGame) {
+      if (pendingPose) { batch.push(pendingPose); pendingPose = null; }
+      if (pendingIn) { batch.push(pendingIn); pendingIn = null; }
+      if (pendingSnap) { batch.push(pendingSnap); pendingSnap = null; }
+    }
     return batch;
   }
 
@@ -67,12 +77,26 @@ export function createLinkMux({ directSend, fallbackSend, isDirectOpen, onMessag
     pendingEvts.splice(drop, 1);
   }
 
+  function scheduleFallbackPump(delay) {
+    if (fallbackTimer || closed) return;
+    fallbackTimer = setTimeout(() => { fallbackTimer = null; pump(); }, Math.max(0, delay));
+  }
+
   async function pump() {
     if (inFlight || closed) return;
-    const batch = takeBatch();
+    const useDirect = !!isDirectOpen?.();
+    const now = performance.now();
+    let includeGame = true;
+    if (!useDirect) {
+      const wait = FALLBACK_GAME_MS - (now - lastFallbackGameAt);
+      if (wait > 0) {
+        includeGame = false;
+        if (pendingSnap || pendingIn || pendingPose) scheduleFallbackPump(wait);
+      }
+    }
+    const batch = takeBatch(includeGame);
     if (!batch.length) return;
     inFlight = true;
-    const useDirect = !!isDirectOpen?.();
     const send = useDirect ? directSend : fallbackSend;
     lastPath = useDirect ? 'direct' : 'fallback';
     const t0 = performance.now();
@@ -86,6 +110,7 @@ export function createLinkMux({ directSend, fallbackSend, isDirectOpen, onMessag
           else if (c === 'in') sent.inn++;
           else if (typ === 'pose') sent.pose++;
           else sent.evt++;
+          if (!useDirect && isGamePacket(m)) lastFallbackGameAt = performance.now();
         }
       }
     } catch (e) {
@@ -148,13 +173,15 @@ export function createLinkMux({ directSend, fallbackSend, isDirectOpen, onMessag
     },
     maybePing() {
       const now = performance.now();
-      if (now - lastPingAt < 1000) return;
+      const gap = isDirectOpen?.() ? 1000 : 2500;
+      if (now - lastPingAt < gap) return;
       lastPingAt = now;
       pingPending = now;
       this.send({ ch: 'evt', data: { type: '__ping' } });
     },
     close() {
       closed = true;
+      if (fallbackTimer) { try { clearTimeout(fallbackTimer); } catch (e) {} fallbackTimer = null; }
       pendingSnap = pendingIn = pendingPose = null;
       pendingEvts.length = 0;
     },

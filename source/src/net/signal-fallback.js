@@ -55,8 +55,17 @@ function asU8(data) {
 function envelope(msg) {
   const ch = msg && msg.ch;
   const data = msg && Object.prototype.hasOwnProperty.call(msg, 'data') ? msg.data : msg;
-  const u = asU8(data);
-  if (u) return { ch: ch || 'snap', bin: b64(u) };
+  const nested = (data && typeof data === 'object' && !ArrayBuffer.isView(data) && !(data instanceof ArrayBuffer))
+    ? asU8(data.bin) : null;
+  const u = asU8(data) || nested;
+  if (u) {
+    const extra = {};
+    if (msg && msg.body != null) extra.body = msg.body;
+    if (data && typeof data === 'object' && data.body != null) extra.body = data.body;
+    if (msg && msg.s != null) extra.s = msg.s;
+    if (data && typeof data === 'object' && data.s != null) extra.s = data.s;
+    return { ch: ch || 'snap', bin: b64(u), ...extra };
+  }
   return { ch: ch || 'evt', json: data };
 }
 
@@ -66,6 +75,7 @@ function openEnvelope(raw) {
     const u = unb64(raw.bin);
     const copy = new Uint8Array(u.byteLength);
     copy.set(u);
+    if (raw.ch === 'in') return { ch: 'in', data: { bin: copy.buffer, body: raw.body || null, s: raw.s } };
     return { ch: raw.ch || 'snap', data: copy.buffer };
   }
   return { ch: raw.ch || 'evt', data: raw.json };

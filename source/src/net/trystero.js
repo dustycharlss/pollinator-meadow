@@ -30,30 +30,51 @@ import { devIceConfig } from './ice.js';
 import { isOnlineDev, fallbackRelayUrl } from './flags.js';
 import { createSignalFallback } from './signal-fallback.js';
 import { createLinkMux } from './link-mux.js';
+import { packNetInput, unpackNetInput } from './codec.js';
 
 export const TRYSTERO_STUB = false;
 
 const APP_ID = 'dustycharlss.github.io/pollinator-meadow';
 const NOTE = 'Trystero public signalling (Nostr) + public STUN, no TURN. On ICE failure, a signalling-plane fallback carries coalesced inputs and snapshots. Cloudflare SignalRoom / TURN not configured.';
 
+/** Trystero 0.27 getPeers()[id].connection is the RTCPeerConnection itself
+ *  (peer.mjs returns { connection: pc, get channel() { return dataChannel } },
+ *  but room.getPeers only copies `.connection`, not the channel getter).
+ *  pc.channel / pc.readyState are undefined, so a readyState==='open' check
+ *  on the PC is always false and would keep us on the Nostr fallback forever.
+ */
 function anyDirectOpen(tr) {
   try {
     const peers = tr.getPeers?.() || {};
     return Object.values(peers).some((p) => {
       if (!p || p.direct !== true || !p.connection) return false;
-      const conn = p.connection;
-      const dc = conn.channel || conn.dataChannel || conn;
-      const pc = conn.peerConnection || conn.pc || conn;
-      const ice = pc && (pc.iceConnectionState || pc.connectionState);
-      if (ice && ice !== 'connected' && ice !== 'completed') return false;
-      // Only treat the link as direct once a data channel is actually open.
-      // A peer entry with no open channel would make action.send no-op and
-      // silently drop snapshots while the fallback still works the other way.
-      return dc && dc.readyState === 'open';
+      const pc = p.connection.peerConnection || p.connection.pc || p.connection;
+      if (!pc) return false;
+      const cs = pc.connectionState;
+      if (cs && cs !== 'connected') return false;
+      const sctp = pc.sctp && pc.sctp.state;
+      if (sctp && sctp !== 'connected') return false;
+      const ice = pc.iceConnectionState;
+      if (!cs && ice && ice !== 'connected' && ice !== 'completed') return false;
+      return (cs === 'connected') || (!cs && (ice === 'connected' || ice === 'completed' || sctp === 'connected'));
     });
   } catch (e) {
     return false;
   }
+}
+
+function isBinary(d) {
+  return d instanceof ArrayBuffer || ArrayBuffer.isView(d);
+}
+
+function asBuf(d) {
+  if (!d) return null;
+  if (d instanceof ArrayBuffer) return d;
+  if (ArrayBuffer.isView(d)) {
+    if (d.byteOffset === 0 && d.byteLength === d.buffer.byteLength) return d.buffer;
+    return d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength);
+  }
+  return null;
 }
 
 export function createTrysteroTransport({ room, password, appId, maxUsers = 4, rtcConfig } = {}) {
@@ -74,6 +95,8 @@ export function createTrysteroTransport({ room, password, appId, maxUsers = 4, r
   };
   const tr = joinRoom(cfg, roomId);
   const action = tr.makeAction('lobby');
+  const snapAction = tr.makeAction('snap');
+  const inAction = tr.makeAction('in');
   const selfId = (typeof crypto !== 'undefined' && crypto.randomUUID)
     ? crypto.randomUUID()
     : ('self-' + Math.random().toString(36).slice(2) + Date.now().toString(36));
@@ -88,8 +111,31 @@ export function createTrysteroTransport({ room, password, appId, maxUsers = 4, r
     httpUrl: fallbackRelayUrl(),
   });
 
+  function directSend(msg) {
+    const ch = msg && msg.ch;
+    const data = msg && Object.prototype.hasOwnProperty.call(msg, 'data') ? msg.data : msg;
+    if (ch === 'snap' || (isBinary(data) && ch !== 'in' && ch !== 'evt')) {
+      const buf = asBuf(data);
+      if (buf && buf.byteLength) return snapAction.send(buf);
+      return;
+    }
+    if (ch === 'in') {
+      const bin = isBinary(data) ? data : (data && data.bin);
+      const buf = asBuf(bin);
+      if (buf && buf.byteLength) {
+        const body = (msg && msg.body) || (data && data.body) || null;
+        const from = (msg && msg.from) || (data && data.from) || null;
+        const s = (msg && msg.s) ?? (data && data.s);
+        const packed = packNetInput(buf, { body, from });
+        return inAction.send(packed, { metadata: { body, s, from } });
+      }
+      return;
+    }
+    return action.send(msg);
+  }
+
   const mux = createLinkMux({
-    directSend: (msg) => action.send(msg),
+    directSend,
     fallbackSend: (msg) => fallback.send(msg),
     isDirectOpen: () => !ice.forcedFail && anyDirectOpen(tr),
     onMessage: (msg) => {
@@ -98,6 +144,16 @@ export function createTrysteroTransport({ room, password, appId, maxUsers = 4, r
   });
 
   offs.push(action.onMessage((data) => { mux.deliver(data); }));
+  offs.push(snapAction.onMessage((data) => { mux.deliver({ ch: 'snap', data }); }));
+  offs.push(inAction.onMessage((data, ctx) => {
+    const meta = (ctx && ctx.metadata) || {};
+    const unpacked = unpackNetInput(data) || {};
+    const bin = unpacked.bin || data;
+    const body = unpacked.body || meta.body || null;
+    const from = unpacked.from || meta.from || (ctx && ctx.peerId) || null;
+    const s = meta.s;
+    mux.deliver({ ch: 'in', data: { bin, body, s, from } });
+  }));
   offs.push(fallback.onMessage((msg) => { mux.deliver(msg); }));
   offs.push(tr.onUserJoin((ctx) => {
     for (const fn of joinListeners) { try { fn(ctx); } catch (e) {} }
@@ -105,6 +161,40 @@ export function createTrysteroTransport({ room, password, appId, maxUsers = 4, r
   offs.push(tr.onError((err) => {
     for (const fn of errorListeners) { try { fn(err); } catch (e) {} }
   }));
+
+  let lastIcePair = null;
+  const iceTimer = (typeof setInterval !== 'undefined') ? setInterval(async () => {
+    try {
+      const peers = tr.getPeers?.() || {};
+      for (const p of Object.values(peers)) {
+        const pc = p && (p.connection?.peerConnection || p.connection?.pc || p.connection);
+        if (!pc || typeof pc.getStats !== 'function') continue;
+        const st = await pc.getStats();
+        let sel = null;
+        const byId = {};
+        st.forEach(r => { byId[r.id] = r; });
+        st.forEach(r => { if (r.type === 'transport' && r.selectedCandidatePairId) sel = byId[r.selectedCandidatePairId]; });
+        if (!sel) st.forEach(r => { if (r.type === 'candidate-pair' && (r.nominated || r.selected) && (r.state === 'succeeded' || r.state === 'in-progress')) sel = r; });
+        if (sel) {
+          const l = byId[sel.localCandidateId] || {};
+          const rm = byId[sel.remoteCandidateId] || {};
+          lastIcePair = {
+            local: l.candidateType || l.type || null,
+            remote: rm.candidateType || rm.type || null,
+            proto: l.protocol || l.protocol || null,
+            relayProto: l.relayProtocol || null,
+            rtt: sel.currentRoundTripTime != null ? Math.round(sel.currentRoundTripTime * 1000) : null,
+            pc: pc.connectionState || null,
+            ice: pc.iceConnectionState || null,
+            sctp: (pc.sctp && pc.sctp.state) || null,
+          };
+          break;
+        } else {
+          lastIcePair = { pc: pc.connectionState || null, ice: pc.iceConnectionState || null, sctp: (pc.sctp && pc.sctp.state) || null, local: null, remote: null };
+        }
+      }
+    } catch (e) {}
+  }, 1000) : null;
 
   const iceFail = !!ice.forcedFail;
   const note = iceFail
@@ -146,10 +236,12 @@ export function createTrysteroTransport({ room, password, appId, maxUsers = 4, r
       try { return getRelaySockets() || {}; } catch (e) { return {}; }
     },
     getLink() { return mux.getLink(); },
+    getIcePair() { return lastIcePair; },
     maybePing() { mux.maybePing(); },
     ready: tr.ready,
     close() {
       mux.close();
+      if (iceTimer) { try { clearInterval(iceTimer); } catch (e) {} }
       try { fallback.close(); } catch (e) {}
       for (const off of offs) { try { off(); } catch (e) {} }
       offs.length = 0;
