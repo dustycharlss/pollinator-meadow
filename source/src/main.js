@@ -1168,7 +1168,7 @@ function focusGameForInput() {
 }
 
 function assignOnlineBody() {
-  if (!net || !net.role) return null;
+  if (!net || !net.role || net.mode === 'nettest') return null;
   const members = (crew && crew.get && crew.get()) || ['bee', 'raccoon', 'bear'];
   const players = (lobby && lobby.players) || [];
   const me = (lobby && lobby.self) || (net.mode === 'nettest' ? (net.isHost ? 'host' : 'client') : null);
@@ -1204,7 +1204,7 @@ function assignOnlineBody() {
 }
 
 function onlineOwnsBody(id) {
-  if (!net || !net.role || !id) return true;
+  if (!net || !net.role || !id || net.mode === 'nettest') return true;
   const owners = net.owners || {};
   const me = (lobby && lobby.self) || (net.mode === 'nettest' ? (net.isHost ? 'host' : 'client') : null);
   for (const [pid, bid] of Object.entries(owners)) {

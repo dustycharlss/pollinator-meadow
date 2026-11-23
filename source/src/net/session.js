@@ -42,6 +42,7 @@ export function snapshotFromHooks(hooks) {
 export function createNet(hooks = {}) {
   let role = readNetRole();
   const onlineDev = typeof location !== 'undefined' && /(?:\?|&)online=dev(?:&|$)/.test(location.search || '');
+  const nettestMode = !!role;
   const active = !!(role || onlineDev);
 
   let transport = null;
@@ -90,7 +91,7 @@ export function createNet(hooks = {}) {
     topic: role ? room : null,
     transport: { name: 'LocalTransport', id: 'broadcast' },
     kind: 'local',
-    mode: role ? 'nettest' : (onlineDev ? 'dev' : null),
+    mode: role ? 'nettest' : (onlineDev ? 'dev' : null), // role from ?nettest= is sticky
     isHost: role === 'host',
     isClient: role === 'client',
     amHost: role === 'host',
@@ -539,8 +540,8 @@ export function createNet(hooks = {}) {
       if (data.bodies && zones?.applyNetState) {
         const owned = {};
         for (const id of Object.keys(data.bodies)) {
-          if (bodyOwners[id] && bodyOwners[id] !== from) continue;
-          if (!bodyOwners[id]) bodyOwners[id] = from;
+          if (!nettestMode && bodyOwners[id] && bodyOwners[id] !== from) continue;
+          if (!nettestMode && !bodyOwners[id]) bodyOwners[id] = from;
           owned[id] = data.bodies[id];
           remoteBodies[id] = true;
         }
@@ -616,8 +617,8 @@ export function createNet(hooks = {}) {
       } else frame = decodeInput(data);
     }
     if (!frame || isEmptyNetPayload(frame)) return;
-    if (body && who && bodyOwners[body] && bodyOwners[body] !== who) return;
-    if (body && who && !bodyOwners[body]) bodyOwners[body] = who;
+    if (!nettestMode && body && who && bodyOwners[body] && bodyOwners[body] !== who) return;
+    if (!nettestMode && body && who && !bodyOwners[body]) bodyOwners[body] = who;
     if (frame.s != null) lastInSeq = frame.s;
     if (body) remoteBodies[body] = true;
     hooks.applyRemoteFrame?.(frame, body);
