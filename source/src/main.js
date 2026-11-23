@@ -2620,6 +2620,7 @@ async function boot() {
   installOnlineArt();
   lobby = isOnlineDev() ? createLobby({
     audio, toast,
+    getNet: () => net,
     getSettings: () => settings,
     saveSettings: () => saveSettings(settings),
     onOnlineSettings: (online) => {

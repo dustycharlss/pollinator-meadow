@@ -10,6 +10,8 @@ import {
 const ANIMAL_IDS = ['bee', 'raccoon', 'bear'];
 const INTERP_MS = 100;
 const KEYFRAME_MS = 1000;
+const SNAP_MAX_AGE_MS = 250;
+const LOCAL_REWIND_MAX_AGE_MS = 180;
 
 export function readNetRole(search = (typeof location !== 'undefined' ? location.search : '')) {
   const q = new URLSearchParams(search.startsWith('?') || search.startsWith('http') ? search : '?' + search);
@@ -63,6 +65,8 @@ export function createNet(hooks = {}) {
   let pendingLoad = null;
   let loading = false;
   let recvBuf = []; // { tHost, wall, state }
+  let snapRecv = 0;
+  let lastSnapErr = null;
   let lastApplied = null;
   let lastPoseSent = {};
   let pendingPoses = {};
@@ -296,16 +300,34 @@ export function createNet(hooks = {}) {
     };
   }
 
+
+  function pruneRecvBuf() {
+    if (!recvBuf.length) return;
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const cut = now - SNAP_MAX_AGE_MS;
+    // Keep the newest snap even if it is old so the guest still has a pose
+    // to show; drop everything else that aged out, then cap the buffer.
+    while (recvBuf.length > 1 && recvBuf[0].wall < cut) recvBuf.shift();
+    if (recvBuf.length > 8) recvBuf.splice(0, recvBuf.length - 8);
+  }
+
   function onSnap(data) {
     if (role === 'host') return;
     const buf = data;
-    const expect = expectOf(currentSnapState() || lastApplied);
-    const dec = decodeSnap(buf, expect);
-    if (!dec) return;
+    let dec = null;
+    try {
+      const expect = expectOf(currentSnapState() || lastApplied);
+      dec = decodeSnap(buf, expect);
+    } catch (e) {
+      lastSnapErr = String(e && e.message || e);
+      return;
+    }
+    if (!dec) { lastSnapErr = lastSnapErr || 'decode-null'; return; }
+    snapRecv++;
     const st = mergeSnap(dec);
     const wall = typeof performance !== 'undefined' ? performance.now() : Date.now();
     recvBuf.push({ tHost: dec.hostTime, wall, state: st, tick: dec.tick });
-    if (recvBuf.length > 24) recvBuf.splice(0, recvBuf.length - 24);
+    pruneRecvBuf();
     lastAckTick = dec.tick;
     connected = true;
     ready = true;
@@ -387,14 +409,20 @@ export function createNet(hooks = {}) {
       if (localId && st.bodies && st.bodies[localId] && !tweening) {
         const cur = hooks.getPose?.(localId);
         const snap = st.bodies[localId];
+        const latestEntry = recvBuf.length ? recvBuf[recvBuf.length - 1] : null;
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const snapAge = latestEntry && latestEntry.wall != null ? now - latestEntry.wall : 0;
+        const stale = snapAge > LOCAL_REWIND_MAX_AGE_MS;
         if (cur && snap) {
           const d = bodyDist(cur, snap);
-          if (d < 0.5) {
+          if (d < 0.5 || stale) {
+            // Keep local control when we are close, or when the host snap is
+            // stale (a lagged correction would yank the guest back ~seconds).
             const bodies = { ...st.bodies };
             delete bodies[localId];
             st = { ...st, bodies };
+            if (stale) predictBlend = null;
           } else if (d < 4) {
-            const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
             predictBlend = { id: localId, from: { ...cur }, to: { ...snap }, at: now, dur: 150 };
             const bodies = { ...st.bodies };
             delete bodies[localId];
@@ -608,6 +636,7 @@ export function createNet(hooks = {}) {
   function tickNet(wallDt) {
     if (!active || !role) return;
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    try { transport?.maybePing?.(); } catch (e) {}
     if (role === 'host') {
       // Snapshots are sent from armSnapClock's fixed timestep, not from rAF/tickNet.
       if (now - lastHelloAt > 4000) sendHello();
@@ -874,6 +903,19 @@ export function createNet(hooks = {}) {
   net.abortReadyWait = abortReadyWait;
   net.remoteBodies = () => Object.keys(remoteBodies);
   net.markRemote = (id) => { if (id) remoteBodies[id] = true; };
+  function linkInfo() {
+    pruneRecvBuf();
+    const t = (typeof transport?.getLink === 'function') ? transport.getLink() : null;
+    const latest = recvBuf.length ? recvBuf[recvBuf.length - 1] : null;
+    const snapAge = latest && latest.wall != null
+      ? ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - latest.wall)
+      : null;
+    const local = !!(readNetRole() || (transport && (transport.stub || transport.kind === 'local' || transport.name === 'LocalTransport')));
+    const path = local ? 'local' : (t?.path || (transport ? 'direct' : 'none'));
+    const slow = !local && (path === 'fallback' || !!(t && t.slow) || (snapAge != null && snapAge > 400));
+    return { path, snapAge, rtt: t?.rtt ?? null, slow, direct: path === 'direct', recvBuf: recvBuf.length, snapRecv, lastSnapErr, sent: t?.sent || null, recv: t?.recv || null };
+  }
+  Object.defineProperty(net, 'link', { get: linkInfo });
   Object.defineProperty(net, 'holding', { get: () => holding, set: v => { holding = !!v; } });
   syncRoleFlags();
   net.active = active;

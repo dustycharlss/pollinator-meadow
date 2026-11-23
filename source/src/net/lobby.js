@@ -4,6 +4,7 @@
  *  are hung on g.net (n1.mjs would then take the isolated-context path).
  */
 import { createTrysteroTransport } from './trystero.js';
+import { installSlowLinkHint } from './slow-link-hint.js';
 import { createSignalRoomTransport } from './signalroom.js';
 import { createChannel } from './channel.js';
 import {
@@ -70,6 +71,11 @@ export function createLobby(hooks = {}) {
 
   let root = null, bar = null, screen = 'closed';
   let transport = null, channel = null;
+  installSlowLinkHint({
+    getLink: () => {
+      try { return hooks.getNet?.()?.link || transport?.getLink?.() || null; } catch (e) { return null; }
+    },
+  });
   let role = null, code = null, pinWords = null, usePin = false, locked = false;
   let players = [];
   let pick = [];
@@ -130,9 +136,11 @@ export function createLobby(hooks = {}) {
   function pathInfo() {
     const t = transport;
     return {
-      path: t?.kind || (t?.stub ? 'local' : 'trystero'),
+      path: (t?.getLink?.()?.path) || t?.kind || (t?.stub ? 'local' : 'trystero'),
       detail: t?.note || 'Trystero public signalling (Nostr) + public STUN, no TURN. Cloudflare SignalRoom / TURN not configured.',
       policy: t?.icePolicy || 'all',
+      link: (typeof t?.getLink === 'function') ? t.getLink() : null,
+      iceFail: !!t?.iceFail,
       wake: wakeState,
       relays: typeof t?.getRelaySockets === 'function' ? Object.keys(t.getRelaySockets() || {}).length : 0,
     };

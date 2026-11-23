@@ -4,6 +4,16 @@ export function isOnlineDev(search = typeof location !== 'undefined' ? location.
   return /(?:\?|&)online=dev(?:&|$)/.test(search || '');
 }
 
+export function isIceFail(search = typeof location !== 'undefined' ? location.search : '') {
+  return /(?:\?|&)iceFail(?:=1)?(?:&|$)/.test(search || '');
+}
+
+export function fallbackRelayUrl(search = typeof location !== 'undefined' ? location.search : '') {
+  const m = /(?:\?|&)fallbackRelay=([^&]+)/i.exec(search || '');
+  if (!m) return null;
+  try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; }
+}
+
 export function isDebugFlag(search = typeof location !== 'undefined' ? location.search : '') {
   return /(?:\?|&)debug(?:=|&|$)/.test(search || '');
 }
