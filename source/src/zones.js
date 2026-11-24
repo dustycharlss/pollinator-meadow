@@ -572,12 +572,15 @@ export function createZones(scene, host) {
     return src;
   }
   // Mechanic framed-mirror pane (#ddedf9 glass). Keep it off the S148/S149 atlas
-  // merge and give it a cooler, slightly lifted tint so it holds gray ΔE ≥ 12
-  // against the restored shadowed wall, without retinting cave bands or ghosts.
-  const PANE_SRC = 0xddedf9, PANE_TINT = 0xe8eef8, PANE_EMISSIVE = 0xa8b4d4, PANE_EI = 0.55;
+  // merge. Lambert lighting left a dark left half, so the official-box median
+  // stayed at gray ΔE 9.1 (Y 46). Use unlit MeshBasic so the whole visible pane
+  // lifts together and the official boxes can reach gray ΔE ≥ 12.
+  const PANE_SRC = 0xddedf9, PANE_TINT = 0xd4dcec;
   function isFramedMirrorPane(mat, name) {
-    if (/framed-mirror_1/i.test(name || '')) return true;
+    const nm = name || '';
+    if (/framed-mirror$/i.test(nm) && !/framed-mirror_/i.test(nm)) return true;
     if (!mat || !mat.color || mat.map) return false;
+    if (/framed-mirror_\d/i.test(nm)) return false; // frame / wood parts
     const c = mat.color.getHex();
     const dr = Math.abs(((c >> 16) & 255) - ((PANE_SRC >> 16) & 255));
     const dg = Math.abs(((c >> 8) & 255) - ((PANE_SRC >> 8) & 255));
@@ -586,12 +589,17 @@ export function createZones(scene, host) {
   }
   function tintMirrorPane(obj, mat, name) {
     if (!isFramedMirrorPane(mat, name || obj && obj.name)) return mat;
-    const m = mat.clone();
-    m.color.setHex(PANE_TINT);
-    m.emissive.setHex(PANE_EMISSIVE);
-    m.emissiveIntensity = PANE_EI;
+    const m = new THREE.MeshBasicMaterial({
+      color: PANE_TINT,
+      transparent: !!mat.transparent,
+      opacity: mat.opacity,
+      side: mat.side,
+      fog: true,
+      toneMapped: true,
+    });
+    m.name = mat.name;
     m.userData.noPastel = true;
-    if (obj) { obj.userData.noMerge = true; obj.userData.noPastel = true; obj.material = m; }
+    if (obj) { obj.userData.noMerge = true; obj.userData.noPastel = true; obj.receiveShadow = false; obj.material = m; }
     return m;
   }
 
@@ -1151,7 +1159,7 @@ export function createZones(scene, host) {
           const mat1 = part.pane ? tintMirrorPane(null, part.mat, part.name) : part.mat;
           const im = new THREE.InstancedMesh(part.geo, mat1, n);
           im.castShadow = false;
-          if (part.pane) { im.userData.noMerge = true; im.userData.noPastel = true; }
+          if (part.pane) { im.userData.noMerge = true; im.userData.noPastel = true; im.receiveShadow = false; }
           mats.forEach((m, i) => im.setMatrixAt(i, m));
           im.instanceMatrix.needsUpdate = true; styleNew(im); group.add(im);
         }
