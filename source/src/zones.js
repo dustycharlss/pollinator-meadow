@@ -9,6 +9,7 @@ import { CLASSES, CLASS_OF, ACTS, classOf } from './classes.js';
 import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
 import { swatchUV, atlasMaterial, writeAtlasUV, mergeAtlasRig } from './act3-atlas.js';
+import { createIconSheet } from './act3-icons.js';
 import { setCaveLevel, installFallbackHooks, isShaderFallback, fallbackMaterial, applyGhostMaterial, refreshFallbackMaterials } from './l20-fallback.js';
 import { lodify, lodFor } from './lod.js';
 import { canShowFriendsStation } from './net/flags.js';
@@ -530,6 +531,7 @@ export function createZones(scene, host) {
   });
   const withFocus = (id, fn) => { const prev = focusId; focusId = id; try { return fn(); } finally { focusId = prev; } };
   const group = new THREE.Group(); scene.add(group);
+  const icons = createIconSheet(scene);
   let solids = [], picks = [], nodes = [], hoops = [], nightDews = [], star = null;
   let petalV = 0, homeAt = null, A = { x: 0, z: 0 }, baseY = 0, recipe = null, id = null, picked = 0, keyDone = false, msgT = 0, t = 0;
   let tutorI = 0, tutorT = -99, endLines = [], result = null;
@@ -549,7 +551,11 @@ export function createZones(scene, host) {
   const gy = (x, z) => { if (sampleH) { const h = sampleH(x, z); if (h != null) return h; } return (ctx.meadowHeightAt || ctx.heightAt)(A.x + x, A.z + z); };
   const W = (x, z) => ({ x: A.x + x, z: A.z + z });
   const texL = new THREE.TextureLoader(), badgeMat = {};
-  const badgeOf = c => { const u = CLASSES[c].badge; return badgeMat[u] || (badgeMat[u] = new THREE.SpriteMaterial({ map: texL.load(u), depthTest: false, transparent: true })); };
+  const badgeOf = c => {
+    if (badgeMat[c]) return badgeMat[c];
+    icons.packImage('badge:' + c, CLASSES[c].badge);
+    return (badgeMat[c] = { opacity: 1, depthTest: false, transparent: true, color: new THREE.Color(0xffffff), userData: { iconKey: 'badge:' + c } });
+  };
   // POLISH §3 second cue: class rings take the class shape (Scout circle · Trickster rounded square · Bruiser hex), not just its colour
   const SHAPE_SEG = { circle: 28, square: 4, hex: 6 };
   function shapeRingGeo(c, r0, r1) { const sh = CLASSES[c]?.shape || 'circle', g = new THREE.RingGeometry(sh === 'square' ? r0 * 1.2 : r0, sh === 'square' ? r1 * 1.2 : r1, SHAPE_SEG[sh] || 28); if (sh === 'square') g.rotateZ(Math.PI / 4); if (sh === 'hex') g.rotateZ(Math.PI / 6); return g.rotateX(-Math.PI / 2); }
@@ -668,7 +674,7 @@ export function createZones(scene, host) {
     });
   }
   function addSolid(s) { ctx.phys.addDyn(s); solids.push(s); return s; }
-  function badge(c, x, y, z, s = 1.15) { const sp = new THREE.Sprite(badgeOf(c)); sp.scale.set(s, s, 1); sp.position.set(x, y, z); sp.renderOrder = 8; group.add(sp); return sp; }
+  function badge(c, x, y, z, s = 1.15) { const sp = icons.make({ key: 'badge:' + c, size: s, material: badgeOf(c), layer: 'overlay' }); sp.scale.set(s, s, 1); sp.position.set(x, y, z); sp.renderOrder = 8; group.add(sp); return sp; }
   const isOn = (need) => !need || [].concat(need).every(k => sig[k]);
   let applyingNet = false;
   function emitNet(kind, payload) { if (applyingNet) return; ctx.onNetEvent?.({ kind, ...payload }); }
@@ -1059,7 +1065,7 @@ export function createZones(scene, host) {
       for (let i = 0; i < 4; i++) { const pe = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.42, 0.3), mat(0xff7fbf, 0.45)); const a = i * Math.PI / 2; pe.position.set(Math.cos(a) * 0.42, Math.sin(a) * 0.42, 0); head.add(pe); }
       G.position.set(A.x + x, g, A.z + z); group.add(G);
       const col = new THREE.Color(0xffd23f);
-      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloMap(), color: col, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false })); halo.scale.set(3, 3, 1); halo.position.set(A.x + x, g + 1.15, A.z + z); group.add(halo);
+      const halo = icons.make({ key: 'halo', size: 3, additive: true, material: { opacity: 0.7, depthTest: true, blending: THREE.AdditiveBlending, color: col, userData: { iconKey: 'halo' } } }); halo.scale.set(3, 3, 1); halo.position.set(A.x + x, g + 1.15, A.z + z); group.add(halo);
       const ring = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.5, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
       ring.position.set(A.x + x, g + 0.08, A.z + z); group.add(ring);
       kidObjs.push({ key, x: A.x + x, y: g, z: A.z + z, G, head, halo, ring, got: false });
@@ -1099,8 +1105,9 @@ export function createZones(scene, host) {
   const ICON_TX = new Map();
   function gearSprite(k, s) { // Squid's gear badge (falls back to the emoji)
     const I = GEAR_INFO[k]; if (!I.icon) return emojiSprite(I.em, s);
-    let tx = ICON_TX.get(k); if (!tx) { tx = new THREE.TextureLoader().load(import.meta.env.BASE_URL + I.icon); tx.colorSpace = THREE.SRGBColorSpace; ICON_TX.set(k, tx); }
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, transparent: true, depthWrite: false })); sp.scale.set(s, s, 1); sp.renderOrder = 9; return sp;
+    const key = 'gear:' + k;
+    icons.packImage(key, import.meta.env.BASE_URL + I.icon);
+    const sp = icons.make({ key, size: s, layer: 'depth' }); sp.scale.set(s, s, 1); sp.renderOrder = 9; return sp;
   }
   /** Beans' CC0 gear model, scaled so its longest side = size; hides the blocky fallback once loaded */
   /** CC0 level decor model, dropped onto holder and scaled so its height (or longest side) = size */
@@ -1756,7 +1763,7 @@ export function createZones(scene, host) {
     hiddenStep(x, z, w, d, top) { const r = this.wall(x, z, w, d, top, { bot: top - 0.4, c: 0xc9b6ff }); r.m.material = new THREE.MeshBasicMaterial({ color: 0xd9c6ff, transparent: true, opacity: 0, depthWrite: false, wireframe: false }); AA().hidden.push({ r, x: A.x + x, z: A.z + z, kind: 'step' }); },
     hiddenLever(s, x, z, o = {}) { this.lever(s, x, z, o); const pr = props[props.length - 1]; pr.secret = true; pr.found = false; pr.G.visible = false; pr.icon.visible = false; const sv = pr.act; pr.act = null; pr._act = sv; AA().hidden.push({ pr, x: pr.x, z: pr.z, kind: 'switch', range: o.range || 16 }); },
     gift(kind, x, z, h = 0.6) { kind = GIFT_ALIAS[kind] || kind; const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.1, 0.8, 1.1, 0x5fae4a, 0, 0, 0, 0.3), bx(1.15, 0.18, 0.2, 0xff6bd6, 0, 0.1, 0, 0.4), bx(0.2, 0.18, 1.15, 0xff6bd6, 0, 0.1, 0, 0.4)); const sp = gearSprite(kind, 1.3); sp.position.y = 1.3; G.add(sp);
-      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloMap(), color: new THREE.Color(0xffe680), transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false })); halo.scale.set(3, 3, 1); G.add(halo);
+      const halo = icons.make({ key: 'halo', size: 3, additive: true, material: { opacity: 0.7, depthTest: true, blending: THREE.AdditiveBlending, color: new THREE.Color(0xffe680), userData: { iconKey: 'halo' } } }); halo.scale.set(3, 3, 1); G.add(halo);
       AA().gifts.push({ kind, x: w.x, y: w.y, z: w.z, G, got: false }); },
     // ---- M7 Seasons ----
     seasonBells(x, z, h) { [['summer', '☀️', 0xffd23f], ['winter', '❄️', 0xbfe8ff], ['spring', '🌱', 0x8be07a]].forEach(([s, em, col], i) => this.toggleBell('bell:' + s, x + (i - 1) * 2.6, z, h, () => setSeason(s), { label: `${s[0].toUpperCase() + s.slice(1)} bell`, em, col })); },
@@ -1900,9 +1907,10 @@ export function createZones(scene, host) {
   const masterNext = s => MASTER_ORDER[(MASTER_ORDER.indexOf(s) + 1) % 3];
   function masterIconRow(ems, s = 0.7) { const row = new THREE.Group(); ems.forEach((em, i) => { const sp = emojiSprite(em, s); sp.position.x = (i - 1) * (s * 0.9); row.add(sp); }); return row; }
   function masterTextSprite(text, s = 0.45) {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 64; const g = c.getContext('2d');
-    g.clearRect(0, 0, 256, 64); g.font = 'bold 44px ui-rounded, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#f4efe4'; g.fillText(text, 128, 34);
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); sp.scale.set(s * 2.4, s * 0.6, 1); sp.renderOrder = 9; return sp;
+    const key = 'tx:' + text;
+    icons.packText(text, text);
+    const sp = icons.make({ key, material: { opacity: 1, depthTest: false, color: new THREE.Color(0xffffff), userData: { iconKey: key } }, layer: 'overlay' });
+    sp.scale.set(s * 2.4, s * 0.6, 1); sp.renderOrder = 9; return sp;
   }
   function applyMaster(state, opts = {}) {
     const S = AA(), st = MASTER[state] ? state : 'A', M = MASTER[st];
@@ -2670,6 +2678,7 @@ export function createZones(scene, host) {
     for (const n of nodes) n.label.remove(); nodes = [];
     instWalls = []; decoJobs = new Map(); camRooms = []; caveChunks = []; for (const rec of atlasInsts) { const im = rec.im || rec; if (im.parent) im.parent.remove(im); } atlasInsts = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
+    icons.reset();
     tutorI = 0; tutorT = -99; endLines = []; result = null;
     for (const h of hubPads) h.el.remove(); hubPads = []; hubFr = []; document.body.classList.remove('inHub');
     if (exitLabel) exitLabel.remove(); exitAt = null; exitOpen = false; exitMesh = null; exitLabel = null; starGot = false;
@@ -3475,11 +3484,12 @@ export function createZones(scene, host) {
       // Clients still tick mixers so babies and decorations don't freeze.
       for (const mx of babyMixers) try { mx.update(dt); } catch (e) {}
       cullCaveChunks(cam);
+      icons.sync(cam);
       return;
     }
     updateWorld(dt, cam);
     cullCaveChunks(cam);
-    if (!recipe || recipe.hub) return;
+    if (!recipe || recipe.hub) { icons.sync(cam); return; }
     const ids = [...new Set((ctx.driven() || []).filter(Boolean))];
     const view = host.cur();
     if (!ids.length && view) ids.push(view);
@@ -3492,6 +3502,7 @@ export function createZones(scene, host) {
         checkKey(); updateExit(cam); updateHighlights(dt); updateTracker(cam);
       });
     }
+    icons.sync(cam);
   }
   // ---- objective highlights (t158u): every live puzzle prop glows in the colour of the class that solves it ----
   let haloTex = null;
@@ -3502,7 +3513,7 @@ export function createZones(scene, host) {
     return (haloTex = new THREE.CanvasTexture(c));
   }
   const badgeLock = {};
-  const badgeLockOf = c => badgeLock[c] || (badgeLock[c] = Object.assign(badgeOf(c).clone(), { opacity: 0.4 }));
+  const badgeLockOf = c => badgeLock[c] || (badgeLock[c] = { opacity: 0.4, depthTest: false, transparent: true, color: new THREE.Color(0xffffff), userData: { iconKey: 'badge:' + c } });
   function decorateProps() {
     for (const pr of props) {
       const cls = pr.kind === 'plate' ? (pr.plate.heavy ? 'bruiser' : 'trickster') : pr.cls;
@@ -3511,7 +3522,7 @@ export function createZones(scene, host) {
       const air = pr.kind === 'bell' || pr.kind === 'target';
       const hy = { bell: 0, target: 0, lever: 0.9, boulder: pr.from ? pr.from.top - pr.y + 0.8 : 1, cracked: 1.4, slip: 0, vine: 1.2, dig: 0.4, plank: 0.4, plate: 0.4 }[pr.kind] ?? 0.6;
       const big = pr.kind === 'boulder' || pr.kind === 'cracked';
-      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloMap(), color: col, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }));
+      const halo = icons.make({ key: 'halo', additive: true, material: { opacity: 0.6, depthTest: true, blending: THREE.AdditiveBlending, color: col, userData: { iconKey: 'halo' } } });
       const hs = big ? 4.4 : 2.6; halo.scale.set(hs, hs, 1); halo.position.set(pr.x, pr.y + hy, pr.z); halo.renderOrder = 5; group.add(halo);
       const gyw = air ? gy(pr.x - A.x, pr.z - A.z) : pr.y;
       const R = pr.kind === 'plate' ? (pr.plate.heavy ? 1.75 : 1.45) : pr.kind === 'boulder' ? Math.hypot(pr.s.hx, pr.s.hz) + 0.45 : big ? Math.max(1.4, pr.r - 1.4) : 1.15;
@@ -3639,21 +3650,10 @@ export function createZones(scene, host) {
   // ---- Training Garden runtime (t159u): one tiny step at a time, a big picture card, a pointing hand ----
   const _spPos = new THREE.Vector3();
   function emojiSprite(e, s = 1.4, clamp = false) {
-    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
-    g.font = '96px system-ui, "Apple Color Emoji", "Noto Color Emoji", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70);
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false })); sp.scale.set(s, s, 1); sp.renderOrder = 9;
-    if (clamp) {
-      sp.userData.baseS = s;
-      sp.onBeforeRender = (_r, _sc, cam) => {
-        const d = cam.position.distanceTo(sp.getWorldPosition(_spPos));
-        _spPos.project(cam);
-        // leave .visible to the gate; hide a too-close or bottom-of-frame lock so it does not sit on Buzz Boost
-        const atBottom = _spPos.y < -0.42, tooClose = d < 2.2;
-        sp.material.opacity = (tooClose || atBottom) ? 0 : 1;
-        const sc = THREE.MathUtils.clamp(sp.userData.baseS * (d / 12), 0.28, 0.7);
-        sp.scale.set(sc, sc, 1);
-      };
-    }
+    const key = 'em:' + e;
+    icons.packEmoji(e);
+    const sp = icons.make({ key, size: s, clamp, layer: 'depth' });
+    sp.scale.set(s, s, 1); sp.renderOrder = 9;
     return sp;
   }
   let kid = null;
@@ -4045,6 +4045,7 @@ export function createZones(scene, host) {
       }
       for (const sp of warmSpr) { group.add(sp); temp.push(sp); }
     } catch (e) {}
+    try { const un = icons.warm(); if (un) temp.push({ parent: { remove() {} }, _iconUnwarm: un }); } catch (e) {}
     // GLB set-dressing (lambertFrom materials: textured or plain, flat, Front/Double side, instanced decos) can finish
     // loading after the level starts on a slow device: warm those program variants with tiny stand-ins styled with
     // this level's look. One set per pastel style key, built once and kept (never disposed), so a level whose look
@@ -4065,7 +4066,7 @@ export function createZones(scene, host) {
       }
       for (const o of set) { group.add(o); temp.push(o); }
     } catch (e) {}
-    const undo = () => { for (const o of hidden) o.visible = false; for (const o of temp) o.parent?.remove(o); };
+    const undo = () => { for (const o of hidden) o.visible = false; for (const o of temp) { if (o && o._iconUnwarm) o._iconUnwarm(); else o.parent?.remove(o); } };
     if (!recipe.kid) return undo;
     if (!kid) kidInit();
     for (const G of kid.trails) { if (!G.visible) { G.visible = true; hidden.push(G); } }
