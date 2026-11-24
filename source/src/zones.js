@@ -568,20 +568,24 @@ export function createZones(scene, host) {
   // Mechanic framed-mirror pane (#ddedf9 glass). Keep it off the S148/S149 atlas
   // merge and give it a cooler, slightly lifted tint so it holds gray ΔE ≥ 12
   // against the restored shadowed wall, without retinting cave bands or ghosts.
-  const PANE_SRC = 0xddedf9, PANE_TINT = 0xc8d4ee;
+  const PANE_SRC = 0xddedf9, PANE_TINT = 0xe8eef8, PANE_EMISSIVE = 0xa8b4d4, PANE_EI = 0.55;
   function isFramedMirrorPane(mat, name) {
     if (/framed-mirror_1/i.test(name || '')) return true;
     if (!mat || !mat.color || mat.map) return false;
     const c = mat.color.getHex();
-    const dr = Math.abs(((c >> 16) & 255) - 0xdd), dg = Math.abs(((c >> 8) & 255) - 0xed), db = Math.abs((c & 255) - 0xf9);
+    const dr = Math.abs(((c >> 16) & 255) - ((PANE_SRC >> 16) & 255));
+    const dg = Math.abs(((c >> 8) & 255) - ((PANE_SRC >> 8) & 255));
+    const db = Math.abs((c & 255) - (PANE_SRC & 255));
     return (dr + dg + db) <= 24;
   }
   function tintMirrorPane(obj, mat, name) {
     if (!isFramedMirrorPane(mat, name || obj && obj.name)) return mat;
     const m = mat.clone();
     m.color.setHex(PANE_TINT);
+    m.emissive.setHex(PANE_EMISSIVE);
+    m.emissiveIntensity = PANE_EI;
     m.userData.noPastel = true;
-    if (obj) { obj.userData.noMerge = true; obj.material = m; }
+    if (obj) { obj.userData.noMerge = true; obj.userData.noPastel = true; obj.material = m; }
     return m;
   }
 
@@ -1140,7 +1144,7 @@ export function createZones(scene, host) {
           const mat1 = part.pane ? tintMirrorPane(null, part.mat, part.name) : part.mat;
           const im = new THREE.InstancedMesh(part.geo, mat1, n);
           im.castShadow = false;
-          if (part.pane) im.userData.noMerge = true;
+          if (part.pane) { im.userData.noMerge = true; im.userData.noPastel = true; }
           mats.forEach((m, i) => im.setMatrixAt(i, m));
           im.instanceMatrix.needsUpdate = true; styleNew(im); group.add(im);
         }
