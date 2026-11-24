@@ -536,7 +536,7 @@ export function createZones(scene, host) {
   let hubPads = [], hubFr = [], friendsSpec = null;
   let exitAt = null, exitOpen = false, exitMesh = null, exitLabel = null, starGot = false;
   let nightOn = false, dewPulseT = -99, nodesDone = 0, keyDew = 0;
-  let sampleH = null, waterMeshes = [], terrMesh = null, instWalls = [], decoJobs = new Map(), decoBatching = false, camRooms = [], caveChunks = [];
+  let sampleH = null, waterMeshes = [], terrMesh = null, instWalls = [], decoJobs = new Map(), decoBatching = false, camRooms = [], caveChunks = [], atlasInsts = [];
   // three-class puzzle state
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
@@ -1185,7 +1185,7 @@ export function createZones(scene, host) {
     turtle() { const G = new THREE.Group(); G.add(bx(1.9, 0.7, 2.1, 0x4f8a3a, 0, 0.5, 0), bx(1.3, 0.45, 1.5, 0x6fae4a, 0, 1.0, 0), bx(0.7, 0.2, 0.8, 0x8bc65a, 0, 1.3, 0), bx(0.6, 0.5, 0.75, 0x9ac270, 0, 0.5, 1.35), bx(0.5, 0.12, 0.2, 0x3a2a1a, 0, 0.42, 1.73));
       for (const [x, z] of [[-0.9, 0.7], [0.9, 0.7], [-0.9, -0.7], [0.9, -0.7]]) G.add(bx(0.45, 0.3, 0.45, 0x8bb060, x, 0.18, z)); return G; },
     spider() { const G = new THREE.Group(); G.add(bx(1.1, 0.85, 1.3, 0x3a2a3a, 0, 0.9, -0.2), bx(0.7, 0.55, 0.6, 0x4a3448, 0, 0.85, 0.65), bx(0.14, 0.14, 0.06, 0xff3030, -0.15, 0.95, 0.96, 0.8), bx(0.14, 0.14, 0.06, 0xff3030, 0.15, 0.95, 0.96, 0.8), bx(0.3, 0.1, 0.06, 0x2a1a2a, 0, 1.12, 0.96));
-      for (let i = 0; i < 4; i++) for (const s of [-1, 1]) { const l = bx(1.2, 0.12, 0.12, 0x2a1a2a, s * 0.9, 0.6, 0.45 - i * 0.35); l.rotation.z = s * 0.5; G.add(l); } return G; },
+      for (let i = 0; i < 4; i++) for (const s of [-1, 1]) { const l = bx(1.2, 0.12, 0.12, 0x2a1a2a, s * 0.9, 0.6, 0.45 - i * 0.35); l.rotation.z = s * 0.5; G.add(l); } mergeColorBoxes(G, 0x2a1a2a); return G; },
     crow() { const G = new THREE.Group(); G.add(bx(0.8, 0.7, 1.4, 0x222228, 0, 0, 0), bx(0.6, 0.55, 0.55, 0x2a2a30, 0, 0.2, 0.85), bx(0.2, 0.15, 0.4, 0xffc93c, 0, 0.15, 1.25), bx(0.6, 0.12, 0.7, 0x1a1a20, 0, 0.05, -0.95));
       const wl = bx(1.4, 0.1, 0.7, 0x1a1a20, -0.95, 0.1, 0), wr = bx(1.4, 0.1, 0.7, 0x1a1a20, 0.95, 0.1, 0); G.add(wl, wr); G.userData.wings = [wl, wr]; return G; },
     nest() { const G = new THREE.Group(); G.add(bx(1.5, 1.9, 1.5, 0xd8c49a, 0, 1.0, 0), bx(1.6, 0.2, 1.6, 0xb8a47a, 0, 0.6, 0), bx(1.6, 0.2, 1.6, 0xb8a47a, 0, 1.3, 0), bx(0.5, 0.5, 0.1, 0x3a2a1a, 0, 0.5, 0.76));
@@ -2641,7 +2641,7 @@ export function createZones(scene, host) {
     fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady'); syncObjH();
     sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
-    instWalls = []; decoJobs = new Map(); camRooms = []; caveChunks = [];
+    instWalls = []; decoJobs = new Map(); camRooms = []; caveChunks = []; for (const rec of atlasInsts) { const im = rec.im || rec; if (im.parent) im.parent.remove(im); } atlasInsts = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
     tutorI = 0; tutorT = -99; endLines = []; result = null;
     for (const h of hubPads) h.el.remove(); hubPads = []; hubFr = []; document.body.classList.remove('inHub');
@@ -2762,6 +2762,129 @@ export function createZones(scene, host) {
       o.visible = Math.hypot(_cull.x - x, _cull.z - z) < fogR;
     });
   }
+
+  function mergeColorBoxes(root, hex) {
+    if (!root) return;
+    const kids = [];
+    root.traverse(m => {
+      if (!m.isMesh || m.isInstancedMesh || !m.geometry || !m.material || m.userData.caveChunk) return;
+      if (Array.isArray(m.material)) return;
+      if (!m.material.color || m.material.color.getHex() !== hex) return;
+      kids.push(m);
+    });
+    const byParent = new Map();
+    for (const m of kids) {
+      const p = m.parent || root;
+      const L = byParent.get(p) || []; L.push(m); byParent.set(p, L);
+    }
+    for (const [parent, list] of byParent) {
+      if (list.length < 2) continue;
+      parent.updateMatrixWorld(true);
+      const geos = [];
+      for (const m of list) {
+        const g = (m.geometry.index ? m.geometry.toNonIndexed() : m.geometry).clone();
+        g.applyMatrix4(m.matrix);
+        const uv = swatchUV(m.material);
+        if (uv) writeAtlasUV(g, uv);
+        geos.push(g);
+      }
+      let merged = null;
+      try { merged = geos.length === 1 ? geos[0] : (mergeGeos(geos, false) || null); } catch (e) { merged = null; }
+      if (!merged) continue;
+      const uv0 = swatchUV(list[0].material);
+      const useMat = uv0 ? atlasMaterial({ basic: !!list[0].material.isMeshBasicMaterial, doubleSide: list[0].material.side === THREE.DoubleSide }) : list[0].material;
+      const nm = new THREE.Mesh(merged, useMat);
+      nm.castShadow = false; nm.receiveShadow = true;
+      nm.userData.noMerge = true; nm.userData.atlasMerged = true;
+      parent.add(nm);
+      for (const m of list) { if (m.parent) m.parent.remove(m); }
+    }
+  }
+
+  const _imM = new THREE.Matrix4(), _imP = new THREE.Vector3(), _imQ = new THREE.Quaternion(), _imS = new THREE.Vector3();
+  function hideAndTrack(src, im, i) {
+    src.userData.atlasInst = { im, i };
+    src.visible = false;
+    src.userData.wasFrustum = src.frustumCulled;
+    src.frustumCulled = false;
+  }
+  function composeFrom(src, visible) {
+    src.updateMatrixWorld(true);
+    if (!visible) { _imS.set(0, 0, 0); _imP.setFromMatrixPosition(src.matrixWorld); _imQ.setFromRotationMatrix(src.matrixWorld); }
+    else { src.matrixWorld.decompose(_imP, _imQ, _imS); }
+    _imM.compose(_imP, _imQ, _imS);
+    return _imM;
+  }
+  function addInstanced(geo, srcMat, items, kind) {
+    if (!items.length) return null;
+    const uv = swatchUV(srcMat);
+    const g = (geo.index ? geo.toNonIndexed() : geo).clone();
+    if (uv) writeAtlasUV(g, uv);
+    const useMat = uv ? atlasMaterial({ basic: !!srcMat.isMeshBasicMaterial, doubleSide: srcMat.side === THREE.DoubleSide }) : srcMat;
+    const im = new THREE.InstancedMesh(g, useMat, items.length);
+    im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    im.castShadow = false; im.receiveShadow = true; im.frustumCulled = false;
+    im.userData.noMerge = true; im.userData.atlasInstKind = kind;
+    items.forEach((src, i) => { hideAndTrack(src, im, i); im.setMatrixAt(i, composeFrom(src, src.userData.atlasWantVis !== false)); });
+    im.instanceMatrix.needsUpdate = true;
+    group.add(im); atlasInsts.push({ im, items, kind });
+    return im;
+  }
+  function instanceAtlasProps() {
+    // Pickups: same-colour, same-geometry petals (and other non-bloom pick meshes) → 1 InstancedMesh per bucket.
+    const pickBuckets = new Map();
+    for (const k of picks) {
+      const m = k.m;
+      if (!m || !m.isMesh || k.bloom || m.userData.atlasInst) continue;
+      if (!m.geometry || !m.material || Array.isArray(m.material)) continue;
+      const hex = m.material.color ? m.material.color.getHex() : 0;
+      const ei = +(m.material.emissiveIntensity || 0).toFixed(3);
+      const key = 'pick|' + hex + '|' + ei + '|' + (m.geometry.type || '') + '|' + (m.geometry.parameters ? JSON.stringify(m.geometry.parameters) : (m.geometry.uuid || ''));
+      const L = pickBuckets.get(key) || { mat: m.material, geo: m.geometry, items: [], recs: [] };
+      L.items.push(m); L.recs.push(k); pickBuckets.set(key, L);
+    }
+    for (const b of pickBuckets.values()) {
+      if (b.items.length < 2) continue;
+      addInstanced(b.geo, b.mat, b.items, 'pickup');
+    }
+    // Leftover #2a1a2a boxes not already merged (spider legs etc.).
+    mergeColorBoxes(group, 0x2a1a2a);
+    // Beacons: MeshBasic #4fe3e0 (sphere + cone, or any leftover same-geo set).
+    const beaconBuckets = new Map();
+    group.traverse(m => {
+      if (!m.isMesh || m.isInstancedMesh || !m.geometry || !m.material || Array.isArray(m.material)) return;
+      if (m.userData.caveChunk || m.userData.atlasInst || m.userData.atlasMerged || m.userData.noMerge) return;
+      if (m.isSkinnedMesh) return;
+      const hex = m.material.color ? m.material.color.getHex() : 0;
+      if (hex !== 0x4fe3e0 && hex !== 0x4FE3E0) return;
+      const gkey = (m.geometry.type || 'g') + '|' + (m.geometry.parameters ? JSON.stringify(m.geometry.parameters) : m.geometry.uuid);
+      const basic = !!m.material.isMeshBasicMaterial;
+      const key = hex + '|' + gkey + '|' + (basic ? 'b' : 'l');
+      const L = beaconBuckets.get(key) || { mat: m.material, geo: m.geometry, items: [] };
+      L.items.push(m); beaconBuckets.set(key, L);
+    });
+    for (const b of beaconBuckets.values()) {
+      if (b.items.length < 2) continue;
+      addInstanced(b.geo, b.mat, b.items, 'beacon');
+    }
+  }
+  function updateAtlasInsts() {
+    if (!atlasInsts.length) return;
+    for (const rec of atlasInsts) {
+      const { im, items } = rec;
+      for (let i = 0; i < items.length; i++) {
+        const src = items[i];
+        // Pickups keep bob/spin on the hidden source mesh; visibility follows the mesh flag + scale.
+        const vis = !!(src.visible || src.userData.atlasWantVis) && (src.scale.x !== 0);
+        // Source is hidden after instancing; use pickup record visibility via a flag we keep in sync.
+        const show = src.userData.atlasShow;
+        const on = show == null ? true : !!show;
+        im.setMatrixAt(i, composeFrom(src, on));
+      }
+      im.instanceMatrix.needsUpdate = true;
+    }
+  }
+
   function load(pid, anchor) {
     clear(); matLive = false; recipe = MAPS[pid]; if (!recipe) return; id = pid;
     setCaveLevel(!!(recipe.caveFloor || recipe.id === 'mirror_caves' || pid === 'mirror_caves'));
@@ -2777,8 +2900,9 @@ export function createZones(scene, host) {
     if (!recipe.hub) { const e = recipe.exit || [0, 0]; B.exit(e[0], e[1], e[2] || 3, e[3] || 0); } else hubInit();
     if (!(recipe.caveFloor || recipe.id === 'mirror_caves')) buildLeafyBackdrop(recipe.bounds);
     decorateProps();
-    Promise.resolve(decoReady).then(() => { if (recipe && recipe.caveFloor) { mergeCaveStatics(); refreshFallbackMaterials(); } });
+    Promise.resolve(decoReady).then(() => { if (recipe && recipe.caveFloor) { mergeCaveStatics(); refreshFallbackMaterials(); } instanceAtlasProps(); });
     if (recipe.act2) a2Init();
+    instanceAtlasProps();
     if (ctx.look?.setPatch) {
       const fills = {};
       if (pid === 'thaw_valley') fills.denGlow = { x: A.x + 11.2, y: gy(11.2, 20) + 1.2, z: A.z + 20 };
@@ -3121,7 +3245,7 @@ export function createZones(scene, host) {
         if (k.show && !isOn(k.show)) continue;
         if (Math.hypot(p.x - k.m.position.x, p.z - k.m.position.z) < 1.5 && Math.abs(p.y + 0.6 - k.m.position.y) < 1.8) {
           if (k.who && !k.who.includes(c)) { say('🙅 ' + (k.whyNot || 'Another class has to grab this'), 2000); continue; }
-          k.got = true; k.m.visible = false; k.alive = false; addHeal(TIER[k.tier].heal); ctx.audio?.sample?.('ui2/item-produced', 0.4); picked++; if (k.tier === 'petal' && !k.nightOnly) petalV += k.value || 1; emitNet('pick', { idx: picks.indexOf(k), by: ctx.cur(), tier: k.tier });
+          k.got = true; k.m.visible = false; k.m.userData.atlasShow = false; k.alive = false; addHeal(TIER[k.tier].heal); ctx.audio?.sample?.('ui2/item-produced', 0.4); picked++; if (k.tier === 'petal' && !k.nightOnly) petalV += k.value || 1; emitNet('pick', { idx: picks.indexOf(k), by: ctx.cur(), tier: k.tier });
           if (k.bloom) say(`🌸 Bloom bunch! +${k.value} Petals`, 1200);
           if (k.tier === 'dew') keyDew++;
           if (k.set) setSig(k.set);
@@ -3230,11 +3354,15 @@ export function createZones(scene, host) {
       if (pr.icon && !pr.done) pr.icon.position.y += Math.sin(t * 3 + pr.x) * 0.004;
     }
     for (const k of picks) {
-      if (k.got) continue;
-      if (k.nightOnly && !k.alive) continue;
-      if (k.show && !isOn(k.show)) { k.m.visible = false; continue; } else if (k.show) k.m.visible = true;
+      if (k.got) { if (k.m) k.m.userData.atlasShow = false; continue; }
+      if (k.nightOnly && !k.alive) { if (k.m) k.m.userData.atlasShow = false; continue; }
+      if (k.show && !isOn(k.show)) { k.m.visible = false; k.m.userData.atlasShow = false; continue; }
+      k.m.userData.atlasShow = true;
+      if (k.m.userData.atlasInst) k.m.visible = false;
+      else if (k.show) k.m.visible = true;
       if (!still()) { k.m.rotation.y += dt * 2; k.m.position.y = k.y + Math.sin(t * 2 + k.y) * 0.15; }
     }
+    updateAtlasInsts();
     for (const n of nodes) {
       if (n.need && !isOn(n.need)) { n.label.style.display = 'none'; continue; } else if (n.need && !n.done && !n.m.visible) { n.m.visible = true; tst(`✨ ${NODE[n.kind].name} appeared!`, 1800); }
       if (n.done) { n.label.style.display = 'none'; continue; }
