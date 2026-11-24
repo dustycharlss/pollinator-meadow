@@ -3,8 +3,8 @@
 // Per-tier caps follow the perf audit budgets: low 6, med 12, high 18, ultra 26 critters. Each type is baked once into one
 // merged vertex-colour mesh per animated node (a butterfly is 3 draw calls, not 10), then cloned per instance.
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { loadGLB } from './models.js';
+import { mergeAtlasRig } from './act3-atlas.js';
 
 // size = target longest extent in game metres (the player bee is 1.35 m); fly = [min,max] height; spd = m/s cap; r = wander leash
 export const CRITTERS = {
@@ -41,28 +41,12 @@ async function template(kind) {
   if (tmpl.has(kind)) return tmpl.get(kind);
   const p = loadGLB('critters/' + kind).then(g => {
     if (!g) { ready.set(kind, null); return null; }
-    const root = g.scene.clone(true), clip = g.animations[0] || null, anim = new Set((clip ? clip.tracks : []).map(t => t.name.split('.')[0]));
+    const root = g.scene.clone(true), clip = g.animations[0] || null;
     root.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(root), sz = box.getSize(new THREE.Vector3()), k = CRITTERS[kind].size / Math.max(sz.x, sz.y, sz.z, 1e-3);
-    // merge plain-colour meshes per animated ancestor (keeps the node-TRS clip working)
-    const groups = new Map(), inv = new THREE.Matrix4(), rel = new THREE.Matrix4(), keep = [];
-    root.traverse(o => {
-      if (!o.isMesh) return; const m = Array.isArray(o.material) ? null : o.material;
-      if (!m || m.map || (m.emissive && m.emissive.getHex() && (m.emissiveIntensity || 1) > 0)) { keep.push(o); return; }
-      let a = o.parent; while (a && a !== root && !anim.has(a.name)) a = a.parent; a = a || root;
-      inv.copy(a.matrixWorld).invert(); rel.multiplyMatrices(inv, o.matrixWorld);
-      const geo = o.geometry.clone(); for (const n of Object.keys(geo.attributes)) if (!['position', 'normal', 'color'].includes(n)) geo.deleteAttribute(n);
-      // dequantize to float so mergeGeometries accepts mixed sources
-      for (const n of ['position', 'normal']) { const at = geo.attributes[n]; if (at && !(at.array instanceof Float32Array && !at.normalized)) { const f = new Float32Array(at.count * 3); for (let i = 0; i < at.count; i++) { f[i * 3] = at.getX(i); f[i * 3 + 1] = at.getY(i); f[i * 3 + 2] = at.getZ(i); } geo.setAttribute(n, new THREE.BufferAttribute(f, 3)); } }
-      geo.applyMatrix4(rel); if (!geo.attributes.normal) geo.computeVertexNormals();
-      const c = m.color || new THREE.Color(1, 1, 1), n = geo.attributes.position.count, col = new Float32Array(n * 3); for (let i = 0; i < n; i++) { col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
-      geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); const ng = geo.index ? geo.toNonIndexed() : geo;
-      (groups.get(a) || groups.set(a, []).get(a)).push(ng); o.userData._drop = true;
-    });
-    const mat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
-    for (const [a, list] of groups) { const g2 = mergeGeometries(list, false); if (!g2) continue; const mesh = new THREE.Mesh(g2, mat); mesh.name = 'critterMerged'; a.add(mesh); }
-    const drop = []; root.traverse(o => { if (o.userData._drop) drop.push(o); }); for (const o of drop) o.removeFromParent();
-    for (const o of keep) { const m = o.material; if (m && m.emissive) m.userData.noPastel = true; }
+    // Step 4: atlas UVs + fold glow/eye Standard parts into the per-node merge (keep flap / maps).
+    mergeAtlasRig(root, clip);
+    root.traverse(o => { if (o.isMesh && o.material && o.material.emissive && o.material.emissive.getHex && o.material.emissive.getHex() > 0) o.material.userData.noPastel = true; });
     const T = { root, clip, scale: k }; ready.set(kind, T); return T;
   });
   tmpl.set(kind, p); return p;

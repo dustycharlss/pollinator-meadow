@@ -2,6 +2,7 @@
 // One 256² nearest-filter albedo + emissive companion. Each colour lives in an 8 px
 // cell; UVs sit at the cell centre so merged chunks stay one draw regardless of colour.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import albedoUrl from './atlas/act3-palette-albedo-256.png';
 import emissiveUrl from './atlas/act3-palette-emissive-256.png';
 import SW from './atlas/swatches.json';
@@ -82,6 +83,20 @@ export function swatchUV(mat) {
   const a = rgbToHex(mat.color);
   const e = (mat.emissive && mat.emissive.getHex && mat.emissive.getHex() > 0) ? rgbToHex(mat.emissive) : '';
   if (PIN[a]) return PIN[a];
+  if (e) {
+    const exact = byKey.get(a + '|' + e);
+    if (exact) return { u: exact.u, v: exact.v, id: exact.id };
+    // Same albedo, closest emissive (firefly glow is #daaa6c / #ffeaaa, not an exact cell).
+    const er = parseInt(e.slice(0, 2), 16), eg = parseInt(e.slice(2, 4), 16), eb = parseInt(e.slice(4, 6), 16);
+    let best = null, bestD = 80;
+    for (const s of SW.swatches) {
+      if (s.alias || hexOf(s.a) !== a || !s.e) continue;
+      const h = hexOf(s.e);
+      const d = Math.abs(er - parseInt(h.slice(0, 2), 16)) + Math.abs(eg - parseInt(h.slice(2, 4), 16)) + Math.abs(eb - parseInt(h.slice(4, 6), 16));
+      if (d < bestD) { bestD = d; best = s; }
+    }
+    if (best) return { u: best.u, v: best.v, id: best.id };
+  }
   const s = nearest(a, e);
   return s ? { u: s.u, v: s.v, id: s.id } : null;
 }
@@ -101,3 +116,90 @@ export function writeAtlasUV(geo, uv) {
 }
 
 export { lit as ATLAS };
+
+function decodeNormAttr(src) {
+  const dst = new Float32Array(src.length);
+  let max = 0, signed = false;
+  if (src instanceof Int8Array) { max = 127; signed = true; }
+  else if (src instanceof Int16Array) { max = 32767; signed = true; }
+  else if (src instanceof Int32Array) { max = 2147483647; signed = true; }
+  else if (src instanceof Uint8Array || src instanceof Uint8ClampedArray) { max = 255; }
+  else if (src instanceof Uint16Array) { max = 65535; }
+  else if (src instanceof Uint32Array) { max = 4294967295; }
+  else { dst.set(src); return dst; }
+  if (signed) { for (let i = 0; i < src.length; i++) dst[i] = Math.max(src[i] / max, -1); }
+  else { for (let i = 0; i < src.length; i++) dst[i] = src[i] / max; }
+  return dst;
+}
+function asFloat32Attr(g, name) {
+  const attr = g.attributes[name];
+  if (!attr || !attr.array) return;
+  const src = attr.array;
+  if (src instanceof Float32Array && !attr.normalized) return;
+  const packed = attr.normalized && !(src instanceof Float32Array) && !(src instanceof Float64Array);
+  const dst = packed ? decodeNormAttr(src) : (src instanceof Float32Array ? src : new Float32Array(src));
+  g.setAttribute(name, new THREE.BufferAttribute(dst, attr.itemSize, false));
+}
+function normRigGeo(g) {
+  if (g.index) g = g.toNonIndexed();
+  for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal' && name !== 'uv') g.deleteAttribute(name);
+  if (!g.attributes.normal && g.attributes.position) g.computeVertexNormals();
+  asFloat32Attr(g, 'position'); asFloat32Attr(g, 'normal'); asFloat32Attr(g, 'uv');
+  if (g.morphAttributes) g.morphAttributes = {};
+  if (g.clearGroups) g.clearGroups();
+  return g;
+}
+
+function isFlapOrSeason(mat) {
+  if (!mat) return false;
+  const key = (typeof mat.customProgramCacheKey === 'function' && mat.customProgramCacheKey()) || '';
+  if (/^flap-|^seas-/.test(key) || mat.userData?.flapStyle || mat.userData?.uPh) return true;
+  const hook = mat.userData?.shaderHook || mat.userData?.hook || mat.name || '';
+  return /flap-|seas-/.test(hook);
+}
+
+/** Step 4: merge plain-colour (and glow/eye) sub-meshes per animated node onto the shared atlas.
+ *  Keeps textured maps and flap-/seas- shader parts as separate draws so clips still run on node TRS. */
+export function mergeAtlasRig(root, clip) {
+  if (!root) return root;
+  const anim = new Set((clip ? clip.tracks : []).map(t => String(t.name).split('.')[0]));
+  root.updateMatrixWorld(true);
+  const groups = new Map(), drop = [];
+  const inv = new THREE.Matrix4(), rel = new THREE.Matrix4();
+  root.traverse(o => {
+    if (!o.isMesh || o.userData.noMerge) return;
+    const m = Array.isArray(o.material) ? null : o.material;
+    if (!m || m.map || isFlapOrSeason(m)) return;
+    const uv = swatchUV(m);
+    if (!uv) return;
+    let a = o.parent;
+    while (a && a !== root && !anim.has(a.name)) a = a.parent;
+    a = a || root;
+    inv.copy(a.matrixWorld).invert();
+    rel.multiplyMatrices(inv, o.matrixWorld);
+    let geo = normRigGeo(o.geometry.clone());
+    geo.applyMatrix4(rel);
+    writeAtlasUV(geo, uv);
+    const list = groups.get(a) || [];
+    list.push(geo); groups.set(a, list);
+    drop.push(o);
+  });
+  const mat = atlasMaterial();
+  for (const [a, list] of groups) {
+    if (!list.length) continue;
+    let merged = null;
+    try { merged = list.length === 1 ? list[0] : (mergeGeometries(list, false) || null); } catch (e) { merged = null; }
+    const parts = merged ? [merged] : list;
+    for (const geo of parts) {
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.name = 'rigMerged';
+      mesh.castShadow = false;
+      mesh.receiveShadow = true;
+      mesh.userData.atlasRig = true;
+      a.add(mesh);
+    }
+  }
+  for (const o of drop) o.removeFromParent();
+  return root;
+}
+

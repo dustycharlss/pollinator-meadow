@@ -8,7 +8,7 @@ import { setZoneHeight } from './world.js';
 import { CLASSES, CLASS_OF, ACTS, classOf } from './classes.js';
 import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
-import { swatchUV, atlasMaterial, writeAtlasUV } from './act3-atlas.js';
+import { swatchUV, atlasMaterial, writeAtlasUV, mergeAtlasRig } from './act3-atlas.js';
 import { setCaveLevel, installFallbackHooks, isShaderFallback, fallbackMaterial, applyGhostMaterial, refreshFallbackMaterials } from './l20-fallback.js';
 import { lodify, lodFor } from './lod.js';
 import { canShowFriendsStation } from './net/flags.js';
@@ -1235,10 +1235,11 @@ export function createZones(scene, host) {
     loadGLB('act3/babies/' + key).then(g => {
       if (!g || !G.parent) return;
       const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = lambertFrom(n.material); n.castShadow = false; } });
+      const clip = (g.animations || []).find(a => /idle/i.test(a.name)) || (g.animations || [])[0];
+      mergeAtlasRig(m, clip);
       const b2 = new THREE.Box3().setFromObject(m), h2 = b2.max.y - b2.min.y; if (h2 < 1e-4) return;
       const k = H / h2; m.scale.setScalar(k); m.position.y = -b2.min.y * k;
       old.forEach(c => { c.visible = false; }); styleNew(m); G.add(m); G.userData.babyGlb = key; lodify(m, 'act3/babies/' + key, { drop: true });
-      const clip = (g.animations || []).find(a => /idle/i.test(a.name)) || (g.animations || [])[0];
       if (clip) { const mx = new THREE.AnimationMixer(m); mx.clipAction(clip).play(); mx.setTime(Math.random() * 2); babyMixers.push(mx); }
     });
   }
