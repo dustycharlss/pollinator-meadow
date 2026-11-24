@@ -1,6 +1,14 @@
 /** Query flags and Online settings helpers (§4.1, §6 N2). */
 
+/**
+ * Solo release switch. false = the build ships with NO multiplayer: no net session, lobby, Play with friends,
+ * Online settings, friends station, ?join / ?online=dev / ?nettest handling, and no WebRTC / Trystero / Nostr traffic.
+ * Vite folds this constant, so the net modules drop out of the bundle. Flip to true to restore the rc behaviour.
+ */
+export const ONLINE_ENABLED = false;
+
 export function isOnlineDev(search = typeof location !== 'undefined' ? location.search : '') {
+  if (!ONLINE_ENABLED) return false;
   return /(?:\?|&)online=dev(?:&|$)/.test(search || '');
 }
 
@@ -32,6 +40,7 @@ export function canShowFriendsStation(settings, search) {
 }
 
 export function parseJoinCode(search = typeof location !== 'undefined' ? location.search : '') {
+  if (!ONLINE_ENABLED) return null;
   const m = /(?:\?|&)join=([^&]+)/i.exec(search || '');
   if (!m) return null;
   try { return decodeURIComponent(m[1]).trim().toLowerCase(); } catch (e) { return String(m[1] || '').toLowerCase(); }

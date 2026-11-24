@@ -10,7 +10,7 @@ import { buildNests } from './nests.js';
 import { createInput, composeSources } from './input.js';
 import { createSlots } from './slots.js';
 import { createNet } from './net/session.js';
-import { isOnlineDev, canShowFriendsStation } from './net/flags.js';
+import { ONLINE_ENABLED, isOnlineDev, canShowFriendsStation } from './net/flags.js';
 import { createLobby, ANIMAL_OF } from './net/lobby.js';
 import { createLevelFlow } from './net/level-flow.js';
 import { installOnlineArt } from './net/art.js';
@@ -2596,6 +2596,8 @@ async function boot() {
     tech, openTech: () => openTech(lead), speciesList: () => SPECIES_ORDER.map(id => `${SPECIES[id].emoji} ${SPECIES[id].name}${id === lead ? ' ★' : ''}`), setLead: i => setLead(SPECIES_ORDER[i]), leadText: () => `${SPECIES[lead].emoji} ${SPECIES[lead].name} (pays ${payIcons(lead)})`, statsTable };
   admin = createAdmin(X);
   if (/[?&]admin=1/.test(location.search)) admin.showButton(true);
+  // Solo release: with ONLINE_ENABLED false none of the multiplayer layer is created (net, level flow, lobby, online art).
+  if (ONLINE_ENABLED) {
   installOnlineArt();
   levelFlow = createLevelFlow({ audio, toast });
   net = createNet({
@@ -2729,6 +2731,7 @@ async function boot() {
     lobby.settings.mount();
     try { lobby.maybeAutoJoin(); } catch (e) {}
   }
+  } // ONLINE_ENABLED
 
   if (NEWFLAG) {
     if (NEWFLAG.lead && SPECIES[NEWFLAG.lead]) settings.lead = NEWFLAG.lead;
