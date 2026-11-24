@@ -1201,20 +1201,15 @@ export function createZones(scene, host) {
           im.name = part.name || '';
           im.castShadow = false;
           if (part.pane || part.wood) { im.userData.noMerge = true; im.userData.noPastel = true; im.receiveShadow = false; }
-          // Parent framed-mirror parts to the placed deco holder. Adding them to `group`
-          // left the InstancedMesh object (and its untransformed geo bbox) at world origin,
-          // which showed up as built-framed-mirror_2.._5 MeshBasic #c8b8c4 at (0,0,0).
-          const framed = part.wood || /framed-mirror/i.test(part.name || '');
-          const host = framed ? live[0] && live[0].H : null;
-          if (host) {
-            host.updateMatrixWorld(true);
-            const inv = host.matrixWorld.clone().invert();
-            mats.forEach((m, i) => im.setMatrixAt(i, inv.clone().multiply(m)));
-            im.instanceMatrix.needsUpdate = true; styleNew(im); host.add(im);
-          } else {
-            mats.forEach((m, i) => im.setMatrixAt(i, m));
-            im.instanceMatrix.needsUpdate = true; styleNew(im); group.add(im);
-          }
+          // Keep InstancedMeshes on the zone group with world-space instance matrices
+          // (parenting them to the deco holder in l20e broke landscape frustum culling
+          // and raised Low draws ~15). computeBoundingSphere so the bounds cover the
+          // in-cave instances instead of the untransformed geo at the group origin.
+          mats.forEach((m, i) => im.setMatrixAt(i, m));
+          im.instanceMatrix.needsUpdate = true;
+          im.computeBoundingSphere();
+          im.frustumCulled = true;
+          styleNew(im); group.add(im);
         }
         live.forEach(j => { if (j.o.fallback) j.o.fallback.forEach(f => { f.visible = false; }); });
       }));
@@ -2827,11 +2822,25 @@ export function createZones(scene, host) {
       for (const s of a2.shots || []) mark(s.m || s.G);
       for (const src of a2.srcs || []) mark(src.cr);
     }
+    if (a2 && a2.gviz) for (const k of ['pouch', 'glider', 'sling']) mark(a2.gviz[k]);
     group.updateMatrixWorld(true);
+    const rct = rect();
+    const levelHasOrigin = rct.x0 - 4 < 0 && rct.x1 + 4 > 0 && rct.z0 - 4 < 0 && rct.z1 + 4 > 0;
+    const atWorldOrigin = (x, z) => !levelHasOrigin && Math.hypot(x, z) < 8;
+    const skipMergeObj = (o) => {
+      let p = o;
+      while (p) {
+        if (p.visible === false) return true;
+        if (p.userData && (p.userData.noMerge || p.userData.isGearViz)) return true;
+        p = p.parent;
+      }
+      return false;
+    };
     const buckets = new Map();
     const doomed = [];
     const take = (geo, matrix, wx, wz, mat, src) => {
       if (!geo || !mat) return;
+      if (atWorldOrigin(wx, wz)) return;
       if (mat.transparent && (mat.opacity < 0.2 || mat.blending !== THREE.NormalBlending)) return;
       const uv = swatchUV(mat);
       const g = normCaveGeo(geo.clone());
@@ -2847,7 +2856,7 @@ export function createZones(scene, host) {
     };
     const _pos = new THREE.Vector3(), _M = new THREE.Matrix4(), _MW = new THREE.Matrix4();
     group.traverse(m => {
-      if (skip.has(m)) return;
+      if (skip.has(m) || skipMergeObj(m)) return;
       if (!(m.isMesh || m.isInstancedMesh) || !m.visible || !m.geometry) return;
       if (m.isSkinnedMesh || m.userData.caveChunk || m.userData.noMerge || m.userData.isAnimal || m.userData.terrain) return;
       const mat = Array.isArray(m.material) ? null : m.material; if (!mat) return;
@@ -2881,6 +2890,19 @@ export function createZones(scene, host) {
         nm.castShadow = false; nm.receiveShadow = true; nm.frustumCulled = true;
         group.add(nm); caveChunks.push(nm);
       }
+    }
+    // Warm-up briefly unhides worn-gear models while they still sit at world origin
+    // (primeReadyVisuals). If they were baked into cave chunks, they show up as a
+    // pouch + glider + sling assembly when a camera looks at (0,0,0). Drop those.
+    if (!levelHasOrigin) {
+      for (const m of caveChunks) {
+        const p = m.userData.chunkPos;
+        if (p && Math.hypot(p.x, p.z) < 8) {
+          if (m.parent) m.parent.remove(m);
+          try { m.geometry && m.geometry.dispose && m.geometry.dispose(); } catch (e) {}
+        }
+      }
+      caveChunks = caveChunks.filter(m => m.parent);
     }
   }
   function cullCaveChunks(cam) {
@@ -3065,7 +3087,7 @@ export function createZones(scene, host) {
             for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M); o.setMatrixAt(i, W.copy(inv).multiply(M)); }
             o.instanceMatrix.needsUpdate = true;
             o.position.set(first.x, first.y, first.z);
-            o.updateMatrix();
+            o.updateMatrix(); o.updateMatrixWorld(true); o.computeBoundingSphere(); o.frustumCulled = true;
           }
           return;
         }
