@@ -1201,8 +1201,20 @@ export function createZones(scene, host) {
           im.name = part.name || '';
           im.castShadow = false;
           if (part.pane || part.wood) { im.userData.noMerge = true; im.userData.noPastel = true; im.receiveShadow = false; }
-          mats.forEach((m, i) => im.setMatrixAt(i, m));
-          im.instanceMatrix.needsUpdate = true; styleNew(im); group.add(im);
+          // Parent framed-mirror parts to the placed deco holder. Adding them to `group`
+          // left the InstancedMesh object (and its untransformed geo bbox) at world origin,
+          // which showed up as built-framed-mirror_2.._5 MeshBasic #c8b8c4 at (0,0,0).
+          const framed = part.wood || /framed-mirror/i.test(part.name || '');
+          const host = framed ? live[0] && live[0].H : null;
+          if (host) {
+            host.updateMatrixWorld(true);
+            const inv = host.matrixWorld.clone().invert();
+            mats.forEach((m, i) => im.setMatrixAt(i, inv.clone().multiply(m)));
+            im.instanceMatrix.needsUpdate = true; styleNew(im); host.add(im);
+          } else {
+            mats.forEach((m, i) => im.setMatrixAt(i, m));
+            im.instanceMatrix.needsUpdate = true; styleNew(im); group.add(im);
+          }
         }
         live.forEach(j => { if (j.o.fallback) j.o.fallback.forEach(f => { f.visible = false; }); });
       }));
@@ -3011,29 +3023,61 @@ export function createZones(scene, host) {
     if (posts.length >= 2) addInstanced(posts[0].geometry, posts[0].material, posts, 'mirror-post');
     removeStrayFramedMirrors();
   }
+  function isFramedMirrorObj(o) {
+    const nm = [o.name, o.parent && o.parent.name].filter(Boolean).join(' ');
+    const mats = [].concat(o.material || []);
+    return /framed-mirror/i.test(nm) || mats.some(m => m && m.color && (m.color.getHex() === 0xe8eef8 || m.color.getHex() === FRAME_TINT || /^mirror$/i.test(m.name || '') || /^dark-wood$/i.test(m.name || '')));
+  }
+  function disposeFramedMirror(o) {
+    if (o.parent) o.parent.remove(o);
+    try { o.geometry && o.geometry.dispose && o.geometry.dispose(); } catch (e) {}
+    try { if (o.isInstancedMesh && o.dispose) o.dispose(); } catch (e) {}
+  }
   function removeStrayFramedMirrors() {
-    // Fern l20c: the CVD pane material landed on an unplaced copy at world origin
-    // (0, .55, 0), ~80 m from the level, while the placed crystal stayed #dff4ff.
+    // Drop leftover framed-mirror parts at world origin. Instanced copies belong on the
+    // placed deco holder (around [6, 2.45, 14] in level space); never leave the object
+    // itself at (0,0,0). Dispose origin leftovers rather than hiding them.
     const placed = [];
     const M = new THREE.Matrix4(), W = new THREE.Matrix4(), P = new THREE.Vector3();
-    group.traverse(o => {
-      if (!o.isInstancedMesh || !/framed-mirror/i.test(o.name || '')) return;
-      for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M); W.multiplyMatrices(o.matrixWorld, M); P.setFromMatrixPosition(W); placed.push(P.clone()); }
+    const root = group.parent || group;
+    root.updateMatrixWorld(true);
+    root.traverse(o => {
+      if (!o.isInstancedMesh || !isFramedMirrorObj(o)) return;
+      for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M); W.multiplyMatrices(o.matrixWorld, M); P.setFromMatrixPosition(W); if (Math.hypot(P.x, P.z) >= 2) placed.push(P.clone()); }
     });
     const doomed = [];
-    const root = group.parent || group;
     root.traverse(o => {
-      if (!o.isMesh || o.isInstancedMesh) return;
-      const nm = [o.name, o.parent && o.parent.name].filter(Boolean).join(' ');
-      const mats = [].concat(o.material || []);
-      const flagged = /framed-mirror/i.test(nm) || mats.some(m => m && m.color && (m.color.getHex() === 0xe8eef8 || /^mirror$/i.test(m.name || '')));
-      if (!flagged) return;
+      if (!o.isMesh || !isFramedMirrorObj(o)) return;
+      if (o.isInstancedMesh) {
+        o.getWorldPosition(P);
+        const objAtOrigin = Math.hypot(P.x, P.z) < 2;
+        let instAtCave = 0, instAtOrigin = 0;
+        for (let i = 0; i < o.count; i++) {
+          o.getMatrixAt(i, M); W.multiplyMatrices(o.matrixWorld, M); P.setFromMatrixPosition(W);
+          if (Math.hypot(P.x, P.z) < 2) instAtOrigin++; else instAtCave++;
+        }
+        // Relocate an IM whose object sits at origin but whose instances are in-cave:
+        // parent it to the first placed deco (or keep it on group at the first instance).
+        if (objAtOrigin && instAtCave && !instAtOrigin) {
+          const first = placed[0];
+          if (first) {
+            const inv = new THREE.Matrix4().makeTranslation(-first.x, -first.y, -first.z);
+            for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M); o.setMatrixAt(i, W.copy(inv).multiply(M)); }
+            o.instanceMatrix.needsUpdate = true;
+            o.position.set(first.x, first.y, first.z);
+            o.updateMatrix();
+          }
+          return;
+        }
+        if (objAtOrigin && !instAtCave) doomed.push(o);
+        return;
+      }
       o.getWorldPosition(P);
       const atOrigin = Math.hypot(P.x, P.z) < 2;
       const nearPlaced = placed.some(q => Math.hypot(P.x - q.x, P.z - q.z) < 2.5);
       if (atOrigin && !nearPlaced) doomed.push(o);
     });
-    for (const o of doomed) { if (o.parent) o.parent.remove(o); }
+    for (const o of doomed) disposeFramedMirror(o);
   }
   function updateAtlasInsts() {
     if (!atlasInsts.length) return;
