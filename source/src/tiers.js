@@ -37,7 +37,7 @@ function label() {
 export function createTiers(scene, ctx) {
   const { heightAt, round, fx, toast, audio } = ctx;
   const TI = { carrying: false, speedMul: 1, noDrain: false, nodes: [], clusters: [], seeds: [], team: [], said: {}, logs: 0, cd: {}, combo: { n: 0, t: 0 }, rainbowT: 0, songT: 0, boostT: 0 };
-  const root = new THREE.Group(); scene.add(root);
+  const root = new THREE.Group(); root.name = 'meadow-tiers'; scene.add(root);
   const land = (tries = 40, rMax = 120) => { for (let i = 0; i < tries; i++) { const a = Math.random() * 6.283, d = 25 + Math.random() * rMax, x = Math.cos(a) * d, z = Math.sin(a) * d; if (heightAt(x, z) > WATER_Y + 0.8 && Math.hypot(x - POND.x, z - POND.z) > POND.r + 4) return { x, z }; } return { x: 30, z: 30 }; };
   const say = (k, ms = 3200) => { if (TI.said[k]) return; TI.said[k] = 1; toast((k === 'p' ? '🌼 ' : k === 'd' ? '💧 ' : k === 's' ? '🌟 ' : '') + KID[k], ms); };
   TI.say = say;
@@ -91,6 +91,11 @@ export function createTiers(scene, ctx) {
   TI.reset = () => {
     for (const c of [...TI.clusters]) killCluster(c); for (const s of TI.seeds) root.remove(s.g); TI.seeds.length = 0; for (const n of TI.team) root.remove(n.g); TI.team.length = 0;
     TI.carrying = false; carryObj.visible = false; TI.logs = 0; TI.cd = {}; TI.spawnT = 0; TI.said = {};
+    // Adventure campaign has no meadow dew/seed economy. startNew() still calls reset()
+    // when a valley patch loads; do not spawn clusters (a third one used to appear at 20 s
+    // on layer 0, after declutter, and add ~15 Low landscape draws).
+    if (ctx.adventure) { root.visible = false; carryObj.visible = false; return; }
+    root.visible = true;
     spawnCluster(); spawnCluster();
     const nS = 1 + (Math.random() < 0.5 ? 1 : 0); for (let i = 0; i < nS; i++) { const c = land(30, 150); spawnSeed(c.x, c.z); }
     spawnTeam('honeylog'); spawnTeam('honeylog'); spawnTeam('dewpond', { x: POND.x + (POND.r + 5), z: POND.z }); spawnTeam('starheart', land(30, 140));
@@ -134,6 +139,7 @@ export function createTiers(scene, ctx) {
   TI.isDeposit = (x, z) => !!(ctx.build.near('stash_den', x, z, 1) || ctx.build.near('clover_pad', x, z, 1));
   // ---------- per-frame
   TI.update = (dt, t, playing) => {
+    if (ctx.adventure) { root.visible = false; carryObj.visible = false; return; }
     const p = P(); if (!p) return; const id = sp(), B = ctx.build;
     // dew
     TI.spawnT = (TI.spawnT || 0) + dt; if (TI.spawnT > 20 && TI.clusters.length < 3) { TI.spawnT = 0; spawnCluster(); }
