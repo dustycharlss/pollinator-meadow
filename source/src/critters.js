@@ -1,7 +1,7 @@
 // Art pass (Nov 14, 2026): ambient background critters from Beans (assets-incoming/critters, CC0, palette B).
 // Background props only: never interactable, kept out of the player's path, slow clips and slow wander (README motion rules).
 // Per-tier caps follow the perf audit budgets: low 6, med 12, high 18, ultra 26 critters. Each type is baked once into one
-// merged vertex-colour mesh per animated node (a butterfly is 3 draw calls, not 10), then cloned per instance.
+// merged vertex-colour mesh per animated node (a butterfly is 3 draw calls, not 10), then cloned per instance. Step 6 instances same-kind atlas-rig parts (per bone) across those clones and copies matrixWorld each update, so a flock of 3 bats is 1 draw per part, not 3.
 import * as THREE from 'three';
 import { loadGLB } from './models.js';
 import { mergeAtlasRig } from './act3-atlas.js';
@@ -56,7 +56,54 @@ async function template(kind) {
 export function createCritters(scene, { heightAt, tier = () => 'med', prep = null } = {}) {
   const group = new THREE.Group(); group.name = 'critters'; scene.add(group);
   let list = [], token = 0;
-  function clear() { token++; for (const c of list) { c.mixer.stopAllAction(); c.obj.removeFromParent(); } list = []; }
+  const batches = []; // step 6: same-kind atlas-rig parts share one InstancedMesh; originals stay on the clip nodes (hidden) so flaps still drive matrices
+  const _Z = new THREE.Matrix4().makeScale(0, 0, 0);
+  function clearBatches() {
+    for (const b of batches) { b.im.removeFromParent(); b.im.dispose(); }
+    batches.length = 0;
+  }
+  function syncBatches() {
+    for (const b of batches) {
+      for (let i = 0; i < b.meshes.length; i++) {
+        const m = b.meshes[i];
+        let vis = true, p = m.parent;
+        while (p) { if (p.visible === false) { vis = false; break; } p = p.parent; }
+        if (vis) { m.updateWorldMatrix(true, false); b.im.setMatrixAt(i, m.matrixWorld); }
+        else b.im.setMatrixAt(i, _Z);
+      }
+      b.im.instanceMatrix.needsUpdate = true;
+      b.im.computeBoundingSphere();
+    }
+  }
+  function buildBatches() {
+    clearBatches();
+    const groups = new Map();
+    for (const c of list) {
+      c.obj.traverse(o => {
+        if (!o.isMesh || !o.userData.atlasRig || !o.geometry) return;
+        const bone = o.parent?.name || '';
+        const verts = o.geometry.attributes?.position?.count || 0;
+        const key = c.kind + '|' + bone + '|' + verts;
+        let g = groups.get(key);
+        if (!g) { g = { kind: c.kind, bone, meshes: [], geo: o.geometry, mat: o.material }; groups.set(key, g); }
+        g.meshes.push(o);
+      });
+    }
+    for (const g of groups.values()) {
+      if (g.meshes.length < 2) continue;
+      const im = new THREE.InstancedMesh(g.geo, g.mat, g.meshes.length);
+      im.name = 'rigInst:' + g.kind + ':' + g.bone;
+      im.userData.atlasRigInst = true;
+      im.castShadow = false;
+      im.receiveShadow = true;
+      im.frustumCulled = true;
+      for (const m of g.meshes) m.visible = false;
+      group.add(im);
+      batches.push({ im, meshes: g.meshes });
+    }
+    syncBatches();
+  }
+  function clear() { token++; clearBatches(); for (const c of list) { c.mixer.stopAllAction(); c.obj.removeFromParent(); } list = []; }
   /** Spawn for a level. rect = world {x0,x1,z0,z1}; deep = water rects; avoid(x,z) true near the start / paths; waterY for fish. */
   async function spawn(patchId, { rect, deep = [], waterY = null, start = null } = {}) {
     clear(); const my = token; if (!rect) return;
@@ -90,6 +137,8 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
         place(c, 0); if (prep) { try { prep(obj); } catch (e) {} } group.add(obj); list.push(c); placed++;
       }
     }
+    for (const c of list) { try { c.mixer.update(0); } catch (e) {} }
+    buildBatches();
     return placed;
   }
   function place(c, t) {
@@ -111,6 +160,7 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
       const v = D.spd * Math.min(1, dist) * d; c.x += Math.sin(c.yaw) * v; c.z += Math.cos(c.yaw) * v;
       place(c, t);
     }
+    syncBatches();
   }
   /** Background-load every template (no scene, no compile) so later spawns are synchronous. */
   function prefetch() { for (const k of Object.keys(CRITTERS)) template(k).catch(() => {}); }
