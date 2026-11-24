@@ -162,7 +162,23 @@ function isFlapOrSeason(mat) {
  *  Keeps textured maps and flap-/seas- shader parts as separate draws so clips still run on node TRS. */
 export function mergeAtlasRig(root, clip) {
   if (!root) return root;
-  const anim = new Set((clip ? clip.tracks : []).map(t => String(t.name).split('.')[0]));
+  const anim = new Set((clip ? clip.tracks : []).map(t => {
+    const parts = String(t.name).split('.');
+    return parts.length > 1 ? parts[parts.length - 2] : parts[0];
+  }));
+  // If a track target is itself a Mesh, wrap it in a same-named Object3D so merging can drop the mesh
+  // without removing the node PropertyBinding looks up (WingL / WingR quaternion tracks).
+  const wrap = [];
+  root.traverse(o => { if (o.isMesh && o.name && anim.has(o.name)) wrap.push(o); });
+  for (const o of wrap) {
+    const parent = o.parent; if (!parent) continue;
+    const bone = new THREE.Object3D();
+    bone.name = o.name;
+    bone.position.copy(o.position); bone.quaternion.copy(o.quaternion); bone.scale.copy(o.scale);
+    parent.add(bone);
+    o.name = o.name + '_mesh';
+    bone.add(o);
+  }
   root.updateMatrixWorld(true);
   const groups = new Map(), drop = [];
   const inv = new THREE.Matrix4(), rel = new THREE.Matrix4();

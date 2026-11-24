@@ -52,6 +52,26 @@ async function template(kind) {
   tmpl.set(kind, p); return p;
 }
 
+/** Keep clip tracks bound to named bones on a cloned rig (WingL / WingR quaternion, Glow scale, …). */
+function retargetClip(root, clip) {
+  if (!clip) return clip;
+  const names = new Set();
+  root.traverse(o => { if (o.name) names.add(o.name); });
+  let changed = false;
+  const tracks = clip.tracks.map(t => {
+    const raw = String(t.name), parts = raw.split('.');
+    if (parts.length < 2) return t;
+    const prop = parts[parts.length - 1], node = parts[parts.length - 2];
+    if (names.has(node)) {
+      const want = node + '.' + prop;
+      if (raw === want) return t;
+      const c = t.clone(); c.name = want; changed = true; return c;
+    }
+    return t;
+  });
+  return changed ? new THREE.AnimationClip(clip.name, clip.duration, tracks) : clip;
+}
+
 /** prep(obj): optional hook run on each new critter before it joins the scene (main styles + compiles it there). */
 export function createCritters(scene, { heightAt, tier = () => 'med', prep = null } = {}) {
   const group = new THREE.Group(); group.name = 'critters'; scene.add(group);
@@ -131,13 +151,17 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
         }
         if (!ok) continue;
         const obj = T.root.clone(true); obj.scale.setScalar(T.scale); obj.userData.critter = kind;
-        const mixer = new THREE.AnimationMixer(obj); if (T.clip) { const a = mixer.clipAction(T.clip); a.time = rnd() * T.clip.duration; a.play(); }
+        const mixer = new THREE.AnimationMixer(obj);
+        if (T.clip) {
+          const a = mixer.clipAction(retargetClip(obj, T.clip));
+          a.time = rnd() * T.clip.duration; a.play();
+        }
         const c = { kind, D, obj, mixer, hx: x, hz: z, x, z, yaw: rnd() * 6.28, tx: x, tz: z, wait: rnd() * 2, h: D.fly ? D.fly[0] + rnd() * (D.fly[1] - D.fly[0]) : 0, ph: rnd() * 6.28 };
         if (D.swim) c.wy = waterY - 0.2 - rnd() * 0.4;
         place(c, 0); if (prep) { try { prep(obj); } catch (e) {} } group.add(obj); list.push(c); placed++;
       }
     }
-    for (const c of list) { try { c.mixer.update(0); } catch (e) {} }
+    for (const c of list) { try { c.mixer.update(0); c.obj.updateMatrixWorld(true); } catch (e) {} }
     buildBatches();
     return placed;
   }
@@ -151,8 +175,10 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
     if (!list.length) return; acc += dt; if (acc < 1 / 30) return; const d = acc; acc = 0; // 30 Hz is plenty for slow background motion
     for (const c of list) {
       const D = c.D, on = D.always || (D.night ? night > 0.5 : night <= 0.5) || (D.cave && c.kind === 'bat'); c.obj.visible = !!on; if (!on) continue;
-      if (cam && Math.hypot(c.x - cam.x, c.z - cam.z) > 60) continue; // far: freeze (fog hides it)
+      const far = !!(cam && Math.hypot(c.x - cam.x, c.z - cam.z) > 60);
       c.mixer.update(d);
+      c.obj.updateMatrixWorld(true);
+      if (far) continue; // far: skip wander (fog hides it); keep mixer + matrixWorld so a follow-cam still sees flaps
       if (c.wait > 0) { c.wait -= d; continue; }
       const dx = c.tx - c.x, dz = c.tz - c.z, dist = Math.hypot(dx, dz);
       if (dist < 0.2) { const a = Math.random() * 6.28, r = Math.random() * D.r; c.tx = c.hx + Math.cos(a) * r; c.tz = c.hz + Math.sin(a) * r; c.wait = D.perch || D.hop ? 1.5 + Math.random() * 3 : D.hover ? 1 + Math.random() : Math.random() * 0.6; continue; }

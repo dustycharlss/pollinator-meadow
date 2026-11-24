@@ -77,12 +77,15 @@
     failKind = null;
   }
 
+  var _fetch = window.fetch;
   window.__bootOk = function () {
     if (window.__bootFailed && failKind === 'error') return;
     if (window.__bootFailed && failKind === 'stall') hideFailUi();
     done = true;
     window.__bootReady = true;
     if (timer) { clearTimeout(timer); timer = null; }
+    // Drop the boot inflight wrapper so later GLB loads (L23 / Night Market) use native fetch + AbortSignal.
+    try { if (typeof _fetch === 'function') window.fetch = _fetch; } catch (e) {}
   };
   window.__bootFail = function (reason) { showFail(reason, 'error'); };
   window.__bootProgress = touch;
@@ -135,7 +138,6 @@
   function begin() { inflight++; touch(); }
   function end() { inflight = Math.max(0, inflight - 1); touch(); }
   try {
-    var _fetch = window.fetch;
     if (typeof _fetch === 'function') {
       window.fetch = function () {
         begin();

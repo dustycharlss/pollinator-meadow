@@ -308,8 +308,15 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     const fogNear = owned && P.fog ? P.fog.near : B.fog.near;
     scene.fog.color.lerp(cFog, k); scene.fog.near = lerp(scene.fog.near, fogNear, k); scene.fog.far = lerp(scene.fog.far, fogFar, k);
     if (L.bake && !owned) { sun.color.lerp(tc.copy(sun.color).multiply(LT), k); hemi.color.lerp(tc.copy(hemi.color).multiply(LT), k); hemi.groundColor.lerp(tc.copy(hemi.groundColor).multiply(LT), k); scene.fog.color.lerp(HZ, ((P.quality && P.quality.low && P.quality.low.bakeGrade && P.quality.low.bakeGrade.hazeMix) || B.quality.low.bakeGrade.hazeMix) * k); }
-    // sun: day direction from preset B (low, raking), night keeps the moon key from main.js — unless a look target owns the key (L22 A moon, L24 dusk)
-    dirB.lerp(sunDirectionB(camera, P), 0.06).normalize(); dirO.copy(sun.position).normalize().lerp(dirB, k).normalize();
+    // sun: a look target snaps to its elevation/azimuth (L23 is 24°). Do not use sun.position.normalize()
+    // (that's the world point, ~57° from the origin on Act 3 maps). Unowned day still eases toward preset B.
+    const wantDir = sunDirectionB(camera, P);
+    if (owned) dirB.copy(wantDir);
+    else dirB.lerp(wantDir, 0.06).normalize();
+    dirO.copy(sun.position).sub(sun.target.position);
+    if (dirO.lengthSq() < 1e-8) dirO.copy(dirB); else dirO.normalize();
+    if (owned) dirO.copy(dirB);
+    else dirO.lerp(dirB, k).normalize();
     const p = getPlayer && getPlayer(), tg = sun.target.position; if (p) tg.set(p.x, p.y, p.z); else tg.set(0, 0, 0);
     sun.position.copy(tg).addScaledVector(dirO, P.sun.distance || B.sun.distance);
     skyU.sunDir.value.copy(dirO); skyU.sunC.value.copy(sun.color);

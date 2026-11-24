@@ -4,14 +4,30 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 import URLS from './model-urls.json';
-const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const manager = new THREE.LoadingManager();
+const loader = new GLTFLoader(manager).setMeshoptDecoder(MeshoptDecoder);
 const BASE = import.meta.env.BASE_URL;
 const cache = new Map(), ready = new Map();
+/** Resolve a repo-relative asset against <base href> / document.baseURI so staging slugs do not fetch from /staging/l20x/. */
+function assetURL(rel) {
+  const path = String(rel || '');
+  const base = (typeof document !== 'undefined' && document.baseURI) ? document.baseURI : (BASE || './');
+  try { return new URL(path, base).href; } catch (e) { return path; }
+}
+function loadAsyncRetry(url, tries = 3) {
+  return loader.loadAsync(url).catch(e => {
+    const msg = String((e && e.message) || e);
+    if (tries > 1 && /Failed to fetch|abort|AbortError|NetworkError|Load failed/i.test(msg)) {
+      return new Promise(r => setTimeout(r, 180)).then(() => loadAsyncRetry(url, tries - 1));
+    }
+    return Promise.reject(e);
+  });
+}
 export const getGLB = (key) => ready.get(key) || null;
 export function loadGLB(key) {
   if (!cache.has(key)) {
-    const raw = BASE + 'models/' + key + '.glb', url = URLS[key] ? BASE + URLS[key] : raw; // lod > blocky-opt > opt > raw (tools/lod-map.json)
-    cache.set(key, loader.loadAsync(url).catch(e => url !== raw ? (console.warn('model fallback to raw', key), loader.loadAsync(raw)) : Promise.reject(e))
+    const raw = assetURL((BASE || './') + 'models/' + key + '.glb'), url = URLS[key] ? assetURL((BASE || './') + URLS[key]) : raw; // lod > blocky-opt > opt > raw (tools/lod-map.json)
+    cache.set(key, loadAsyncRetry(url).catch(e => url !== raw ? (console.warn('model fallback to raw', key), loadAsyncRetry(raw)) : Promise.reject(e))
       .then(g => { ready.set(key, g); return g; }).catch(e => { console.warn('model failed', key, e); return null; }));
   }
   return cache.get(key);
@@ -19,7 +35,7 @@ export function loadGLB(key) {
 const urlCache = new Map();
 /** load a GLB by repo-relative path (phone LOD files); null on failure */
 export function loadURL(path) {
-  if (!urlCache.has(path)) urlCache.set(path, loader.loadAsync(BASE + path).catch(e => { console.warn('lod model failed', path, e); return null; }));
+  if (!urlCache.has(path)) urlCache.set(path, loadAsyncRetry(assetURL((BASE || './') + path)).catch(e => { console.warn('lod model failed', path, e); return null; }));
   return urlCache.get(path);
 }
 export async function loadMany(keys, onProgress) {

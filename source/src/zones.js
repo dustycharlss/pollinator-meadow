@@ -1403,6 +1403,18 @@ export function createZones(scene, host) {
     return (recipe.splitAt && ((S.cpBy || {})[id || ctx.cur()] || (sAt && { x: A.x + sAt[0], y: gy(sAt[0], sAt[1]), z: A.z + sAt[1] }))) || S.cp || { x: homeAt ? homeAt.x : A.x, y: gy((homeAt ? homeAt.x : A.x) - A.x, (homeAt ? homeAt.z : A.z) - A.z), z: homeAt ? homeAt.z : A.z };
   }
   function warpTo(q, cp, ox, oz) { if (!q || !cp) return; q.x = cp.x + ox; q.y = cp.y + 0.8; q.z = cp.z + oz; q.vx = q.vy = q.vz = 0; q._safe = { x: q.x, z: q.z }; q.goto = null; }
+  // Short visual fade around a pit respawn. Warp stays immediate (no lost petals, lives, or score — bonks is telemetry only).
+  function fadePitBonk() {
+    if (typeof document === 'undefined') return;
+    let el = document.getElementById('pitFade');
+    if (!el) {
+      el = document.createElement('div'); el.id = 'pitFade';
+      el.style.cssText = 'position:fixed;inset:0;background:#1a1028;opacity:0;pointer-events:none;z-index:80;transition:opacity .16s ease';
+      document.body.appendChild(el);
+    }
+    el.style.opacity = '0.8';
+    setTimeout(() => { el.style.opacity = '0'; }, 160);
+  }
   function resetEscorts(cp) {
     const S = a2; if (!S) return;
     (S.escorts || []).forEach((b, i) => { const c = cp || b.home; b.x = c.x + (i % 3) * 0.7 - 0.5; b.z = c.z + 0.8 + (i * 0.35); b.y = (c.y || gy(b.x - A.x, b.z - A.z)) + 0.2; b.hide = false; b.vx = b.vz = 0; b.stuckFor = 0; b.lagFor = 0; if (b.G) b.G.position.set(b.x, b.y, b.z); });
@@ -1425,7 +1437,7 @@ export function createZones(scene, host) {
     fx(p.x, p.y + 0.6, p.z); ctx.audio?.sample?.(src === 'ember' || src === 'pit' || (S.escorts || []).length ? 'act3/gentle-bonk-poof' : 'ui/error-bonk', 0.5); // Act 3: the gentle poof
     emitNet('bonk', { body: ctx.cur(), src: src || (e && e.name) || '?', warp: src === 'escort' ? ctx.crewIds().slice() : [ctx.cur()] });
     if (src === 'ember') { tst('💨 Puff! Soot on your nose — poof, back to the 🚩 flag. Douse embers with a 🫧 bubble, or ring 🌱 spring to dim them', 2600); return; }
-    if (src === 'pit') { tst('💨 Whoops! That drop is too steep — poof, back to the 🚩 flag. Light the ghost bridge first', 2600); return; }
+    if (src === 'pit') { fadePitBonk(); tst('💨 Whoops! That drop is too steep — poof, back to the 🚩 flag. Light the ghost bridge first', 2600); return; }
     tst(src === 'escort' ? `💫 Bonk! The ${e.name} reached the little one — poof, back to the 🚩 flag` : `💫 Bonk! The ${e.name} spotted you — poof, back to the 🚩 flag`, 2400);
   }
   function updEnemies(dt, cam, p, cur) {
