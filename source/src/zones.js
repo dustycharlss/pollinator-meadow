@@ -2652,14 +2652,33 @@ export function createZones(scene, host) {
     ctx.look?.setPatch?.(null);
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
+  function decodeNormAttr(src) {
+    const dst = new Float32Array(src.length);
+    let max = 0, signed = false;
+    if (src instanceof Int8Array) { max = 127; signed = true; }
+    else if (src instanceof Int16Array) { max = 32767; signed = true; }
+    else if (src instanceof Int32Array) { max = 2147483647; signed = true; }
+    else if (src instanceof Uint8Array || src instanceof Uint8ClampedArray) { max = 255; }
+    else if (src instanceof Uint16Array) { max = 65535; }
+    else if (src instanceof Uint32Array) { max = 4294967295; }
+    else { dst.set(src); return dst; }
+    if (signed) { for (let i = 0; i < src.length; i++) dst[i] = Math.max(src[i] / max, -1); }
+    else { for (let i = 0; i < src.length; i++) dst[i] = src[i] / max; }
+    return dst;
+  }
   function asFloat32Attr(g, name) {
     const attr = g.attributes[name];
     if (!attr || !attr.array) return;
-    if (attr.array instanceof Float32Array) return;
-    g.setAttribute(name, new THREE.BufferAttribute(new Float32Array(attr.array), attr.itemSize, attr.normalized));
+    const src = attr.array;
+    // Already a plain Float32 (normalized=false) — the merge target.
+    if (src instanceof Float32Array && !attr.normalized) return;
+    const packed = attr.normalized && !(src instanceof Float32Array) && !(src instanceof Float64Array);
+    const dst = packed ? decodeNormAttr(src) : (src instanceof Float32Array ? src : new Float32Array(src));
+    g.setAttribute(name, new THREE.BufferAttribute(dst, attr.itemSize, false));
   }
   function normCaveGeo(g) {
-    // All step-1 band geos must share index presence and Float32 attrs so mergeGeometries stays quiet.
+    // All step-1 band geos must share index presence, Float32 attrs, and the same
+    // BufferAttribute.normalized flag so mergeGeometries / mergeAttributes stay quiet.
     if (g.index) g = g.toNonIndexed();
     for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal' && name !== 'uv') g.deleteAttribute(name);
     if (!g.attributes.normal && g.attributes.position) g.computeVertexNormals();
@@ -2742,16 +2761,21 @@ export function createZones(scene, host) {
     for (const m of doomed) { if (seen.has(m)) continue; seen.add(m); if (m.parent) m.parent.remove(m); }
     caveChunks = caveChunks.filter(m => m.parent);
     for (const { mat, geos } of buckets.values()) {
-      const merged = tryMergeCaveGeos(geos); if (!merged) continue;
-      const nm = new THREE.Mesh(merged, mat);
-      merged.computeBoundingSphere();
-      const sph = merged.boundingSphere;
-      nm.userData.caveChunk = true; nm.userData.noCast = true; nm.userData.zoneWall = true;
-      nm.userData.chunkPos = sph ? sph.center.clone() : new THREE.Vector3();
-      nm.userData.chunkR = sph ? sph.radius : 12;
-      nm.userData.fogCull = (nm.userData.chunkR || 0) < 22; // leave huge ceiling/long walls drawn
-      nm.castShadow = false; nm.receiveShadow = true; nm.frustumCulled = true;
-      group.add(nm); caveChunks.push(nm);
+      // If merge still fails, keep the already-baked clones so the band is not dropped
+      // (sources were removed above).
+      const merged = tryMergeCaveGeos(geos);
+      const parts = merged ? [merged] : geos;
+      for (const geo of parts) {
+        const nm = new THREE.Mesh(geo, mat);
+        geo.computeBoundingSphere();
+        const sph = geo.boundingSphere;
+        nm.userData.caveChunk = true; nm.userData.noCast = true; nm.userData.zoneWall = true;
+        nm.userData.chunkPos = sph ? sph.center.clone() : new THREE.Vector3();
+        nm.userData.chunkR = sph ? sph.radius : 12;
+        nm.userData.fogCull = (nm.userData.chunkR || 0) < 22; // leave huge ceiling/long walls drawn
+        nm.castShadow = false; nm.receiveShadow = true; nm.frustumCulled = true;
+        group.add(nm); caveChunks.push(nm);
+      }
     }
   }
   function cullCaveChunks(cam) {
