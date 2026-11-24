@@ -578,9 +578,13 @@ export function createZones(scene, host) {
   const PANE_SRC = 0xddedf9, PANE_TINT = 0xe8eef8;
   function isFramedMirrorPane(mat, name) {
     const nm = name || '';
-    if (/framed-mirror$/i.test(nm) && !/framed-mirror_/i.test(nm)) return true;
+    const matName = (mat && mat.name) || '';
+    // GLTFLoader splits the 9-prim mesh into built-framed-mirror / _0 (glass)
+    // and _1+ (dark-wood / gold frame). Only the glass primitive is the pane.
+    if (/framed-mirror_[1-9]\d*$/i.test(nm)) return false;
+    if (/framed-mirror_0$/i.test(nm) || (/framed-mirror$/i.test(nm) && !/framed-mirror_/i.test(nm))) return true;
+    if (/^mirror$/i.test(matName) && /framed-mirror/i.test(nm)) return true;
     if (!mat || !mat.color || mat.map) return false;
-    if (/framed-mirror_\d/i.test(nm)) return false; // frame / wood parts
     const c = mat.color.getHex();
     const dr = Math.abs(((c >> 16) & 255) - ((PANE_SRC >> 16) & 255));
     const dg = Math.abs(((c >> 8) & 255) - ((PANE_SRC >> 8) & 255));
@@ -1122,7 +1126,7 @@ export function createZones(scene, host) {
   function decoInto(holder, key, size, o = {}) {
     loadGLB(key).then(g => {
       if (!g || !holder.parent) return;
-      const night = !!(recipe && recipe.night); const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { n.material = cavePaletteMat(lambertFrom(n.material, night ? { caveNight: true } : {})); n.material = tintMirrorPane(n, n.material, n.name); n.castShadow = false; } });
+      const night = !!(recipe && recipe.night); const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { const nm = [n.name, n.parent && n.parent.name].filter(Boolean).join(' / '); const pane = isFramedMirrorPane(n.material, nm); const src = lambertFrom(n.material, night ? { caveNight: true } : {}); n.material = pane ? src : cavePaletteMat(src); n.material = tintMirrorPane(n, n.material, nm); n.castShadow = false; } });
       const bb = new THREE.Box3().setFromObject(m), sz = bb.getSize(new THREE.Vector3()), L = o.byLong ? Math.max(sz.x, sz.y, sz.z) : sz.y; if (L < 1e-4) return;
       const k = size / L; m.scale.setScalar(k); const bb2 = new THREE.Box3().setFromObject(m), c = bb2.getCenter(new THREE.Vector3()); m.position.set(-c.x, -bb2.min.y + (o.sink || 0), -c.z);
       styleNew(m); holder.add(m); lodify(m, key); if (o.fallback) o.fallback.forEach(f => { f.visible = false; }); o.onLoad?.(m);
@@ -1144,8 +1148,11 @@ export function createZones(scene, host) {
         src.traverse(n => {
           if (!n.isMesh || !n.geometry) return;
           const geo = n.geometry.clone(); geo.applyMatrix4(n.matrixWorld);
-          const mat0 = cavePaletteMat(lambertFrom(n.material, night ? { caveNight: true } : {}));
-          parts.push({ geo, mat: mat0, name: n.name, pane: isFramedMirrorPane(mat0, n.name) });
+          const nm = [n.name, n.parent && n.parent.name].filter(Boolean).join(' / ');
+          const pane = isFramedMirrorPane(n.material, nm);
+          const srcMat = lambertFrom(n.material, night ? { caveNight: true } : {});
+          const mat0 = pane ? srcMat : cavePaletteMat(srcMat);
+          parts.push({ geo, mat: mat0, name: nm, pane });
         });
         if (!parts.length) { live.forEach(j => decoInto(j.H, key, j.size, j.o)); return; }
         const n = live.length;
@@ -1158,6 +1165,7 @@ export function createZones(scene, host) {
         for (const part of parts) {
           const mat1 = part.pane ? tintMirrorPane(null, part.mat, part.name) : part.mat;
           const im = new THREE.InstancedMesh(part.geo, mat1, n);
+          im.name = part.name || '';
           im.castShadow = false;
           if (part.pane) { im.userData.noMerge = true; im.userData.noPastel = true; im.receiveShadow = false; }
           mats.forEach((m, i) => im.setMatrixAt(i, m));
