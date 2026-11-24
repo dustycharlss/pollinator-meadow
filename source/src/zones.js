@@ -594,7 +594,7 @@ export function createZones(scene, host) {
       transparent: !!mat.transparent,
       opacity: mat.opacity,
       side: mat.side,
-      fog: true,
+      fog: false,
       toneMapped: true,
     });
     m.name = mat.name;
