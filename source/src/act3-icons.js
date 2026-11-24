@@ -138,25 +138,12 @@ export function createIconSheet(scene) {
           vec3 iconWorld = iconPos + camRight * (transformed.x * iconSx) + camUp * (transformed.y * iconSy);
           vec4 mvPosition = viewMatrix * vec4(iconWorld, 1.0);
           gl_Position = projectionMatrix * mvPosition;
+          vec4 worldPosition = vec4(iconWorld, 1.0);
           `,
         )
         .replace(
           '#include <worldpos_vertex>',
-          `
-#ifdef USE_FOG
-          vec3 wpRight = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
-          vec3 wpUp = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-#ifdef USE_INSTANCING
-          vec3 wpPos = instanceMatrix[3].xyz;
-          float wpSx = length(instanceMatrix[0].xyz);
-          float wpSy = length(instanceMatrix[1].xyz);
-#else
-          vec3 wpPos = vec3(0.0);
-          float wpSx = 1.0, wpSy = 1.0;
-#endif
-          worldPosition = vec4(wpPos + wpRight * (transformed.x * wpSx) + wpUp * (transformed.y * wpSy), 1.0);
-#endif
-          `,
+          '/* worldPosition set in project_vertex */',
         );
       sh.fragmentShader = sh.fragmentShader
         .replace('#include <common>', '#include <common>\nvarying float vIconOp;')
