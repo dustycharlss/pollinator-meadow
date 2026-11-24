@@ -3336,7 +3336,8 @@ export function createZones(scene, host) {
     if (!h) return;
     for (const c of Object.keys(h)) {
       const id = crewOfCls(c); if (!id || id === ctx.cur()) continue; const q = ctx.parked(id); if (!q) continue;
-      const [x, z, base] = h[c]; q.x = A.x + x; q.z = A.z + z; q.y = gy(x, z) + (base || 0) + 0.6; q.vx = q.vy = q.vz = 0; q._safe = { x: q.x, z: q.z }; q.goto = null; q.yaw = 0;
+      const v = h[c]; if (!Array.isArray(v)) continue;
+      const [x, z, base] = v; q.x = A.x + x; q.z = A.z + z; q.y = gy(x, z) + (base || 0) + 0.6; q.vx = q.vy = q.vz = 0; q._safe = { x: q.x, z: q.z }; q.goto = null; q.yaw = 0;
       fx(q.x, q.y + 0.6, q.z);
     }
   }
@@ -3388,7 +3389,8 @@ export function createZones(scene, host) {
     if (clsOfCur() === 'scout') { p.stam = 1; p.tired = false; } // little wings never get tired here
     if (!kid.init && t > 0.05) {
       const KS = recipe.kidStart || { me: [0.5, -3], scout: [-2.5, -3.5], bruiser: [3, -5.5] };
-      kid.init = true; herd({ scout: KS.scout, bruiser: KS.bruiser, trickster: KS.trickster }); p.x = A.x + KS.me[0]; p.z = A.z + KS.me[1]; p.y = gy(KS.me[0], KS.me[1]) + 0.5; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; p.yaw = 0; ctx.camYaw?.(0);
+      kid.init = true; herd({ scout: KS.scout, bruiser: KS.bruiser, trickster: KS.trickster });
+      if (Array.isArray(KS.me)) { p.x = A.x + KS.me[0]; p.z = A.z + KS.me[1]; p.y = gy(KS.me[0], KS.me[1]) + 0.5; p.vx = p.vy = p.vz = 0; p._safe = { x: p.x, z: p.z }; p.yaw = 0; ctx.camYaw?.(0); }
     }
     // gentle safety net: anyone who ends up outside the path pops back to the last safe spot
     const lx = p.x - A.x, lz = p.z - A.z;

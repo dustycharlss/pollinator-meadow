@@ -67,6 +67,7 @@ export function createNet(hooks = {}) {
   let lastEncoded = null;
   let lastAcked = null;
   let lastAckTick = 0;
+  let lastAppliedTick = -1; // -1: a fresh session's tick 0 is never dropped
   let lastHelloAt = 0;
   let pendingLoad = null;
   let loading = false;
@@ -336,8 +337,16 @@ export function createNet(hooks = {}) {
       return;
     }
     if (!dec) { lastSnapErr = lastSnapErr || 'decode-null'; return; }
+    // Drop stale / duplicate ticks (relay fan-out, delayed out-of-order).
+    // 16-bit wrap: "behind" if last-t is in (0, 32768). lastAppliedTick < 0
+    // means no snap has been applied this session, so tick 0 is kept.
+    if (lastAppliedTick >= 0) {
+      const behind = (lastAppliedTick - dec.tick) & 65535;
+      if (behind < 32768) return;
+    }
     lastSnapErr = null;
     snapRecv++;
+    lastAppliedTick = dec.tick;
     const st = mergeSnap(dec);
     const wall = typeof performance !== 'undefined' ? performance.now() : Date.now();
     recvBuf.push({ tHost: dec.hostTime, wall, state: st, tick: dec.tick });
@@ -914,6 +923,14 @@ export function createNet(hooks = {}) {
     ready = !!role;
   }
 
+  function resetClientSnapClock() {
+    // New session / room / reconnect / host change: never drop a fresh tick 0.
+    lastAppliedTick = -1;
+    recvBuf = [];
+    snapRecv = 0;
+    lastSnapErr = null;
+  }
+
   function syncRoleFlags() {
     net.isClient = role === 'client';
     net.isHost = role === 'host';
@@ -926,6 +943,9 @@ export function createNet(hooks = {}) {
     if (readNetRole()) return;
     const r = opts.role;
     if (!r) return;
+    resetClientSnapClock();
+    tick = 0;
+    lastAckTick = 0;
     role = r;
     syncRoleFlags();
     net.kind = opts.transport?.kind || opts.transport?.name || 'trystero';
@@ -946,6 +966,9 @@ export function createNet(hooks = {}) {
     if (readNetRole()) return;
     abortReadyWait();
     if (snapClock) { try { clearInterval(snapClock); } catch (e) {} snapClock = null; }
+    resetClientSnapClock();
+    tick = 0;
+    lastAckTick = 0;
     role = null;
     syncRoleFlags();
     connected = false;

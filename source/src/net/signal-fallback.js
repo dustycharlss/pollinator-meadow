@@ -121,6 +121,17 @@ function createNostrFallback(room, onMsg, { selfId } = {}) {
   let closed = false;
   const kind = topicKind(topic);
   const since = Math.max(0, Math.floor(Date.now() / 1000) - 30);
+  // Same event is delivered by each subscribed relay (~2.6× on cgnat). Dedupe
+  // on evnt.id with a bounded FIFO so onMsg runs once per event.
+  const SEEN_CAP = 1024;
+  const seen = new Map();
+  function alreadySeen(id) {
+    if (!id) return false;
+    if (seen.has(id)) return true;
+    seen.set(id, 1);
+    if (seen.size > SEEN_CAP) seen.delete(seen.keys().next().value);
+    return false;
+  }
 
   function attach(url) {
     let ws;
@@ -140,6 +151,7 @@ function createNostrFallback(room, onMsg, { selfId } = {}) {
         const evnt = parsed[2] || parsed[1];
         const content = evnt && evnt.content;
         if (!content) return;
+        if (alreadySeen(evnt.id)) return;
         const raw = JSON.parse(content);
         if (!raw || raw.from === selfId) return;
         const msg = openEnvelope(raw);
