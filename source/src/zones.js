@@ -1646,8 +1646,9 @@ export function createZones(scene, host) {
     },
     /** ghost platform: solid only while the sunbeam lands on it (shadow:true → while Bear's shadow covers it) */
     ghost(id, x, z, w, d, top, o = {}) {
-      const r = this.wall(x, z, w, d, top, { bot: o.bot ?? top - 0.6, c: o.shadow ? 0x6a5a9a : 0xfff0a0 }); r.s.off = true;
-      r.m.material = new THREE.MeshLambertMaterial({ color: o.shadow ? 0x8a7ad0 : 0xfff3b0, transparent: true, opacity: 0.25, emissive: o.shadow ? 0x2a2050 : 0x806a20, emissiveIntensity: 0.3, depthWrite: false });
+      const r = this.wall(x, z, w, d, top, { bot: o.bot ?? top - 0.6, c: o.shadow ? 0x6a5a9a : 0xcfe8ff }); r.s.off = true;
+      r.m.material = new THREE.MeshLambertMaterial({ color: o.shadow ? 0x8a7ad0 : 0xcfe8ff, transparent: true, opacity: 0.25, emissive: o.shadow ? 0x2a2050 : 0x8fc0f0, emissiveIntensity: 0.45, depthWrite: false });
+      r.m.userData.noMerge = true;
       const gh = { id, r, shadow: !!o.shadow, on: false, sig: (o.shadow ? 'shade:' : 'lit:') + id };
       if (o.cross) { gh.cr = { x0: A.x + x - w / 2, z0: A.z + z - d / 2, x1: A.x + x + w / 2, z1: A.z + z + d / 2, on: false, thin: false }; crossings.push(gh.cr); }
       AA().ghosts.push(gh);
@@ -2459,7 +2460,7 @@ export function createZones(scene, host) {
         }
       }
       for (let i = n; i < S.beamPool.length; i++) S.beamPool[i].visible = false;
-      for (const g of S.ghosts) { const want = g.shadow ? shade.has(g.id) : lit.has(g.id); if (want !== g.on) { g.on = want; g.r.s.off = !want; if (g.cr) g.cr.on = want; g.r.m.material.opacity = want ? 0.95 : 0.25; g.r.m.material.depthWrite = want; g.r.m.material.emissiveIntensity = want ? 0.6 : 0.3; if (want) { fx(g.r.m.position.x, g.r.m.position.y, g.r.m.position.z); tst(g.shadow ? '🌑 Bear\'s shadow made the bridge solid!' : '✨ The sunbeam made the ghost step solid!', 1500); } } setSig(g.sig, want); }
+      for (const g of S.ghosts) { const want = g.shadow ? shade.has(g.id) : lit.has(g.id); if (want !== g.on) { g.on = want; g.r.s.off = !want; if (g.cr) g.cr.on = want; g.r.m.material.opacity = want ? (g.shadow ? 0.95 : 0.72) : 0.25; g.r.m.material.depthWrite = want; g.r.m.material.emissiveIntensity = g.shadow ? (want ? 0.6 : 0.3) : 0.45; if (want) { fx(g.r.m.position.x, g.r.m.position.y, g.r.m.position.z); tst(g.shadow ? '🌑 Bear\'s shadow made the bridge solid!' : '✨ The sunbeam made the ghost step solid!', 1500); } } setSig(g.sig, want); }
     }
     // ---- water level: logs + turtle naps handled in enemies ----
     for (const L of S.logs) {
@@ -2651,10 +2652,19 @@ export function createZones(scene, host) {
     ctx.look?.setPatch?.(null);
     id = null; recipe = null; nightOn = false; dewPulseT = -99; nodesDone = 0; keyDew = 0;
   }
+  function asFloat32Attr(g, name) {
+    const attr = g.attributes[name];
+    if (!attr || !attr.array) return;
+    if (attr.array instanceof Float32Array) return;
+    g.setAttribute(name, new THREE.BufferAttribute(new Float32Array(attr.array), attr.itemSize, attr.normalized));
+  }
   function normCaveGeo(g) {
+    // All step-1 band geos must share index presence and Float32 attrs so mergeGeometries stays quiet.
+    if (g.index) g = g.toNonIndexed();
     for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal' && name !== 'uv') g.deleteAttribute(name);
     if (!g.attributes.normal && g.attributes.position) g.computeVertexNormals();
     if (!g.attributes.uv && g.attributes.position) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    asFloat32Attr(g, 'position'); asFloat32Attr(g, 'normal'); asFloat32Attr(g, 'uv');
     if (g.morphAttributes) g.morphAttributes = {};
     if (g.clearGroups) g.clearGroups();
     return g;

@@ -68,10 +68,20 @@ function nearest(aHex, eHex) {
 }
 
 /** Return cell-centre UV for a material, or null if we should keep the mesh separate. */
+// Authored cave stone / shadow stay on lavender cells (S148 / S149), never a gold neighbour like S147.
+const PIN = {
+  '9c8cc6': { u: 0.203125, v: 0.796875, id: 'S148' },
+  'c0b9d6': { u: 0.203125, v: 0.796875, id: 'S148' },
+  '5e5288': { u: 0.234375, v: 0.796875, id: 'S149' },
+  '8a7cb8': { u: 0.234375, v: 0.796875, id: 'S149' },
+  '8f82b8': { u: 0.234375, v: 0.796875, id: 'S149' },
+};
+
 export function swatchUV(mat) {
   if (!mat || mat.map || (mat.transparent && mat.opacity < 0.97)) return null;
   const a = rgbToHex(mat.color);
   const e = (mat.emissive && mat.emissive.getHex && mat.emissive.getHex() > 0) ? rgbToHex(mat.emissive) : '';
+  if (PIN[a]) return PIN[a];
   const s = nearest(a, e);
   return s ? { u: s.u, v: s.v, id: s.id } : null;
 }
