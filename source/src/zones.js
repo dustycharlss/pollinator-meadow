@@ -1216,13 +1216,57 @@ export function createZones(scene, host) {
     }
     return Promise.all(pending);
   }
+  /** Fold a worn-gear GLB into one mesh per material (atlas swatch when possible), in the
+   *  holder's local space, so the pebble sling is ~4 draws instead of 12. Meshes stay
+   *  parented to the follow group (Bear / Bee / Raccoon), never baked into origin caveChunks. */
+  function mergeGearMeshes(root, { skip } = {}) {
+    if (!root) return 0;
+    root.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), rel = new THREE.Matrix4();
+    const buckets = new Map(), drop = [];
+    root.traverse(m => {
+      if (!m.isMesh || m.isInstancedMesh || m.isSkinnedMesh || !m.geometry) return;
+      if (m.userData.noMerge || m.userData.atlasMerged) return;
+      if (skip && skip(m)) return;
+      const mat = Array.isArray(m.material) ? null : m.material; if (!mat) return;
+      rel.multiplyMatrices(inv, m.matrixWorld);
+      const geo = normCaveGeo(m.geometry.clone());
+      geo.applyMatrix4(rel);
+      const uv = swatchUV(mat);
+      if (uv) writeAtlasUV(geo, uv);
+      const basic = !!mat.isMeshBasicMaterial, ds = mat.side === THREE.DoubleSide;
+      // One atlas material can hold many swatches (UVs already stamped), so key by
+      // atlas-vs-unique + shading flags, not swatch id — otherwise the sling stays ~6–7 draws.
+      const key = (uv ? 'atlas' : caveMatKey(mat)) + (basic ? ':b' : '') + (ds ? ':ds' : '');
+      const useMat = uv ? atlasMaterial({ basic, doubleSide: ds }) : mat;
+      const L = buckets.get(key) || { mat: useMat, geos: [] };
+      L.geos.push(geo); buckets.set(key, L); drop.push(m);
+    });
+    if (!drop.length) return 0;
+    let n = 0;
+    for (const { mat, geos } of buckets.values()) {
+      const merged = tryMergeCaveGeos(geos);
+      const parts = merged ? [merged] : geos;
+      for (const geo of parts) {
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.name = 'gearMerged';
+        mesh.castShadow = false; mesh.receiveShadow = true;
+        mesh.userData.noMerge = true; mesh.userData.atlasMerged = true; mesh.userData.isGearViz = true;
+        root.add(mesh); n++;
+      }
+    }
+    for (const m of drop) { if (m.parent) m.parent.remove(m); }
+    return n;
+  }
   function gearModel(k, holder, fallback, onLoad) {
     const I = GEAR_INFO[k]; if (!I.glb) return;
     loadGLB(I.glb).then(g => {
       if (!g || !holder.parent) return;
       const o = g.scene.clone(true); o.traverse(m => { if (m.isMesh) { const tr = m.material && m.material.transparent; m.material = lambertFrom(m.material); if (tr) { m.material.transparent = true; m.material.opacity = 0.7; m.material.depthWrite = false; } m.castShadow = false; } });
       const sz = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3()), L = Math.max(sz.x, sz.y, sz.z); if (L < 1e-4) return;
-      o.scale.setScalar(I.size / L); styleNew(o); holder.add(o); lodify(o, I.glb); if (fallback) fallback.visible = false; holder.userData.model = o; onLoad?.(o);
+      o.scale.setScalar(I.size / L); styleNew(o); holder.add(o);
+      mergeGearMeshes(o, { skip: m => k === 'pouch' && /^bubble/i.test(m.name || '') });
+      lodify(o, I.glb); if (fallback) fallback.visible = false; holder.userData.model = o; onLoad?.(o);
     });
   }
   // timed-window multiplier (default 1). A later easy mode sets it (e.g. 1.5 → the 6 s gusts last 9 s): zones.setTiming(k) or ctx.timing()
@@ -2204,7 +2248,7 @@ export function createZones(scene, host) {
     V.glider = new THREE.Group(); const lf = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.06, 1.3), mat(0x6fbf4a, 0.15)); V.glider.add(lf, bx(0.08, 0.08, 1.4, 0x3f8a35, 0, 0.04, 0), bx(0.06, 0.9, 0.06, 0x8b6a45, 0, -0.45, 0)); for (const sx of [-1, 1]) V.glider.add(bx(0.7, 0.05, 0.9, 0x5fae4a, sx * 1.25, 0.08, -0.1));
     V.sling = new THREE.Group(); V.sling.add(bx(0.1, 0.5, 0.1, 0x8b5a2b, 0, 0, 0), bx(0.08, 0.36, 0.08, 0x8b5a2b, -0.12, 0.38, 0), bx(0.08, 0.36, 0.08, 0x8b5a2b, 0.12, 0.38, 0), bx(0.34, 0.04, 0.04, 0xe5485a, 0, 0.52, 0), bx(0.14, 0.14, 0.14, 0xffe680, 0, 0.52, -0.08, 0.6));
     for (const k of ['pouch', 'glider', 'sling']) {
-      V[k].visible = false; group.add(V[k]);
+      V[k].visible = false; V[k].userData.isGearViz = true; group.add(V[k]);
       const H = new THREE.Group(); V[k].add(H); const fb = V[k].children.filter(c => c !== H);
       const box = { visible: true }; Object.defineProperty(box, 'visible', { set(v) { fb.forEach(c => { if (c !== V.bub) c.visible = v; }); } });
       gearModel(k, H, box, o => { if (k === 'pouch') { V.bubM = []; o.traverse(n => { if (/^bubble/.test(n.name)) V.bubM.push(n); }); V.bub.visible = false; V.bubOff = true; }
