@@ -575,7 +575,7 @@ export function createZones(scene, host) {
   // merge. Lambert lighting left a dark left half, so the official-box median
   // stayed at gray ΔE 9.1 (Y 46). Use unlit MeshBasic so the whole visible pane
   // lifts together and the official boxes can reach gray ΔE ≥ 12.
-  const PANE_SRC = 0xddedf9, PANE_TINT = 0xd4dcec;
+  const PANE_SRC = 0xddedf9, PANE_TINT = 0xe8eef8;
   function isFramedMirrorPane(mat, name) {
     const nm = name || '';
     if (/framed-mirror$/i.test(nm) && !/framed-mirror_/i.test(nm)) return true;
