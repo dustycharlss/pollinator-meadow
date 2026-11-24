@@ -1616,6 +1616,22 @@ export function createZones(scene, host) {
     },
     /** decor model on the ground (no collider) */
     deco(key, x, z, size = 1, o = {}) { const w = L2W(x, z, o.h || 0), H = new THREE.Group(); H.position.set(w.x, w.y, w.z); H.rotation.y = o.yaw || 0; group.add(H); if (!decoBatching) { decoInto(H, key, size, o); return H; } const job = { H, size, o }; const L = decoJobs.get(key) || []; L.push(job); decoJobs.set(key, L); return H; },
+    fillLight(x, z, h, o = {}) { const w = L2W(x, z, h), L = new THREE.PointLight(o.color || 0xffe2c4, o.intensity ?? 1.55, o.dist ?? 14, o.decay ?? 2); L.position.set(w.x, w.y, w.z); group.add(L); return L; },
+    scatterRocks(pts, o = {}) {
+      if (!pts || !pts.length) return null;
+      const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mat(o.c || 0x5e5288), pts.length), M = new THREE.Matrix4();
+      const P = new THREE.Vector3(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0);
+      pts.forEach((pt, i) => { const w = L2W(pt[0], pt[1]), sy = pt[3] || 1; P.set(w.x, w.y + sy / 2, w.z); Q.setFromAxisAngle(Y, pt[5] || 0); S.set(pt[2] || 1, sy, pt[4] || 1); M.compose(P, Q, S); im.setMatrixAt(i, M); });
+      im.instanceMatrix.needsUpdate = true; im.castShadow = false; group.add(im); return im;
+    },
+    scatterStalactites(pts, o = {}) {
+      if (!pts || !pts.length) return null;
+      const im = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 6), mat(o.c || 0x8a7cb8), pts.length), M = new THREE.Matrix4();
+      const P = new THREE.Vector3(), Q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI), S = new THREE.Vector3();
+      const y0 = o.y != null ? o.y : 9.2;
+      pts.forEach((pt, i) => { const w = L2W(pt[0], pt[1]), h = pt[3] || 1.4; P.set(w.x, baseY + y0 - h / 2, w.z); S.set(pt[2] || 0.45, h, pt[2] || 0.45); M.compose(P, Q, S); im.setMatrixAt(i, M); });
+      im.instanceMatrix.needsUpdate = true; im.castShadow = false; im.receiveShadow = true; group.add(im); return im;
+    },
     sprinkler(id, x, z, o = {}) { const e = enemy('sprinkler', id, x, z, { r: o.r || 7, beam: o.beam || 0.22, ...o }); e.cone = coneMesh(e.o.r, e.o.beam, 0x7fd8ff); e.F.add(e.cone); e.F.rotation.y = e.baseYaw; e.grace = o.grace ?? 0.45; if (o.high) { const H = Math.min(o.high, 8), cg = new THREE.PlaneGeometry(e.o.r, H).rotateY(Math.PI / 2); cg.translate(0, H / 2, e.o.r / 2); const cur = new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ color: 0x9fe4ff, transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide })); e.cone.add(cur); for (let i = 0; i < 9; i++) { const k = (i + 1) / 10, d = bx(0.34, 0.34, 0.34, 0xbfeeff, 0, 0.6 + H * 0.9 * Math.sin(Math.PI * k * 0.85), e.o.r * k); d.material = new THREE.MeshBasicMaterial({ color: 0xbfeeff, transparent: true, opacity: 0.8 }); e.cone.add(d); } } return e; },
     mower(id, x0, x1, z, o = {}) { const e = enemy('mower', id, x0, z, { x0, x1, period: o.period || 9, dur: o.dur || 3.2, yaw: Math.PI / 2, ...o }); e.grace = 0.05; const L = Math.abs(x1 - x0), m = new THREE.Mesh(new THREE.PlaneGeometry(L + 2, 2.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff6a3a, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); const w = L2W((x0 + x1) / 2, z); m.position.set(w.x, w.y + 0.1, w.z); group.add(m); e.lane = m; return e; },
     gravel(x0, z0, x1, z1) { const S = AA(); S.gravel.push({ x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1 }); const w = L2W((x0 + x1) / 2, (z0 + z1) / 2); const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.08, z1 - z0), mat(0xb8b0a0)); m.position.set(w.x, w.y + 0.05, w.z); group.add(m); for (let i = 0; i < 14; i++) { const s = bx(0.3, 0.15, 0.3, 0x8a8478, w.x + (Math.sin(i * 7.1) * 0.5) * (x1 - x0), w.y + 0.1, w.z + (Math.cos(i * 3.3) * 0.5) * (z1 - z0)); group.add(s); } },
