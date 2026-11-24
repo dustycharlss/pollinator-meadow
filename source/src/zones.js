@@ -1422,9 +1422,10 @@ export function createZones(scene, host) {
     resetEscorts(cp);
     if (S.master) S.master.coolUntil = 0; // S4 §1.6: bonk does not reset the Master Bell; cooldown clears so they can ring at once
     if ((S.acorns || []).some(a => a.by === ctx.cur())) acornBack();
-    fx(p.x, p.y + 0.6, p.z); ctx.audio?.sample?.(src === 'ember' || (S.escorts || []).length ? 'act3/gentle-bonk-poof' : 'ui/error-bonk', 0.5); // Act 3: the gentle poof
+    fx(p.x, p.y + 0.6, p.z); ctx.audio?.sample?.(src === 'ember' || src === 'pit' || (S.escorts || []).length ? 'act3/gentle-bonk-poof' : 'ui/error-bonk', 0.5); // Act 3: the gentle poof
     emitNet('bonk', { body: ctx.cur(), src: src || (e && e.name) || '?', warp: src === 'escort' ? ctx.crewIds().slice() : [ctx.cur()] });
     if (src === 'ember') { tst('💨 Puff! Soot on your nose — poof, back to the 🚩 flag. Douse embers with a 🫧 bubble, or ring 🌱 spring to dim them', 2600); return; }
+    if (src === 'pit') { tst('💨 Whoops! That drop is too steep — poof, back to the 🚩 flag. Light the ghost bridge first', 2600); return; }
     tst(src === 'escort' ? `💫 Bonk! The ${e.name} reached the little one — poof, back to the 🚩 flag` : `💫 Bonk! The ${e.name} spotted you — poof, back to the 🚩 flag`, 2400);
   }
   function updEnemies(dt, cam, p, cur) {
@@ -2257,7 +2258,7 @@ export function createZones(scene, host) {
       : new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.28), mat(0xffe680, 0.7));
     m.position.set(p.x, p.y + 1.1, p.z); group.add(m);
     if (o.ty != null) by = o.ty;
-    S.shots.push({ kind: k, m, ax: p.x, ay: p.y + 1.1, az: p.z, bx: bx2, by, bz, x: p.x, y: p.y + 1.1, z: p.z, t: 0, t0: t, dur: o.dur || 0.55, landed: false, dead: false, src: o.src || 'tool' });
+    S.shots.push({ kind: k, m, ax: p.x, ay: p.y + 1.1, az: p.z, bx: bx2, by, bz, x: p.x, y: p.y + 1.1, z: p.z, t: 0, t0: t, dur: o.dur || 0.55, landed: false, dead: false, src: o.src || 'tool', hitMir: !!o.hitMir });
     if (!o.src) S.heldTool = null; tst(o.msg || (k === 'bubble' ? '🫧 Bubble shot!' : '✨ Shiny pebble thrown!'), 1200); ctx.audio?.blip?.(3);
     return true;
   }
@@ -2534,6 +2535,13 @@ export function createZones(scene, host) {
     }
     for (const gf of S.gifts) { if (gf.got) continue; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; const GI = GEAR_INFO[gf.kind], gc = GI.cls; gear[gf.kind] = true; gear[eqK(gf.kind)] = true; (gear.slot ||= {})[gc] = gf.kind; if (S.borrow && S.borrow.slot) S.borrow.slot[gc] = gf.kind; gearSave(); if (gf.kind === 'whistle') S.pingNext = t; setSig('gift:' + gf.kind); if (ALIAS_OF[gf.kind]) setSig('gift:' + ALIAS_OF[gf.kind]); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GI.em} You found the ${GI.name}! Tap ${GI.em} on the ${CLASSES[gc].name}'s picture (or G) to switch it on/off${GEAR_BY_CLS[gc].length > 1 ? ' · swap gear at a 🧰 gear stump' : ''}`, 4200); } }
     for (const pr of props) if (pr.kind === 'web' && !pr.done && c === 'scout' && !S.stuck && t > S.safeT && Math.abs(p.x - pr.x) < pr.ww / 2 + 0.6 && Math.abs(p.z - pr.z) < 1.3 && p.y - pr.y < pr.wh) { S.stuck = { who: cur, x: p.x, y: p.y, z: p.z, until: t + 3 }; if (pr.spider) pr.spider.look = { x: pr.x, z: pr.z, until: t + 3.5 }; tst('🕸️ Stuck in the web for 3 seconds!', 1800); }
+    // L20-R03: recipe.pits are shallow (2 m) and walkable; treat them as a kill-plane unless a lit ghost crossing is underfoot. Same cp-respawn path as ember/enemy bonk. Do not deepen the terrain.
+    if (recipe && recipe.pits && t > (S.safeT || 0)) {
+      const lx = p.x - A.x, lz = p.z - A.z;
+      let inPit = false;
+      for (const r of recipe.pits) if (lx >= r[0] && lx <= r[2] && lz >= r[1] && lz <= r[3]) { inPit = true; break; }
+      if (inPit && !crossings.some(c => c.on && inRect(p.x, p.z, c))) bonk({ name: 'chasm' }, 'pit');
+    }
   }
   function a2Update(dt, cam, p, cur) {
 
