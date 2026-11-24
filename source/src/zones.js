@@ -2535,12 +2535,16 @@ export function createZones(scene, host) {
     }
     for (const gf of S.gifts) { if (gf.got) continue; if (flatD(gf, p) < 1.8 && Math.abs(p.y - gf.y) < 2.2) { gf.got = true; gf.G.visible = false; const GI = GEAR_INFO[gf.kind], gc = GI.cls; gear[gf.kind] = true; gear[eqK(gf.kind)] = true; (gear.slot ||= {})[gc] = gf.kind; if (S.borrow && S.borrow.slot) S.borrow.slot[gc] = gf.kind; gearSave(); if (gf.kind === 'whistle') S.pingNext = t; setSig('gift:' + gf.kind); if (ALIAS_OF[gf.kind]) setSig('gift:' + ALIAS_OF[gf.kind]); ctx.onGear?.(); ctx.audio?.music?.jingle?.('stage') || ctx.audio?.chime?.(); tst(`${GI.em} You found the ${GI.name}! Tap ${GI.em} on the ${CLASSES[gc].name}'s picture (or G) to switch it on/off${GEAR_BY_CLS[gc].length > 1 ? ' · swap gear at a 🧰 gear stump' : ''}`, 4200); } }
     for (const pr of props) if (pr.kind === 'web' && !pr.done && c === 'scout' && !S.stuck && t > S.safeT && Math.abs(p.x - pr.x) < pr.ww / 2 + 0.6 && Math.abs(p.z - pr.z) < 1.3 && p.y - pr.y < pr.wh) { S.stuck = { who: cur, x: p.x, y: p.y, z: p.z, until: t + 3 }; if (pr.spider) pr.spider.look = { x: pr.x, z: pr.z, until: t + 3.5 }; tst('🕸️ Stuck in the web for 3 seconds!', 1800); }
-    // L20-R03: recipe.pits are shallow (2 m) and walkable; treat them as a kill-plane unless a lit ghost crossing is underfoot. Same cp-respawn path as ember/enemy bonk. Do not deepen the terrain.
+    // L20-R03: the wide chasms under ghost crossings are only 2 m deep and were walkable. Kill-plane + existing bonk/cp-respawn unless a lit crossing is underfoot. Do not deepen the terrain. Small decorative center dips (no ghost crossing) stay walkable so the official mechanic camera at z=8 and the lane past them still work.
     if (recipe && recipe.pits && t > (S.safeT || 0)) {
       const lx = p.x - A.x, lz = p.z - A.z;
-      let inPit = false;
-      for (const r of recipe.pits) if (lx >= r[0] && lx <= r[2] && lz >= r[1] && lz <= r[3]) { inPit = true; break; }
-      if (inPit && !crossings.some(c => c.on && inRect(p.x, p.z, c))) bonk({ name: 'chasm' }, 'pit');
+      let inChasm = false;
+      for (const r of recipe.pits) {
+        if (!(lx >= r[0] && lx <= r[2] && lz >= r[1] && lz <= r[3])) continue;
+        const x0 = A.x + r[0], z0 = A.z + r[1], x1 = A.x + r[2], z1 = A.z + r[3];
+        if (crossings.some(c => x0 < c.x1 && x1 > c.x0 && z0 < c.z1 && z1 > c.z0)) { inChasm = true; break; }
+      }
+      if (inChasm && !crossings.some(c => c.on && inRect(p.x, p.z, c))) bonk({ name: 'chasm' }, 'pit');
     }
   }
   function a2Update(dt, cam, p, cur) {
