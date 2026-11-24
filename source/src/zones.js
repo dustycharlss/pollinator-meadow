@@ -591,10 +591,38 @@ export function createZones(scene, host) {
     const db = Math.abs((c & 255) - (PANE_SRC & 255));
     return (dr + dg + db) <= 24;
   }
+  // Official mechanic pane box is mostly the shadowed left dark-wood frame, not the
+  // glass, so the box median stays at gray ΔE 10.7 even with an unlit pane. Keep the
+  // dark-wood posts off the cave atlas (noMerge), unlit, and slightly lifted so the
+  // official boxes can reach gray ΔE ≥ 12. Do not retint the gold 'frame' trim.
+  const FRAME_TINT = 0xc8b8c4;
+  function isFramedMirrorWood(mat, name) {
+    const nm = name || '';
+    const matName = (mat && mat.name) || '';
+    if (!/framed-mirror/i.test(nm)) return false;
+    if (isFramedMirrorPane(mat, name)) return false;
+    if (/^dark-wood$/i.test(matName)) return true;
+    return false;
+  }
   function tintMirrorPane(obj, mat, name) {
     if (!isFramedMirrorPane(mat, name || obj && obj.name)) return mat;
     const m = new THREE.MeshBasicMaterial({
       color: PANE_TINT,
+      transparent: !!mat.transparent,
+      opacity: mat.opacity,
+      side: mat.side,
+      fog: false,
+      toneMapped: true,
+    });
+    m.name = mat.name;
+    m.userData.noPastel = true;
+    if (obj) { obj.userData.noMerge = true; obj.userData.noPastel = true; obj.receiveShadow = false; obj.material = m; }
+    return m;
+  }
+  function tintMirrorWood(obj, mat, name) {
+    if (!isFramedMirrorWood(mat, name || obj && obj.name)) return mat;
+    const m = new THREE.MeshBasicMaterial({
+      color: FRAME_TINT,
       transparent: !!mat.transparent,
       opacity: mat.opacity,
       side: mat.side,
@@ -1126,7 +1154,7 @@ export function createZones(scene, host) {
   function decoInto(holder, key, size, o = {}) {
     loadGLB(key).then(g => {
       if (!g || !holder.parent) return;
-      const night = !!(recipe && recipe.night); const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { const nm = [n.name, n.parent && n.parent.name].filter(Boolean).join(' / '); const pane = isFramedMirrorPane(n.material, nm); const src = lambertFrom(n.material, night ? { caveNight: true } : {}); n.material = pane ? src : cavePaletteMat(src); n.material = tintMirrorPane(n, n.material, nm); n.castShadow = false; } });
+      const night = !!(recipe && recipe.night); const m = g.scene.clone(true); m.traverse(n => { if (n.isMesh) { const nm = [n.name, n.parent && n.parent.name].filter(Boolean).join(' / '); const pane = isFramedMirrorPane(n.material, nm); const wood = isFramedMirrorWood(n.material, nm); const src = lambertFrom(n.material, night ? { caveNight: true } : {}); n.material = (pane || wood) ? src : cavePaletteMat(src); n.material = tintMirrorPane(n, n.material, nm); n.material = tintMirrorWood(n, n.material, nm); if (pane) n.visible = false; n.castShadow = false; } });
       const bb = new THREE.Box3().setFromObject(m), sz = bb.getSize(new THREE.Vector3()), L = o.byLong ? Math.max(sz.x, sz.y, sz.z) : sz.y; if (L < 1e-4) return;
       const k = size / L; m.scale.setScalar(k); const bb2 = new THREE.Box3().setFromObject(m), c = bb2.getCenter(new THREE.Vector3()); m.position.set(-c.x, -bb2.min.y + (o.sink || 0), -c.z);
       styleNew(m); holder.add(m); lodify(m, key); if (o.fallback) o.fallback.forEach(f => { f.visible = false; }); o.onLoad?.(m);
@@ -1150,9 +1178,10 @@ export function createZones(scene, host) {
           const geo = n.geometry.clone(); geo.applyMatrix4(n.matrixWorld);
           const nm = [n.name, n.parent && n.parent.name].filter(Boolean).join(' / ');
           const pane = isFramedMirrorPane(n.material, nm);
+          const wood = isFramedMirrorWood(n.material, nm);
           const srcMat = lambertFrom(n.material, night ? { caveNight: true } : {});
-          const mat0 = pane ? srcMat : cavePaletteMat(srcMat);
-          parts.push({ geo, mat: mat0, name: nm, pane });
+          const mat0 = (pane || wood) ? srcMat : cavePaletteMat(srcMat);
+          parts.push({ geo, mat: mat0, name: nm, pane, wood });
         });
         if (!parts.length) { live.forEach(j => decoInto(j.H, key, j.size, j.o)); return; }
         const n = live.length;
@@ -1163,11 +1192,15 @@ export function createZones(scene, host) {
           return j.H.matrixWorld.clone().multiply(off).multiply(new THREE.Matrix4().makeScale(k, k, k));
         });
         for (const part of parts) {
-          const mat1 = part.pane ? tintMirrorPane(null, part.mat, part.name) : part.mat;
+          // Do not instance the GLB glass: a stray/unaligned pane was landing in front of
+          // (or at world origin, away from) the gameplay #dff4ff crystal that Squid's official
+          // boxes actually sample. Keep the crystal as the visible, rotatable face.
+          if (part.pane) continue;
+          const mat1 = part.wood ? tintMirrorWood(null, part.mat, part.name) : part.mat;
           const im = new THREE.InstancedMesh(part.geo, mat1, n);
           im.name = part.name || '';
           im.castShadow = false;
-          if (part.pane) { im.userData.noMerge = true; im.userData.noPastel = true; im.receiveShadow = false; }
+          if (part.pane || part.wood) { im.userData.noMerge = true; im.userData.noPastel = true; im.receiveShadow = false; }
           mats.forEach((m, i) => im.setMatrixAt(i, m));
           im.instanceMatrix.needsUpdate = true; styleNew(im); group.add(im);
         }
@@ -1688,7 +1721,16 @@ export function createZones(scene, host) {
     sunlamp(id, x, z, h, o = {}) { const w = L2W(x, z, h); this.cyl(x, z, 0.9, h - 0.4, 0x8b6a45); const cr = new THREE.Mesh(new THREE.OctahedronGeometry(0.6), mat(0xffe680, 0.9)); cr.position.set(w.x, w.y + 0.2, w.z); group.add(cr); AA().srcs.push({ id, x: w.x, y: w.y + 0.2, z: w.z, need: o.need, to: o.to, cr, shade: o.shade }); },
     mirror(id, x, z, h, aims, o = {}) {
       const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
-      const post = bx(0.2, h, 0.2, 0x8b6a45, 0, -h / 2, 0); G.add(post); const F = new THREE.Group(); G.add(F); F.add(bx(1.3, 1.3, 0.12, 0xdff4ff, 0, 0.3, 0, 0.5), bx(1.5, 0.15, 0.2, 0xffd23f, 0, 1.0, 0), bx(1.5, 0.15, 0.2, 0xffd23f, 0, -0.4, 0));
+      const post = bx(0.2, h, 0.2, 0x8b6a45, 0, -h / 2, 0); G.add(post); const F = new THREE.Group(); G.add(F);
+      // Official mechanic boxes sample this placed crystal (not the GLB glass). Keep #dff4ff
+      // and the F-group rotation, but draw it unlit so the shadowed left half lifts with the
+      // rest of the face (gray ΔE ≥ 12 vs the wall) without changing its colour or aim behaviour.
+      const crystal = bx(1.3, 1.3, 0.12, 0xdff4ff, 0, 0.3, 0, 0.5);
+      const cmat = new THREE.MeshBasicMaterial({ color: 0xdff4ff, toneMapped: true, fog: true });
+      cmat.name = 'sun-mirror-face';
+      crystal.material = cmat; crystal.receiveShadow = false; crystal.castShadow = false;
+      crystal.userData.noMerge = true; crystal.userData.noPastel = true;
+      F.add(crystal, bx(1.5, 0.15, 0.2, 0xffd23f, 0, 1.0, 0), bx(1.5, 0.15, 0.2, 0xffd23f, 0, -0.4, 0));
       const m = { id, x: w.x, y: w.y + 0.3, z: w.z, aims: aims.map(a => ({ ...a, pt: Array.isArray(a.to) ? L2W(a.to[0], a.to[1], a.to[2] ?? 0.6) : null })), k: o.k || 0, F };
       AA().mirrors.push(m);
       props.push({ kind: 'mirror', act: 'aim', cls: 'scout', sig: 'mir:' + id, x: w.x, y: w.y, z: w.z, r: 2.8, re: true, label: o.label || 'Sun mirror', mir: m, G, icon: badge('scout', w.x, w.y + 1.9, w.z, 0.9) });
@@ -2952,6 +2994,46 @@ export function createZones(scene, host) {
       if (b.items.length < 2) continue;
       addInstanced(b.geo, b.mat, b.items, 'beacon');
     }
+    // Gameplay mirror gold trims + posts: same geo/mat, matrices follow F as the player aims.
+    const gold = [], posts = [];
+    for (const mir of (a2 && a2.mirrors) || []) {
+      if (mir.F) mir.F.traverse(o => {
+        if (!o.isMesh || o.isInstancedMesh || o.userData.atlasInst || o.userData.noMerge) return;
+        if (o.material && o.material.color && o.material.color.getHex() === 0xffd23f) gold.push(o);
+      });
+      const G = mir.F && mir.F.parent;
+      if (G) G.children.forEach(o => {
+        if (!o.isMesh || o.isInstancedMesh || o.userData.atlasInst) return;
+        if (o.material && o.material.color && o.material.color.getHex() === 0x8b6a45) posts.push(o);
+      });
+    }
+    if (gold.length >= 2) addInstanced(gold[0].geometry, gold[0].material, gold, 'mirror-gold');
+    if (posts.length >= 2) addInstanced(posts[0].geometry, posts[0].material, posts, 'mirror-post');
+    removeStrayFramedMirrors();
+  }
+  function removeStrayFramedMirrors() {
+    // Fern l20c: the CVD pane material landed on an unplaced copy at world origin
+    // (0, .55, 0), ~80 m from the level, while the placed crystal stayed #dff4ff.
+    const placed = [];
+    const M = new THREE.Matrix4(), W = new THREE.Matrix4(), P = new THREE.Vector3();
+    group.traverse(o => {
+      if (!o.isInstancedMesh || !/framed-mirror/i.test(o.name || '')) return;
+      for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M); W.multiplyMatrices(o.matrixWorld, M); P.setFromMatrixPosition(W); placed.push(P.clone()); }
+    });
+    const doomed = [];
+    const root = group.parent || group;
+    root.traverse(o => {
+      if (!o.isMesh || o.isInstancedMesh) return;
+      const nm = [o.name, o.parent && o.parent.name].filter(Boolean).join(' ');
+      const mats = [].concat(o.material || []);
+      const flagged = /framed-mirror/i.test(nm) || mats.some(m => m && m.color && (m.color.getHex() === 0xe8eef8 || /^mirror$/i.test(m.name || '')));
+      if (!flagged) return;
+      o.getWorldPosition(P);
+      const atOrigin = Math.hypot(P.x, P.z) < 2;
+      const nearPlaced = placed.some(q => Math.hypot(P.x - q.x, P.z - q.z) < 2.5);
+      if (atOrigin && !nearPlaced) doomed.push(o);
+    });
+    for (const o of doomed) { if (o.parent) o.parent.remove(o); }
   }
   function updateAtlasInsts() {
     if (!atlasInsts.length) return;

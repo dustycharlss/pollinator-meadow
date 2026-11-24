@@ -648,7 +648,7 @@ export const MAPS3 = {
         { to: [10, 14, 0.4] },
         { lights: 'gA', to: [0, 18, 0.5] },
       ], { k: 0, label: 'Far crystal' });
-      B.deco('act3/mirror-caves/built-framed-mirror', 6, 14, 2.2, { h: 1.4, yaw: -Math.PI / 2 });
+      B.deco('act3/mirror-caves/built-framed-mirror', 6, 14, 2.2, { h: 2.3, yaw: -Math.PI / 2 }); // align frame with gameplay crystal at gy+2.3
       // Wide, thin ghost dock through the chasm and a little into the gallery so a 40-frame walk from z=16 clears z=22. boost: a gentle crystal current (needed so Bear's 7.8 m/s covers 6 m in 0.67 s).
       B.ghost('gA', 0, 18, 10, 8, 2.5, { bot: 2.15, cross: true, boost: 8 });
       // muted fill pond in the east nook (no default emissive water); regex-visible to fillPouch
