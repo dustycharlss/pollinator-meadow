@@ -10,8 +10,8 @@ import { buildNests } from './nests.js';
 import { createInput, composeSources } from './input.js';
 import { createSlots } from './slots.js';
 import { createNet } from './net/session.js';
-import { isOnlineDev, canShowFriendsStation } from './net/flags.js';
-import { createLobby } from './net/lobby.js';
+import { ONLINE_ENABLED, isOnlineDev, canShowFriendsStation } from './net/flags.js';
+import { createLobby, ANIMAL_OF } from './net/lobby.js';
 import { createLevelFlow } from './net/level-flow.js';
 import { installOnlineArt } from './net/art.js';
 import { emoteOf, EMOTE_SHOW } from './net/emotes.js';
@@ -204,15 +204,6 @@ let ringK = 1, ringR = 1.4;
 function viewTiers(id) { return shopOpen && id === cur ? shopPv : save.gear[id].t; }
 function updateRing(p, sp, t, dt) {
   if (!ringMesh) return;
-  if (skipCustomShaders() || !ringMesh.material.uniforms) {
-    const target = Math.min(1, p.carried / abOf(cur).cap);
-    ringShown += (target - ringShown) * Math.min(1, dt * 9);
-    ringK += (ringMult(viewTiers(cur)[0]) - ringK) * Math.min(1, dt * 8);
-    const R = (0.3 * sp.size + 1.05) * ringK, Q = R * 1.45; ringR = R;
-    ringMesh.visible = playing; ringMesh.position.set(p.x, (p.floorY ?? p.y) + 0.1, p.z); ringMesh.scale.setScalar(Q);
-    ringMesh.material.opacity = 0.45 + 0.4 * ringShown;
-    return;
-  }
   const u = ringMesh.material.uniforms, target = Math.min(1, p.carried / abOf(cur).cap), full = p.carried >= abOf(cur).cap ? 1 : 0;
   ringShown += (target - ringShown) * Math.min(1, dt * 9); if (Math.abs(target - ringShown) < 0.002) ringShown = target;
   ringK += (ringMult(viewTiers(cur)[0]) - ringK) * Math.min(1, dt * 8); const R = (0.3 * sp.size + 1.05) * ringK, Q = R * 1.45; ringR = R;
@@ -239,16 +230,6 @@ function buildStamRing() {
 }
 function updateStamRing(p, sp, t, dt) {
   if (!stamMesh) return;
-  if (skipCustomShaders() || !stamMesh.material.uniforms) {
-    const fly = !!(sp.mv && sp.mv.fly);
-    const target = fly ? Math.max(0, Math.min(1, p.stam)) : 1;
-    stamShown += (target - stamShown) * Math.min(1, dt * 10);
-    const R = ringR + 0.28, Q = R * 1.45;
-    stamMesh.visible = playing && fly;
-    stamMesh.position.set(p.x, (p.floorY ?? p.y) + 0.08, p.z); stamMesh.scale.setScalar(Q);
-    stamMesh.material.opacity = 0.35 + 0.5 * stamShown;
-    return;
-  }
   const fly = !!(sp.mv && sp.mv.fly);
   const target = fly ? Math.max(0, Math.min(1, p.stam)) : 1;
   stamShown += (target - stamShown) * Math.min(1, dt * 10); if (Math.abs(target - stamShown) < 0.002) stamShown = target;
@@ -968,6 +949,13 @@ function updateArrow(dt, t) {
 }
 
 // ---------- day/night ----------
+// Mood lights stay in the scene (visible, intensity 0) for the whole of a moody level, not only while the mood is
+// ramped in: toggling their visibility changes the light count and recompiles every lit program mid-play.
+function syncMoodLights(md) {
+  const lit = md > 0 || (zones && zones.moody ? zones.moody() : null) != null;
+  if (lit && !MOOD_L.parent) scene.add(MOOD_L); if (lit && !MOOD_FILL.parent) scene.add(MOOD_FILL);
+  MOOD_L.visible = lit; MOOD_FILL.visible = lit; MOOD_L.intensity = 4.2 * md; MOOD_FILL.intensity = 0.55 * md;
+}
 function updateNight(dt) {
   const cdt = (!playing || paused) ? 0 : dt;
   const sp = SPECIES[cur], nF = nightOf(clock.t);
@@ -998,9 +986,9 @@ function updateNight(dt) {
   if (patchOwned) {
     // A look-target (L20 cave, etc.) owns hemi/sun/fog/exposure; do not let meadow or Owl-Wood mood overwrite it.
     state.mood = 0;
+    syncMoodLights(0);
     if (MOOD_L.parent) scene.remove(MOOD_L);
     if (MOOD_FILL.parent) scene.remove(MOOD_FILL);
-    MOOD_L.visible = false; MOOD_FILL.visible = false; MOOD_L.intensity = 0; MOOD_FILL.intensity = 0;
     stars.visible = false; moon.visible = false;
   } else {
   scene.backgroundBlurriness = 0;
@@ -1023,8 +1011,7 @@ function updateNight(dt) {
       scene.fog.color.lerp(wxCol.set(0x080d26), md); scene.fog.near = L(scene.fog.near, 20, md); scene.fog.far = L(scene.fog.far, 78, md);
       scene.backgroundIntensity *= 1 - 0.6 * md; if (!look.patch) renderer.toneMappingExposure = L(renderer.toneMappingExposure, 1.15, md);
     }
-    if (md > 0 && !MOOD_L.parent) scene.add(MOOD_L); if (md > 0 && !MOOD_FILL.parent) scene.add(MOOD_FILL);
-    MOOD_L.visible = md > 0; MOOD_FILL.visible = md > 0; MOOD_L.intensity = 4.2 * md; MOOD_FILL.intensity = 0.55 * md;
+    syncMoodLights(md);
     if (md > 0 && P[cur]) MOOD_L.position.set(P[cur].x, P[cur].y + 2.4, P[cur].z + 0.8); // soft moonlit halo; hemi fill keeps parked crew and stalls readable
   }
   }
@@ -1033,7 +1020,7 @@ function updateNight(dt) {
   { const now = performance.now(); if (now - (state.creekT || 0) > 500 && P[cur]) { state.creekT = now; const p = P[cur]; let wd = 99; // nearest water within ~24 m -> creek bed level
     if (heightAt(p.x, p.z) < WATER_Y) wd = 0; else for (const r of [5, 11, 18, 24]) { for (let a = 0; a < 6.28 && wd > r; a += 0.785) if (heightAt(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r) < WATER_Y) wd = r; if (wd <= r) break; }
     audio.ambCtx(wd > 24 ? 0 : 1 - Math.max(0, wd - 4) / 22, clock.season === 3); } }
-  look.tune({ n: patchOwned ? 0 : n, md: patchOwned ? 0 : (state.mood || 0), grey, mist, t: performance.now() / 1000, heightAt });
+  look.tune({ n, md: state.mood || 0, grey, mist, t: performance.now() / 1000, heightAt });
   state.nightInit = true;
 }
 function updateDrift() {
@@ -1180,6 +1167,65 @@ function followerIds() { if (!crew || !playing || rts.on || (valleySession && cl
 function classStay() { return true; }
 function followSlot(id) { const f = followerIds(), k = f.indexOf(id); return k < 0 ? null : { side: k ? 1 : -1, back: 3.2 + k * 1.6 }; }
 function placeFollowers(snap) { const L = P[cur]; if (!L) return; const F = snap ? crewOthers() : followerIds(); for (const id of F) { const k = F.indexOf(id), s = { side: k ? 1 : -1, back: 3.2 + k * 1.6 }, p = P[id]; const tx = L.x - Math.sin(L.yaw) * s.back + Math.cos(L.yaw) * s.side * 2.4, tz = L.z - Math.cos(L.yaw) * s.back - Math.sin(L.yaw) * s.side * 2.4; if (snap || Math.hypot(p.x - L.x, p.z - L.z) > 45) { p.x = tx; p.z = tz; p.y = Math.max(heightAt(tx, tz), L.y) + 0.5; p.vy = 0; p.grounded = false; p.goto = null; } } }
+
+let netLoadingMap = null;
+function focusGameForInput() {
+  try {
+    if (typeof document === 'undefined') return;
+    const c = document.querySelector('canvas');
+    if (c && c.tabIndex < 0) c.tabIndex = 0;
+    (c || document.body).focus?.();
+    window.focus?.();
+  } catch (e) {}
+}
+
+function assignOnlineBody() {
+  if (!net || !net.role || net.mode === 'nettest') return null;
+  const members = (crew && crew.get && crew.get()) || ['bee', 'raccoon', 'bear'];
+  const players = (lobby && lobby.players) || [];
+  const me = (lobby && lobby.self) || (net.mode === 'nettest' ? (net.isHost ? 'host' : 'client') : null);
+  const taken = new Set();
+  const assigned = {};
+  for (const pl of players) {
+    const a = ANIMAL_OF[pl.cls];
+    if (a && members.includes(a) && !taken.has(a)) { assigned[pl.id] = a; taken.add(a); }
+  }
+  for (const pl of players) {
+    if (assigned[pl.id]) continue;
+    const a = members.find(id => !taken.has(id)) || members[0];
+    assigned[pl.id] = a;
+    taken.add(a);
+  }
+  if (me && !assigned[me]) {
+    const fallback = net.isHost ? (ANIMAL_OF.bruiser || 'bear') : members.find(id => !taken.has(id)) || members[0];
+    assigned[me] = fallback;
+    taken.add(fallback);
+  }
+  if (!Object.keys(assigned).length && me) assigned[me] = members[0];
+  net.owners = assigned;
+  net.ownBody = (me && assigned[me]) || null;
+  if (net.isHost) {
+    try { net.onHostEvent?.({ type: 'owners', owners: { ...assigned } }); } catch (e) {}
+  }
+  const mine = net.ownBody;
+  if (mine && P[mine] && cur !== mine) {
+    try { crew.swapById(mine); } catch (e) {}
+    selectSpecies(mine, true);
+  }
+  return mine;
+}
+
+function onlineOwnsBody(id) {
+  if (!net || !net.role || !id || net.mode === 'nettest') return true;
+  const owners = net.owners || {};
+  const me = (lobby && lobby.self) || (net.mode === 'nettest' ? (net.isHost ? 'host' : 'client') : null);
+  for (const [pid, bid] of Object.entries(owners)) {
+    if (bid === id && pid && pid !== me) return false;
+  }
+  if (typeof net.remoteBodies === 'function' && net.remoteBodies().includes(id)) return false;
+  return true;
+}
+
 function startValleyPatch(patchId, opts = {}) {
   const fromNet = !!(opts && opts.fromNet);
   if (net && net.isClient && !fromNet) {
@@ -1187,10 +1233,15 @@ function startValleyPatch(patchId, opts = {}) {
     return;
   }
   if (!valley || !crew) return;
+  if (fromNet && netLoadingMap === patchId && zones && zones.status && zones.status()?.id === patchId) return;
+  if (fromNet) netLoadingMap = patchId;
   // Never load an unbuilt valley id (nextPlayable, ensureMap, or a direct call) as an empty map.
   if (zones && !zones.MAPS?.[patchId]) { toast('🗺️ That trail is not ready yet', 2600); return; }
-  const gate = valley.canStart(patchId, crew.tags());
-  if (!gate.ok) { toast('🔒 ' + gate.why, 2600); return; }
+  // Follow the host even when the guest's campaign has not unlocked this patch yet.
+  if (!fromNet) {
+    const gate = valley.canStart(patchId, crew.tags());
+    if (!gate.ok) { toast('🔒 ' + gate.why, 2600); return; }
+  }
   const def = valley.def(patchId);
   valleySession = { patchId, neighbor: def.neighbor, contest: def.contest };
   valley.data.activePatch = patchId;
@@ -1205,13 +1256,15 @@ function startValleyPatch(patchId, opts = {}) {
   closeValleyMap();
   // lead = first crew member for nest/tech defaults; swap free among crew
   const members = crew.get();
-  settings.lead = members[0]; saveSettings(settings);
-  setLead(members[0], true);
+  const onlineStart = (net && net.role) ? assignOnlineBody() : null;
+  const startId = onlineStart || members[0];
+  settings.lead = startId; saveSettings(settings);
+  setLead(startId, true);
   // ensure all crew animals exist as playable
   for (const id of members) if (!P[id]) initPlayer(id);
   // kids' Training Garden starts on the Trickster so the first swap lesson is "tap the Scout"
   const sc0 = zones?.MAPS?.[patchId]?.startCls, lead0 = (sc0 && members.find(id => CLASS_OF[id] === sc0)) || members[0];
-  selectSpecies(members[0], true);
+  selectSpecies(startId, true);
   crew.active = 0;
   healAmt = valley.get(patchId).heal || 0;
   if (contests) contests.resetRound();
@@ -1220,19 +1273,25 @@ function startValleyPatch(patchId, opts = {}) {
   if (zones) {
     const p0 = P[cur] || { x: 0, z: 0 };
     // Anchor the map so local (0,0) home sits on the player; then snap onto the new heightfield.
-    zones.load(patchId, { x: p0.x, z: p0.z });
+    const origin = (fromNet && opts.A && Number.isFinite(+opts.A.x) && Number.isFinite(+opts.A.z))
+      ? { x: +opts.A.x, z: +opts.A.z }
+      : { x: p0.x, z: p0.z };
+    zones.load(patchId, origin);
     document.body.classList.toggle('skipT', patchId === 'trailhead_trials' && !!valley.data.trailBadge);
-    { const h = zones.homePos ? zones.homePos() : p0; unifyHomes(h.x, h.z, members[0]); p0.x = h.x + 4; p0.z = h.z + 4; }
-    const p = P[cur];
-    if (p) {
-      p.x = p0.x; p.z = p0.z; p.vx = p.vz = p.vy = 0;
-      p.y = heightAt(p.x, p.z) + 1.0; p.grounded = true; p.coyote = 0.2;
+    if (!fromNet) {
+      { const h = zones.homePos ? zones.homePos() : p0; unifyHomes(h.x, h.z, members[0]); p0.x = h.x + 4; p0.z = h.z + 4; }
+      const p = P[cur];
+      if (p) {
+        p.x = p0.x; p.z = p0.z; p.vx = p.vz = p.vy = 0;
+        p.y = heightAt(p.x, p.z) + 1.0; p.grounded = true; p.coyote = 0.2;
+      }
+      placeFollowers(true);
     }
-    placeFollowers(true);
     if (critters) { const s0 = zones.status ? zones.status() : null; critters.spawn(patchId, { rect: zones.rect(), deep: zones.deepRects ? zones.deepRects() : [], waterY: s0 ? s0.baseY - 0.9 : null, start: P[cur] ? { x: P[cur].x, z: P[cur].z } : null }).catch(e => console.warn('critters', e)); }
     state.styT = 0.3; // art pass: pastel-style the new level soon after it is built
   }
-  if (lead0 !== members[0]) crew.swapById(lead0);
+  if (!onlineStart && lead0 !== members[0]) crew.swapById(lead0);
+  if (onlineStart) assignOnlineBody();
   renderCrewDock();
   updateHealUi();
   onb?.note?.('valleyIn');
@@ -1244,6 +1303,38 @@ function startValleyPatch(patchId, opts = {}) {
     if (!hasIntroCard(patchId)) presentLevelTips(patchId);
   }
   try { net?.onMapLoaded?.(patchId); } catch (e) {}
+  // Shader warm-up for the new level, so nothing links at GO (online ready-wait) or in the
+  // first seconds of solo play. three links in compile(), but the blocking cost (driver
+  // compile, getProgramInfoLog) lands on a program's FIRST DRAW, so we draw once here:
+  // - ready-wait freezes stepPlayer/zones.update, so rings, kid-trail arrows, glow marks and
+  //   the objective pip would otherwise first appear at GO;
+  // - the objective pip/arrow (homeind.js) is otherwise created lazily on the first play frame;
+  // - off-camera level meshes (exit sparkles, far props) would first draw when the camera turns.
+  // Draw to the real canvas path (an offscreen target links different, linear-output keys).
+  try { syncMoodLights(state.mood || 0); } catch (e) {}
+  // Escort follow logic's first call costs ~100 ms on a slow phone (lazy path state). Run just that, with dt 0, in the
+  // load hitch: no full zones.update here, so no pickups, triggers, timers or sounds happen before frame 1.
+  try { zones?.warmTick?.(camera); } catch (e) {}
+  const restoreKid = zones?.primeReadyVisuals?.();
+  if (!homeInd) homeInd = createHomeInd(scene);
+  const indMats = [];
+  for (const g of [homeInd.pip, homeInd.arrow]) { g.visible = true; g.traverse(o => { if (o.material) { indMats.push([o.material, o.material.opacity]); o.material.opacity = 0; } }); }
+  presentReadyVisuals();
+  const unculled = [], hiddenSpr = []; // hiddenSpr: scene-level pooled sprites (species marks, icons) shown later
+  try {
+    look.styleScene();
+    updateCamera(0);
+    // Only the level's own content (not the hidden-away sandbox meadow, whose programs a level never uses).
+    for (const o of scene.children) if (o.isSprite && !o.visible) { o.visible = true; hiddenSpr.push(o); }
+    for (const R of [zones?.root?.(), critters?.group, ...hiddenSpr]) R?.traverse(o => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isSprite || o.isLine)) { o.frustumCulled = false; unculled.push(o); } });
+    // No renderer.compile(scene): it links every material in the scene, including the hidden sandbox meadow
+    // (~70 programs a level never draws), which then queue ahead of the level's own first draws.
+    look.render();
+  } catch (e) {}
+  for (const o of unculled) o.frustumCulled = true;
+  for (const o of hiddenSpr) o.visible = false;
+  homeInd.hide(); for (const [mt, op] of indMats) mt.opacity = op;
+  try { restoreKid?.(); } catch (e) {}
 }
 // ---------- class skins (cosmetic only: physics/hitbox/abilities stay on bee · raccoon · bear) ----------
 const baseRiders = {}, skinRiderP = {}, skinThumbs = {};
@@ -1537,7 +1628,7 @@ function beginRound() {
   if (!swapOK() && cur !== lead && SPECIES[lead]) selectSpecies(lead, true);
   $('title').classList.remove('on'); document.body.classList.add('inRound'); playing = true; syncPause(); audio.start(); renderCrewDock();
   cam.zoomT = 1; cam.pitch = 0.35; { const p = P[cur]; cam.yaw = p.yaw; cam.swoop = 1.4; }
-  setHint(isMobile ? 'Drag left to move · hold Jump in the air to fly · hold a big button for its wheel' : 'WASD move · Space jump (hold in air = fly) · E action · Esc menu'); setTimeout(() => setHint(''), 10000);
+  setHint(isMobile ? 'Drag left to move · hold Jump in the air to fly · hold a big button for its wheel' : 'WASD move · Space jump (hold in air = fly) · E action · B build · Esc menu'); setTimeout(() => setHint(''), 10000);
   if (rivals && !rivals.active) rivals.resetRound(lead);
   if (hazards && !(hazards.list && hazards.list.length)) hazards.resetRound();
   if (goals) goals.resetRound();
@@ -1969,10 +2060,27 @@ function withCur(id, fn) {
   }
   return fn();
 }
+function presentReadyVisuals() {
+  if (!playing) return;
+  const t = state.sT || 0;
+  for (const id of SPECIES_ORDER) {
+    const p = P[id], R = riders && riders[id], sp = SPECIES[id];
+    if (!p || !sp) continue;
+    if (R) { R.position.set(p.x, p.y, p.z); R.rotation.y = p.yaw; }
+    if (shadows[id]) placeShadow(id, p, sp);
+  }
+  const p = P[cur], sp = SPECIES[cur];
+  if (p && sp) { updateRing(p, sp, t, 0); updateStamRing(p, sp, t, 0); }
+}
 function worldTick(dt, st) {
   try { net?.tick?.(0); } catch (e) {}
-  if (net && net.holding) {
-    // Ready-wait / countdown: freeze simulation for everyone.
+  const holding = !!(net && net.holding);
+  const simLive = playing && !paused && !holding;
+  if (holding) {
+    // Ready-wait / countdown: freeze simulation (and the level timer) for everyone,
+    // but keep bodies, carry/stamina rings and blob shadows posed so their programs
+    // compile during the wait (same keys live compiled at level start with no hold).
+    presentReadyVisuals();
   } else if (net && net.isClient) {
     // Own-animal prediction; other bodies come from interpolated snaps.
     const local = cur;
@@ -2002,13 +2110,13 @@ function worldTick(dt, st) {
     }
     for (const id of SPECIES_ORDER) if (!driven.has(id)) stepParked(id, dt, st);
   }
-  coop.update(dt, st, cur);
-  if (helpers) helpers.update(playing && !paused ? dt : 0, st, playing && !paused && round.running && !round.over);
-  if (tiers) tiers.update(playing && !paused ? dt : 0, st, playing && !paused && round.running && !round.over);
-  if (hazards) hazards.update(playing && !paused ? dt : 0, st, { playing, paused, p: P[cur], sp: SPECIES[cur], elapsed: round.len * 60 - (round.left || 0), len: round.len });
-  if (rivals) rivals.update(playing && !paused ? dt : 0, st, { playing, paused, p: P[cur], lead });
+  coop.update(simLive ? dt : 0, st, cur);
+  if (helpers) helpers.update(simLive ? dt : 0, st, simLive && round.running && !round.over);
+  if (tiers) tiers.update(simLive ? dt : 0, st, simLive && round.running && !round.over);
+  if (hazards) hazards.update(simLive ? dt : 0, st, { playing, paused, p: P[cur], sp: SPECIES[cur], elapsed: round.len * 60 - (round.left || 0), len: round.len });
+  if (rivals) rivals.update(simLive ? dt : 0, st, { playing, paused, p: P[cur], lead });
   // Valley heal meter ← bloom %; contests + pack-up
-  if (valleySession && playing && !paused && round.running && !round.over) {
+  if (valleySession && simLive && round.running && !round.over) {
     // Heal comes from zone pickups / team lifts / contests — territory bloom retired (t135u).
     if (zones) { zones.update(dt, camera); if (!zones.keyGoalMet()) healAmt = Math.min(healAmt, HEAL_PACKUP - 0.01); }
     if (ADVENTURE && zones && zones.keyGoalMet() && valleySession && !valleySession.ending) {
@@ -2048,11 +2156,11 @@ function worldTick(dt, st) {
     if (packup && !ADVENTURE) packup.update(dt, P[cur]);
   }
 
-  if (items) items.update(playing && !paused ? dt : 0);
-  if (looks) looks.update(playing && !paused ? dt : 0, riders[cur], P[cur]);
-  if (goals && !ADVENTURE && playing && !paused) goals.update();
-  if (onb && playing && !paused) { if (round.stats.builds && Object.keys(round.stats.builds).length) onb.flags.built = 1; if (helpers && helpers.perm && helpers.perm() > 0) onb.flags.hired = 1; onb.update(dt, st); }
-  if (playing && !paused && round.running && !round.over) { round.tick(dt); tech.update(dt); }
+  if (items) items.update(simLive ? dt : 0);
+  if (looks) looks.update(simLive ? dt : 0, riders[cur], P[cur]);
+  if (goals && !ADVENTURE && simLive) goals.update();
+  if (onb && simLive) { if (round.stats.builds && Object.keys(round.stats.builds).length) onb.flags.built = 1; if (helpers && helpers.perm && helpers.perm() > 0) onb.flags.hired = 1; onb.update(dt, st); }
+  if (simLive && round.running && !round.over) { round.tick(dt); tech.update(dt); }
 }
 function frameSim(sdt, t, st) {
   terr.growMul = 0; terr.update(sdt, camera.position, night);
@@ -2325,7 +2433,9 @@ async function boot() {
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
   DCL.TERR[1] = scene.children.length; zones = createZones(scene, { look, easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => { const d = (slots.driven() || []).slice(); if (net && net.isHost && net.remoteBodies) { for (const id of net.remoteBodies()) if (id && !d.includes(id)) d.push(id); } return d; }, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, isNetClient: () => !!(net && net.isClient), swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
-  critters = createCritters(scene, { heightAt, tier: () => look.tier });
+  // Each critter is pastel-styled and linked before its first frame: unstyled it would link once,
+  // then again as |presetB when the periodic restyle reaches it (a double compile mid-play).
+  critters = createCritters(scene, { heightAt, tier: () => look.tier, prep: obj => { look.styleScene({ children: [obj] }); if (typeof renderer.compile === 'function') renderer.compile(obj, camera, scene); } });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
@@ -2351,8 +2461,10 @@ async function boot() {
   crew = createCrew({
     valley,
     lead: () => lead,
+    canSwap: (id) => onlineOwnsBody(id),
     onSwap: (id) => {
       if (!playing || !swapOK()) return;
+      if (!onlineOwnsBody(id)) return;
       selectSpecies(id);
       lead = id; // portrait lead follows active crew member in valley
       renderCrewDock();
@@ -2464,10 +2576,14 @@ async function boot() {
   installFallbackHooks({ scene, look, sky: look.sky, grass: world && world.grass, motes: look.motes, renderer, ringMesh, stamMesh, weather });
   if (SPECIES[cur].nocturnal !== (nightOf(clock.t) > 0.5)) setNight(SPECIES[cur].nocturnal, true);
   curNight = nightOf(clock.t) > 0.5; $('bNight').textContent = curNight ? '☀️ Switch to day' : '🌙 Switch to night'; $('bSeason').textContent = SEASON_INFO[clock.season].emoji + ' Season: ' + SEASON_INFO[clock.season].name; night = nightOf(clock.t); updateNight(0.01);
-  state.musicLive = true; look.start(); setLoad(1, 'Ready');
+  setLoad(0.95, 'Warming the meadow…');
+  state.musicLive = true; look.start();
+  setLoad(1, 'Ready');
   try { look.render(); } catch (e) { window.__bootFail?.(e); throw e; }
   if (window.__bootFailed) return;
   window.__bootOk?.();
+  // Critter models (~250 KB) load in the background on the title screen, not awaited (boot time).
+  setTimeout(() => { try { critters?.prefetch?.(); } catch (e) {} }, 200);
   const loadEl = $('load'); if (loadEl) { loadEl.style.opacity = 0; setTimeout(() => { if (!window.__bootFailed) $('load')?.remove(); }, 700); }
   buildCards(); loop(performance.now());
   buildLens(); refreshTitle(); syncMixUi(); $('sMute').checked = !!settings.mute; applyMix(); applyAccess(); audio.setMute(settings.mute);
@@ -2493,13 +2609,15 @@ async function boot() {
     tech, openTech: () => openTech(lead), speciesList: () => SPECIES_ORDER.map(id => `${SPECIES[id].emoji} ${SPECIES[id].name}${id === lead ? ' ★' : ''}`), setLead: i => setLead(SPECIES_ORDER[i]), leadText: () => `${SPECIES[lead].emoji} ${SPECIES[lead].name} (pays ${payIcons(lead)})`, statsTable };
   admin = createAdmin(X);
   if (/[?&]admin=1/.test(location.search)) admin.showButton(true);
+  // Solo release: with ONLINE_ENABLED false none of the multiplayer layer is created (net, level flow, lobby, online art).
+  if (ONLINE_ENABLED) {
   installOnlineArt();
   levelFlow = createLevelFlow({ audio, toast });
   net = createNet({
     getZones: () => zones,
     getCrew: () => crew ? crew.get() : ['bee', 'raccoon', 'bear'],
     isPlaying: () => !!playing || !!(zones && zones.active?.()),
-    isPaused: () => !!paused || !!(net && net.holding),
+    isPaused: () => !!paused,
     isInLevel: () => {
       const id = zones && zones.status && zones.status()?.id;
       if (!id) return false;
@@ -2531,10 +2649,14 @@ async function boot() {
     get levelFlow() { return levelFlow; },
     onHold: () => {},
     onGo: (map) => {
+      focusGameForInput();
       if (map && map !== HUB_ID) {
         showIntroCard(map);
         if (!hasIntroCard(map)) presentLevelTips(map);
       }
+      // Re-focus after the intro card mounts so Playwright mobile keys reach the game.
+      setTimeout(focusGameForInput, 50);
+      setTimeout(focusGameForInput, 400);
     },
     onLoadTimeout: (map) => {
       toast("Couldn't load, try again", 3200);
@@ -2561,15 +2683,23 @@ async function boot() {
     isTweening: () => !!(zones && zones.tweening && zones.tweening()),
     now: () => performance.now(),
     toast: (a, b) => toast(a, b),
-    ensureMap: (id) => {
+    ensureMap: (id, extra = {}) => {
       if (!id || !valley) return;
       const curId = zones && zones.status && zones.status()?.id;
-      if (curId === id) { try { net?.onMapReady?.(id); } catch (e) {} return; }
+      if (curId === id) return;
+      // typ load/welcome forces a new map. Keep preferring that id even after
+      // the load finishes, so a stale snap with the previous map cannot
+      // startValleyPatch us back (N3-ACT3: guest snapped back to trailhead).
+      if (!extra?.force && netLoadingMap && netLoadingMap !== id) return;
+      if (netLoadingMap === id && !extra?.force) return;
+      netLoadingMap = id;
       if (curId && curId !== id) levelFlow?.showCatchup?.();
-      startValleyPatch(id, { fromNet: true });
+      startValleyPatch(id, { fromNet: true, A: extra && extra.A, baseY: extra && extra.baseY });
     },
     pollLocalFrame: () => input && input.pollFrame ? input.pollFrame() : null,
     localBody: () => cur,
+    getOwners: () => net?.owners || {},
+    onOwners: (owners) => { if (owners) net.owners = owners; },
     peerId: () => (net && net.mode === 'nettest') ? (net.isClient ? 'client' : 'host') : ((lobby && lobby.self) || (net && net.isClient ? 'client' : 'host')),
     pulseWorld: (() => { let last = 0; return () => { const n = performance.now(); if (n - last < 45) return; last = n; try { if (zones && zones.update) zones.update(0, camera); } catch (e) {} }; })(),
     applyRemoteFrame: (frame, body) => {
@@ -2591,6 +2721,7 @@ async function boot() {
   installOnlineArt();
   lobby = isOnlineDev() ? createLobby({
     audio, toast,
+    getNet: () => net,
     getSettings: () => settings,
     saveSettings: () => saveSettings(settings),
     onOnlineSettings: (online) => {
@@ -2613,6 +2744,7 @@ async function boot() {
     lobby.settings.mount();
     try { lobby.maybeAutoJoin(); } catch (e) {}
   }
+  } // ONLINE_ENABLED
 
   if (NEWFLAG) {
     if (NEWFLAG.lead && SPECIES[NEWFLAG.lead]) settings.lead = NEWFLAG.lead;

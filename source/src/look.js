@@ -246,7 +246,10 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     clearFills();
     if (!look || !look.extras || !look.extras.fills) return;
     for (const spec of look.extras.fills) {
+      // Skip note-only fills ({ name: 'none' } / shaftKey): no colour, no intensity. Making a light from them
+      // gave a PointLight with intensity undefined → NaN in every lit shader → all lit geometry black.
       if (spec.type && !/PointLight/i.test(String(spec.type))) continue;
+      if (spec.color == null || !Number.isFinite(spec.intensity)) continue;
       const l = new THREE.PointLight(spec.color, 0, spec.distance, spec.decay == null ? 2 : spec.decay);
       l.castShadow = false; l.name = 'look-fill-' + spec.name; scene.add(l);
       const at = opts.fills && opts.fills[spec.name]; if (at) l.position.set(at.x, at.y, at.z);
@@ -266,7 +269,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   function fillIntensity(spec, letter) {
     if (!fillOn(spec, letter)) return 0;
     if (spec.name === 'crewFill' && letter === 'C') return 3;
-    return spec.intensity;
+    return Number.isFinite(spec.intensity) ? spec.intensity : 0;
   }
   /** Apply (or clear) a level look-target. id is the recipe key (thaw_valley, …). */
   function setPatch(id, opts = {}) {
@@ -322,7 +325,17 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     if (owned && P.exposure != null) renderer.toneMappingExposure = P.exposure;
   }
   renderer.info.autoReset = false; // count every pass of a frame (composer + shadow), reset once per frame below
-  function render() { renderer.info.reset(); if (composer) composer.render(); else renderer.render(scene, camera); }
+  // Safety net: a light with a non-finite intensity/colour turns every lit pixel NaN (black on most GPUs). Check now and
+  // then and zero it, with one console warning, instead of letting the whole level go black.
+  let lightChk = 0; const warnedL = new Set();
+  function guardLights() {
+    scene.traverse(o => { if (!o.isLight) return; const c = o.color;
+      if (!Number.isFinite(o.intensity) || (c && !(Number.isFinite(c.r) && Number.isFinite(c.g) && Number.isFinite(c.b)))) {
+        if (!warnedL.has(o.uuid)) { warnedL.add(o.uuid); console.warn('look: non-finite light zeroed', o.type, o.name); }
+        o.intensity = 0; if (c && !Number.isFinite(c.r + c.g + c.b)) c.setRGB(1, 1, 1);
+      } });
+  }
+  function render() { if ((lightChk++ % 30) === 0) guardLights(); renderer.info.reset(); if (composer) composer.render(); else renderer.render(scene, camera); }
   /** 3 s boot probe after load (audit §7.3): step down once at once if the start tier is clearly too heavy. */
   let probeT0 = 0;
   function frame(now) {

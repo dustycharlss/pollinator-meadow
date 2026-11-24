@@ -580,7 +580,6 @@ export const MAPS3 = {
     },
   },
 
-  // ===== L20 Mirror Caves =====
   mirror_caves: {
     ambience: 'mirror-caves', // Beans CC0 loop (banasz + Nox_Sound), SFX bus
     goal: 'Mirror Caves', act2: true, moody: true, night: true, loanGear: 'test', loanPouch: true,
@@ -765,14 +764,21 @@ export const MAPS3 = {
       // west corridor; greenhouse is wider (x ±8). east gaps: cup lawn, wasp basin, gnome garden
       hedge(-6.5, -10, 24); hedge(-8, 24, 44); hedge(-6.5, 44, 94);
       hedge(6.5, -10, 12); hedge(8, 24, 44); hedge(6.5, 44, 50); hedge(6.5, 60, 66); hedge(6.5, 76, 94);
+      // Close the unfenced east lawn (x 8–16, z 24–66) so the crew cannot walk around the doors.
+      const closeEast = (z) => {
+        const r = B.wall(12, z, 8.5, 1, 3.4, { look: 'hedge' });
+        B.wall(12, z, 8.5, 1, 30, { bot: 3.3, hidden: true }).s.off = false;
+        return r;
+      };
+      closeEast(24); closeEast(46); closeEast(64.5);
       B.checkpoint(0, -1);
       B.escort('snail', 3, -2);
       // A · cup lawn
       B.pond('puddle', 10, 8, 15, 13, { level: 'mid' });
-      B.sprinkler('skA', 8, 16, { yaw: -Math.PI / 2, r: 7, speed: 0.55, sweep: 1.1, beam: 0.26, high: 8, pause: 'plA' });
+      B.sprinkler('skA', 8, 16, { yaw: -Math.PI / 2, r: 7.5, speed: 0.55, sweep: 1.1, beam: 0.26, high: 8, pause: 'plA' });
       B.plate('plA', -5, 16, { label: 'Tap plate' });
       B.cup('cup1', 2, 16, { fill: 1.4 });
-      B.cup('cup2', 2, 20, { fill: 1.4 });
+      B.cup('cup2', 2, 19.6, { fill: 1.4 });
       B.deco('act3/grand-garden/built-sprinkler', 8, 16, 1.6, { yaw: -Math.PI / 2 });
       B.deco('act3/grand-garden/j-toastie-hose-reel-blocky', 11, 18, 1.4, { yaw: Math.PI });
       B.hide('rock', 4, 8, 1.2, 1.2);
@@ -844,7 +850,7 @@ export const MAPS3 = {
       // dressing (CC0 Kenney Nature / Fantasy Town / Platformer + built props)
       const g = (k, x, z, h, yaw) => B.deco('act3/grand-garden/' + k, x, z, h, { yaw: yaw || 0 });
       [['kenney-platformer-hedge', -5, -8, 2.2], ['kenney-nature-plant-bush', 5.2, -7, 1.8], ['kenney-nature-flower-yellow-a', -4, 10, 1.0], ['kenney-nature-flower-red-a', 4, 12, 1.0], ['kenney-nature-crop-carrot', 12, 14, 1.0], ['kenney-nature-crops-dirt-row', 13, 20, 1.6], ['kenney-fantasytown-fence', -10, 32, 1.8], ['kenney-nature-flower-purple-a', 5, 40, 1.0], ['kenney-nature-plant-bush-small', -5, 50, 1.2], ['kenney-platformer-flowers-tall', 10, 64, 1.6], ['kenney-nature-flower-yellow-b', 5, 78, 1.0], ['kenney-platformer-hedge', -5, 90, 2.2], ['kenney-platformer-hedge', 5, 90, 2.2]].forEach(([k, x, z, h], i) => g(k, x, z, h, i * 0.7));
-      B.puzzle('cups', 'Sprinkler cups', ['scout', 'trickster'], ['cup1', 'cup2'], { hint: 'Time the sprinkler to fill both cups, or hold the plate and use the Bubble Pouch.', track: [['cup1', 'scout', 'fill the first cup', 2, 16], ['cup2', 'scout', 'fill the second cup', 2, 20]] });
+      B.puzzle('cups', 'Sprinkler cups', ['scout', 'trickster'], ['cup1', 'cup2'], { hint: 'Time the sprinkler to fill both cups, or hold the plate and use the Bubble Pouch.', track: [['cup1', 'scout', 'fill the first cup', 2, 16], ['cup2', 'scout', 'fill the second cup', 2, 19.6]] });
       B.puzzle('wasps', 'Wasp wind', ['trickster', 'scout'], ['waspClear'], { hint: 'Light the glow steps, pull the lever, then crank the vane so the buzz blows east.', track: [['lvB', 'trickster', 'climb the glow steps and pull the lever', 0, 38], ['waspClear', 'trickster', 'crank the vane and blow the wasps off the path', -5, 48]] });
       B.puzzle('gear', 'Gear swap', ['trickster', 'bruiser'], ['lvG', 'gnBell'], { hint: 'Swap at the stumps. Glide to the west lever, and sling the gnome\'s cap bell.', track: [['lvG', 'trickster', 'glide the pit and pull the lever', -4, 73], ['gnBell', 'bruiser', 'sling the gnome cap bell', 12, 72]] });
       B.puzzle('snail', 'Snail escort', ['scout', 'trickster', 'bruiser'], ['snail'], { hint: 'Hold the plates so the spray and mower stay still, then walk the snail to the flag.', track: [['plE1', 'trickster', 'hold the sprinkler plate', -5, 80], ['plE2', 'bruiser', 'hold the mower plate', -5, 83], ['snail', 'any', 'walk the snail past the mower', 0, 87]] });

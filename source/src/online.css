@@ -39,7 +39,7 @@
 .olBubble { position: absolute; transform: translate(-50%, -120%); z-index: 60; background: #fff3d8; border: 3px solid #3b2614; border-radius: 14px; padding: 4px 8px; font-size: 22px; pointer-events: none; white-space: nowrap; }
 .olPlate { position: absolute; transform: translate(-50%, 12px); z-index: 59; pointer-events: none; display: flex; align-items: center; gap: 4px; }
 .olPlate img { width: 28px; height: 28px; }
-.olDebug { position: fixed; top: 8px; left: 8px; z-index: 90; background: rgba(20,16,12,.82); color: #fff3d8; font: 12px/1.35 ui-monospace, monospace; padding: 8px 10px; border-radius: 8px; max-width: 240px; }
+.olDebug { position: fixed; top: 8px; left: 8px; z-index: 90; background: rgba(20,16,12,.82); color: #fff3d8; font: 11px/1.35 ui-monospace, monospace; padding: 8px 10px; border-radius: 8px; max-width: min(360px, calc(100vw - 16px)); white-space: pre-wrap; pointer-events: none; }
 .olGateRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 100%; }
 .olGate { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: 1 1 180px; width: auto; max-width: 300px; min-width: 160px; min-height: 64px; padding: 0; box-sizing: border-box; border-style: solid; border-width: 20px 28px 24px 28px; border-image: var(--ol-hold-btn) 20 28 24 28 fill / 20px 28px 24px 28px; background: none; color: #3b2614; font: inherit; font-weight: 700; font-size: calc(13.5px * var(--text, 1)); line-height: 1.2; text-align: center; cursor: pointer; user-select: none; }
 .olGateRing { flex: none; width: 80px; height: 80px; box-sizing: border-box; background: var(--ol-gate-ring-0) no-repeat center / contain; pointer-events: none; }
@@ -230,6 +230,7 @@ body:has(#pause.on) .olBar { display: none !important; }
   .olCard:has(.olRoster) .olHead { padding: 6px 12px 4px; }
   .olCard:has(.olRoster) .olBody { padding: 4px 12px 12px; overflow: hidden; }
   .olChoiceCard img { width: 120px; height: 130px; }
+}
 /* N3 ready-wait / complete / catchup */
 #olLevel { position: fixed; inset: 0; z-index: 85; pointer-events: none; }
 #olLevel:not([hidden]) { pointer-events: auto; }
@@ -386,3 +387,23 @@ body:has(#pause.on) .olBar { display: none !important; }
   .olRosterSlot { width: 88px; height: 102px; }
   .olRosterSlot img.olSlotFace { width: 88px; height: 102px; }
 }
+
+/* Slow / no-direct-link warning (fallback path, high snap age). */
+#olSlowLink {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  background: rgba(28, 22, 12, 0.9);
+  color: #ffe7a0;
+  font: 600 13px/1.35 system-ui, sans-serif;
+  padding: 8px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  max-width: calc(100vw - 24px);
+  text-align: center;
+}
+#olSlowLink[hidden] { display: none !important; }

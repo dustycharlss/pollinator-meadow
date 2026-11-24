@@ -3,7 +3,7 @@
  "level": 20,
  "recipeKey": "mirror_caves",
  "name": "Mirror Caves",
- "setting": "Crystal cave under the meadow: mirror crystals, a lamp beam, ghost bridge over a chasm, spider webs. Always dark underground, moody, no wind or seasons (Fern act3-levels-17-21.md \u00a75). Baby: bat pup (dark only). Enemy: Grumpy Spider.",
+ "setting": "Crystal cave under the meadow: mirror crystals, a lamp beam, ghost bridge over a chasm, spider webs. Always dark underground, moody, no wind or seasons (Fern act3-levels-17-21.md §5). Baby: bat pup (dark only). Enemy: Grumpy Spider.",
  "state": "always dark (treat as night for lantern/glow)",
  "setpiece": "Crystal lamp A beams onto the far mirror crystal and lights the ghost bridge across chasm 1; webbed side tunnel, crystal clusters on the walls, stalactite ceiling.",
  "how_to_apply": "import PRESET_B from preset-B.json; const P = deepMerge(structuredClone(PRESET_B), presetB_override); const fx = applyPresetB(scene, renderer, { quality, camera, target, sky: true }, P); const composer = createComposerB(renderer, scene, camera, fx, P); then add extras.fills, materials from extras.emissive / water / ice.",
@@ -120,11 +120,6 @@
      "medium",
      "low"
     ]
-   },
-   {
-    "name": "shaftKey",
-    "type": "DirectionalLight (the preset sun)",
-    "note": "reads as a light shaft from a crack in the ceiling; keeps contact shadows under the crew"
    }
   ],
   "emissive": {

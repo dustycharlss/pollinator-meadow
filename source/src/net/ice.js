@@ -1,3 +1,4 @@
+import { isIceFail } from './flags.js';
 /** ICE / TURN credentials (§1.3, §1.8).
  *
  *  LIVE PATH (needs a Cloudflare account + the pm-net Worker, not created in N2):
@@ -19,7 +20,15 @@ export const PUBLIC_STUN = [
 ];
 
 /** Dev-only ICE: allow host/srflx candidates so same-Wi-Fi peers can connect. */
-export function devIceConfig() {
+export function devIceConfig(search = typeof location !== 'undefined' ? location.search : '') {
+  if (isIceFail(search)) {
+    return {
+      iceServers: [],
+      iceTransportPolicy: 'relay',
+      forcedFail: true,
+      note: 'Forced ICE failure (?iceFail=1): no STUN, no TURN, relay-only — WebRTC cannot connect.',
+    };
+  }
   return {
     iceServers: PUBLIC_STUN.slice(),
     iceTransportPolicy: 'all',

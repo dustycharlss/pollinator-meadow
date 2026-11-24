@@ -1,7 +1,25 @@
 /** Query flags and Online settings helpers (§4.1, §6 N2). */
 
+/**
+ * Solo release switch. false = the build ships with NO multiplayer: no net session, lobby, Play with friends,
+ * Online settings, friends station, ?join / ?online=dev / ?nettest handling, and no WebRTC / Trystero / Nostr traffic.
+ * Vite folds this constant, so the net modules drop out of the bundle. Flip to true to restore the rc behaviour.
+ */
+export const ONLINE_ENABLED = false;
+
 export function isOnlineDev(search = typeof location !== 'undefined' ? location.search : '') {
+  if (!ONLINE_ENABLED) return false;
   return /(?:\?|&)online=dev(?:&|$)/.test(search || '');
+}
+
+export function isIceFail(search = typeof location !== 'undefined' ? location.search : '') {
+  return /(?:\?|&)iceFail(?:=1)?(?:&|$)/.test(search || '');
+}
+
+export function fallbackRelayUrl(search = typeof location !== 'undefined' ? location.search : '') {
+  const m = /(?:\?|&)fallbackRelay=([^&]+)/i.exec(search || '');
+  if (!m) return null;
+  try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; }
 }
 
 export function isDebugFlag(search = typeof location !== 'undefined' ? location.search : '') {
@@ -22,7 +40,26 @@ export function canShowFriendsStation(settings, search) {
 }
 
 export function parseJoinCode(search = typeof location !== 'undefined' ? location.search : '') {
+  if (!ONLINE_ENABLED) return null;
   const m = /(?:\?|&)join=([^&]+)/i.exec(search || '');
   if (!m) return null;
   try { return decodeURIComponent(m[1]).trim().toLowerCase(); } catch (e) { return String(m[1] || '').toLowerCase(); }
+}
+
+/** Room-identity query keys. Keep feature flags such as online=dev / nettest / debug. */
+const ROOM_PARAMS = ['join'];
+
+/** Drop join (and any other room params) so a refresh cannot rejoin a room the player just left. */
+export function stripRoomParamsFromUrl() {
+  if (typeof location === 'undefined' || typeof history === 'undefined' || typeof URL === 'undefined') return;
+  try {
+    const u = new URL(location.href);
+    let changed = false;
+    for (const k of ROOM_PARAMS) {
+      if (u.searchParams.has(k)) { u.searchParams.delete(k); changed = true; }
+    }
+    if (!changed) return;
+    const search = u.searchParams.toString();
+    history.replaceState(history.state, '', u.pathname + (search ? '?' + search : '') + u.hash);
+  } catch (e) {}
 }

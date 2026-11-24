@@ -34,7 +34,20 @@
 #tipsTray[hidden]{display:none!important}
 #tipsTray .tipsInner{pointer-events:auto;width:min(100%, 640px);position:relative;max-height:min(38dvh, 220px)}
 #tipsTray .tipsTrack{max-height:min(32dvh, 180px)}
+/* Measured placement (tips-ui.js placeTray): the tray box hugs the card in a span free of HUD controls. */
+#tipsTray.placed{right:auto;justify-content:flex-start;padding:16px 0 0;background:none}
+#tipsTray.placed .tipsInner{width:100%;border-radius:16px;background:rgba(16,10,24,.55)}
+#tipsTray.placed .tipsX{right:2px}
 #tipsTray .tipCard{width:min(88%, 520px)}
+/* Big pastel close button for the new-move tray: 48x48 CSS px tap target, top-right corner. */
+#tipsTray .tipsX{
+  top:-14px;right:-4px;z-index:3;width:48px;height:48px;border-radius:14px;
+  background:linear-gradient(#fff6d6, #ffe08a);border:3px solid #c98a2b;color:#3b2614;
+  font:900 30px/40px system-ui,sans-serif;box-shadow:0 3px 0 rgba(59,38,20,.55), 0 4px 12px rgba(0,0,0,.25);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:0
+}
+#tipsTray .tipsX:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(59,38,20,.55)}
+#tipsTray .tipsX:focus-visible{outline:3px solid #ffd23f;outline-offset:2px}
 
 #introCard.icHasTips{flex-direction:column;justify-content:center;gap:8px}
 #introCard.icHasTips .icHit{height:auto;width:100%;flex:0 1 auto;min-height:0}

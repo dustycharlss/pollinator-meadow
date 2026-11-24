@@ -4,6 +4,7 @@
  *  are hung on g.net (n1.mjs would then take the isolated-context path).
  */
 import { createTrysteroTransport } from './trystero.js';
+import { installSlowLinkHint } from './slow-link-hint.js';
 import { createSignalRoomTransport } from './signalroom.js';
 import { createChannel } from './channel.js';
 import {
@@ -12,7 +13,7 @@ import {
 } from './words.js';
 import { pinReply, randomNonce, bytesToB64, b64ToBytes, timingSafeEqual, createPinGuard } from './pin.js';
 import { EMOTES, EMOTE_COOLDOWN, EMOTE_SHOW, emoteOf } from './emotes.js';
-import { isOnlineDev, canShowFriendsStation, parseJoinCode, onlineDefaults } from './flags.js';
+import { isOnlineDev, canShowFriendsStation, parseJoinCode, onlineDefaults, stripRoomParamsFromUrl } from './flags.js';
 import { createOnlineSettings } from './online-settings.js';
 import { mountDebugOverlay } from './debug-overlay.js';
 
@@ -31,7 +32,7 @@ const PLAYER_STYLE = [
   { id: 'p2', fill: '#6db4d6', shape: 'square-chevron', tag: 'tag-p2' },
   { id: 'p3', fill: '#d45890', shape: 'hex-dots', tag: 'tag-p3' },
 ];
-const ANIMAL_OF = { bruiser: 'bear', trickster: 'raccoon', scout: 'bee' };
+export const ANIMAL_OF = { bruiser: 'bear', trickster: 'raccoon', scout: 'bee' };
 const BADGE_TAB = { animals: 'animals', food: 'food-plants', outside: 'outside', home: 'home-toys' };
 const PICKS = (name) => ICON('picks', name);
 
@@ -62,14 +63,13 @@ export function createLobby(hooks = {}) {
     },
     audio: hooks.audio,
   });
-  mountDebugOverlay({
-    measureTile: () => document.querySelector('.olTile')?.getBoundingClientRect?.().width || 0,
-    getWake: () => wakeState,
-    getPath: () => pathInfo(),
-  });
-
   let root = null, bar = null, screen = 'closed';
   let transport = null, channel = null;
+  installSlowLinkHint({
+    getLink: () => {
+      try { return hooks.getNet?.()?.link || transport?.getLink?.() || null; } catch (e) { return null; }
+    },
+  });
   let role = null, code = null, pinWords = null, usePin = false, locked = false;
   let players = [];
   let pick = [];
@@ -79,6 +79,13 @@ export function createLobby(hooks = {}) {
   let pendingAsk = null, askQueue = [];
   let lastEmoteAt = 0;
   let wakeLock = null, wakeState = 'off';
+  mountDebugOverlay({
+    measureTile: () => document.querySelector('.olTile')?.getBoundingClientRect?.().width || 0,
+    getWake: () => wakeState,
+    getPath: () => pathInfo(),
+    getNet: () => hooks.getNet?.() || null,
+    getIce: () => { try { return transport?.getIcePair?.() || hooks.getNet?.()?.link?.ice || null; } catch (e) { return null; } },
+  });
   let lobbyMusic = false;
   let helloTimer = null, helloOff = null, findTimer = null;
   let pinHint = '';
@@ -130,9 +137,11 @@ export function createLobby(hooks = {}) {
   function pathInfo() {
     const t = transport;
     return {
-      path: t?.kind || (t?.stub ? 'local' : 'trystero'),
+      path: (t?.getLink?.()?.path) || t?.kind || (t?.stub ? 'local' : 'trystero'),
       detail: t?.note || 'Trystero public signalling (Nostr) + public STUN, no TURN. Cloudflare SignalRoom / TURN not configured.',
       policy: t?.icePolicy || 'all',
+      link: (typeof t?.getLink === 'function') ? t.getLink() : null,
+      iceFail: !!t?.iceFail,
       wake: wakeState,
       relays: typeof t?.getRelaySockets === 'function' ? Object.keys(t.getRelaySockets() || {}).length : 0,
     };
@@ -482,6 +491,7 @@ export function createLobby(hooks = {}) {
 
   function leave(why) {
     if (why === 'lobby' || why === 'pause') sfx('sfx-n2/leave-game', 0.5);
+    try { stripRoomParamsFromUrl(); } catch (e) {}
     stopHello();
     if (role) send('leave', { why });
     if (role === 'host') send('ended', { why });
