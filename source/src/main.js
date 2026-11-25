@@ -571,7 +571,7 @@ function critterSpotted(kind) {
   if (was) { was.count = (was.count || 1) + 1; persist(); return; }
   const lv = (valleySession && valleySession.patchId) || 'meadow_hub';
   save.critterSeen[kind] = { first: lv, count: 1 }; persist();
-  try { audio.chime(); } catch (err) {}
+  try { audio.sample('ui2/journal-chime', 1.0); } catch (err) {} // l20q: Beans's -20 LUFS chime file (procedural chime was -28 LUFS)
   toast('📖 New friend: ' + e.name + '!', 3000);
   $('bJournal').classList.add('critNew'); $('bPause').classList.add('pulse');
   if ($('journal').classList.contains('on') && jTab === 3) renderJournal();
