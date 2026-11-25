@@ -211,7 +211,7 @@ const MAPS = {
       B.gate('dam', -7.5, 19, 0.6, 3.6, 5.2, { label: 'Dam gate' });
       B.plate('dam', -9, 15.6, { label: 'dam plate' });
       B.cage(5, 19.5, 3.6, 3.6, 3, { base: 5.2, cracked: 'w', crackSig: 'branch', look: 'hedge', label: 'Willow branches' });
-      B.bell('willow', 5.4, 19.5, 6.8, { label: 'Willow bell' });
+      B.bell('willow', 5.4, 19.5, 6.8, { need: ['branch'], needWhy: 'The willow branches are in the way — Bear smashes them first', label: 'Willow bell' });
       B.tree(7.5, 21.6, 1.2, 5.2);
       // 4 · Secret: a Starseed on the tall east rock (boost from Bear once he's across)
       B.wall(22, 23, 3, 3, 5.2, { look: 'stone' });
