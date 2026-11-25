@@ -546,7 +546,7 @@ export function createZones(scene, host) {
   // three-class puzzle state
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
-  const rimSpecs = []; // l20p
+  const rimSpecs = [], hedgeRuns = []; // l20p
   let sig = {}, props = [], gates = [], plates = [], puzzles = [], deep = [], crossings = [], steps = [], tw = null, lastProg = 0, hintT = 0, bearPad = null, windT = 0, introQ = [];
   let hintSt = null, hintCool = new Map(), hintSpr = {};
   function hintSprite(c) {
@@ -878,6 +878,7 @@ export function createZones(scene, host) {
       };
       const imB = mk(boxes, col), imC = mk(caps, topC);
       fadeEs.forEach((e, i) => { e.ims = [imB, imC].filter(Boolean); e.bases = [boxes[i] && boxes[i].base, caps[i] && caps[i].base]; });
+      if (look === 'hedge') hedgeRuns.push({ x, z0, z1, h, fadeEs, ims: [imB, imC].filter(Boolean) }); // l20p: fuller-decor swaps the visuals for the hedge kit
     },
     cyl(x, z, r, h, c, base = 0) {
       const g = gy(x, z) + base, T = h + 1.5, m = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.94, r, T, 12), mat(c));
@@ -1382,7 +1383,7 @@ export function createZones(scene, host) {
   const sprite = (e, s) => emojiSprite(e, s);
   const bx = (w, h, d, c, x, y, z, e = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c, e)); m.position.set(x, y, z); return m; };
   const L2W = (x, z, base = 0) => ({ x: A.x + x, y: gy(x, z) + base, z: A.z + z });
-  const fdecor = createFullerDecor({ group, L2W: (x, z, h) => L2W(x, z, h), rims: () => rimSpecs, tier: () => (ctx.look && ctx.look.tier) || 'high', anchor: () => A }); // l20p
+  const fdecor = createFullerDecor({ group, L2W: (x, z, h) => L2W(x, z, h), rims: () => rimSpecs, runs: () => hedgeRuns, tier: () => (ctx.look && ctx.look.tier) || 'high', anchor: () => A }); // l20p
   const posOfId = id => id === ctx.cur() ? ctx.getP() : ctx.parked(id);
   const idOfCls = c => ctx.crewIds().find(i => CLASS_OF[i] === c);
   function moveTween(q, to, dur, arc, done) { AA().movers.push({ q, a: { x: q.x, y: q.y, z: q.z }, b: to, t: 0, d: dur, arc, done }); }
@@ -2921,7 +2922,7 @@ export function createZones(scene, host) {
     for (const s of solids) s.off = true;
     solids = []; picks = []; hoops = []; nightDews = []; star = null;
     fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady'); syncObjH();
-    rimSpecs.length = 0; sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
+    rimSpecs.length = 0; hedgeRuns.length = 0; sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
     instWalls = []; decoJobs = new Map(); camRooms = []; caveChunks = []; for (const rec of atlasInsts) { const im = rec.im || rec; if (im.parent) im.parent.remove(im); } atlasInsts = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
@@ -3988,6 +3989,7 @@ export function createZones(scene, host) {
       if (e.inst && e.ims) {
         const hide = e.a < 0.6, M = new THREE.Matrix4(), Z = new THREE.Matrix4().makeScale(0, 0, 0);
         e.ims.forEach((im, k) => { if (!im || !e.bases[k]) return; im.setMatrixAt(e.i, hide ? Z : e.bases[k]); im.instanceMatrix.needsUpdate = true; });
+        if (e.kit) for (const q of e.kit) { q.im.setMatrixAt(q.i, hide ? Z : q.base); q.im.instanceMatrix.needsUpdate = true; } // l20p hedge kit
         continue;
       }
       if (!e.roots) continue;

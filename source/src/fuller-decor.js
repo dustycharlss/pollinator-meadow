@@ -25,7 +25,7 @@ const OFF = k => new RegExp('[?&]fuller=(0|[^&]*no' + k + ')').test(Q);
 // Per-level cuts made to stay inside the draw budget (filled in from the per-level census; see l20b-notes ## l20p).
 export const CUTS = {};
 
-export function createFullerDecor({ group, L2W, rims = () => [], tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {
+export function createFullerDecor({ group, L2W, rims = () => [], runs = () => [], tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {
   let root = null, token = 0, info = null;
   function clear() { token++; if (root) { root.removeFromParent(); root.traverse(o => { if (o.isInstancedMesh) o.dispose(); }); root = null; } info = null; setRouteClip(null); }
   async function build(levelId) {
@@ -39,7 +39,7 @@ export function createFullerDecor({ group, L2W, rims = () => [], tier = () => 'h
     const D = L.declutter || {};
     setRouteClip({ route: (D.route || []).map(([x, z]) => [A.x + x, A.z + z]), half: D.routeHalfWidth || 2.5, lane: D.lane ? [A.x + D.lane[0], A.x + D.lane[1], A.z + D.lane[2], A.z + D.lane[3]] : null, keep: (D.keepClear || []).map(k => ({ x: A.x + (k.x ?? k[0]), z: A.z + (k.z ?? k[1]), r: k.r ?? k[2] ?? 1.5 })) });
     // collect placements per key: [x, z, scale, yaw, yOff]
-    const byKey = new Map(); const add = (key, x, z, s, yaw, yo = 0) => { if (!byKey.has(key)) byKey.set(key, []); byKey.get(key).push([x, z, s, yaw, yo]); };
+    const byKey = new Map(); const add = (key, x, z, s, yaw, yo = 0, sy = 1) => { if (!byKey.has(key)) byKey.set(key, []); const l = byKey.get(key); l.push([x, z, s, yaw, yo, sy]); return l.length - 1; };
     if (!OFF('decor')) for (const d of L.decor || []) { if (cut.decor && cut.decor.includes(d.key)) continue; add(d.key, d.x, d.z, d.s ?? 1, d.yaw || 0); }
     if (!OFF('vig') && !cut.vignettes) for (const v of L.vignettes || []) add(v.key, v.x, v.z, v.s ?? 1, v.yaw || 0);
     if (!OFF('clutter')) {
@@ -56,23 +56,38 @@ export function createFullerDecor({ group, L2W, rims = () => [], tier = () => 'h
       for (let i = 0; i < n; i++) { const c = s0 + 1 + i * 2; add('fuller/walls/hedge-2m-h1.6', xAxis ? r.x + c : r.x, xAxis ? r.z : r.z + c, 1, xAxis ? 0 : Math.PI / 2, -0.3); }
       for (const c of [s0, -s0]) add('fuller/walls/hedge-post-h1.6', xAxis ? r.x + c : r.x, xAxis ? r.z : r.z + c, 1, 0, -0.3);
       if (rem > 0.2) add('fuller/walls/hedge-post-h1.6', xAxis ? r.x + s0 + n * 2 + rem / 2 : r.x, xAxis ? r.z : r.z + s0 + n * 2 + rem / 2, 1, 0, -0.3); } }
+    // Act 2 lane hedges (hedgeRun): 2 m kit runs every 2 m along z, nearest height variant scaled to h; window pieces where the
+    // level asks for them (visual only; lane colliders unchanged). Fades keep working: each 0.5 m fade entry also hides its kit piece.
+    const HV = [1.6, 2.2, 3.4], RU = OFF('kit') || cut.kit ? [] : runs(), runRecs = [];
+    const wins = ((L.act2 && L.act2.windows) || []).filter(w => /hedge-window/.test(w.piece || ''));
+    for (const r of RU) { const hv = HV.reduce((a, b) => Math.abs(b - r.h) < Math.abs(a - r.h) ? b : a), sy = r.h / hv, pcs = [];
+      for (let z = r.z0; z < r.z1 - 0.01; z += 2) { const L2 = Math.min(2, r.z1 - z), zc = z + L2 / 2;
+        const win = hv === 2.2 && L2 > 1.9 && wins.find(w => Math.abs(w.x - r.x) < 0.8 && Math.abs(w.z - zc) <= 1.0);
+        const key = win ? 'fuller/walls/hedge-window-h2.2' : L2 > 1.9 ? 'fuller/walls/hedge-2m-h' + hv : 'fuller/walls/hedge-post-h' + hv;
+        pcs.push({ key, z: zc, idx: add(key, r.x, zc, 1, Math.PI / 2, -0.1, sy) }); }
+      runRecs.push({ r, pcs }); }
     const lm = !OFF('lm') && !cut.landmark && L.landmark && L.landmark.key ? L.landmark : null;
     const keys = [...byKey.keys()]; if (lm) keys.push(lm.key);
     const P = await Promise.all(keys.map(partsOf)); if (my !== token) return null;
     root = new THREE.Group(); root.name = 'fullerDecor:' + levelId;
     const M = new THREE.Matrix4(), Q4 = new THREE.Quaternion(), S = new THREE.Vector3(), V = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0);
-    let draws = 0, inst = 0;
+    let draws = 0, inst = 0; const imsByKey = new Map();
     keys.forEach((key, ki) => {
       const pl = key === (lm && lm.key) && !byKey.has(key) ? [[lm.x, lm.z, lm.s ?? 1, lm.yaw || 0]] : byKey.get(key);
       for (const part of P[ki]) {
         const im = new THREE.InstancedMesh(part.geo, part.mat, pl.length); im.name = 'fuller:' + key.split('/').pop();
         im.castShadow = false; im.receiveShadow = true; im.userData.fullerDecor = true; im.userData.noOutline = true;
-        pl.forEach(([x, z, s, yaw, yo], i) => { const w = L2W(x, z, yo || 0); V.set(w.x, w.y, w.z); Q4.setFromAxisAngle(Y, yaw); S.setScalar(s); M.compose(V, Q4, S).multiply(part.m4); im.setMatrixAt(i, M); });
+        pl.forEach(([x, z, s, yaw, yo, sy], i) => { const w = L2W(x, z, yo || 0); V.set(w.x, w.y, w.z); Q4.setFromAxisAngle(Y, yaw); S.set(s, s * (sy || 1), s); M.compose(V, Q4, S).multiply(part.m4); im.setMatrixAt(i, M); });
         im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.computeBoundingBox?.(); im.frustumCulled = true;
-        root.add(im); draws++; inst += pl.length;
+        root.add(im); draws++; inst += pl.length; if (!imsByKey.has(key)) imsByKey.set(key, []); imsByKey.get(key).push(im);
       }
     });
     group.add(root);
+    const A2 = anchor();
+    for (const { r, pcs } of runRecs) { if (!pcs.every(p => (imsByKey.get(p.key) || []).length)) continue;
+      for (const im of r.ims) im.visible = false;
+      for (const e of r.fadeEs) { const zc = (e.z0 + e.z1) / 2 - A2.z; let best = pcs[0]; for (const p of pcs) if (Math.abs(p.z - zc) < Math.abs(best.z - zc)) best = p;
+        e.kit = imsByKey.get(best.key).map(im => { const m = new THREE.Matrix4(); im.getMatrixAt(best.idx, m); return { im, i: best.idx, base: m }; }); } }
     if (R.length && byKey.has('fuller/walls/hedge-2m-h1.6')) { const ok = P[keys.indexOf('fuller/walls/hedge-2m-h1.6')]; if (ok && ok.length) for (const r of R) r.m.visible = false; }
     info = { levelId, keys: keys.length, draws, inst, tier: tn };
     if (typeof window !== 'undefined') window.__fullerDecor = info;
