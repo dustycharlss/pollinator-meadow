@@ -543,6 +543,62 @@ export function createZones(scene, host) {
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
   let sig = {}, props = [], gates = [], plates = [], puzzles = [], deep = [], crossings = [], steps = [], tw = null, lastProg = 0, hintT = 0, bearPad = null, windT = 0, introQ = [];
+  let hintSt = null, hintCool = new Map(), hintSpr = {};
+  function hintSprite(c) {
+    if (hintSpr[c]) return hintSpr[c];
+    const sp = badge(c, 0, -80, 0, 1.15);
+    sp.visible = false;
+    return (hintSpr[c] = sp);
+  }
+  function clearWrongHint() {
+    if (!hintSt && !Object.keys(hintSpr).length) {
+      document.querySelectorAll('#crewDock button.hintNeed').forEach(b => b.classList.remove('hintNeed'));
+      return;
+    }
+    document.querySelectorAll('#crewDock button.hintNeed').forEach(b => b.classList.remove('hintNeed'));
+    for (const c of Object.keys(hintSpr)) if (hintSpr[c]) hintSpr[c].visible = false;
+    hintSt = null;
+  }
+  function showWrongHint(pr, force = false) {
+    if (!pr || !pr.cls || pr.done) return;
+    const c = clsOfCur();
+    if (pr.cls === c) return;
+    const id = pr.sig || (pr.kind + ':' + (+pr.x).toFixed(1) + ':' + (+pr.z).toFixed(1));
+    if (hintSt && hintSt.id === id && t < hintSt.until) return;
+    if (!force && t - (hintCool.get(id) || -99) < 6) return;
+    clearWrongHint();
+    hintCool.set(id, t);
+    hintSt = { pr, cls: pr.cls, until: t + 3, id };
+    const btn = document.querySelector('#crewDock button.cls-' + pr.cls);
+    if (btn) btn.classList.add('hintNeed');
+    const sp = hintSprite(pr.cls);
+    sp.position.set(pr.x, (pr.y || 0) + 2.35, pr.z);
+    sp.visible = true;
+  }
+  function tickWrongHint() {
+    const p = (host.getP && host.getP()) || (ctx.getP && ctx.getP());
+    const c = clsOfCur();
+    if (p) {
+      const near = nearest(p);
+      if (near && near.cls && near.cls !== c && !near.done) showWrongHint(near);
+      for (const pl of plates) {
+        if (!pl.heavy) continue;
+        const pr = props.find(q => q.plate === pl);
+        if (pr && Math.hypot(p.x - pl.x, p.z - pl.z) < (pl.r || 1.6) + 0.4) showWrongHint(pr);
+      }
+    }
+    if (hintSt) {
+      const pr = hintSt.pr;
+      const away = !p || Math.hypot(p.x - pr.x, p.z - pr.z) > (pr.r || 2) + 2.8;
+      if (c === hintSt.cls || away || t >= hintSt.until) clearWrongHint();
+      else { const sp = hintSprite(hintSt.cls); sp.position.set(pr.x, (pr.y || 0) + 2.35, pr.z); sp.visible = true; }
+    }
+    for (const pl of plates) {
+      if (!pl.heavy || !pl.m || !pl.m.material) continue;
+      const lit = !!(hintSt && hintSt.pr && (hintSt.pr.plate === pl || (Math.hypot((hintSt.pr.x || 0) - pl.x, (hintSt.pr.z || 0) - pl.z) < 0.5)));
+      pl.m.material.emissiveIntensity = lit ? 0.55 : 0.18;
+    }
+  }
   const mats = new Map();
   // art pass: the few hard-coded forest greens / dark browns used by B.tree, hedges and logs map onto Golden Hour Pastel swatches
   const B_REMAP = { 0x3f8a35: 0x5cc48a, 0x4fa044: 0x6fd39a, 0x6b4a30: 0xa06a5a, 0x4f9a3e: 0x58b878, 0x5a3b22: 0x8a5a4a, 0x5fae4a: 0x79cf8c };
@@ -964,9 +1020,13 @@ export function createZones(scene, host) {
     },
     plate(s, x, z, o = {}) {
       const g = gy(x, z) + (o.base || 0), heavy = !!o.heavy;
-      const m = new THREE.Mesh(new THREE.BoxGeometry(heavy ? 2.6 : 2.0, 0.3, heavy ? 2.6 : 2.0), mat(heavy ? 0xff8a1f : 0x7dc85a, 0.15)); m.position.set(A.x + x, g + 0.12, A.z + z); group.add(m);
+      // l20k: class-locked (heavy/bruiser) plates get their own material so a faint class glow can
+      // brighten with the wrong-character hint without extra draws; icon sits on the plate.
+      const pm = heavy ? mat(0xff8a1f, 0.18).clone() : mat(0x7dc85a, 0.15);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(heavy ? 2.6 : 2.0, 0.3, heavy ? 2.6 : 2.0), pm); m.position.set(A.x + x, g + 0.12, A.z + z); group.add(m);
       const rim = new THREE.Mesh(new THREE.BoxGeometry(heavy ? 3.0 : 2.4, 0.12, heavy ? 3.0 : 2.4), mat(0x6a6a68)); rim.position.set(A.x + x, g + 0.04, A.z + z); group.add(rim);
-      const p = { sig: s, x: A.x + x, y: g, z: A.z + z, r: heavy ? 1.6 : 1.3, heavy, m, label: o.label || 'plate', holder: null, icon: badge(heavy ? 'bruiser' : 'trickster', A.x + x, g + 2.2, A.z + z, 0.9) };
+      const icY = heavy ? g + 0.48 : g + 2.2, icS = heavy ? 0.55 : 0.9;
+      const p = { sig: s, x: A.x + x, y: g, z: A.z + z, r: heavy ? 1.6 : 1.3, heavy, m, label: o.label || 'plate', holder: null, icon: badge(heavy ? 'bruiser' : 'trickster', A.x + x, icY, A.z + z, icS) };
       plates.push(p); props.push({ kind: 'plate', cls: heavy ? 'bruiser' : null, x: p.x, y: g, z: p.z, r: 1.8, label: p.label, plate: p });
     },
     /** shove: Bruiser pushes a log/boulder/basket into its slot (becomes stair, ford, or plate weight) */
@@ -3206,7 +3266,7 @@ export function createZones(scene, host) {
   function load(pid, anchor) {
     clear(); matLive = false; recipe = MAPS[pid]; if (!recipe) return; id = pid;
     setCaveLevel(!!(recipe.caveFloor || recipe.id === 'mirror_caves' || pid === 'mirror_caves'));
-    installFallbackHooks({ zoneGroup: group, scene }); babyMixers.length = 0; pipDone = new Set(); pipPend = null; pipSigT = {}; picked = 0; petalV = 0; keyDone = false; t = 0; lastProg = 0; hintT = 0;
+    installFallbackHooks({ zoneGroup: group, scene }); babyMixers.length = 0; pipDone = new Set(); pipPend = null; pipSigT = {}; picked = 0; petalV = 0; keyDone = false; t = 0; lastProg = 0; hintT = 0; hintCool = new Map(); hintSpr = {}; hintSt = null; try { clearWrongHint(); } catch (e) {}
     if (recipe.ambience) ctx.audio?.levelAmb?.(recipe.ambience);
     A = { x: anchor.x, z: anchor.z };
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
@@ -3349,7 +3409,7 @@ export function createZones(scene, host) {
     if (ctx.isNetClient?.()) { emitNet('intent', { intent: 'act', body: ctx.cur() }); return true; }
     if (pr.act === 'gear') return stumpSwap(pr);
     const c = clsOfCur(), C = CLASSES[pr.cls];
-    if (pr.cls && pr.cls !== c) { say(`${C.em} Only a ${C.name} can ${(ACTS[pr.act] || { verb: 'Act' }).verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
+    if (pr.cls && pr.cls !== c) { showWrongHint(pr); say(`${C.em} Only a ${C.name} can ${(ACTS[pr.act] || { verb: 'Act' }).verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
     if (pr.need && !isOn(pr.need)) { say('🔒 ' + (pr.needWhy || 'Not yet — something else has to happen first'), 2600); return true; }
     const atB = pr._atB;
     if (a2 && a2Act(pr, p)) { if (pr.icon && pr.done && !pr.two) pr.icon.visible = false; return true; }
@@ -3577,6 +3637,7 @@ export function createZones(scene, host) {
     for (const mx of babyMixers) mx.update(dt);
     if (!recipe) return; t += dt;
     if (recipe.hub) { if (introQ.length && t > 0.4 && t - msgT > 3.2) { msgT = t; const line = introQ.shift(); const say = typeof line === 'string' ? line : line.say; tst(say, 3000); const vid = typeof line === 'string' ? null : line.voice; if (vid) ctx.audio?.speak?.(vid); } updateHub(dt, cam); return; }
+    tickWrongHint();
     // look-target: lerp L22 snow-pile scale and terrain vertex colours over 1.2 s with the Master Bell
     if (recipe.id === 'thaw_valley') {
       const S = AA(), winter = S.season === 'winter';
@@ -4370,7 +4431,7 @@ export function createZones(scene, host) {
     useGear: () => { const p = ctx.getP(); return !!(a2 && p && useGear(p)); },
     gearViz: () => { const V = a2 && a2.gviz; if (!V) return null; const o = {}; for (const k of ['pouch', 'glider', 'sling']) { const m = V[k].children.find(c => c.userData && c.userData.model); const sz = m && m.visible !== false && V[k].visible ? new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3()) : null; o[k] = { shown: V[k].visible, model: !!m, size: sz ? [+sz.x.toFixed(2), +sz.y.toFixed(2), +sz.z.toFixed(2)] : null }; } return o; },
     gearList: () => Object.keys(GEAR_INFO).map(k => ({ k, ...GEAR_INFO[k], has: !!gear[k] })),
-    setT: v => { t = +v; }, idleSec: () => t - lastProg, nudgeIdle: sec => { lastProg = t - Math.max(0, +sec || 0); }, forcePuzzles, setTiming: k => { timingK = +k > 0 ? +k : 1; }, timing: () => TK(),
+    setT: v => { t = +v; }, idleSec: () => t - lastProg, nudgeIdle: sec => { lastProg = t - Math.max(0, +sec || 0); }, wrongHint: () => hintSt ? { cls: hintSt.cls, until: hintSt.until, kind: hintSt.pr.kind, sig: hintSt.pr.sig || null, x: hintSt.pr.x, z: hintSt.pr.z } : null, forceWrongHint: () => { const p = ctx.getP && ctx.getP(), c = clsOfCur(); const pr = (p && props.find(q => q.cls && q.cls !== c && !q.done && Math.hypot(p.x - q.x, p.z - q.z) < 10)) || props.find(q => q.cls && q.cls !== c && !q.done) || plates.filter(q => q.heavy).map(q => props.find(r => r.plate === q)).find(Boolean); if (!pr) return false; const id = pr.sig || (pr.kind + ':' + (+pr.x).toFixed(1) + ':' + (+pr.z).toFixed(1)); hintCool.delete(id); showWrongHint(pr, true); return true; }, forcePuzzles, setTiming: k => { timingK = +k > 0 ? +k : 1; }, timing: () => TK(),
     gearState: () => ({ ...gear }), a2: () => a2 ? { bonks: a2.bonks, season: a2.season, night: a2.night, wind: a2.wind, windFlipT: a2.windFlipT, pingAt: a2.pingAt ? { x: a2.pingAt.x - A.x, z: a2.pingAt.z - A.z, t: a2.pingAt.t } : null, cp: !!a2.cp, cpPos: a2.cp ? { x: +(a2.cp.x - A.x).toFixed(2), z: +(a2.cp.z - A.z).toFixed(2) } : null, cps: a2.cps.map(c => ({ x: c.x - A.x, z: c.z - A.z, on: !!c.on })), hidEver: !!a2.hidEver, bonkLog: (a2.bonkLog || []).slice(-20), dew: !!a2.dew, heldTool: a2.heldTool, pouch: !!a2.pouch.full, glide: +a2.glide.toFixed(2), slot: { scout: slotOf('scout'), trickster: slotOf('trickster'), bruiser: slotOf('bruiser') }, embers: a2.embers.map(e => ({ id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z })), targets: a2.targets.map(q => ({ sig: q.sig, done: !!q.done })), stumps: a2.stumps.map(q => ({ x: q.x - A.x, z: q.z - A.z, auto: !!q.auto })), cups: a2.cups.map(c => ({ sig: c.sig, amt: +c.amt.toFixed(2), on: c.on, x: c.x - A.x, z: c.z - A.z })), escorts: a2.escorts.map(b => ({ kind: b.kind, x: +(b.x - A.x).toFixed(2), z: +(b.z - A.z).toFixed(2), called: !!b.called, following: !!b.following, hide: !!b.hide, leadBody: b.leadBody || null })), shots: a2.shots.map(s => ({ kind: s.kind, x: s.x - A.x, z: s.z - A.z, landed: !!s.landed })), acorn: a2.acorn ? { at: a2.acorn.at, by: a2.acorn.by, home: a2.acorn.home } : null, ponds: a2.ponds.map(q => ({ id: q.id, level: q.level, wy: +pondSurf(q).toFixed(2) })), en: a2.en.map(e => ({ kind: e.kind, id: e.id, st: e.st, x: e.x - A.x, z: e.z - A.z, yaw: e.yaw, sus: e.sus, bait: !!e.bait, pingLure: e.pingLure ? e.pingLure.phase : null, swoop: !!e.swoop, calm: !!e.calm, roll: e.roll ? e.roll.phase : null, napT: e.napT || 0, stayedFar: !!e.stayedFar })), ghosts: a2.ghosts.map(g => ({ id: g.id, on: g.on, latched: !!g.latched })), logs: a2.logs.map(l => ({ id: l.id, k: l.k, x: l.x - A.x, z: l.z - A.z })), time: a2.time || (a2.night ? 'night' : 'day'), windMag: a2.windMag ?? 6, master: a2.master ? { state: a2.master.state, next: a2.master.next, start: a2.master.start, cool: +Math.max(0, (a2.master.coolUntil || 0) - t).toFixed(2) } : null } : null, result: () => result, objective: () => objCache || objective(), fadeLine, rect, puzzleList: () => puzzles.map(p => ({ ...p })), NEED, SIZE, MAPS,
   };
 }

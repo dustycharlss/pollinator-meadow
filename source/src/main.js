@@ -2796,6 +2796,11 @@ async function boot() {
     get idle() { return zones && zones.idleSec ? zones.idleSec() : 0; },
     get target() { const o = zones && zones.objective && zones.objective(); return o && o.x != null ? { x: o.x, y: o.y, z: o.z, text: o.text, cls: o.cls, color: o.color } : null; },
   };
+  window.__game.wrongHintCtl = {
+    get shown() { return !!(zones && zones.wrongHint && zones.wrongHint()); },
+    get info() { return zones && zones.wrongHint && zones.wrongHint(); },
+    force() { return !!(zones && zones.forceWrongHint && zones.forceWrongHint()); },
+  };
 }
 
 let last = performance.now(), fpsAcc = 0, fpsN = 0;

@@ -886,10 +886,10 @@ body.adv #bBuild,body.adv #bRts,body.adv #nestBar,body.adv #shopChip,body.adv #d
 .howCls .hc{display:flex;gap:8px;align-items:center;margin:4px 0;padding:5px 7px;border-radius:12px;border:2px solid var(--cc);background:rgba(255,255,255,.5);font-size:13px}.howCls .hc img{width:40px;height:40px;flex:none}
 #crewDock button .dockB{position:absolute;left:-6px;top:-6px;width:24px;height:24px;pointer-events:none}
 #crewDock button.cls-scout{border-color:#4aa8ff}#crewDock button.cls-trickster{border-color:#7dc85a}#crewDock button.cls-bruiser{border-color:#ff8a1f}
-#crewDock button.hintNeed{animation:dockHint 0.55s ease-in-out 5;box-shadow:0 0 0 3px #fff,0 0 14px 4px #ffe27a,0 3px 0 #3b2614;z-index:1}
-#crewDock button.cls-scout.hintNeed{box-shadow:0 0 0 3px #fff,0 0 16px 5px #4aa8ff,0 3px 0 #3b2614}
-#crewDock button.cls-trickster.hintNeed{box-shadow:0 0 0 3px #fff,0 0 16px 5px #7dc85a,0 3px 0 #3b2614}
-#crewDock button.cls-bruiser.hintNeed{box-shadow:0 0 0 3px #fff,0 0 16px 5px #ff8a1f,0 3px 0 #3b2614}
+#crewDock button.hintNeed{animation:dockHint 0.55s ease-in-out 5;box-shadow:0 0 0 3px #3b2614,0 0 0 6px #fff,0 0 16px 5px #ffe27a,0 3px 0 #3b2614;z-index:1}
+#crewDock button.cls-scout.hintNeed{box-shadow:0 0 0 3px #3b2614,0 0 0 6px #fff,0 0 18px 6px #4aa8ff,0 3px 0 #3b2614}
+#crewDock button.cls-trickster.hintNeed{box-shadow:0 0 0 3px #3b2614,0 0 0 6px #fff,0 0 18px 6px #7dc85a,0 3px 0 #3b2614}
+#crewDock button.cls-bruiser.hintNeed{box-shadow:0 0 0 3px #3b2614,0 0 0 6px #fff,0 0 18px 6px #ff8a1f,0 3px 0 #3b2614}
 @keyframes dockHint{0%,100%{filter:brightness(1)}50%{filter:brightness(1.28)}}
 html.reduceMotion #crewDock button.hintNeed{animation:none}
 .tpClass{border:3px solid var(--cc);border-radius:16px;padding:6px;margin:6px 0;background:rgba(255,255,255,.35)}.tpcH{display:flex;align-items:center;gap:6px;margin-bottom:4px}.tpcH img{width:34px;height:34px}.tpcH b{font-size:15px}.tpcH small{font-size:11px;opacity:.8}
