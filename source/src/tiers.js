@@ -154,9 +154,19 @@ export function createTiers(scene, ctx) {
   TI.update = (dt, t, playing) => {
     if (adv()) { wasAdv = true; root.visible = false; carryObj.visible = false; return; }
     if (wasAdv) { wasAdv = false; root.visible = true; if (!TI.clusters.length) { spawnCluster(); spawnCluster(); } }
+    // l20j: in the meadow hub one dew cluster lives on the open glade in front of spawn (ctx.hubDew → world spot,
+    // null outside the hub, so arcade / free play keep the random meadow ring exactly as before)
+    const hs = ctx.hubDew ? ctx.hubDew() : null;
+    const hubCl = () => TI.clusters.find(c => c.hub);
+    const placeHub = () => { const cl = spawnCluster(hs); cl.hub = true; return cl; };
+    if (hs) {
+      const key = hs.x.toFixed(1) + ',' + hs.z.toFixed(1);
+      if (TI.hubKey !== key) { TI.hubKey = key;
+        if (!hubCl()) { if (TI.clusters.length >= 3) { let far = null, fd = -1; for (const c of TI.clusters) { const d = Math.hypot(c.x - hs.x, c.z - hs.z); if (d > fd) { fd = d; far = c; } } if (far) killCluster(far); } placeHub(); } }
+    } else TI.hubKey = null;
     const p = P(); unpark(p); if (!p) return; const id = sp(), B = ctx.build;
     // dew
-    TI.spawnT = (TI.spawnT || 0) + dt; if (TI.spawnT > 20 && TI.clusters.length < 3) { TI.spawnT = 0; spawnCluster(); }
+    TI.spawnT = (TI.spawnT || 0) + dt; if (TI.spawnT > 20 && TI.clusters.length < 3) { TI.spawnT = 0; if (hs && !hubCl()) placeHub(); else spawnCluster(); }
     const echo = B.count('echo_tower') > 0;
     for (const cl of [...TI.clusters]) {
       cl.beam.scale.y = echo ? 2.5 : 1;
