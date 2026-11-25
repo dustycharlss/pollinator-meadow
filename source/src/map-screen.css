@@ -318,3 +318,14 @@ body #valley.ov:has(#mapScreen.msClean:not([data-view="world"])){background:var(
   #mapScreen.msClean:not([data-view="world"]) .msTab span{display:inline}
   #mapScreen.msClean:not([data-view="world"]) .msTabs{max-width:320px}
 }
+
+/* l20p: area summary line above the clean grid (mockup levelselect-mock-grid.png) */
+.msSum{display:none}
+#mapScreen.msClean:not([data-view="world"]) .msSum:not([hidden]){display:flex;position:absolute;left:12px;right:12px;top:2px;height:22px;align-items:center;justify-content:space-between;gap:8px;font:700 14px/1 var(--cl-font);color:var(--cl-ink2);white-space:nowrap;overflow:hidden;z-index:1}
+#mapScreen.msClean:not([data-view="world"]) .msSum b{font-weight:900;color:var(--map-ink)}
+#mapScreen.msClean:not([data-view="world"]) .msSum span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+#mapScreen.msClean:not([data-view="world"]) .msSum:not([hidden])~.msGrid{top:24px}
+@media (orientation:landscape) and (max-height:420px){
+  #mapScreen.msClean:not([data-view="world"]) .msSum:not([hidden]){font-size:12px;height:18px;top:0}
+  #mapScreen.msClean:not([data-view="world"]) .msSum:not([hidden])~.msGrid{top:19px}
+}

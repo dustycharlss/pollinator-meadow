@@ -55,6 +55,7 @@ export function createMapScreen(root, ctx) {
   </div>
   <div class="msWell">
    <img class="msBackdrop" alt="" draggable="false">
+   <div class="msSum" id="msSum"><span class="msSumL"></span><span class="msSumR"></span></div>
    <div id="vGrid" class="msGrid" role="listbox" aria-label="Levels"></div>
    <div id="msWorld" class="msWorld" hidden></div>
    <div class="msWellRim" aria-hidden="true"></div>
@@ -190,6 +191,9 @@ ${s.seed ? img2x('nodes/marker-starseed', 'tSeed') : ''}</span>
     // status lines kept for tests + screen readers
     const c = key === 'world' ? null : ctx.actCounts(key);
     $('vSub').textContent = key === 'world' ? 'Meadow · pick an act or enter the Hub' : `${GRID.acts[key].subtitle} · ${c.done}/${c.of} cleared · pick a level, then Play`;
+    // l20p: area summary line (Squid mockup): "Act 2 · 9 levels" + "x / 24 stars here" (built levels; earned / max stars of the built scored levels)
+    if (key !== 'world') { const ts = GRID.acts[key].tiles.filter(t => ctx.built(t.id)), sc = ts.filter(t => t.kind !== 'tutorial'), got = sc.reduce((a, t) => a + Math.min(3, ctx.stars(t.id)?.n || 0), 0);
+      const sm = $('msSum'); sm.querySelector('.msSumL').innerHTML = `<b>${esc(GRID.acts[key].subtitle)}</b> · ${ts.length} level${ts.length === 1 ? '' : 's'}`; sm.querySelector('.msSumR').innerHTML = `<b>${got}</b> / ${sc.length * 3} stars here`; sm.hidden = !ts.length; }
     $('vA2Note').textContent = ctx.gatesOff?.() ? 'Every level is open — play in any order.' : '';
   }
 
