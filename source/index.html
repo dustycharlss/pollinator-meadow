@@ -1191,6 +1191,17 @@ html.cbOn #btns #bAct[data-cls].cd{background:url(ui/fuller/hud/btn-action-neutr
 #btns #bSneak,#btns #bCall{background:url(ui/fuller/hud/btn-action-neutral-normal.png) center/100% 100% no-repeat;background-image:image-set(url(ui/fuller/hud/btn-action-neutral-normal.png) 1x,url(ui/fuller/hud/btn-action-neutral-normal@2x.png) 2x);color:#3b2614;border:0;box-shadow:none}
 #btns #bSneak:active,#btns #bCall:active{background:url(ui/fuller/hud/btn-action-neutral-pressed.png) center/100% 100% no-repeat;background-image:image-set(url(ui/fuller/hud/btn-action-neutral-pressed.png) 1x,url(ui/fuller/hud/btn-action-neutral-pressed@2x.png) 2x)}
 #btns #bSneak.on,#btns #bCall.on{background:url(ui/fuller/hud/btn-action-neutral-on.png) center/100% 100% no-repeat;background-image:image-set(url(ui/fuller/hud/btn-action-neutral-on.png) 1x,url(ui/fuller/hud/btn-action-neutral-on@2x.png) 2x);color:#3b2614;box-shadow:none}
+
+/* l20q H1 (Squid l20p re-check): neighbouring HUD plates need gray dE >= 10 in all CVD sims. Jump = the same gold sprite on a DARK amber
+   plate (sprite drawn by ::before through brightness()) with a gold label; CB-mode neutral action plate = cream dimmed (distinct from Interact). */
+#btns #bJump,#bJump{isolation:isolate;background:none!important}
+#bJump::before{content:'';position:absolute;inset:0;border-radius:50%;z-index:-1;pointer-events:none;filter:brightness(var(--jumpDim,0.42)) saturate(1.25);
+  background:url(ui/fuller/hud/btn-jump-gold-normal.png) center/100% 100% no-repeat;background-image:image-set(url(ui/fuller/hud/btn-jump-gold-normal.png) 1x,url(ui/fuller/hud/btn-jump-gold-normal@2x.png) 2x)}
+#bJump:active::before,#bJump.pressed::before{background-image:image-set(url(ui/fuller/hud/btn-jump-gold-pressed.png) 1x,url(ui/fuller/hud/btn-jump-gold-pressed@2x.png) 2x)}
+#bJump.on::before{background-image:image-set(url(ui/fuller/hud/btn-jump-gold-on.png) 1x,url(ui/fuller/hud/btn-jump-gold-on@2x.png) 2x)}
+#bJump:disabled::before,#bJump.cd::before{background-image:image-set(url(ui/fuller/hud/btn-jump-gold-disabled.png) 1x,url(ui/fuller/hud/btn-jump-gold-disabled@2x.png) 2x)}
+#btns #bJump b,#bJump b,#bJump span{color:#ffda61}
+html.cbOn #btns #bAct[data-cls]{filter:brightness(var(--cbActDim,0.8))}
 </style>
 <style id="fullerJournal">/* l20p P5: Critters tab (ui/fuller/journal art) */
 #jCrit{max-height:min(60vh,520px);overflow:auto;-webkit-overflow-scrolling:touch}
