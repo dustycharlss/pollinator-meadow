@@ -12,12 +12,17 @@ export function createHomeInd(scene) {
   const arrow = new THREE.Group(); const am = new THREE.Mesh(gAr, mat()); arrow.add(am);
   const edge = new THREE.Mesh(gAr.clone().scale(1.22, 1, 1.18), mat()); edge.material.color.set(0x1a2a20); edge.material.opacity = 0.45; edge.position.y = -0.01; arrow.add(edge);
   for (const o of [pip, arrow]) { o.visible = false; o.renderOrder = 4; o.traverse(m => { m.frustumCulled = false; m.renderOrder = 4; }); scene.add(o); }
-  // l20k Arrow assist: one shared overhead chevron (fill + dark edge = 2 draws, MeshBasic, no shadows).
+  // l20m Arrow assist: upright chevron (fill + dark edge = 2 FrontSide draws). Tip is local +Y;
+  // we map that onto the target direction and roll the face toward the camera so the follow
+  // camera sees the front, not the back/edge of a ground-flat shape.
   const assist = new THREE.Group();
-  const asFill = new THREE.Mesh(gAr, mat());
-  const asEdge = new THREE.Mesh(gAr.clone().scale(1.22, 1, 1.18), mat());
-  asEdge.material.color.set(0x1a2a20); asEdge.material.opacity = 0.6; asEdge.position.y = -0.012;
-  // FrontSide: DoubleSide was 2 draws per mesh (4 total). Chevrons face +Y after rotateX.
+  const asShape = new THREE.Shape();
+  asShape.moveTo(0, 1.1); asShape.lineTo(0.62, 0.25); asShape.lineTo(0.24, 0.25); asShape.lineTo(0.24, -0.75);
+  asShape.lineTo(-0.24, -0.75); asShape.lineTo(-0.24, 0.25); asShape.lineTo(-0.62, 0.25); asShape.closePath();
+  const gAs = new THREE.ShapeGeometry(asShape);
+  const asFill = new THREE.Mesh(gAs, mat());
+  const asEdge = new THREE.Mesh(gAs.clone().scale(1.28, 1.24, 1), mat());
+  asEdge.material.color.set(0x1a1814); asEdge.material.opacity = 0.92; asEdge.position.z = -0.02;
   for (const m of [asFill, asEdge]) {
     m.material.side = THREE.FrontSide;
     m.userData.noCast = true;
@@ -27,6 +32,7 @@ export function createHomeInd(scene) {
   assist.visible = false; assist.renderOrder = 6;
   assist.traverse(m => { m.frustumCulled = false; m.renderOrder = 6; m.castShadow = false; m.receiveShadow = false; });
   scene.add(assist);
+  const _tgt = new THREE.Vector3(), _cam = new THREE.Vector3(), _n = new THREE.Vector3(), _x = new THREE.Vector3(), _m = new THREE.Matrix4();
   let fade = 0, aFade = 0;
   return {
     pip, arrow, assist,
@@ -43,16 +49,32 @@ export function createHomeInd(scene) {
       o.traverse(m => { if (m.material && m !== halo && m !== edge) { m.material.color.set(color); m.material.opacity = 0.92 * fade; } });
       halo.material.opacity = 0.22 * fade; edge.material.opacity = 0.45 * fade;
     },
-    updateAssist({ x, y, z, ang, show, color, t, dt, bob = true }) {
+    updateAssist({ x, y, z, ang, show, color, t, dt, bob = true, cam = null }) {
       aFade += ((show ? 1 : 0) - aFade) * Math.min(1, dt * 6);
       assist.visible = aFade > 0.02; if (!assist.visible) return;
       const lift = bob ? 0.1 * Math.sin(t * 3.2) : 0;
       assist.position.set(x, y + lift, z);
-      assist.rotation.y = ang + Math.PI;
-      assist.scale.setScalar(0.58);
+      // ~2x the old settled 0.58 scale, so the follow camera sees ≥80 CSS px on a Pixel 7 portrait.
+      assist.scale.setScalar(1.2);
+      _tgt.set(Math.sin(ang), 0, Math.cos(ang));
+      if (_tgt.lengthSq() < 1e-8) _tgt.set(0, 0, 1);
+      _tgt.normalize();
+      if (cam && cam.position) {
+        _cam.copy(cam.position).sub(assist.position);
+        _n.copy(_cam).addScaledVector(_tgt, -_cam.dot(_tgt));
+        if (_n.lengthSq() < 1e-6) _n.set(0, 1, 0); else _n.normalize();
+      } else {
+        _n.set(0, 1, 0);
+      }
+      _x.crossVectors(_tgt, _n);
+      if (_x.lengthSq() < 1e-8) { _n.set(0, 1, 0); _x.crossVectors(_tgt, _n); }
+      _x.normalize();
+      _n.crossVectors(_x, _tgt).normalize();
+      _m.makeBasis(_x, _tgt, _n);
+      assist.quaternion.setFromRotationMatrix(_m);
       asFill.material.color.set(color || '#ffd23f');
       asFill.material.opacity = 0.95 * aFade;
-      asEdge.material.opacity = 0.6 * aFade;
+      asEdge.material.opacity = 0.92 * aFade;
     },
     hide() { pip.visible = arrow.visible = assist.visible = false; fade = 0; aFade = 0; },
   };
