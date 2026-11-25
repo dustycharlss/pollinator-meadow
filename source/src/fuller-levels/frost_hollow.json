@@ -1,0 +1,3865 @@
+{
+ "level": "frost_hollow",
+ "act": 2,
+ "theme": "frost",
+ "recipe": "tc-wt-rc-deploy@53e2c56f",
+ "coords": "level-local (same space as the recipe B.* calls); y = terrain height at (x,z)",
+ "bounds": [
+  -9.0,
+  9.0,
+  -8.0,
+  65.0
+ ],
+ "home": [
+  0.0,
+  -5.0
+ ],
+ "exit": [
+  0.0,
+  61.0
+ ],
+ "declutter": {
+  "rule": "hide world decor ONLY inside the route corridor + keepClear circles + solids (not the whole rect + 14 m)",
+  "route": [
+   [
+    0.0,
+    -5.0
+   ],
+   [
+    0.0,
+    -0.6
+   ],
+   [
+    0.0,
+    4.0
+   ],
+   [
+    -4.0,
+    4.0
+   ],
+   [
+    -8.0,
+    6.0
+   ],
+   [
+    -4.0,
+    12.0
+   ],
+   [
+    -3.0,
+    17.0
+   ],
+   [
+    2.25,
+    18.38
+   ],
+   [
+    2.75,
+    12.25
+   ],
+   [
+    4.0,
+    4.0
+   ],
+   [
+    5.1,
+    -2.5
+   ],
+   [
+    -4.0,
+    -3.0
+   ],
+   [
+    -4.5,
+    22.85
+   ],
+   [
+    -4.5,
+    26.4
+   ],
+   [
+    -2.25,
+    35.88
+   ],
+   [
+    -4.0,
+    40.0
+   ],
+   [
+    -6.72,
+    43.38
+   ],
+   [
+    -1.25,
+    52.25
+   ],
+   [
+    5.0,
+    54.0
+   ],
+   [
+    3.0,
+    59.0
+   ],
+   [
+    5.0,
+    44.0
+   ],
+   [
+    4.0,
+    40.0
+   ],
+   [
+    3.33,
+    32.67
+   ],
+   [
+    0.0,
+    61.0
+   ]
+  ],
+  "routeHalfWidth": null,
+  "lane": [
+   -8.0,
+   8.0,
+   -7.0,
+   64.0
+  ],
+  "keepClear": [
+   {
+    "x": 0.0,
+    "z": -1.0,
+    "r": 2.5,
+    "kind": "checkpoint"
+   },
+   {
+    "x": 0.0,
+    "z": 2.0,
+    "r": 3.0,
+    "kind": "seasonBells"
+   },
+   {
+    "x": -8.0,
+    "z": 6.0,
+    "r": 3.0,
+    "kind": "creek"
+   },
+   {
+    "x": 3.5,
+    "z": 12.5,
+    "r": 3.0,
+    "kind": "lever"
+   },
+   {
+    "x": 0.0,
+    "z": 17.5,
+    "r": 2.5,
+    "kind": "checkpoint"
+   },
+   {
+    "x": 3.0,
+    "z": 19.5,
+    "r": 3.0,
+    "kind": "seasonBells"
+   },
+   {
+    "x": -4.5,
+    "z": 20.6,
+    "r": 3.0,
+    "kind": "snowPile"
+   },
+   {
+    "x": -4.5,
+    "z": 22.7,
+    "r": 3.0,
+    "kind": "snowPile"
+   },
+   {
+    "x": -4.5,
+    "z": 26.4,
+    "r": 3.0,
+    "kind": "mudSlide"
+   },
+   {
+    "x": 3.5,
+    "z": 32.5,
+    "r": 3.0,
+    "kind": "lever"
+   },
+   {
+    "x": 0.0,
+    "z": 35.5,
+    "r": 2.5,
+    "kind": "checkpoint"
+   },
+   {
+    "x": -3.0,
+    "z": 37.5,
+    "r": 3.0,
+    "kind": "seasonBells"
+   },
+   {
+    "x": -8.0,
+    "z": 41.5,
+    "r": 3.0,
+    "kind": "creek"
+   },
+   {
+    "x": -5.0,
+    "z": 44.0,
+    "r": 3.5,
+    "kind": "boulder"
+   },
+   {
+    "x": 5.0,
+    "z": 44.0,
+    "r": 3.0,
+    "kind": "iceSlot"
+   },
+   {
+    "x": 0.0,
+    "z": 51.0,
+    "r": 3.0,
+    "kind": "fox"
+   },
+   {
+    "x": -2.5,
+    "z": 53.5,
+    "r": 3.0,
+    "kind": "hide"
+   },
+   {
+    "x": 5.0,
+    "z": 54.0,
+    "r": 3.0,
+    "kind": "bell"
+   },
+   {
+    "x": 0.0,
+    "z": 59.0,
+    "r": 2.5,
+    "kind": "checkpoint"
+   },
+   {
+    "x": -7.4,
+    "z": 44.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 6.5,
+    "z": -4.0,
+    "r": 2.0,
+    "kind": "tree"
+   },
+   {
+    "x": -6.5,
+    "z": 14.0,
+    "r": 2.0,
+    "kind": "tree"
+   },
+   {
+    "x": 6.5,
+    "z": 36.0,
+    "r": 2.0,
+    "kind": "tree"
+   },
+   {
+    "x": -4.0,
+    "z": -3.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -1.33,
+    "z": -3.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 1.33,
+    "z": -3.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 4.0,
+    "z": -3.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -4.0,
+    "z": 4.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 0.0,
+    "z": 4.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 4.0,
+    "z": 4.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -4.0,
+    "z": 12.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 0.0,
+    "z": 12.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 4.0,
+    "z": 12.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -3.0,
+    "z": 17.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 3.0,
+    "z": 17.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -3.0,
+    "z": 33.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 3.0,
+    "z": 33.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -4.0,
+    "z": 40.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 4.0,
+    "z": 40.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -3.0,
+    "z": 59.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 3.0,
+    "z": 59.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 6.2,
+    "z": -2.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 0.0,
+    "z": 2.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 3.5,
+    "z": 12.5,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 3.0,
+    "z": 19.5,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -4.5,
+    "z": 22.7,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -4.5,
+    "z": 25.4,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 3.5,
+    "z": 32.5,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -3.0,
+    "z": 37.5,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 5.0,
+    "z": 44.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": -6.5,
+    "z": 44.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 5.0,
+    "z": 54.0,
+    "r": 1.2,
+    "kind": "pickup"
+   },
+   {
+    "x": 0.0,
+    "z": 60.2,
+    "r": 1.2,
+    "kind": "pickup"
+   }
+  ]
+ },
+ "landmark": {
+  "key": "fuller/landmarks/snowcap-pines",
+  "x": 16.2,
+  "z": 75.0,
+  "yaw": -2.94,
+  "s": 1.0,
+  "collider": null,
+  "note": "outside the playable rim; no collider needed"
+ },
+ "landmarkNote": null,
+ "decor": [
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -22.95,
+   "z": -5.6,
+   "s": 1.01,
+   "yaw": 5.63,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -18.87,
+   "z": -7.24,
+   "s": 1.08,
+   "yaw": 1.37,
+   "zone": "outer",
+   "collider": {
+    "r": 0.43
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -22.92,
+   "z": 2.48,
+   "s": 0.96,
+   "yaw": 2.66,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -16.87,
+   "z": -11.27,
+   "s": 1.07,
+   "yaw": 1.13,
+   "zone": "outer",
+   "collider": {
+    "r": 0.64
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -16.84,
+   "z": 3.6,
+   "s": 0.94,
+   "yaw": 4.73,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -12.61,
+   "z": -1.36,
+   "s": 0.98,
+   "yaw": 4.61,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -18.0,
+   "z": -16.77,
+   "s": 0.95,
+   "yaw": 4.17,
+   "zone": "outer",
+   "collider": {
+    "r": 0.38
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -10.84,
+   "z": 2.07,
+   "s": 1.09,
+   "yaw": 5.92,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -19.71,
+   "z": 9.33,
+   "s": 0.95,
+   "yaw": 3.57,
+   "zone": "outer",
+   "collider": {
+    "r": 0.57
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -14.39,
+   "z": -4.27,
+   "s": 1.04,
+   "yaw": 3.11,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -16.29,
+   "z": 13.09,
+   "s": 0.9,
+   "yaw": 4.71,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -12.57,
+   "z": -17.36,
+   "s": 1.09,
+   "yaw": 6.04,
+   "zone": "outer",
+   "collider": {
+    "r": 0.44
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -12.05,
+   "z": -6.68,
+   "s": 0.97,
+   "yaw": 2.0,
+   "zone": "outer",
+   "collider": {
+    "r": 0.58
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -14.67,
+   "z": -14.25,
+   "s": 0.88,
+   "yaw": 2.1,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -19.77,
+   "z": 14.58,
+   "s": 0.98,
+   "yaw": 4.13,
+   "zone": "outer",
+   "collider": {
+    "r": 0.39
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -9.97,
+   "z": -15.04,
+   "s": 0.94,
+   "yaw": 2.81,
+   "zone": "outer",
+   "collider": {
+    "r": 0.56
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -16.64,
+   "z": 8.22,
+   "s": 1.04,
+   "yaw": 3.0,
+   "zone": "outer",
+   "collider": {
+    "r": 0.62
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -10.31,
+   "z": -10.68,
+   "s": 0.96,
+   "yaw": 3.57,
+   "zone": "outer",
+   "collider": {
+    "r": 0.58
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -6.95,
+   "z": -20.42,
+   "s": 0.94,
+   "yaw": 5.41,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -22.95,
+   "z": 13.42,
+   "s": 1.14,
+   "yaw": 4.18,
+   "zone": "outer",
+   "collider": {
+    "r": 0.46
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -22.08,
+   "z": -1.8,
+   "s": 1.09,
+   "yaw": 2.5,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -13.44,
+   "z": 4.3,
+   "s": 1.14,
+   "yaw": 5.57,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -15.88,
+   "z": -0.28,
+   "s": 0.93,
+   "yaw": 4.48,
+   "zone": "outer",
+   "collider": {
+    "r": 0.56
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -3.72,
+   "z": -12.04,
+   "s": 1.03,
+   "yaw": 1.22,
+   "zone": "outer",
+   "collider": {
+    "r": 0.62
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -15.09,
+   "z": -8.33,
+   "s": 1.12,
+   "yaw": 5.68,
+   "zone": "outer",
+   "collider": {
+    "r": 0.45
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -12.63,
+   "z": 9.48,
+   "s": 0.94,
+   "yaw": 2.3,
+   "zone": "outer",
+   "collider": {
+    "r": 0.38
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -14.46,
+   "z": 17.93,
+   "s": 0.88,
+   "yaw": 3.65,
+   "zone": "outer",
+   "collider": {
+    "r": 0.53
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -6.55,
+   "z": -16.04,
+   "s": 0.91,
+   "yaw": 6.28,
+   "zone": "outer",
+   "collider": {
+    "r": 0.36
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -2.43,
+   "z": -16.74,
+   "s": 0.97,
+   "yaw": 0.78,
+   "zone": "outer",
+   "collider": {
+    "r": 0.39
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 12.29,
+   "z": 15.26,
+   "s": 0.91,
+   "yaw": 3.08,
+   "zone": "outer",
+   "collider": {
+    "r": 0.55
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 12.79,
+   "z": 8.22,
+   "s": 0.94,
+   "yaw": 1.54,
+   "zone": "outer",
+   "collider": {
+    "r": 0.38
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 13.41,
+   "z": 12.03,
+   "s": 0.94,
+   "yaw": 3.9,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 16.12,
+   "z": 5.66,
+   "s": 0.9,
+   "yaw": 1.14,
+   "zone": "outer",
+   "collider": {
+    "r": 0.36
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 2.81,
+   "z": -16.73,
+   "s": 1.01,
+   "yaw": 1.56,
+   "zone": "outer",
+   "collider": {
+    "r": 0.61
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 11.59,
+   "z": 5.02,
+   "s": 0.87,
+   "yaw": 2.44,
+   "zone": "outer",
+   "collider": {
+    "r": 0.52
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -15.61,
+   "z": 21.57,
+   "s": 1.07,
+   "yaw": 4.41,
+   "zone": "outer",
+   "collider": {
+    "r": 0.43
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 3.92,
+   "z": -10.36,
+   "s": 0.94,
+   "yaw": 0.55,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -15.99,
+   "z": 25.65,
+   "s": 1.0,
+   "yaw": 0.68,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 14.19,
+   "z": -0.34,
+   "s": 1.01,
+   "yaw": 3.97,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 4.73,
+   "z": -20.95,
+   "s": 1.05,
+   "yaw": 0.14,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -14.81,
+   "z": 29.88,
+   "s": 1.05,
+   "yaw": 3.45,
+   "zone": "outer",
+   "collider": {
+    "r": 0.63
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -11.07,
+   "z": 24.85,
+   "s": 0.98,
+   "yaw": 1.07,
+   "zone": "outer",
+   "collider": {
+    "r": 0.59
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 16.2,
+   "z": 8.98,
+   "s": 0.87,
+   "yaw": 1.06,
+   "zone": "outer",
+   "collider": {
+    "r": 0.35
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 15.17,
+   "z": 16.81,
+   "s": 1.1,
+   "yaw": 1.35,
+   "zone": "outer",
+   "collider": {
+    "r": 0.66
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -0.46,
+   "z": -13.8,
+   "s": 1.08,
+   "yaw": 6.26,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.92,
+   "z": 0.62,
+   "s": 1.07,
+   "yaw": 3.19,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 14.73,
+   "z": 20.38,
+   "s": 1.04,
+   "yaw": 6.26,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 18.41,
+   "z": 22.03,
+   "s": 1.05,
+   "yaw": 0.86,
+   "zone": "outer",
+   "collider": {
+    "r": 0.63
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -11.03,
+   "z": 19.24,
+   "s": 1.12,
+   "yaw": 4.66,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -17.88,
+   "z": 33.73,
+   "s": 1.01,
+   "yaw": 4.52,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 17.96,
+   "z": 12.4,
+   "s": 1.09,
+   "yaw": 3.74,
+   "zone": "outer",
+   "collider": {
+    "r": 0.65
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 16.94,
+   "z": 26.13,
+   "s": 0.86,
+   "yaw": 5.19,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 12.57,
+   "z": 23.09,
+   "s": 0.97,
+   "yaw": 4.84,
+   "zone": "outer",
+   "collider": {
+    "r": 0.39
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 16.81,
+   "z": -2.88,
+   "s": 0.92,
+   "yaw": 6.28,
+   "zone": "outer",
+   "collider": {
+    "r": 0.37
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 18.3,
+   "z": 29.77,
+   "s": 0.9,
+   "yaw": 4.73,
+   "zone": "outer",
+   "collider": {
+    "r": 0.36
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -6.94,
+   "z": -12.68,
+   "s": 0.97,
+   "yaw": 4.62,
+   "zone": "outer",
+   "collider": {
+    "r": 0.39
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 10.02,
+   "z": -11.43,
+   "s": 0.97,
+   "yaw": 1.1,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 21.14,
+   "z": 12.98,
+   "s": 0.88,
+   "yaw": 0.44,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 13.66,
+   "z": -3.51,
+   "s": 0.96,
+   "yaw": 4.72,
+   "zone": "outer",
+   "collider": {
+    "r": 0.58
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -14.28,
+   "z": 36.58,
+   "s": 1.14,
+   "yaw": 2.72,
+   "zone": "outer",
+   "collider": {
+    "r": 0.46
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 15.37,
+   "z": 32.0,
+   "s": 1.03,
+   "yaw": 2.38,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 14.38,
+   "z": -7.61,
+   "s": 1.09,
+   "yaw": 5.15,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 6.94,
+   "z": -15.52,
+   "s": 1.01,
+   "yaw": 4.11,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 13.56,
+   "z": 28.93,
+   "s": 1.0,
+   "yaw": 2.04,
+   "zone": "outer",
+   "collider": {
+    "r": 0.6
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 11.21,
+   "z": 31.42,
+   "s": 1.12,
+   "yaw": 0.68,
+   "zone": "outer",
+   "collider": {
+    "r": 0.67
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -17.48,
+   "z": 41.54,
+   "s": 0.88,
+   "yaw": 1.26,
+   "zone": "outer",
+   "collider": {
+    "r": 0.53
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 22.04,
+   "z": 31.87,
+   "s": 0.93,
+   "yaw": 0.11,
+   "zone": "outer",
+   "collider": {
+    "r": 0.56
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 22.16,
+   "z": -3.91,
+   "s": 0.86,
+   "yaw": 4.98,
+   "zone": "outer",
+   "collider": {
+    "r": 0.52
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 17.96,
+   "z": 36.12,
+   "s": 0.91,
+   "yaw": 2.77,
+   "zone": "outer",
+   "collider": {
+    "r": 0.36
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -14.3,
+   "z": 33.23,
+   "s": 1.03,
+   "yaw": 4.33,
+   "zone": "outer",
+   "collider": {
+    "r": 0.41
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 9.56,
+   "z": -21.75,
+   "s": 1.01,
+   "yaw": 1.11,
+   "zone": "outer",
+   "collider": {
+    "r": 0.61
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 14.95,
+   "z": -14.11,
+   "s": 1.12,
+   "yaw": 0.23,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 11.95,
+   "z": -17.47,
+   "s": 1.1,
+   "yaw": 1.87,
+   "zone": "outer",
+   "collider": {
+    "r": 0.44
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 11.07,
+   "z": 1.73,
+   "s": 1.13,
+   "yaw": 4.87,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 16.72,
+   "z": 2.34,
+   "s": 0.94,
+   "yaw": 0.73,
+   "zone": "outer",
+   "collider": {
+    "r": 0.38
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -13.39,
+   "z": 40.61,
+   "s": 0.99,
+   "yaw": 4.75,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -14.21,
+   "z": 44.99,
+   "s": 0.96,
+   "yaw": 6.05,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -16.47,
+   "z": 49.17,
+   "s": 0.93,
+   "yaw": 5.28,
+   "zone": "outer",
+   "collider": {
+    "r": 0.56
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 22.13,
+   "z": 36.68,
+   "s": 1.15,
+   "yaw": 5.07,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 21.63,
+   "z": 39.92,
+   "s": 1.13,
+   "yaw": 0.86,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 16.48,
+   "z": -18.12,
+   "s": 0.95,
+   "yaw": 5.48,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -11.75,
+   "z": 50.21,
+   "s": 1.0,
+   "yaw": 4.05,
+   "zone": "outer",
+   "collider": {
+    "r": 0.6
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 15.33,
+   "z": 42.44,
+   "s": 0.99,
+   "yaw": 4.25,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 22.88,
+   "z": -9.12,
+   "s": 0.91,
+   "yaw": 2.62,
+   "zone": "outer",
+   "collider": {
+    "r": 0.36
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -19.42,
+   "z": 50.47,
+   "s": 1.06,
+   "yaw": 1.55,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -19.88,
+   "z": 46.86,
+   "s": 1.09,
+   "yaw": 0.99,
+   "zone": "outer",
+   "collider": {
+    "r": 0.44
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -17.16,
+   "z": 52.77,
+   "s": 0.99,
+   "yaw": 0.58,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 13.36,
+   "z": 38.6,
+   "s": 0.99,
+   "yaw": 1.7,
+   "zone": "outer",
+   "collider": {
+    "r": 0.59
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -22.93,
+   "z": 55.08,
+   "s": 1.09,
+   "yaw": 3.15,
+   "zone": "outer",
+   "collider": {
+    "r": 0.44
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 17.64,
+   "z": 47.97,
+   "s": 0.91,
+   "yaw": 1.11,
+   "zone": "outer",
+   "collider": {
+    "r": 0.36
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 11.59,
+   "z": 35.58,
+   "s": 0.89,
+   "yaw": 5.76,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -16.72,
+   "z": 59.69,
+   "s": 1.04,
+   "yaw": 4.89,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 10.8,
+   "z": 49.45,
+   "s": 1.04,
+   "yaw": 0.23,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 17.72,
+   "z": -9.78,
+   "s": 1.12,
+   "yaw": 1.5,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 22.67,
+   "z": -12.93,
+   "s": 1.14,
+   "yaw": 0.13,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 18.27,
+   "z": -15.33,
+   "s": 0.91,
+   "yaw": 1.1,
+   "zone": "outer",
+   "collider": {
+    "r": 0.55
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -22.81,
+   "z": 33.13,
+   "s": 1.0,
+   "yaw": 2.81,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -13.22,
+   "z": 54.72,
+   "s": 1.08,
+   "yaw": 5.47,
+   "zone": "outer",
+   "collider": {
+    "r": 0.43
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 13.36,
+   "z": -10.75,
+   "s": 1.14,
+   "yaw": 5.74,
+   "zone": "outer",
+   "collider": {
+    "r": 0.68
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -22.65,
+   "z": 50.43,
+   "s": 0.89,
+   "yaw": 4.43,
+   "zone": "outer",
+   "collider": {
+    "r": 0.36
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 14.68,
+   "z": 46.0,
+   "s": 1.0,
+   "yaw": 3.09,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 14.86,
+   "z": 52.42,
+   "s": 1.0,
+   "yaw": 1.82,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 19.21,
+   "z": 45.15,
+   "s": 1.13,
+   "yaw": 4.98,
+   "zone": "outer",
+   "collider": {
+    "r": 0.45
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 17.52,
+   "z": 57.53,
+   "s": 1.1,
+   "yaw": 4.15,
+   "zone": "outer",
+   "collider": {
+    "r": 0.44
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -12.82,
+   "z": 63.69,
+   "s": 0.99,
+   "yaw": 1.76,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 11.19,
+   "z": 57.22,
+   "s": 1.09,
+   "yaw": 1.79,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -12.91,
+   "z": 59.69,
+   "s": 1.14,
+   "yaw": 2.32,
+   "zone": "outer",
+   "collider": {
+    "r": 0.46
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -17.15,
+   "z": 67.32,
+   "s": 1.14,
+   "yaw": 4.5,
+   "zone": "outer",
+   "collider": {
+    "r": 0.46
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 10.93,
+   "z": 53.21,
+   "s": 0.97,
+   "yaw": 1.44,
+   "zone": "outer",
+   "collider": {
+    "r": 0.58
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.52,
+   "z": 50.29,
+   "s": 0.88,
+   "yaw": 0.24,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -11.79,
+   "z": 66.92,
+   "s": 0.95,
+   "yaw": 5.59,
+   "zone": "outer",
+   "collider": {
+    "r": 0.57
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -17.83,
+   "z": 63.66,
+   "s": 1.14,
+   "yaw": 1.84,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -21.21,
+   "z": 68.92,
+   "s": 1.13,
+   "yaw": 2.88,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 21.39,
+   "z": 50.28,
+   "s": 0.99,
+   "yaw": 3.2,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 22.7,
+   "z": 45.34,
+   "s": 1.05,
+   "yaw": 5.84,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 14.47,
+   "z": 61.47,
+   "s": 0.86,
+   "yaw": 4.31,
+   "zone": "outer",
+   "collider": {
+    "r": 0.34
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 19.65,
+   "z": 63.93,
+   "s": 0.95,
+   "yaw": 5.53,
+   "zone": "outer",
+   "collider": {
+    "r": 0.57
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 18.12,
+   "z": 51.22,
+   "s": 1.12,
+   "yaw": 5.18,
+   "zone": "outer",
+   "collider": {
+    "r": 0.45
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -20.53,
+   "z": 72.42,
+   "s": 1.06,
+   "yaw": 2.1,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -4.41,
+   "z": 67.69,
+   "s": 0.88,
+   "yaw": 3.44,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -21.86,
+   "z": 64.17,
+   "s": 1.05,
+   "yaw": 3.12,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 14.87,
+   "z": 65.82,
+   "s": 0.93,
+   "yaw": 0.62,
+   "zone": "outer",
+   "collider": {
+    "r": 0.37
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -8.08,
+   "z": 67.71,
+   "s": 1.07,
+   "yaw": 2.99,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -6.52,
+   "z": 70.82,
+   "s": 1.04,
+   "yaw": 1.78,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 11.28,
+   "z": 66.95,
+   "s": 1.07,
+   "yaw": 4.99,
+   "zone": "outer"
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 18.56,
+   "z": 54.5,
+   "s": 1.02,
+   "yaw": 1.91,
+   "zone": "outer",
+   "collider": {
+    "r": 0.41
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 22.09,
+   "z": 58.67,
+   "s": 1.11,
+   "yaw": 4.99,
+   "zone": "outer",
+   "collider": {
+    "r": 0.44
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -0.96,
+   "z": 69.32,
+   "s": 0.92,
+   "yaw": 3.34,
+   "zone": "outer",
+   "collider": {
+    "r": 0.37
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 13.19,
+   "z": 69.81,
+   "s": 0.86,
+   "yaw": 5.03,
+   "zone": "outer",
+   "collider": {
+    "r": 0.34
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 6.96,
+   "z": 70.23,
+   "s": 1.15,
+   "yaw": 4.52,
+   "zone": "outer",
+   "collider": {
+    "r": 0.46
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -14.0,
+   "z": 69.45,
+   "s": 0.86,
+   "yaw": 2.71,
+   "zone": "outer",
+   "collider": {
+    "r": 0.34
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 16.38,
+   "z": 73.14,
+   "s": 1.05,
+   "yaw": 0.7,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 10.21,
+   "z": 71.23,
+   "s": 0.99,
+   "yaw": 1.21,
+   "zone": "outer",
+   "collider": {
+    "r": 0.59
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 22.76,
+   "z": 74.06,
+   "s": 1.15,
+   "yaw": 0.22,
+   "zone": "outer",
+   "collider": {
+    "r": 0.46
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 1.97,
+   "z": 72.34,
+   "s": 0.99,
+   "yaw": 2.17,
+   "zone": "outer",
+   "collider": {
+    "r": 0.59
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -10.09,
+   "z": 72.82,
+   "s": 1.05,
+   "yaw": 4.18,
+   "zone": "outer",
+   "collider": {
+    "r": 0.63
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 12.21,
+   "z": 73.74,
+   "s": 1.04,
+   "yaw": 0.61,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -17.37,
+   "z": 70.85,
+   "s": 1.0,
+   "yaw": 4.37,
+   "zone": "outer",
+   "collider": {
+    "r": 0.4
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 2.63,
+   "z": 78.2,
+   "s": 0.96,
+   "yaw": 1.55,
+   "zone": "outer",
+   "collider": {
+    "r": 0.38
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -5.68,
+   "z": 78.37,
+   "s": 0.86,
+   "yaw": 5.91,
+   "zone": "outer",
+   "collider": {
+    "r": 0.34
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -9.44,
+   "z": 75.99,
+   "s": 1.04,
+   "yaw": 6.24,
+   "zone": "outer",
+   "collider": {
+    "r": 0.42
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": -12.61,
+   "z": 77.9,
+   "s": 1.13,
+   "yaw": 4.12,
+   "zone": "outer",
+   "collider": {
+    "r": 0.45
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -13.92,
+   "z": 73.82,
+   "s": 1.06,
+   "yaw": 5.23,
+   "zone": "outer",
+   "collider": {
+    "r": 0.64
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": 20.69,
+   "z": 77.39,
+   "s": 1.14,
+   "yaw": 5.03,
+   "zone": "outer",
+   "collider": {
+    "r": 0.68
+   }
+  },
+  {
+   "key": "fuller/decor/snowy-tree",
+   "x": 7.86,
+   "z": 73.83,
+   "s": 1.15,
+   "yaw": 5.88,
+   "zone": "outer",
+   "collider": {
+    "r": 0.46
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -17.82,
+   "z": 74.5,
+   "s": 0.94,
+   "yaw": 5.31,
+   "zone": "outer",
+   "collider": {
+    "r": 0.56
+   }
+  },
+  {
+   "key": "fuller/decor/rock-cluster",
+   "x": -16.12,
+   "z": 77.69,
+   "s": 0.97,
+   "yaw": 3.08,
+   "zone": "outer",
+   "collider": {
+    "r": 0.58
+   }
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.19,
+   "z": -5.53,
+   "s": 0.83,
+   "yaw": 5.62,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.35,
+   "z": -3.27,
+   "s": 0.73,
+   "yaw": 2.99,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.31,
+   "z": -0.89,
+   "s": 0.79,
+   "yaw": 0.86,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.26,
+   "z": 33.32,
+   "s": 0.76,
+   "yaw": 3.38,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.33,
+   "z": 36.44,
+   "s": 0.94,
+   "yaw": 3.22,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.36,
+   "z": 47.93,
+   "s": 0.79,
+   "yaw": 5.87,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.32,
+   "z": 50.12,
+   "s": 0.83,
+   "yaw": 2.36,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.18,
+   "z": 52.5,
+   "s": 0.72,
+   "yaw": 2.97,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.31,
+   "z": 54.15,
+   "s": 0.95,
+   "yaw": 0.65,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.35,
+   "z": 59.63,
+   "s": 0.88,
+   "yaw": 0.27,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": -7.37,
+   "z": 62.52,
+   "s": 0.88,
+   "yaw": 1.95,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.44,
+   "z": 1.45,
+   "s": 0.85,
+   "yaw": 5.3,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.31,
+   "z": 6.58,
+   "s": 0.79,
+   "yaw": 2.57,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.27,
+   "z": 9.4,
+   "s": 0.79,
+   "yaw": 0.66,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.28,
+   "z": 18.64,
+   "s": 0.75,
+   "yaw": 0.61,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.18,
+   "z": 20.85,
+   "s": 0.81,
+   "yaw": 2.32,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.35,
+   "z": 31.5,
+   "s": 0.94,
+   "yaw": 4.22,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.3,
+   "z": 38.74,
+   "s": 0.86,
+   "yaw": 4.3,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.21,
+   "z": 40.46,
+   "s": 0.75,
+   "yaw": 1.66,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/decor/bush-block",
+   "x": 7.18,
+   "z": 47.65,
+   "s": 0.85,
+   "yaw": 0.68,
+   "zone": "laneEdge"
+  }
+ ],
+ "vignettes": [
+  {
+   "key": "fuller/vignettes/vignette-birdbath",
+   "x": 7.38,
+   "z": 61.17,
+   "yaw": 2.8,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/vignettes/vignette-birdbath",
+   "x": -7.12,
+   "z": -1.69,
+   "yaw": 2.64,
+   "zone": "laneEdge"
+  },
+  {
+   "key": "fuller/vignettes/vignette-birdbath",
+   "x": -6.77,
+   "z": 63.82,
+   "yaw": 1.48,
+   "zone": "laneEdge"
+  }
+ ],
+ "clutter": {
+  "fuller/clutter/snow-tuft": [
+   [
+    -0.19,
+    -13.98,
+    1.11,
+    3.82
+   ],
+   [
+    1.09,
+    -13.93,
+    1.07,
+    2.22
+   ],
+   [
+    -4.94,
+    -13.47,
+    1.02,
+    3.12
+   ],
+   [
+    13.32,
+    -13.39,
+    0.83,
+    5.69
+   ],
+   [
+    4.53,
+    -13.3,
+    1.11,
+    0.92
+   ],
+   [
+    8.65,
+    -13.2,
+    0.93,
+    5.03
+   ],
+   [
+    -2.96,
+    -12.96,
+    0.85,
+    2.56
+   ],
+   [
+    -14.13,
+    -12.57,
+    1.22,
+    5.69
+   ],
+   [
+    3.2,
+    -12.4,
+    0.95,
+    1.69
+   ],
+   [
+    11.24,
+    -12.18,
+    1.15,
+    0.38
+   ],
+   [
+    -8.55,
+    -12.05,
+    1.02,
+    3.12
+   ],
+   [
+    5.12,
+    -11.92,
+    0.93,
+    2.79
+   ],
+   [
+    9.25,
+    -11.49,
+    1.08,
+    1.96
+   ],
+   [
+    -14.91,
+    -10.97,
+    0.81,
+    5.17
+   ],
+   [
+    8.61,
+    -10.93,
+    0.81,
+    1.87
+   ],
+   [
+    4.14,
+    -10.91,
+    1.06,
+    2.87
+   ],
+   [
+    12.98,
+    -10.44,
+    1.23,
+    2.73
+   ],
+   [
+    -8.97,
+    -10.21,
+    0.8,
+    3.03
+   ],
+   [
+    -9.93,
+    -10.17,
+    1.07,
+    5.32
+   ],
+   [
+    -3.89,
+    -9.63,
+    1.14,
+    1.6
+   ],
+   [
+    7.08,
+    -9.53,
+    0.89,
+    4.84
+   ],
+   [
+    -11.25,
+    -8.44,
+    1.18,
+    3.3
+   ],
+   [
+    6.29,
+    -8.17,
+    0.83,
+    3.74
+   ],
+   [
+    0.41,
+    -8.04,
+    1.1,
+    4.7
+   ],
+   [
+    11.76,
+    -7.29,
+    1.21,
+    1.74
+   ],
+   [
+    -13.82,
+    -6.8,
+    0.93,
+    6.15
+   ],
+   [
+    14.41,
+    -5.11,
+    1.19,
+    5.5
+   ],
+   [
+    11.7,
+    -4.76,
+    1.24,
+    2.55
+   ],
+   [
+    10.43,
+    -4.55,
+    0.97,
+    1.88
+   ],
+   [
+    14.03,
+    -2.8,
+    1.07,
+    1.33
+   ],
+   [
+    -11.91,
+    -2.42,
+    1.06,
+    1.22
+   ],
+   [
+    12.1,
+    -1.54,
+    0.92,
+    5.22
+   ],
+   [
+    -12.98,
+    -1.14,
+    0.85,
+    0.23
+   ],
+   [
+    -13.78,
+    3.48,
+    0.97,
+    0.65
+   ],
+   [
+    7.56,
+    3.95,
+    1.06,
+    5.59
+   ],
+   [
+    -12.35,
+    5.1,
+    1.19,
+    3.01
+   ],
+   [
+    9.85,
+    5.52,
+    0.87,
+    2.7
+   ],
+   [
+    -14.3,
+    6.31,
+    0.84,
+    5.02
+   ],
+   [
+    9.89,
+    8.64,
+    1.02,
+    5.57
+   ],
+   [
+    -12.68,
+    8.82,
+    1.14,
+    1.75
+   ],
+   [
+    12.14,
+    8.85,
+    1.2,
+    2.64
+   ],
+   [
+    11.94,
+    9.87,
+    0.91,
+    3.59
+   ],
+   [
+    7.79,
+    10.33,
+    0.93,
+    5.09
+   ],
+   [
+    -9.47,
+    11.13,
+    0.83,
+    6.02
+   ],
+   [
+    11.32,
+    11.83,
+    0.98,
+    4.95
+   ],
+   [
+    -10.25,
+    12.74,
+    1.17,
+    4.17
+   ],
+   [
+    9.17,
+    13.36,
+    0.86,
+    5.06
+   ],
+   [
+    -11.26,
+    14.75,
+    1.17,
+    3.07
+   ],
+   [
+    -12.91,
+    14.79,
+    0.83,
+    4.63
+   ],
+   [
+    -12.18,
+    16.39,
+    0.97,
+    5.75
+   ],
+   [
+    14.88,
+    16.55,
+    0.88,
+    5.35
+   ],
+   [
+    -14.52,
+    19.94,
+    0.88,
+    3.93
+   ],
+   [
+    11.54,
+    20.44,
+    1.06,
+    4.98
+   ],
+   [
+    10.84,
+    20.98,
+    0.99,
+    5.34
+   ],
+   [
+    6.99,
+    21.12,
+    1.11,
+    4.71
+   ],
+   [
+    -11.01,
+    21.55,
+    1.0,
+    4.23
+   ],
+   [
+    7.52,
+    22.73,
+    1.18,
+    3.64
+   ],
+   [
+    13.12,
+    23.03,
+    1.19,
+    4.99
+   ],
+   [
+    7.66,
+    23.67,
+    0.92,
+    0.17
+   ],
+   [
+    12.44,
+    24.52,
+    1.05,
+    1.74
+   ],
+   [
+    -12.08,
+    25.43,
+    0.99,
+    4.63
+   ],
+   [
+    13.29,
+    25.78,
+    0.82,
+    5.93
+   ],
+   [
+    12.2,
+    27.19,
+    0.81,
+    5.95
+   ],
+   [
+    11.42,
+    28.01,
+    1.16,
+    0.06
+   ],
+   [
+    10.29,
+    28.45,
+    1.03,
+    4.99
+   ],
+   [
+    -12.55,
+    30.57,
+    0.82,
+    5.88
+   ],
+   [
+    7.23,
+    31.07,
+    1.24,
+    5.56
+   ],
+   [
+    -14.44,
+    32.03,
+    0.98,
+    0.19
+   ],
+   [
+    14.91,
+    33.3,
+    0.84,
+    5.93
+   ],
+   [
+    -12.51,
+    33.63,
+    0.95,
+    3.28
+   ],
+   [
+    11.68,
+    35.04,
+    1.02,
+    1.85
+   ],
+   [
+    12.75,
+    35.4,
+    0.81,
+    4.01
+   ],
+   [
+    14.15,
+    35.56,
+    1.22,
+    1.03
+   ],
+   [
+    -13.94,
+    35.64,
+    1.06,
+    0.41
+   ],
+   [
+    12.7,
+    36.56,
+    1.17,
+    4.97
+   ],
+   [
+    13.62,
+    36.58,
+    0.96,
+    3.86
+   ],
+   [
+    -14.16,
+    36.59,
+    1.24,
+    2.2
+   ],
+   [
+    -14.83,
+    37.75,
+    0.83,
+    3.07
+   ],
+   [
+    14.06,
+    38.38,
+    1.25,
+    4.18
+   ],
+   [
+    11.93,
+    38.43,
+    1.23,
+    0.41
+   ],
+   [
+    12.69,
+    40.66,
+    0.96,
+    3.53
+   ],
+   [
+    13.44,
+    41.21,
+    1.17,
+    2.22
+   ],
+   [
+    11.98,
+    42.01,
+    1.16,
+    0.29
+   ],
+   [
+    9.04,
+    42.74,
+    1.11,
+    5.15
+   ],
+   [
+    9.89,
+    42.83,
+    1.06,
+    4.01
+   ],
+   [
+    12.03,
+    46.33,
+    0.87,
+    5.86
+   ],
+   [
+    -13.99,
+    46.62,
+    1.12,
+    4.18
+   ],
+   [
+    -14.06,
+    48.36,
+    1.01,
+    3.08
+   ],
+   [
+    -12.33,
+    48.99,
+    0.83,
+    6.28
+   ],
+   [
+    13.5,
+    49.98,
+    0.96,
+    1.04
+   ],
+   [
+    7.21,
+    50.02,
+    1.17,
+    2.11
+   ],
+   [
+    -10.53,
+    50.25,
+    1.17,
+    5.96
+   ],
+   [
+    -12.59,
+    50.32,
+    1.17,
+    1.28
+   ],
+   [
+    12.3,
+    50.87,
+    0.97,
+    4.88
+   ],
+   [
+    13.18,
+    50.94,
+    0.99,
+    3.13
+   ],
+   [
+    -11.37,
+    50.99,
+    1.22,
+    0.24
+   ],
+   [
+    7.62,
+    51.09,
+    0.97,
+    5.64
+   ],
+   [
+    -14.9,
+    51.26,
+    0.97,
+    4.16
+   ],
+   [
+    -10.22,
+    51.26,
+    1.1,
+    1.2
+   ],
+   [
+    -7.71,
+    53.19,
+    0.99,
+    5.32
+   ],
+   [
+    -6.77,
+    53.4,
+    0.81,
+    3.28
+   ],
+   [
+    -12.08,
+    53.93,
+    1.14,
+    0.83
+   ],
+   [
+    9.62,
+    54.24,
+    1.19,
+    0.48
+   ],
+   [
+    14.91,
+    54.36,
+    0.88,
+    0.82
+   ],
+   [
+    -6.84,
+    54.44,
+    1.18,
+    1.83
+   ],
+   [
+    12.9,
+    54.76,
+    1.23,
+    1.08
+   ],
+   [
+    11.16,
+    55.27,
+    0.81,
+    3.36
+   ],
+   [
+    -14.13,
+    57.04,
+    1.13,
+    0.7
+   ],
+   [
+    -12.31,
+    58.63,
+    1.05,
+    0.69
+   ],
+   [
+    10.12,
+    58.84,
+    1.05,
+    2.56
+   ],
+   [
+    7.92,
+    59.64,
+    0.83,
+    2.08
+   ],
+   [
+    12.47,
+    59.89,
+    1.2,
+    4.76
+   ],
+   [
+    -12.82,
+    60.46,
+    0.9,
+    0.61
+   ],
+   [
+    13.36,
+    63.59,
+    1.04,
+    0.88
+   ],
+   [
+    14.94,
+    64.09,
+    0.9,
+    4.83
+   ],
+   [
+    1.23,
+    65.06,
+    0.93,
+    4.81
+   ],
+   [
+    -4.93,
+    65.6,
+    0.98,
+    0.59
+   ],
+   [
+    3.3,
+    65.6,
+    1.12,
+    5.26
+   ],
+   [
+    13.71,
+    65.75,
+    0.88,
+    6.21
+   ],
+   [
+    5.37,
+    66.85,
+    0.83,
+    6.12
+   ],
+   [
+    2.45,
+    66.96,
+    1.18,
+    5.86
+   ],
+   [
+    -4.44,
+    67.27,
+    0.82,
+    0.92
+   ],
+   [
+    -5.56,
+    67.82,
+    0.87,
+    5.64
+   ],
+   [
+    -3.91,
+    68.21,
+    1.13,
+    3.91
+   ],
+   [
+    -4.84,
+    68.29,
+    0.89,
+    4.06
+   ],
+   [
+    7.2,
+    68.29,
+    0.94,
+    2.58
+   ],
+   [
+    13.71,
+    68.29,
+    0.9,
+    3.44
+   ],
+   [
+    -12.34,
+    68.4,
+    1.22,
+    0.45
+   ],
+   [
+    -8.75,
+    68.72,
+    1.2,
+    5.95
+   ],
+   [
+    0.42,
+    69.35,
+    1.19,
+    5.96
+   ],
+   [
+    2.69,
+    69.63,
+    1.13,
+    2.36
+   ],
+   [
+    -5.02,
+    69.7,
+    1.23,
+    1.61
+   ],
+   [
+    8.42,
+    70.33,
+    1.09,
+    1.62
+   ],
+   [
+    4.68,
+    70.99,
+    1.08,
+    2.97
+   ]
+  ],
+  "fuller/clutter/pebbles": [
+   [
+    3.5,
+    -13.49,
+    1.05,
+    2.79
+   ],
+   [
+    11.04,
+    -13.19,
+    1.25,
+    3.35
+   ],
+   [
+    -7.39,
+    -11.62,
+    1.16,
+    1.81
+   ],
+   [
+    8.61,
+    -10.93,
+    1.05,
+    1.12
+   ],
+   [
+    12.98,
+    -10.44,
+    0.8,
+    1.61
+   ],
+   [
+    14.65,
+    -8.45,
+    0.81,
+    5.64
+   ],
+   [
+    9.31,
+    -5.4,
+    1.07,
+    2.14
+   ],
+   [
+    -13.93,
+    -4.31,
+    1.05,
+    2.03
+   ],
+   [
+    10.46,
+    -0.83,
+    0.84,
+    3.02
+   ],
+   [
+    -10.24,
+    0.01,
+    0.98,
+    0.79
+   ],
+   [
+    12.04,
+    6.22,
+    1.06,
+    5.34
+   ],
+   [
+    11.94,
+    9.87,
+    0.88,
+    6.02
+   ],
+   [
+    13.31,
+    9.89,
+    1.01,
+    2.31
+   ],
+   [
+    -7.17,
+    11.41,
+    0.89,
+    1.83
+   ],
+   [
+    14.73,
+    12.58,
+    0.89,
+    1.13
+   ],
+   [
+    11.27,
+    15.49,
+    1.18,
+    1.76
+   ],
+   [
+    -10.67,
+    16.11,
+    0.93,
+    1.05
+   ],
+   [
+    11.44,
+    16.65,
+    0.99,
+    4.15
+   ],
+   [
+    11.64,
+    17.84,
+    0.94,
+    4.11
+   ],
+   [
+    9.23,
+    18.02,
+    1.11,
+    4.41
+   ],
+   [
+    10.45,
+    21.92,
+    1.1,
+    2.27
+   ],
+   [
+    -9.38,
+    22.49,
+    0.98,
+    5.87
+   ],
+   [
+    11.04,
+    23.8,
+    0.93,
+    5.64
+   ],
+   [
+    13.82,
+    24.27,
+    0.84,
+    3.51
+   ],
+   [
+    -11.72,
+    27.86,
+    1.11,
+    3.24
+   ],
+   [
+    -11.18,
+    28.73,
+    1.1,
+    2.96
+   ],
+   [
+    -14.68,
+    28.8,
+    1.06,
+    3.6
+   ],
+   [
+    10.36,
+    29.4,
+    1.12,
+    6.01
+   ],
+   [
+    -7.52,
+    31.8,
+    1.06,
+    3.78
+   ],
+   [
+    7.91,
+    32.31,
+    0.97,
+    4.08
+   ],
+   [
+    11.4,
+    32.75,
+    0.94,
+    2.47
+   ],
+   [
+    -13.72,
+    33.47,
+    1.08,
+    6.04
+   ],
+   [
+    -11.07,
+    37.78,
+    1.09,
+    6.02
+   ],
+   [
+    10.68,
+    37.79,
+    1.12,
+    3.28
+   ],
+   [
+    -13.46,
+    40.01,
+    0.85,
+    0.81
+   ],
+   [
+    15.0,
+    40.1,
+    1.18,
+    1.59
+   ],
+   [
+    9.08,
+    40.61,
+    0.87,
+    4.68
+   ],
+   [
+    7.32,
+    40.85,
+    0.92,
+    5.8
+   ],
+   [
+    13.09,
+    42.07,
+    0.93,
+    5.79
+   ],
+   [
+    11.08,
+    45.11,
+    1.01,
+    5.83
+   ],
+   [
+    -10.64,
+    45.87,
+    0.95,
+    1.74
+   ],
+   [
+    -10.31,
+    53.45,
+    0.99,
+    0.7
+   ],
+   [
+    10.9,
+    53.64,
+    0.9,
+    0.66
+   ],
+   [
+    -11.33,
+    57.36,
+    1.05,
+    5.92
+   ],
+   [
+    9.14,
+    57.98,
+    0.95,
+    2.73
+   ],
+   [
+    14.87,
+    59.01,
+    0.87,
+    6.23
+   ],
+   [
+    -14.11,
+    60.71,
+    0.88,
+    3.14
+   ],
+   [
+    -13.91,
+    61.55,
+    0.88,
+    4.77
+   ],
+   [
+    -7.87,
+    62.04,
+    1.22,
+    4.73
+   ],
+   [
+    14.31,
+    62.17,
+    1.17,
+    0.7
+   ],
+   [
+    -10.0,
+    62.68,
+    1.24,
+    3.7
+   ],
+   [
+    -12.21,
+    63.75,
+    1.08,
+    5.58
+   ],
+   [
+    14.94,
+    64.09,
+    0.85,
+    4.63
+   ],
+   [
+    2.05,
+    65.95,
+    1.07,
+    1.42
+   ],
+   [
+    10.49,
+    66.47,
+    1.17,
+    4.58
+   ],
+   [
+    -7.26,
+    66.55,
+    0.86,
+    0.19
+   ],
+   [
+    -10.48,
+    67.32,
+    1.03,
+    2.68
+   ],
+   [
+    9.47,
+    68.35,
+    1.19,
+    3.68
+   ],
+   [
+    -12.34,
+    68.4,
+    0.97,
+    4.8
+   ],
+   [
+    4.05,
+    68.64,
+    0.81,
+    2.29
+   ],
+   [
+    7.33,
+    69.27,
+    0.96,
+    3.37
+   ],
+   [
+    0.42,
+    69.35,
+    1.05,
+    2.77
+   ],
+   [
+    2.69,
+    69.63,
+    1.24,
+    1.48
+   ],
+   [
+    -1.03,
+    70.03,
+    0.87,
+    3.04
+   ]
+  ],
+  "fuller/clutter/twig-bits": [
+   [
+    -7.07,
+    -13.62,
+    1.23,
+    4.92
+   ],
+   [
+    -4.94,
+    -13.47,
+    0.95,
+    3.45
+   ],
+   [
+    13.32,
+    -13.39,
+    1.2,
+    5.28
+   ],
+   [
+    8.11,
+    -12.14,
+    0.8,
+    0.45
+   ],
+   [
+    6.91,
+    -11.46,
+    0.86,
+    1.13
+   ],
+   [
+    -0.27,
+    -9.54,
+    0.94,
+    1.24
+   ],
+   [
+    13.23,
+    -9.18,
+    0.96,
+    2.38
+   ],
+   [
+    1.6,
+    -9.09,
+    1.23,
+    0.03
+   ],
+   [
+    -10.26,
+    -7.95,
+    0.93,
+    1.91
+   ],
+   [
+    13.26,
+    -4.92,
+    1.19,
+    5.13
+   ],
+   [
+    -13.93,
+    -4.31,
+    1.11,
+    1.39
+   ],
+   [
+    9.28,
+    -2.47,
+    1.07,
+    2.92
+   ],
+   [
+    12.51,
+    -0.38,
+    1.05,
+    5.93
+   ],
+   [
+    -12.26,
+    0.08,
+    1.18,
+    5.12
+   ],
+   [
+    9.66,
+    2.55,
+    1.23,
+    3.46
+   ],
+   [
+    7.56,
+    3.95,
+    1.24,
+    0.11
+   ],
+   [
+    9.51,
+    4.24,
+    0.81,
+    2.34
+   ],
+   [
+    10.79,
+    7.3,
+    1.03,
+    0.5
+   ],
+   [
+    13.66,
+    7.65,
+    1.2,
+    2.16
+   ],
+   [
+    -11.15,
+    10.17,
+    0.86,
+    0.5
+   ],
+   [
+    11.67,
+    11.04,
+    1.24,
+    4.72
+   ],
+   [
+    -13.35,
+    13.68,
+    1.07,
+    5.38
+   ],
+   [
+    -12.55,
+    15.62,
+    1.13,
+    2.68
+   ],
+   [
+    -9.39,
+    17.34,
+    0.88,
+    5.0
+   ],
+   [
+    13.48,
+    17.41,
+    1.16,
+    1.71
+   ],
+   [
+    6.93,
+    18.91,
+    1.01,
+    6.26
+   ],
+   [
+    -9.82,
+    20.14,
+    1.1,
+    5.52
+   ],
+   [
+    11.59,
+    22.97,
+    0.99,
+    0.59
+   ],
+   [
+    14.28,
+    23.48,
+    1.19,
+    0.55
+   ],
+   [
+    12.44,
+    24.52,
+    0.81,
+    5.24
+   ],
+   [
+    -10.43,
+    25.55,
+    1.06,
+    1.12
+   ],
+   [
+    -14.41,
+    26.61,
+    0.86,
+    1.41
+   ],
+   [
+    11.47,
+    28.87,
+    1.18,
+    2.41
+   ],
+   [
+    9.42,
+    29.6,
+    0.99,
+    4.59
+   ],
+   [
+    -12.55,
+    30.57,
+    0.82,
+    4.03
+   ],
+   [
+    -14.63,
+    31.17,
+    0.89,
+    0.32
+   ],
+   [
+    10.2,
+    31.27,
+    0.84,
+    5.89
+   ],
+   [
+    -9.59,
+    32.08,
+    1.01,
+    4.92
+   ],
+   [
+    -14.96,
+    33.22,
+    0.98,
+    3.57
+   ],
+   [
+    -13.72,
+    33.47,
+    1.16,
+    4.08
+   ],
+   [
+    -12.51,
+    33.63,
+    0.93,
+    4.39
+   ],
+   [
+    -11.07,
+    36.57,
+    1.09,
+    3.92
+   ],
+   [
+    13.62,
+    36.58,
+    1.12,
+    2.04
+   ],
+   [
+    11.87,
+    39.55,
+    1.17,
+    1.44
+   ],
+   [
+    -14.91,
+    42.88,
+    0.86,
+    1.27
+   ],
+   [
+    -13.99,
+    46.62,
+    0.9,
+    3.14
+   ],
+   [
+    11.03,
+    47.97,
+    1.12,
+    5.41
+   ],
+   [
+    -12.59,
+    50.32,
+    0.89,
+    5.33
+   ],
+   [
+    14.29,
+    51.37,
+    0.81,
+    4.75
+   ],
+   [
+    -14.09,
+    51.63,
+    0.82,
+    0.51
+   ],
+   [
+    -10.31,
+    53.45,
+    1.08,
+    1.7
+   ],
+   [
+    14.67,
+    55.31,
+    1.05,
+    2.22
+   ],
+   [
+    9.75,
+    55.59,
+    1.1,
+    0.63
+   ],
+   [
+    -9.73,
+    58.37,
+    1.06,
+    3.7
+   ],
+   [
+    11.04,
+    58.57,
+    0.91,
+    5.75
+   ],
+   [
+    -14.56,
+    59.67,
+    0.93,
+    5.79
+   ],
+   [
+    14.47,
+    60.38,
+    0.82,
+    4.0
+   ],
+   [
+    -11.78,
+    62.19,
+    0.99,
+    3.68
+   ],
+   [
+    -14.27,
+    63.48,
+    0.93,
+    1.49
+   ],
+   [
+    -14.22,
+    64.39,
+    1.0,
+    3.12
+   ],
+   [
+    -6.56,
+    65.39,
+    0.87,
+    2.4
+   ],
+   [
+    0.79,
+    65.97,
+    1.16,
+    3.48
+   ],
+   [
+    -4.16,
+    66.01,
+    1.16,
+    5.65
+   ],
+   [
+    11.31,
+    66.11,
+    1.03,
+    2.35
+   ],
+   [
+    -12.34,
+    68.4,
+    0.91,
+    1.64
+   ],
+   [
+    4.05,
+    68.64,
+    0.95,
+    0.29
+   ],
+   [
+    -7.9,
+    68.75,
+    0.88,
+    4.83
+   ],
+   [
+    -13.33,
+    69.44,
+    1.07,
+    2.35
+   ],
+   [
+    10.19,
+    69.86,
+    1.16,
+    2.51
+   ],
+   [
+    -11.13,
+    70.05,
+    0.83,
+    2.68
+   ],
+   [
+    3.93,
+    70.23,
+    1.12,
+    0.09
+   ]
+  ]
+ },
+ "act2": {
+  "windows": [
+   {
+    "piece": "fuller/walls/hedge-window-h2.2",
+    "x": -8.5,
+    "z": -1.0,
+    "side": "west",
+    "collider": "keep the existing lane collider (tall + invisible); visual swap only"
+   },
+   {
+    "piece": "fuller/walls/hedge-window-h2.2",
+    "x": 8.5,
+    "z": 8.0,
+    "side": "east",
+    "collider": "keep the existing lane collider (tall + invisible); visual swap only"
+   },
+   {
+    "piece": "fuller/walls/hedge-window-h2.2",
+    "x": -8.5,
+    "z": 35.0,
+    "side": "west",
+    "collider": "keep the existing lane collider (tall + invisible); visual swap only"
+   },
+   {
+    "piece": "fuller/walls/hedge-window-h2.2",
+    "x": 8.5,
+    "z": 44.0,
+    "side": "east",
+    "collider": "keep the existing lane collider (tall + invisible); visual swap only"
+   },
+   {
+    "piece": "fuller/walls/hedge-window-h2.2",
+    "x": -8.5,
+    "z": 53.0,
+    "side": "west",
+    "collider": "keep the existing lane collider (tall + invisible); visual swap only"
+   }
+  ],
+  "nooks": [
+   {
+    "z": 49,
+    "wallX": 8.0,
+    "side": "east",
+    "opening": 1.8,
+    "depth": 2.4,
+    "arch": "fuller/walls/hedge-arch-h3.4",
+    "pocketRect": {
+     "x0": 8.0,
+     "x1": 10.4,
+     "z0": 47.8,
+     "z1": 50.2
+    },
+    "reward": "petal bloom bunch (value 5, existing B.pickup bloom)",
+    "note": "extends bounds by 2.5 m on that side locally; the rest of the lane is unchanged; nothing required, no timer"
+   },
+   {
+    "z": 35,
+    "wallX": 8.0,
+    "side": "east",
+    "opening": 1.8,
+    "depth": 2.4,
+    "arch": "fuller/walls/hedge-arch-h3.4",
+    "pocketRect": {
+     "x0": 8.0,
+     "x1": 10.4,
+     "z0": 33.8,
+     "z1": 36.2
+    },
+    "reward": "resting snail on a mossy stump (vignette-snail-stump) + journal sighting",
+    "note": "extends bounds by 2.5 m on that side locally; the rest of the lane is unchanged; nothing required, no timer"
+   },
+   {
+    "z": 11,
+    "wallX": -8.0,
+    "side": "west",
+    "opening": 1.8,
+    "depth": 2.4,
+    "arch": "fuller/walls/hedge-arch-h3.4",
+    "pocketRect": {
+     "x0": -10.4,
+     "x1": -8.0,
+     "z0": 9.8,
+     "z1": 12.2
+    },
+    "reward": "ladybird picnic vignette + journal sighting",
+    "note": "extends bounds by 2.5 m on that side locally; the rest of the lane is unchanged; nothing required, no timer"
+   }
+  ]
+ },
+ "critters": null,
+ "drawCallBudget": {
+  "landmark": 1,
+  "decorKeys": 3,
+  "vignetteKeys": 1,
+  "clutterSets": 3,
+  "total": 8
+ },
+ "counts": {
+  "decor": 167,
+  "vignettes": 3,
+  "clutterInstances": 269
+ }
+}

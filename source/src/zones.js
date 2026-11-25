@@ -12,6 +12,7 @@ import { swatchUV, atlasMaterial, writeAtlasUV, mergeAtlasRig } from './act3-atl
 import { createIconSheet } from './act3-icons.js';
 import { setFullerLevel } from './fuller.js';
 import { fullerGeo, preloadFullerGeo } from './fuller-geo.js';
+import { createFullerDecor } from './fuller-decor.js';
 preloadFullerGeo();
 import { setCaveLevel, installFallbackHooks, isShaderFallback, fallbackMaterial, applyGhostMaterial, refreshFallbackMaterials } from './l20-fallback.js';
 import { lodify, lodFor } from './lod.js';
@@ -1379,6 +1380,7 @@ export function createZones(scene, host) {
   const sprite = (e, s) => emojiSprite(e, s);
   const bx = (w, h, d, c, x, y, z, e = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c, e)); m.position.set(x, y, z); return m; };
   const L2W = (x, z, base = 0) => ({ x: A.x + x, y: gy(x, z) + base, z: A.z + z });
+  const fdecor = createFullerDecor({ group, L2W: (x, z, h) => L2W(x, z, h), tier: () => (ctx.look && ctx.look.tier) || 'high', anchor: () => A }); // l20p
   const posOfId = id => id === ctx.cur() ? ctx.getP() : ctx.parked(id);
   const idOfCls = c => ctx.crewIds().find(i => CLASS_OF[i] === c);
   function moveTween(q, to, dur, arc, done) { AA().movers.push({ q, a: { x: q.x, y: q.y, z: q.z }, b: to, t: 0, d: dur, arc, done }); }
@@ -2911,7 +2913,7 @@ export function createZones(scene, host) {
   }
   const say = (s, d = 2200) => { if (t - msgT > 1.6) { msgT = t; tst(s, d); } };
   function clear() {
-    setCaveLevel(false); setFullerLevel(null);
+    setCaveLevel(false); setFullerLevel(null); try { fdecor && fdecor.clear(); } catch (e) {}
     WATER_RECTS.length = 0; setZoneHeight(null);
     sampleH = null; waterMeshes = []; caveChunks = [];
     for (const s of solids) s.off = true;
@@ -3300,6 +3302,7 @@ export function createZones(scene, host) {
     clear(); matLive = false; recipe = MAPS[pid]; if (!recipe) return; id = pid;
     setCaveLevel(!!(recipe.caveFloor || recipe.id === 'mirror_caves' || pid === 'mirror_caves'));
     setFullerLevel(recipe.id || pid);
+    try { fdecor.build(pid); } catch (e) {}
     installFallbackHooks({ zoneGroup: group, scene }); babyMixers.length = 0; pipDone = new Set(); pipPend = null; pipSigT = {}; picked = 0; petalV = 0; keyDone = false; t = 0; lastProg = 0; hintT = 0; hintCool = new Map(); hintSpr = {}; hintSt = null; try { clearWrongHint(); } catch (e) {}
     if (recipe.ambience) ctx.audio?.levelAmb?.(recipe.ambience);
     A = { x: anchor.x, z: anchor.z };
