@@ -53,6 +53,22 @@ export function createIconSheet(scene) {
     return slot;
   }
 
+  function packDisc(key = 'badge-back') {
+    if (slots.has(key)) return slots.get(key);
+    const s = alloc(key, 128, 128);
+    g.save();
+    g.beginPath();
+    g.arc(s.x + 64, s.y + 64, 60, 0, Math.PI * 2);
+    g.fillStyle = 'rgba(22, 18, 14, 0.96)';
+    g.fill();
+    g.lineWidth = 10;
+    g.strokeStyle = 'rgba(10, 8, 6, 1)';
+    g.stroke();
+    g.restore();
+    tex.needsUpdate = true;
+    return s;
+  }
+
   function packHalo() {
     if (slots.has('halo')) return slots.get('halo');
     const s = alloc('halo', 128, 128);
@@ -334,5 +350,5 @@ export function createIconSheet(scene) {
     };
   }
 
-  return { packHalo, packEmoji, packText, packImage, make, reset, sync, warm, texture: tex, slots };
+  return { packHalo, packDisc, packEmoji, packText, packImage, make, reset, sync, warm, texture: tex, slots };
 }

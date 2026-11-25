@@ -37,6 +37,12 @@ export const CLASSES = {
 // Shapes ship always. With the colour-blind setting off, the badges are tinted to the live glow colours (so they match the world glows);
 // on, every runtime class colour switches to Squid's shipped palette (Bruiser darkened to #bc5134 for grayscale separation).
 const CB = { scout: '#9bb4ff', trickster: '#2aa894', bruiser: '#bc5134' };
+// Cue colours for hint badges, plate glows, dock pulse and arrow assist.
+// The default class colours fail gray-vs-gray (scout/bruiser ΔE 2.1); this palette passes (≥10).
+export const CUE = { scout: '#9bb4ff', trickster: '#2aa894', bruiser: '#bc5134' };
+export const cueColor = c => CUE[c] || '#ffd23f';
+export const cueHex = c => parseInt((CUE[c] || '#ffd23f').slice(1), 16);
+export const cueBadge = (c, kind = 'badge', sz = 64) => BADGE(c, true, kind, sz);
 const SHAPE = { scout: 'circle', trickster: 'square', bruiser: 'hex' };
 const BADGE = (c, cb, kind = 'badge', sz = 64) => import.meta.env.BASE_URL + `ui/icons/class-badges/${c}-${kind}-${sz}${cb ? '-cb' : ''}.png`;
 for (const c of Object.keys(CLASSES)) { const C = CLASSES[c]; C.color0 = C.color; C.colorBlind = CB[c]; C.shape = SHAPE[c]; C.badge0 = C.badge; C.badge = BADGE(c, false); C.badge2x = BADGE(c, false, 'badge', '64@2x'); }

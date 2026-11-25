@@ -5,7 +5,7 @@ import { at1x } from './tex.js';
 import * as THREE from 'three';
 import { WATER_RECTS, WATER_Y } from './data.js';
 import { setZoneHeight } from './world.js';
-import { CLASSES, CLASS_OF, ACTS, classOf } from './classes.js';
+import { CLASSES, CLASS_OF, ACTS, classOf, cueColor, cueHex, cueBadge } from './classes.js';
 import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
 import { swatchUV, atlasMaterial, writeAtlasUV, mergeAtlasRig } from './act3-atlas.js';
@@ -593,6 +593,7 @@ export function createZones(scene, host) {
       if (c === hintSt.cls || away || t >= hintSt.until) clearWrongHint();
       else { const sp = hintSprite(hintSt.cls); sp.position.set(pr.x, (pr.y || 0) + 2.35, pr.z); sp.visible = true; }
     }
+    syncBadgeBacks();
     for (const pl of plates) {
       if (!pl.heavy || !pl.m || !pl.m.material) continue;
       const lit = !!(hintSt && hintSt.pr && (hintSt.pr.plate === pl || (Math.hypot((hintSt.pr.x || 0) - pl.x, (hintSt.pr.z || 0) - pl.z) < 0.5)));
@@ -607,11 +608,24 @@ export function createZones(scene, host) {
   const gy = (x, z) => { if (sampleH) { const h = sampleH(x, z); if (h != null) return h; } return (ctx.meadowHeightAt || ctx.heightAt)(A.x + x, A.z + z); };
   const W = (x, z) => ({ x: A.x + x, z: A.z + z });
   const texL = new THREE.TextureLoader(), badgeMat = {};
+  const badgePairs = [];
+  icons.packDisc('badge-back');
+  const badgeBackMat = () => badgeMat._back || (badgeMat._back = { opacity: 1, depthTest: false, transparent: true, color: new THREE.Color(0xffffff), userData: { iconKey: 'badge-back' } });
   const badgeOf = c => {
     if (badgeMat[c]) return badgeMat[c];
-    icons.packImage('badge:' + c, CLASSES[c].badge);
+    // Always the CVD-safe badge art so gray ΔE between classes and vs ground can hold.
+    icons.packImage('badge:' + c, cueBadge(c));
     return (badgeMat[c] = { opacity: 1, depthTest: false, transparent: true, color: new THREE.Color(0xffffff), userData: { iconKey: 'badge:' + c } });
   };
+  function syncBadgeBacks() {
+    for (const { sp, back, s } of badgePairs) {
+      if (!sp || !back) continue;
+      back.visible = sp.visible !== false;
+      back.position.copy(sp.position);
+      const k = (sp.scale.x || s) * 1.34;
+      back.scale.set(k, k, 1);
+    }
+  }
   // POLISH §3 second cue: class rings take the class shape (Scout circle · Trickster rounded square · Bruiser hex), not just its colour
   const SHAPE_SEG = { circle: 28, square: 4, hex: 6 };
   function shapeRingGeo(c, r0, r1) { const sh = CLASSES[c]?.shape || 'circle', g = new THREE.RingGeometry(sh === 'square' ? r0 * 1.2 : r0, sh === 'square' ? r1 * 1.2 : r1, SHAPE_SEG[sh] || 28); if (sh === 'square') g.rotateZ(Math.PI / 4); if (sh === 'hex') g.rotateZ(Math.PI / 6); return g.rotateX(-Math.PI / 2); }
@@ -770,7 +784,14 @@ export function createZones(scene, host) {
     });
   }
   function addSolid(s) { ctx.phys.addDyn(s); solids.push(s); return s; }
-  function badge(c, x, y, z, s = 1.15) { const sp = icons.make({ key: 'badge:' + c, size: s, material: badgeOf(c), layer: 'overlay' }); sp.scale.set(s, s, 1); sp.position.set(x, y, z); sp.renderOrder = 8; group.add(sp); return sp; }
+  function badge(c, x, y, z, s = 1.15) {
+    const back = icons.make({ key: 'badge-back', size: s * 1.34, material: badgeBackMat(), layer: 'overlay' });
+    back.scale.set(s * 1.34, s * 1.34, 1); back.position.set(x, y, z); back.renderOrder = 7; group.add(back);
+    const sp = icons.make({ key: 'badge:' + c, size: s, material: badgeOf(c), layer: 'overlay' });
+    sp.scale.set(s, s, 1); sp.position.set(x, y, z); sp.renderOrder = 8; group.add(sp);
+    badgePairs.push({ sp, back, s });
+    return sp;
+  }
   const isOn = (need) => !need || [].concat(need).every(k => sig[k]);
   let applyingNet = false;
   function emitNet(kind, payload) { if (applyingNet) return; ctx.onNetEvent?.({ kind, ...payload }); }
@@ -1023,7 +1044,7 @@ export function createZones(scene, host) {
       const g = gy(x, z) + (o.base || 0), heavy = !!o.heavy;
       // l20k: class-locked (heavy/bruiser) plates get their own material so a faint class glow can
       // brighten with the wrong-character hint without extra draws; icon sits on the plate.
-      const pm = heavy ? mat(0xff8a1f, 0.18).clone() : mat(0x7dc85a, 0.15);
+      const pm = heavy ? mat(cueHex('bruiser'), 0.18).clone() : mat(cueHex('trickster'), 0.15);
       const m = new THREE.Mesh(new THREE.BoxGeometry(heavy ? 2.6 : 2.0, 0.3, heavy ? 2.6 : 2.0), pm); m.position.set(A.x + x, g + 0.12, A.z + z); group.add(m);
       const rim = new THREE.Mesh(new THREE.BoxGeometry(heavy ? 3.0 : 2.4, 0.12, heavy ? 3.0 : 2.4), mat(0x6a6a68)); rim.position.set(A.x + x, g + 0.04, A.z + z); group.add(rim);
       const icY = heavy ? g + 0.48 : g + 2.2, icS = heavy ? 0.55 : 0.9;
@@ -3802,12 +3823,13 @@ export function createZones(scene, host) {
       // Clients still tick mixers so babies and decorations don't freeze.
       for (const mx of babyMixers) try { mx.update(dt); } catch (e) {}
       cullCaveChunks(cam);
+      syncBadgeBacks();
       icons.sync(cam);
       return;
     }
     updateWorld(dt, cam);
     cullCaveChunks(cam);
-    if (!recipe || recipe.hub) { icons.sync(cam); return; }
+    if (!recipe || recipe.hub) { syncBadgeBacks(); icons.sync(cam); return; }
     const ids = [...new Set((ctx.driven() || []).filter(Boolean))];
     const view = host.cur();
     if (!ids.length && view) ids.push(view);
@@ -3820,6 +3842,7 @@ export function createZones(scene, host) {
         checkKey(); updateExit(cam); updateHighlights(dt); updateTracker(cam);
       });
     }
+    syncBadgeBacks();
     icons.sync(cam);
   }
   // ---- objective highlights (t158u): every live puzzle prop glows in the colour of the class that solves it ----
@@ -3885,11 +3908,11 @@ export function createZones(scene, host) {
     const findFor = (k, depth) => { // what produces signal k? follows "needs X first" chains back to the first doable step
       if (sig[k] || depth > 5 || seen.has(k)) return null; seen.add(k);
       const cands = props.filter(q => q.sig === k && q.act && !q.done);
-      for (const pr of cands) if (isOn(pr.need)) { if (!pr.cls) return { text: `Anyone: ${VERB[pr.act] || 'use'} the ${lc(pr.label)}`, cls: null, color: '#ffd23f', x: pr.x, y: pr.y, z: pr.z, pr, verb: (ACTS[pr.act] || { verb: 'Act' }).verb }; const C = CLASSES[pr.cls]; return { text: `${C.name}: ${pr.act === 'bell' && pr.lantern ? 'light' : VERB[pr.act]} the ${lc(pr.label)}`, cls: pr.cls, color: C.color, x: pr.x, y: pr.y, z: pr.z, pr, verb: (ACTS[pr.act] || { verb: 'Act' }).verb }; }
+      for (const pr of cands) if (isOn(pr.need)) { if (!pr.cls) return { text: `Anyone: ${VERB[pr.act] || 'use'} the ${lc(pr.label)}`, cls: null, color: '#ffd23f', x: pr.x, y: pr.y, z: pr.z, pr, verb: (ACTS[pr.act] || { verb: 'Act' }).verb }; const C = CLASSES[pr.cls]; return { text: `${C.name}: ${pr.act === 'bell' && pr.lantern ? 'light' : VERB[pr.act]} the ${lc(pr.label)}`, cls: pr.cls, color: cueColor(pr.cls), x: pr.x, y: pr.y, z: pr.z, pr, verb: (ACTS[pr.act] || { verb: 'Act' }).verb }; }
       const pl = plates.find(q => q.sig === k && !q.holder);
-      if (pl) { const c = pl.heavy ? 'bruiser' : 'trickster'; return { text: `${pl.heavy ? 'Bruiser' : 'A friend'}: stand on the ${lc(pl.label)}`, cls: c, color: CLASSES[c].color, x: pl.x, y: pl.y, z: pl.z, pr: props.find(q => q.plate === pl) }; }
+      if (pl) { const c = pl.heavy ? 'bruiser' : 'trickster'; return { text: `${pl.heavy ? 'Bruiser' : 'A friend'}: stand on the ${lc(pl.label)}`, cls: c, color: cueColor(c), x: pl.x, y: pl.y, z: pl.z, pr: props.find(q => q.plate === pl) }; }
       const h = hoops.find(q => q.sig === k && !q.got);
-      if (h) { const first = hoops.find(q => !q.got) || h; return { text: 'Scout: fly through the hoops in order', cls: 'scout', color: CLASSES.scout.color, x: first.m.position.x, y: first.m.position.y, z: first.m.position.z }; }
+      if (h) { const first = hoops.find(q => !q.got) || h; return { text: 'Scout: fly through the hoops in order', cls: 'scout', color: cueColor('scout'), x: first.m.position.x, y: first.m.position.y, z: first.m.position.z }; }
       const n = nodes.find(q => q.sig === k && !q.done);
       if (n && isOn(n.need)) return { text: `Everyone: lift the ${NODE[n.kind].name} together`, cls: null, color: '#ffd23f', x: n.m.position.x, y: n.m.position.y, z: n.m.position.z };
       if (k === 'starHome' && star && star.carry) return { text: 'Carry the Starheart home, gently', cls: null, color: '#ffd23f', x: star.safe.x, y: baseY + 1, z: star.safe.z };
@@ -3898,11 +3921,11 @@ export function createZones(scene, host) {
       return null;
     };
     for (const pz of reqLeft()) {
-      if (pz.track) { const tk = pz.track.find(q => !sig[q[0]]); if (tk) { const [, c, text, x, z, h = 0.6] = tk, C = c ? CLASSES[c] : null, w = { x: A.x + x, y: gy(x, z) + h, z: A.z + z }; let best = null, bd = 2.2; for (const q of props) { if (!q.act) continue; const d = Math.hypot(q.x - w.x, q.z - w.z); if (d < bd) { bd = d; best = q; } } return { text: C ? `${C.name}: ${text}` : text, cls: c || null, color: C ? C.color : '#ffd23f', x: w.x, y: w.y, z: w.z, pr: best }; } }
+      if (pz.track) { const tk = pz.track.find(q => !sig[q[0]]); if (tk) { const [, c, text, x, z, h = 0.6] = tk, C = c ? CLASSES[c] : null, w = { x: A.x + x, y: gy(x, z) + h, z: A.z + z }; let best = null, bd = 2.2; for (const q of props) { if (!q.act) continue; const d = Math.hypot(q.x - w.x, q.z - w.z); if (d < bd) { bd = d; best = q; } } return { text: C ? `${C.name}: ${text}` : text, cls: c || null, color: C ? cueColor(c) : '#ffd23f', x: w.x, y: w.y, z: w.z, pr: best }; } }
       for (const k of pz.sigs) { const r = findFor(k, 0); if (r) return r; }
       if (!fb) fb = pz;
     }
-    if (fb) return { text: `${fb.cls.map(c => CLASSES[c].name).join(' + ')}: ${fb.label}`, cls: fb.cls[0], color: CLASSES[fb.cls[0]].color, x: null };
+    if (fb) return { text: `${fb.cls.map(c => CLASSES[c].name).join(' + ')}: ${fb.label}`, cls: fb.cls[0], color: cueColor(fb.cls[0]), x: null };
     return null;
   }
   function syncObjH() {
@@ -4134,7 +4157,7 @@ export function createZones(scene, host) {
     }
     if (!st || !st.tgt) return exitObj();
     const [x, y, z] = typeof st.tgt === 'function' ? st.tgt() : st.tgt, c = st.color;
-    return { text: st.say, cls: c || null, color: c ? CLASSES[c].color : '#ffd23f', x: A.x + x, y: gy(x, z) + y, z: A.z + z, pr: props.find(q => st.glow && st.glow.includes(q.sig) && q.act) || null };
+    return { text: st.say, cls: c || null, color: c ? cueColor(c) : '#ffd23f', x: A.x + x, y: gy(x, z) + y, z: A.z + z, pr: props.find(q => st.glow && st.glow.includes(q.sig) && q.act) || null };
   }
   function kidClear() {
     if (kid && kid.dom) { kid.dom.C.remove(); kid.dom.H.remove(); kid.dom.F.remove(); kid.dom.pulse?.classList.remove('kidPulse'); }
