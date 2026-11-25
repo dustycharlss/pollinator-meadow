@@ -546,7 +546,7 @@ export function createZones(scene, host) {
   // three-class puzzle state
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
-  const rimSpecs = [], hedgeRuns = []; // l20p
+  const rimSpecs = [], hedgeRuns = [], wallSpecs = []; // l20p
   let sig = {}, props = [], gates = [], plates = [], puzzles = [], deep = [], crossings = [], steps = [], tw = null, lastProg = 0, hintT = 0, bearPad = null, windT = 0, introQ = [];
   let hintSt = null, hintCool = new Map(), hintSpr = {};
   function hintSprite(c) {
@@ -841,6 +841,8 @@ export function createZones(scene, host) {
       if (o.hidden) { s.off = true; }
       { const ca = Math.abs(Math.cos(o.yaw || 0)), sa = Math.abs(Math.sin(o.yaw || 0)), hx = (w * ca + d * sa) / 2, hz = (w * sa + d * ca) / 2;
         if (Math.max(w, d) < 14 && !(recipe && recipe.caveFloor)) { const e = { roots: [m], x0: A.x + x - hx, x1: A.x + x + hx, z0: A.z + z - hz, z1: A.z + z + hz, y0: g + bot, y1: g + top + 0.3, a: 1 }; fades.push(e); s.fadeM = e; } } // long boundary cliffs keep the camera pull-in; cave walls are merged instead
+      // l20p: long, never-faded hedge/cliff/stone walls get the fuller wall kit (visual swap once loaded; collider unchanged)
+      if (!o.hidden && Math.max(w, d) >= 14 && !(recipe && recipe.caveFloor) && (o.look === 'hedge' || o.look === 'cliff' || o.look === 'stone' || o.look == null) && o.c == null) wallSpecs.push({ m, x, z, w, d, T, bot, yaw: o.yaw || 0, look: o.look || 'stone' });
       return { m, s, g };
     },
     /** one instanced hedge (or leaf) strip that follows the ground, plus 2 m collision segments and a fly cap.
@@ -1383,7 +1385,7 @@ export function createZones(scene, host) {
   const sprite = (e, s) => emojiSprite(e, s);
   const bx = (w, h, d, c, x, y, z, e = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c, e)); m.position.set(x, y, z); return m; };
   const L2W = (x, z, base = 0) => ({ x: A.x + x, y: gy(x, z) + base, z: A.z + z });
-  const fdecor = createFullerDecor({ group, L2W: (x, z, h) => L2W(x, z, h), rims: () => rimSpecs, runs: () => hedgeRuns, tier: () => (ctx.look && ctx.look.tier) || 'high', anchor: () => A }); // l20p
+  const fdecor = createFullerDecor({ group, L2W: (x, z, h) => L2W(x, z, h), rims: () => rimSpecs, runs: () => hedgeRuns, walls: () => wallSpecs, tier: () => (ctx.look && ctx.look.tier) || 'high', anchor: () => A }); // l20p
   const posOfId = id => id === ctx.cur() ? ctx.getP() : ctx.parked(id);
   const idOfCls = c => ctx.crewIds().find(i => CLASS_OF[i] === c);
   function moveTween(q, to, dur, arc, done) { AA().movers.push({ q, a: { x: q.x, y: q.y, z: q.z }, b: to, t: 0, d: dur, arc, done }); }
@@ -2922,7 +2924,7 @@ export function createZones(scene, host) {
     for (const s of solids) s.off = true;
     solids = []; picks = []; hoops = []; nightDews = []; star = null;
     fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady'); syncObjH();
-    rimSpecs.length = 0; hedgeRuns.length = 0; sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
+    rimSpecs.length = 0; hedgeRuns.length = 0; wallSpecs.length = 0; sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
     instWalls = []; decoJobs = new Map(); camRooms = []; caveChunks = []; for (const rec of atlasInsts) { const im = rec.im || rec; if (im.parent) im.parent.remove(im); } atlasInsts = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }

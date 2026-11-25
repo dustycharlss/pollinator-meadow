@@ -25,7 +25,7 @@ const OFF = k => new RegExp('[?&]fuller=(0|[^&]*no' + k + ')').test(Q);
 // Per-level cuts made to stay inside the draw budget (filled in from the per-level census; see l20b-notes ## l20p).
 export const CUTS = {};
 
-export function createFullerDecor({ group, L2W, rims = () => [], runs = () => [], tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {
+export function createFullerDecor({ group, L2W, rims = () => [], runs = () => [], walls = () => [], tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {
   let root = null, token = 0, info = null;
   function clear() { token++; if (root) { root.removeFromParent(); root.traverse(o => { if (o.isInstancedMesh) o.dispose(); }); root = null; } info = null; setRouteClip(null); }
   async function build(levelId) {
@@ -66,6 +66,17 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
         const key = win ? 'fuller/walls/hedge-window-h2.2' : L2 > 1.9 ? 'fuller/walls/hedge-2m-h' + hv : 'fuller/walls/hedge-post-h' + hv;
         pcs.push({ key, z: zc, idx: add(key, r.x, zc, 1, Math.PI / 2, -0.1, sy) }); }
       runRecs.push({ r, pcs }); }
+    // long boundary walls (>= 14 m, no camera fade): hedge or cliff kit, 2 m runs along the long axis, height variant nearest T, stacked past 7 m
+    const WL = OFF('kit') || cut.kit ? [] : walls(), wallRecs = [];
+    for (const wv of WL) { const hed = wv.look === 'hedge', V3 = hed ? [1.6, 2.2, 3.4] : [2, 4, 7], along = Math.max(wv.w, wv.d), xAxis = wv.w >= wv.d, depth = Math.min(wv.w, wv.d);
+      const stack = Math.max(1, Math.ceil(wv.T / (V3[2] * 1.25))), hs = wv.T / stack, hv = V3.reduce((a, b) => Math.abs(b - hs) < Math.abs(a - hs) ? b : a), sy = hs / hv;
+      const run = (hed ? 'fuller/walls/hedge-2m-h' : 'fuller/walls/cliff-2m-h') + hv, post = (hed ? 'fuller/walls/hedge-post-h' : 'fuller/walls/cliff-post-h') + hv;
+      const n = Math.floor(along / 2), rem = along - n * 2, c0 = -along / 2, cy = Math.cos(wv.yaw), sn = Math.sin(wv.yaw), keys0 = new Set();
+      const at = c => { const lx = xAxis ? c : 0, lz = xAxis ? 0 : c; return [wv.x + lx * cy + lz * sn, wv.z - lx * sn + lz * cy]; };
+      for (let k = 0; k < stack; k++) { const yo = wv.bot + k * hs;
+        for (let i = 0; i < n; i++) { const [px, pz] = at(c0 + 1 + i * 2); add(run, px, pz, 1, wv.yaw + (xAxis ? 0 : Math.PI / 2), yo, sy); keys0.add(run); }
+        if (rem > 0.2) { const [px, pz] = at(c0 + n * 2 + rem / 2); add(post, px, pz, 1, wv.yaw, yo, sy); keys0.add(post); } }
+      wallRecs.push({ wv, keys: [...keys0] }); }
     const lm = !OFF('lm') && !cut.landmark && L.landmark && L.landmark.key ? L.landmark : null;
     const keys = [...byKey.keys()]; if (lm) keys.push(lm.key);
     const P = await Promise.all(keys.map(partsOf)); if (my !== token) return null;
@@ -88,6 +99,7 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
       for (const im of r.ims) im.visible = false;
       for (const e of r.fadeEs) { const zc = (e.z0 + e.z1) / 2 - A2.z; let best = pcs[0]; for (const p of pcs) if (Math.abs(p.z - zc) < Math.abs(best.z - zc)) best = p;
         e.kit = imsByKey.get(best.key).map(im => { const m = new THREE.Matrix4(); im.getMatrixAt(best.idx, m); return { im, i: best.idx, base: m }; }); } }
+    for (const { wv, keys: ks } of wallRecs) if (ks.every(k => (imsByKey.get(k) || []).length)) wv.m.visible = false;
     if (R.length && byKey.has('fuller/walls/hedge-2m-h1.6')) { const ok = P[keys.indexOf('fuller/walls/hedge-2m-h1.6')]; if (ok && ok.length) for (const r of R) r.m.visible = false; }
     info = { levelId, keys: keys.length, draws, inst, tier: tn };
     if (typeof window !== 'undefined') window.__fullerDecor = info;
