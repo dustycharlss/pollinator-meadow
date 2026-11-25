@@ -318,42 +318,56 @@ function holdClock(on) {
 function syncNightFlag() { const v = nightOf(clock.t) > 0.5; if (v === curNight) return; if (state.musicLive) { moodOver = v ? 'dusk' : 'morning'; moodOverT = performance.now() / 1000 + 26; } curNight = v; $('bNight').textContent = v ? '☀️ Switch to day' : '🌙 Switch to night'; }
 
 // ---------- HUD ----------
-let toastT = 0, toastDoc = null;
+let toastT = 0, toastDoc = null, tipT = 0;
+/* l20n: first-time tips live in their own #tipBox so a later toast (e.g. "… solved!") can't clear them.
+   The tip sits just below the toast when both are up, so they never overlap. */
+function layoutTip() {
+  const b = $('tipBox'); if (!b || !b.classList.contains('on')) return;
+  const t = $('toast'); let top = 0;
+  if (t && t.classList.contains('on') && getComputedStyle(t).display !== 'none') { const r = t.getBoundingClientRect(); if (r.height > 0) top = Math.round(r.bottom + 8); }
+  b.style.top = top ? top + 'px' : '';
+}
+function dismissTip() {
+  const b = $('tipBox'); if (b) { b.classList.remove('on'); b.replaceChildren(); b.style.top = ''; }
+  if (tipT) { clearTimeout(tipT); tipT = 0; }
+  if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
+}
 function dismissToast() {
   const t = $('toast');
   t.classList.remove('on', 'tipBox'); t.replaceChildren(); t.style.pointerEvents = '';
   if (toastT) { clearTimeout(toastT); toastT = 0; }
-  if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
+  layoutTip();
 }
 function toast(msg, ms = 2400) {
   const t = $('toast'); const hostOnly = msg === 'Only the host can start a level';
-  if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
   t.replaceChildren(); t.classList.remove('tipBox'); t.style.pointerEvents = '';
   if (hostOnly) { t.classList.add('olToastHost'); const im = document.createElement('img'); im.className = 'olToastBadge'; im.src = (import.meta.env.BASE_URL || './') + 'ui/online/host/badge-host-only.png'; im.alt = ''; t.append(im, document.createTextNode(skinText(msg))); }
   else { t.classList.remove('olToastHost'); t.textContent = skinText(msg); }
   t.classList.add('on');
   /* #objT is position:fixed, so offsetParent is always null */
-  const measure = () => { const o = $('objT'); const h = o && getComputedStyle(o).display !== 'none' ? o.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); };
-  measure(); requestAnimationFrame(measure); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms);
+  const measure = () => { const o = $('objT'); const h = o && getComputedStyle(o).display !== 'none' ? o.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); layoutTip(); };
+  measure(); requestAnimationFrame(measure); setTimeout(layoutTip, 400); clearTimeout(toastT); toastT = setTimeout(() => { t.classList.remove('on'); layoutTip(); }, ms);
 }
-/** First-time interaction tip: stays up 10 s, tap or X closes early. Not used for the 16 s unlock tray. */
+/** First-time interaction tip: own #tipBox, stays up 10 s, tap or X closes early. Not used for the 16 s unlock tray. */
 function toastTip(msg, ms = TIP_MS) {
-  const t = $('toast');
+  let b = $('tipBox');
+  if (!b) { b = document.createElement('div'); b.id = 'tipBox'; b.setAttribute('role', 'status'); document.body.appendChild(b); }
   if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
-  t.replaceChildren(); t.classList.remove('olToastHost');
+  b.replaceChildren();
   const tx = document.createElement('span'); tx.className = 'tipTx'; tx.textContent = skinText(msg);
   const x = document.createElement('button'); x.type = 'button'; x.className = 'tipX'; x.setAttribute('aria-label', 'Close tip'); x.textContent = '×';
-  t.append(tx, x); t.classList.add('on', 'tipBox'); t.style.pointerEvents = 'auto';
-  const close = ev => { ev && ev.stopPropagation && ev.stopPropagation(); dismissToast(); };
+  b.append(tx, x); b.classList.add('on', 'tipBox');
+  const close = ev => { ev && ev.stopPropagation && ev.stopPropagation(); dismissTip(); };
   x.addEventListener('click', close);
-  toastDoc = ev => { if (t.contains(ev.target)) { if (ev.target === x || ev.target.closest('.tipX')) return; close(ev); return; } close(ev); };
+  toastDoc = ev => { if (b.contains(ev.target) && (ev.target === x || ev.target.closest('.tipX'))) return; close(ev); };
   document.addEventListener('pointerdown', toastDoc, true);
-  const measure = () => { const o = $('objT'); const h = o && getComputedStyle(o).display !== 'none' ? o.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); };
-  measure(); requestAnimationFrame(measure); clearTimeout(toastT); toastT = setTimeout(() => dismissToast(), ms);
+  const measure = () => { const o = $('objT'); const h = o && getComputedStyle(o).display !== 'none' ? o.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); layoutTip(); };
+  measure(); requestAnimationFrame(measure); if (tipT) clearTimeout(tipT); tipT = setTimeout(() => dismissTip(), ms);
 }
+let tipSparkles = 0;
 function actTip(kind, msg, pos) {
   if (noteInteractTip(kind)) toastTip(msg, TIP_MS);
-  else if (pos && fx) fx.burst(pos.x, (pos.y || 0) + 0.8, pos.z, 16, 5);
+  else if (pos && fx) { tipSparkles++; fx.burst(pos.x, (pos.y || 0) + 0.8, pos.z, 16, 5); }
 }
 function setHint(s) { $('hint').textContent = s; }
 function updateHud() {
@@ -2659,7 +2673,7 @@ async function boot() {
   const loadEl = $('load'); if (loadEl) { loadEl.style.opacity = 0; setTimeout(() => { if (!window.__bootFailed) $('load')?.remove(); }, 700); }
   buildCards(); loop(performance.now());
   buildLens(); refreshTitle(); syncMixUi(); $('sMute').checked = !!settings.mute; applyMix(); applyAccess(); audio.setMute(settings.mute);
-  const X = { round, terr, build, adm, rivals, goals, onb, interactTips: interactTipsState, items, looks, save, get weather() { return weather; },
+  const X = { round, terr, build, adm, rivals, goals, onb, interactTips: interactTipsState, tipSparkles: () => tipSparkles, items, looks, save, get weather() { return weather; },
     get valley() { return valley; }, get zones() { return zones; }, startValleyPatch,
     endRound: () => { if (playing && !round.over) round.finish(); }, restartRound: () => startNew(round.len),
     clearTerritory: () => { build.clear(); tiers && tiers.reset(); terr.resetBlooms(); terr.refresh(); renderBTray(true); },
