@@ -35,9 +35,11 @@ export const CUTS = {
   training_garden: { low: { none: true } }, // l20n Low 154; l20p 162-163 with the lighter cut (2 clutter sets + vignettes) -> none
   log_jam: { low: { none: true } }, // l20n Low 160 (at budget)
   festival_glade: { low: { none: true } }, // l20n Low 193 (over budget already); l20p 201-210 with decor; ?fuller=0 = 193
-  backyard_split: { low: { ...LITE, noNooks: true }, all: LITE }, // l20n Low 203; l20p 218 (c8) with decor + nooks, 208 with LITE (c10), 230 with none (c11): Low builds no nooks (hedges stay closed, bounds unchanged); other tiers LITE (High 297 vs l20n 281 on c12)
+  backyard_split: { low: { ...LITE, noNooks: true }, all: { ...LITE, keep: ['fruit-tree', 'bush-flowering'] } }, // l20q: non-Low restores fruit-tree + bush-flowering (Beans re-check)
+  // l20n Low 203; l20p 218 (c8) with decor + nooks, 208 with LITE (c10), 230 with none (c11): Low builds no nooks (hedges stay closed, bounds unchanged); other tiers LITE (High 297 vs l20n 281 on c12)
   mill_pond: { low: LITE, high: { clutterSets: 99, vignettes: true } }, // l20n 317/241; l20p c8 318/244
-  frost_hollow: { all: { ...LITE, noNooks: true } }, // l20n 283/232; l20p c8 290/240; LITE 282-287 (c10, final): + noNooks
+  frost_hollow: { all: { ...LITE, noNooks: true, keep: ['snowy-tree', 'snow-tuft'] } }, // l20q: restores snowy-tree + snow-tuft (Beans re-check)
+  // l20n 283/232; l20p c8 290/240; LITE 282-287 (c10, final): + noNooks
   trailhead_trials: { low: { none: true } }, // l20n Low 390; l20p c8 403
 };
 
@@ -57,13 +59,14 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
     setRouteClip({ route: (D.route || []).map(([x, z]) => [A.x + x, A.z + z]), half: D.routeHalfWidth || 2.5, lane: D.lane ? [A.x + D.lane[0], A.x + D.lane[1], A.z + D.lane[2], A.z + D.lane[3]] : null, keep: (D.keepClear || []).map(k => ({ x: A.x + (k.x ?? k[0]), z: A.z + (k.z ?? k[1]), r: k.r ?? k[2] ?? 1.5 })) });
     // collect placements per key: [x, z, scale, yaw, yOff]
     const byKey = new Map(); const add = (key, x, z, s, yaw, yo = 0, sy = 1, sl = 1) => { if (!byKey.has(key)) byKey.set(key, []); const l = byKey.get(key); l.push([x, z, s, yaw, yo, sy, sl]); return l.length - 1; };
-    if (!OFF('decor')) for (const d of L.decor || []) { if (cut.decor && (cut.decor === '*' || cut.decor.includes(d.key))) continue; add(d.key, d.x, d.z, d.s ?? 1, d.yaw || 0); }
+    if (!OFF('decor')) for (const d of L.decor || []) { if (cut.decor && (cut.decor === '*' || cut.decor.includes(d.key)) && !(cut.keep && cut.keep.some(k => d.key.endsWith(k)))) continue; add(d.key, d.x, d.z, d.s ?? 1, d.yaw || 0); }
     if (!OFF('vig') && !cut.vignettes) for (const v of L.vignettes || []) add(v.key, v.x, v.z, v.s ?? 1, v.yaw || 0);
     if (!OFF('clutter')) {
       const route = D.route && D.route.length ? D.route : [[0, 0]];
       const dRoute = (x, z) => { let b = 1e9; for (let i = 0; i < route.length; i++) { const a = route[i], c = route[Math.min(i + 1, route.length - 1)]; const vx = c[0] - a[0], vz = c[1] - a[1], l2 = vx * vx + vz * vz || 1; let t = ((x - a[0]) * vx + (z - a[1]) * vz) / l2; t = Math.max(0, Math.min(1, t)); b = Math.min(b, Math.hypot(x - a[0] - vx * t, z - a[1] - vz * t)); } return b; };
       const sets = Object.keys(L.clutter || {}); const dropN = cut.clutterSets || 0;
-      for (const key of sets.slice(0, Math.max(0, sets.length - dropN))) {
+      const keptSets = sets.slice(0, Math.max(0, sets.length - dropN)).concat(cut.keep ? sets.slice(Math.max(0, sets.length - dropN)).filter(k => cut.keep.some(x => k.endsWith(x))) : []); // l20q: CUTS keep = restored keys
+      for (const key of keptSets) {
         let n = 0; for (const c of L.clutter[key]) { n++; if ((n % (T.keepEvery || 1)) !== 0 && T.keepEvery > 1) continue; if (dRoute(c[0], c[1]) > (T.maxDistance || 60)) continue; add(key, c[0], c[1], c[2] ?? 1, c[3] || 0); }
       }
     }
