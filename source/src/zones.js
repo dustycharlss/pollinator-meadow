@@ -1379,7 +1379,8 @@ export function createZones(scene, host) {
     cub: { em: '🦡', name: 'badger cub', speed: 2.2, scale: 1, model: 'cub' },
     duckling: { em: '🐥', name: 'duckling', speed: 2.4, scale: 1, model: 'duckling', float: true },
     owlet: { em: '🦉', name: 'owlet', speed: 2.2, scale: 1, model: 'owlet' },
-    batpup: { em: '🦇', name: 'bat pup', speed: 2.0, scale: 1, model: 'batpup', darkOnly: true },
+    // darkOnly retired: lantern-avoid froze the pup at the L20 exit and wasn't fun. Follow-only now.
+    batpup: { em: '🦇', name: 'bat pup', speed: 2.0, scale: 1, model: 'batpup' },
     chick: { em: '🐦', name: 'robin chick', speed: 2.3, scale: 1, model: 'chick', windblown: true },
     fawn: { em: '🦌', name: 'fawn', speed: 2.3, scale: 0.85, model: 'fawn', refuseIce: true, refuseHigh: true },
     snail: { em: '🐌', name: 'garden snail', speed: 0.7, scale: 1, model: 'snail' },

@@ -588,21 +588,21 @@ export const MAPS3 = {
     pits: [[-6.5, 15, 6.5, 19], [-6.5, 66, 6.5, 70], [-1.3, 6.2, 1.3, 8.0], [-1.3, 29.2, 1.3, 31.0], [-1.3, 53.2, 1.3, 55.0], [-1.3, 83.2, 1.3, 85.2]],
     crew: 'Bee · Raccoon · Bear',
     banter: {
-      start: ['🐻 Bear: A pebble sling? I can ping those crystals!', '🐝 Bee: I’ll aim the shiny mirrors. Watch this beam!', '🦝 Raccoon: Whistle will find the hidden paths. And snacks.', '🐻 Bear: The bat pup likes the dark. Lantern off near it.'],
-      end: ['🐻 Bear: Pebble Sling, meet crystal. What a shot!', '🐝 Bee: And the bat pup stayed in the dark, safe and snug.', '🦝 Raccoon: Webs snipped. Shiny cave, happy pup.', '🐝 Bee: I was born to bounce light underground!'],
+      start: ['🐻 Bear: A pebble sling? I can ping those crystals!', '🐝 Bee: I’ll aim the shiny mirrors. Watch this beam!', '🦝 Raccoon: Whistle will find the hidden paths. And snacks.', '🐻 Bear: Call the bat pup — it’ll follow us through the cave.'],
+      end: ['🐻 Bear: Pebble Sling, meet crystal. What a shot!', '🐝 Bee: And the bat pup kept up, all the way with us!', '🦝 Raccoon: Webs snipped. Shiny cave, happy pup.', '🐝 Bee: I was born to bounce light underground!'],
     },
     intro: [
       '💎 Mirror Caves. It is always dark down here.',
       '🐻 Pick up the Pebble Sling and throw at the far crystal.',
       '🫧 The Bubble Pouch from Ember Ridge still cuts webs.',
-      '🦇 The bat pup only walks in the dark — lantern off near it.',
+      '🦇 Call the bat pup and it’ll follow you through the cave.',
     ],
     pip: [
       ['start', 'The Pebble Sling is on that stone. Pick it up, Bear!'],
       ['sig:gift:sling', 'Throw a pebble at the far crystal. Watch the beam!'],
       ['z:22', 'Whistle to see which crystals are mirrors.'],
       ['z:46', 'Bubble the web from far away. Or sling the dew.'],
-      ['sig:called', 'Turn the lantern off. The pup only walks in the dark.'],
+      ['sig:called', 'Lead the bat pup through the cave. It’ll follow you.'],
       ['stuck:bounce', 'Ping, then turn the three real mirrors.'],
     ],
     build(B) {
@@ -732,7 +732,7 @@ export const MAPS3 = {
       B.puzzle('sling', 'Pebble Sling', ['bruiser'], ['lit:gA'], { hint: '🐻 Pick up the Pebble Sling and throw a pebble at the far crystal so the beam lights the ghost bridge.', track: [['gift:sling', 'bruiser', 'pick up the Pebble Sling', 4, 3], ['lit:gA', 'bruiser', 'sling the far crystal', 6, 14, 2]] });
       B.puzzle('bounce', 'Ping and beam', ['trickster', 'scout'], ['lit:gB'], { hint: '🐾 Pull the shutter, whistle to mark the real mirrors, then 🪽 turn the three-bounce path onto the ghost stair.', track: [['shB', 'trickster', 'pull the lamp shutter', -8, 22], ['lit:gB', 'scout', 'aim the three real mirrors', 4, 38, 2]] });
       B.puzzle('web', 'Spider web', ['scout'], ['wC'], { hint: '🫧 Equip the Bubble Pouch at the stump and bubble the web from the south. Or 🪨 sling the dew crystal so the spider looks away.', track: [['wC', 'scout', 'bubble the hall web', 0, 52]] });
-      B.puzzle('pup', 'Dark escort', ['scout', 'trickster', 'bruiser'], ['shade:gD'], { hint: 'Turn the lantern off, call the bat pup, then 🐻 stand in lamp D so the shadow bridge is solid.', track: [['shade:gD', 'bruiser', 'stand in the beam', -3, 64]] });
+      B.puzzle('pup', 'Bat pup escort', ['scout', 'trickster', 'bruiser'], ['shade:gD'], { hint: 'Call the bat pup, then 🐻 stand in lamp D so the shadow bridge is solid.', track: [['shade:gD', 'bruiser', 'stand in the beam', -3, 64]] });
       B.puzzle('caveStar', 'Secret Starseed', ['trickster'], ['caveStar'], { req: false, hint: '🫧 Bubble the side web in the west nook, then 🐾 walk the Starseed out.' });
     },
   },
