@@ -11,6 +11,8 @@ import { loadGLB, lambertFrom } from './models.js';
 import { swatchUV, atlasMaterial, writeAtlasUV, mergeAtlasRig } from './act3-atlas.js';
 import { createIconSheet } from './act3-icons.js';
 import { setFullerLevel } from './fuller.js';
+import { fullerGeo, preloadFullerGeo } from './fuller-geo.js';
+preloadFullerGeo();
 import { setCaveLevel, installFallbackHooks, isShaderFallback, fallbackMaterial, applyGhostMaterial, refreshFallbackMaterials } from './l20-fallback.js';
 import { lodify, lodFor } from './lod.js';
 import { canShowFriendsStation } from './net/flags.js';
@@ -26,9 +28,9 @@ export const SIZE = Object.fromEntries(Object.entries(CLASS_OF).map(([id, c]) =>
 export const FLYERS = new Set(['bee', 'butterfly', 'hummingbird', 'moth', 'bumblebee']);
 const NEED = { team: { tiny: 3, medium: 2, bear: 1 }, heavy: { tiny: 5, medium: 3, bear: 1 }, heaviest: { tiny: 2, medium: 2, bear: 2 } };
 const TIER = {
-  petal: { name: 'Petal', em: '🌸', col: 0xffb7d6, heal: 0.012, geo: () => new THREE.OctahedronGeometry(0.55) },
-  dew: { name: 'Dewdrop', em: '💧', col: 0x7fd8ff, heal: 0.02, geo: () => new THREE.SphereGeometry(0.5, 12, 10) },
-  star: { name: 'Starseed', em: '⭐', col: 0xffe066, heal: 0.08, geo: () => new THREE.IcosahedronGeometry(0.7) },
+  petal: { name: 'Petal', em: '🌸', col: 0xffb7d6, heal: 0.012, geo: () => fullerGeo('petal', 1.1, () => new THREE.OctahedronGeometry(0.55)) },
+  dew: { name: 'Dewdrop', em: '💧', col: 0x7fd8ff, heal: 0.02, geo: () => fullerGeo('dewdrop', 1.3, () => new THREE.SphereGeometry(0.5, 12, 10)) },
+  star: { name: 'Starseed', em: '⭐', col: 0xffe066, heal: 0.08, geo: () => fullerGeo('starseed', 1.45, () => new THREE.IcosahedronGeometry(0.7)) },
 };
 const NODE = { team: { name: 'Honey Log', tier: 'petal', amt: 6 }, heavy: { name: 'Dew Pond', tier: 'dew', amt: 4 }, heaviest: { name: 'Starheart', tier: 'star', amt: 1 } };
 // CC0 premade models (Kenney Nature / Fantasy Town kits), dressed over blocky colliders
@@ -804,6 +806,7 @@ export function createZones(scene, host) {
   // POLISH: 5-value bloom bunch (Fern act2-petals.md): bigger (×1.4), fuller rose-gold flower so kids see it is worth more
   let bloomGeo = null;
   function bloomMesh() {
+    if (!bloomGeo) { const bb = fullerGeo('bloom-bunch', 2.0, () => null); if (bb) bloomGeo = bb; }
     if (!bloomGeo) { const parts = [new THREE.OctahedronGeometry(0.55 * 1.4)]; for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, g = new THREE.OctahedronGeometry(0.3 * 1.4); g.translate(Math.cos(a) * 0.62, 0.05, Math.sin(a) * 0.62); parts.push(g); } bloomGeo = mergeGeos(parts); }
     const petal = (recipe && recipe.petalCol) || 0xffb7d6, centre = (recipe && recipe.petalCenter) || 0xffe08a;
     const G = new THREE.Group(); G.add(new THREE.Mesh(bloomGeo, mat(petal, 0.22))); const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.34), mat(centre, 0.28)); c.position.y = 0.28; G.add(c); return G;
@@ -1721,7 +1724,7 @@ export function createZones(scene, host) {
       S.cps.push({ x: w.x, y: w.y, z: w.z, G, f, rg, on: false, show: o.show || null });
     },
     /** POLISH: decor-only glowing orb (landmark fruit, lantern light) — no collider */
-    orb(x, z, h, r = 0.4, col = 0xffe066) { const w = L2W(x, z, h), m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mat(col, 0.9)); m.position.set(w.x, w.y, w.z); group.add(m); return m; },
+    orb(x, z, h, r = 0.4, col = 0xffe066) { const w = L2W(x, z, h), m = new THREE.Mesh(fullerGeo('glow-cube', 0.8 * r / 0.4, () => new THREE.IcosahedronGeometry(r, 0)), mat(col, 0.9)); m.position.set(w.x, w.y, w.z); group.add(m); return m; },
     /** POLISH: one Pip line the first time a signal (or all of a list) turns on */
     pipOn(s, line) { let said = false; steps.push({ sig: s, fn: on => { if (on && !said) { said = true; msgT = t; tst('🐦 Pip: ' + line, 4200); } } }); },
     camRoom(x0, z0, x1, z1, o = {}) {
@@ -1827,7 +1830,7 @@ export function createZones(scene, host) {
     slingTarget(s, x, z, h = 4, o = {}) {
       const S = AA(), w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
       G.add(bx(0.2, h, 0.2, 0x6a6a70, 0, -h / 2, 0));
-      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.75), mat(o.col || 0x9fe8ff, 0.45)); G.add(gem);
+      const gem = new THREE.Mesh(fullerGeo('sling-gem', 1.33, () => new THREE.OctahedronGeometry(0.75)), mat(o.col || 0x9fe8ff, 0.45)); G.add(gem);
       const tg = emojiSprite('🎯', 0.9); tg.position.y = 1.4; G.add(tg);
       const q = { sig: s, x: w.x, y: w.y, z: w.z, G, gem, tg, done: false, label: o.label || 'Far crystal', onHit: o.onHit };
       S.targets.push(q);
@@ -1866,7 +1869,7 @@ export function createZones(scene, host) {
     mower(id, x0, x1, z, o = {}) { const e = enemy('mower', id, x0, z, { x0, x1, period: o.period || 9, dur: o.dur || 3.2, yaw: Math.PI / 2, ...o }); e.grace = 0.05; const L = Math.abs(x1 - x0), m = new THREE.Mesh(new THREE.PlaneGeometry(L + 2, 2.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff6a3a, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); const w = L2W((x0 + x1) / 2, z); m.position.set(w.x, w.y + 0.1, w.z); group.add(m); e.lane = m; return e; },
     gravel(x0, z0, x1, z1) { const S = AA(); S.gravel.push({ x0: A.x + x0, z0: A.z + z0, x1: A.x + x1, z1: A.z + z1 }); const w = L2W((x0 + x1) / 2, (z0 + z1) / 2); const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, 0.08, z1 - z0), mat(0xb8b0a0)); m.position.set(w.x, w.y + 0.05, w.z); group.add(m); for (let i = 0; i < 14; i++) { const s = bx(0.3, 0.15, 0.3, 0x8a8478, w.x + (Math.sin(i * 7.1) * 0.5) * (x1 - x0), w.y + 0.1, w.z + (Math.cos(i * 3.3) * 0.5) * (z1 - z0)); group.add(s); } },
     // ---- M1 Light & Shadow ----
-    sunlamp(id, x, z, h, o = {}) { const w = L2W(x, z, h); this.cyl(x, z, 0.9, h - 0.4, 0x8b6a45); const cr = new THREE.Mesh(new THREE.OctahedronGeometry(0.6), mat(0xffe680, 0.9)); cr.position.set(w.x, w.y + 0.2, w.z); group.add(cr); AA().srcs.push({ id, x: w.x, y: w.y + 0.2, z: w.z, need: o.need, to: o.to, cr, shade: o.shade }); },
+    sunlamp(id, x, z, h, o = {}) { const w = L2W(x, z, h); this.cyl(x, z, 0.9, h - 0.4, 0x8b6a45); const cr = new THREE.Mesh(fullerGeo('sunlamp-crystal', 1.06, () => new THREE.OctahedronGeometry(0.6)), mat(0xffe680, 0.9)); cr.position.set(w.x, w.y + 0.2, w.z); group.add(cr); AA().srcs.push({ id, x: w.x, y: w.y + 0.2, z: w.z, need: o.need, to: o.to, cr, shade: o.shade }); },
     mirror(id, x, z, h, aims, o = {}) {
       const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G);
       const post = bx(0.2, h, 0.2, 0x8b6a45, 0, -h / 2, 0); G.add(post); const F = new THREE.Group(); G.add(F);
@@ -1933,7 +1936,7 @@ export function createZones(scene, host) {
       else { const pw = L2W(o.padAt ? o.padAt[0] : x, o.padAt ? o.padAt[1] : z, o.base || 0); const P = new THREE.Group(); P.position.set(pw.x, pw.y, pw.z); P.add(bx(0.5, 0.7, 0.5, 0xf3eee0, 0, 0.35, 0), bx(2.2, 0.5, 2.2, 0xe04848, 0, 0.85, 0, 0.15), bx(0.4, 0.12, 0.4, 0xffffff, 0.5, 1.12, 0.3), bx(0.35, 0.12, 0.35, 0xffffff, -0.5, 1.12, -0.4)); P.visible = false; group.add(P); sd.pad = { x: pw.x, y: pw.y + 1.1, z: pw.z, P, v: o.v || { bruiser: 22, trickster: 15, scout: 11 }, to: o.padTo ? L2W(o.padTo[0], o.padTo[1], o.padTo[2] || 0) : null }; sd.pad.s = addSolid({ type: 'cyl', x: pw.x, z: pw.z, r: 1.1, y0: pw.y - 1, top: pw.y + 1.1, kind: 'zone', off: true }); S.pads.push(sd); }
       S.seeds.push(sd); return sd;
     },
-    drip(x, z, h = 2.4) { const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.6, 0.12, 0.9, 0x5fae4a, 0, 0, 0)); const d = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), mat(0x7fd8ff, 0.7)); d.position.y = -0.4; G.add(d); this.cyl(x, z, 0.12, h, 0x3f8a35); AA().drips.push({ x: w.x, y: w.y, z: w.z, G, d }); },
+    drip(x, z, h = 2.4) { const w = L2W(x, z, h), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(1.6, 0.12, 0.9, 0x5fae4a, 0, 0, 0)); const d = new THREE.Mesh(fullerGeo('dewdrop', 0.73, () => new THREE.SphereGeometry(0.28, 10, 8)), mat(0x7fd8ff, 0.7)); d.position.y = -0.4; G.add(d); this.cyl(x, z, 0.12, h, 0x3f8a35); AA().drips.push({ x: w.x, y: w.y, z: w.z, G, d }); },
     // ---- M4 Wind Vanes ----
     vane(id, x, z, o = {}) { const w = L2W(x, z), G = new THREE.Group(); G.position.set(w.x, w.y, w.z); group.add(G); G.add(bx(0.25, 3.2, 0.25, 0x6a6a70, 0, 1.6, 0)); const V = new THREE.Group(); V.position.y = 3.3; V.add(bx(0.12, 0.12, 2.4, 0x3a3a40, 0, 0, 0), bx(0.1, 0.9, 0.9, 0xff6bd6, 0, 0, -1.1, 0.3), bx(0.3, 0.3, 0.4, 0xffd23f, 0, 0, 1.2)); G.add(V);
       props.push({ kind: 'vane', act: 'crank', cls: 'trickster', sig: 'vane:' + id, x: w.x, y: w.y, z: w.z, r: 2.4, re: true, label: o.label || 'Vane crank', V, icon: badge('trickster', w.x, w.y + 4.4, w.z, 0.9) }); AA().vanes = (AA().vanes || []).concat([V]);
@@ -2660,7 +2663,7 @@ export function createZones(scene, host) {
     for (const cp of S.cps) { if (cp.show) { const vis = isOn(cp.show); cp.G.visible = vis; if (!vis) continue; } if (recipe.splitAt && flatD(cp, p) < 2.2 && Math.abs(p.y - cp.y) < 3) (S.cpBy ||= {})[cur] = cp; const ad = flatD(cp, p); const onPad = ad < 2.2 && Math.abs(p.y - cp.y) < 3; const standOn = ad < 1.15 && Math.abs(p.y - cp.y) < 3; if (standOn && spd < 1.15) cp.stillT = (cp.stillT || 0) + dt; else cp.stillT = 0; const fwd = !S.cp || S.cps.indexOf(cp) > S.cps.indexOf(S.cp); const take = (onPad && !cp.on && fwd) || (onPad && cp.armT && t < cp.armT) || (standOn && cp.stillT > 0.3); if (take && S.cp !== cp) { S.cp = cp; for (const b of S.escorts || []) b.home = { x: cp.x, y: cp.y, z: cp.z }; } if (onPad && !cp.on) { cp.on = true; cp.f.material = mat(0xff5a5a, 0.5); emitNet('checkpoint', { x: +(cp.x - A.x).toFixed(2), z: +(cp.z - A.z).toFixed(2) }); tst('🚩 Checkpoint! A bonk brings you back here', 1600); ctx.audio?.sample?.('build/upgrade-sparkle', 0.35); } cp.rg.userData.mats[0].color.setHex(S.cp === cp ? 0xffd23f : cp.on ? 0xff8a8a : 0xffffff); cp.f.rotation.y = Math.sin(t * 2 + cp.x) * 0.3; }
     if (cur === host.cur()) flagBackUpd(S, p, cur);
     if (S.stuck) { if (t > S.stuck.until || !ctx.driven().includes(S.stuck.who)) S.stuck = null; else if (S.stuck.who === cur) { p.x = S.stuck.x; p.z = S.stuck.z; p.y = S.stuck.y; p.vx = p.vz = p.vy = 0; } }
-    for (const d of S.drips) { if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
+    for (const d of S.drips) { if (c === 'scout' && !S.dew && flatD(d, p) < 1.8 && Math.abs(p.y - d.y) < 2.4) { S.dew = { who: cur, m: new THREE.Mesh(fullerGeo('dewdrop', 0.78, () => new THREE.SphereGeometry(0.3, 10, 8)), mat(0x7fd8ff, 0.8)) }; group.add(S.dew.m); tst('💧 Got a dewdrop! Bring it to a planted seed', 1800); } }
     for (const sd of S.seeds) {
       if (sd.planted && !sd.grown && S.dew && S.dew.who === cur && flatD(sd, p) < 2.0 && Math.abs(p.y - sd.y) < 3) { S.dew.m.removeFromParent(); S.dew = null; growSeed(sd); }
     }
