@@ -15,7 +15,7 @@ export const savedRound = () => { const r = j(ROUND_KEY, null); return r && !r.o
 export const clearRound = () => { try { localStorage.removeItem(ROUND_KEY); } catch (e) {} };
 /** Full reset: meadow save, round, bests, settings, valley, gear, skins, closet, hub talk, single-play bests/stars —
  *  plus any later pm-/pm_/pollinator-meadow key. pm-perf (quality tier) is cleared too, per accessibility.md §8. */
-export const WIPE_KEYS = ['pollinator-meadow-v1', ROUND_KEY, BEST_KEY, SET_KEY, 'pm-valley-v1', 'pm_gear_v1', 'pm_skins_v1', 'pm_closet_v1', 'pm_hub_talk_v1', 'pm-best-sp', 'pm-stars-sp', 'pm-goals-collapsed', 'pm-hubcut', 'pm_unlock_all', 'pm-perf'];
+export const WIPE_KEYS = ['pollinator-meadow-v1', ROUND_KEY, BEST_KEY, SET_KEY, 'pm-valley-v1', 'pm_gear_v1', 'pm_skins_v1', 'pm_closet_v1', 'pm_hub_talk_v1', 'pm-best-sp', 'pm-stars-sp', 'pm-goals-collapsed', 'pm-hubcut', 'pm_unlock_all', 'pm-perf', 'pm-interact-tips-v1'];
 export function wipeAll() {
   try {
     WIPE_KEYS.forEach(k => localStorage.removeItem(k));

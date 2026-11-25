@@ -37,6 +37,7 @@ import { createZones, hasLevel } from './zones.js';
 import { createMapScreen } from './map-screen.js';
 import { showIntroCard, dismissIntroCard, preloadIntroCard, hasIntroCard, introCardId } from './intro-card.js';
 import { bindVoice, presentLevelTips, preloadTips, fillHowTips, dismissLevelTips } from './tips-ui.js';
+import { noteInteractTip, resetInteractTips, TIP_MS, interactTipsState } from './interact-tips.js';
 import { CLIP } from './declutter.js';
 import { createLook } from './look.js';
 import { createCritters } from './critters.js';
@@ -317,7 +318,43 @@ function holdClock(on) {
 function syncNightFlag() { const v = nightOf(clock.t) > 0.5; if (v === curNight) return; if (state.musicLive) { moodOver = v ? 'dusk' : 'morning'; moodOverT = performance.now() / 1000 + 26; } curNight = v; $('bNight').textContent = v ? '☀️ Switch to day' : '🌙 Switch to night'; }
 
 // ---------- HUD ----------
-let toastT = 0; function toast(msg, ms = 2400) { const t = $('toast'); const hostOnly = msg === 'Only the host can start a level'; t.replaceChildren(); if (hostOnly) { t.classList.add('olToastHost'); const im = document.createElement('img'); im.className = 'olToastBadge'; im.src = (import.meta.env.BASE_URL || './') + 'ui/online/host/badge-host-only.png'; im.alt = ''; t.append(im, document.createTextNode(skinText(msg))); } else { t.classList.remove('olToastHost'); t.textContent = skinText(msg); } t.classList.add('on'); /* #objT is position:fixed, so offsetParent is always null */ const measure = () => { const o = $('objT'); const h = o && getComputedStyle(o).display !== 'none' ? o.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); }; measure(); requestAnimationFrame(measure); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+let toastT = 0, toastDoc = null;
+function dismissToast() {
+  const t = $('toast');
+  t.classList.remove('on', 'tipBox'); t.replaceChildren(); t.style.pointerEvents = '';
+  if (toastT) { clearTimeout(toastT); toastT = 0; }
+  if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
+}
+function toast(msg, ms = 2400) {
+  const t = $('toast'); const hostOnly = msg === 'Only the host can start a level';
+  if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
+  t.replaceChildren(); t.classList.remove('tipBox'); t.style.pointerEvents = '';
+  if (hostOnly) { t.classList.add('olToastHost'); const im = document.createElement('img'); im.className = 'olToastBadge'; im.src = (import.meta.env.BASE_URL || './') + 'ui/online/host/badge-host-only.png'; im.alt = ''; t.append(im, document.createTextNode(skinText(msg))); }
+  else { t.classList.remove('olToastHost'); t.textContent = skinText(msg); }
+  t.classList.add('on');
+  /* #objT is position:fixed, so offsetParent is always null */
+  const measure = () => { const o = $('objT'); const h = o && getComputedStyle(o).display !== 'none' ? o.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); };
+  measure(); requestAnimationFrame(measure); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms);
+}
+/** First-time interaction tip: stays up 10 s, tap or X closes early. Not used for the 16 s unlock tray. */
+function toastTip(msg, ms = TIP_MS) {
+  const t = $('toast');
+  if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
+  t.replaceChildren(); t.classList.remove('olToastHost');
+  const tx = document.createElement('span'); tx.className = 'tipTx'; tx.textContent = skinText(msg);
+  const x = document.createElement('button'); x.type = 'button'; x.className = 'tipX'; x.setAttribute('aria-label', 'Close tip'); x.textContent = '×';
+  t.append(tx, x); t.classList.add('on', 'tipBox'); t.style.pointerEvents = 'auto';
+  const close = ev => { ev && ev.stopPropagation && ev.stopPropagation(); dismissToast(); };
+  x.addEventListener('click', close);
+  toastDoc = ev => { if (t.contains(ev.target)) { if (ev.target === x || ev.target.closest('.tipX')) return; close(ev); return; } close(ev); };
+  document.addEventListener('pointerdown', toastDoc, true);
+  const measure = () => { const o = $('objT'); const h = o && getComputedStyle(o).display !== 'none' ? o.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); };
+  measure(); requestAnimationFrame(measure); clearTimeout(toastT); toastT = setTimeout(() => dismissToast(), ms);
+}
+function actTip(kind, msg, pos) {
+  if (noteInteractTip(kind)) toastTip(msg, TIP_MS);
+  else if (pos && fx) fx.burst(pos.x, (pos.y || 0) + 0.8, pos.z, 16, 5);
+}
 function setHint(s) { $('hint').textContent = s; }
 function updateHud() {
   const sp = SPECIES[cur], p = P[cur], n = nests[cur];
@@ -1773,6 +1810,7 @@ let gateFn = null;
 function parentGate(fn) { gateFn = fn; openOv('parentGate'); }
 $('parentGate').addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if (!b && e.target !== $('parentGate')) return; const fn = gateFn; gateFn = null; closeOv('parentGate'); if (b && b.dataset.a === '13' && fn) fn(); });
 $('sWipe').onclick = () => parentGate(wipeSave);
+$('sResetTips') && ($('sResetTips').onclick = () => { if (onb && onb.reset) onb.reset(); toast('Tips reset. First-time hints will show again.', 2800); });
 $('sAccRow').onclick = () => openOv('access'); $('accBack').onclick = () => closeOv('access');
 $('sCredRow').onclick = () => showCredits();
 $('sParRow').onclick = () => parentGate(() => openOv('parentInfo')); $('parBack').onclick = () => closeOv('parentInfo');
@@ -2459,7 +2497,7 @@ async function boot() {
   tech = createTech({ round, toast, lead: () => lead, price: t => price(t), sfx: k => audio.sample(k, 0.4) }); tech.onChange = () => { for (const k in abCache) abCache[k] = null; if (techOpen) renderTech(); if (build && build.active) renderBTray(true); updateRoundHud(true); };
   build = await createBuild(scene, { territory: terr, heightAt, phys: world.phys, nests, SPECIES, round, fx, toast, audio, cur: () => cur, price: t => price(t), allowed: t => t === 'home' || (CATALOG[t] && CATALOG[t].sp === cur), spName: id => SPECIES[id] ? SPECIES[id].name : id, techBuilds: () => tech.g().builds, gardenMul: () => 1 + tech.g().garden });
   if (savedR) { if (savedR.lead && SPECIES[savedR.lead]) lead = savedR.lead; tech.restore(savedR.tech); round.restore(savedR); const rf = build.restore(savedR.build); if (rf) round.addRes('p', rf); }
-  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { look, easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), audio, getP: () => P[cur], cur: () => cur, driven: () => { const d = (slots.driven() || []).slice(); if (net && net.isHost && net.remoteBodies) { for (const id of net.remoteBodies()) if (id && !d.includes(id)) d.push(id); } return d; }, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, isNetClient: () => !!(net && net.isClient), swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
+  DCL.TERR[1] = scene.children.length; zones = createZones(scene, { look, easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), actTip, audio, getP: () => P[cur], cur: () => cur, driven: () => { const d = (slots.driven() || []).slice(); if (net && net.isHost && net.remoteBodies) { for (const id of net.remoteBodies()) if (id && !d.includes(id)) d.push(id); } return d; }, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, isNetClient: () => !!(net && net.isClient), swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
   // Each critter is pastel-styled and linked before its first frame: unstyled it would link once,
   // then again as |presetB when the periodic restyle reaches it (a double compile mid-play).
   critters = createCritters(scene, { heightAt, tier: () => look.tier, prep: obj => { look.styleScene({ children: [obj] }); if (typeof renderer.compile === 'function') renderer.compile(obj, camera, scene); } });
@@ -2535,6 +2573,8 @@ async function boot() {
 
   items = createItems({ save, persist, toast, audio, onHud: () => updateHud() });
   onb = createOnboarding({ save, persist, toast, audio, hasBests: () => Object.keys(bests()).length > 0 || Object.keys(save.journal || {}).length > 0, round: () => round });
+  // Settings and admin "Reset tips" share this: onboarding beats plus first-time interaction kinds.
+  const _resetTips = onb.reset; onb.reset = () => { resetInteractTips(); _resetTips(); };
   goals = createGoals({
     round, toast, audio,
     terr: () => terr, techCount: () => tech.count(),
@@ -2615,7 +2655,7 @@ async function boot() {
   const loadEl = $('load'); if (loadEl) { loadEl.style.opacity = 0; setTimeout(() => { if (!window.__bootFailed) $('load')?.remove(); }, 700); }
   buildCards(); loop(performance.now());
   buildLens(); refreshTitle(); syncMixUi(); $('sMute').checked = !!settings.mute; applyMix(); applyAccess(); audio.setMute(settings.mute);
-  const X = { round, terr, build, adm, rivals, goals, onb, items, looks, save, get weather() { return weather; },
+  const X = { round, terr, build, adm, rivals, goals, onb, interactTips: interactTipsState, items, looks, save, get weather() { return weather; },
     get valley() { return valley; }, get zones() { return zones; }, startValleyPatch,
     endRound: () => { if (playing && !round.over) round.finish(); }, restartRound: () => startNew(round.len),
     clearTerritory: () => { build.clear(); tiers && tiers.reset(); terr.resetBlooms(); terr.refresh(); renderBTray(true); },

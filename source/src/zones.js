@@ -2139,6 +2139,7 @@ export function createZones(scene, host) {
     pr.ringT = t;
     paintMaster(pr);
     ctx.audio?.sample?.('act3/master-bell-chime-' + to.toLowerCase(), 0.62);
+    actTip('bell', '🔔 Ding! The Master Bell rang', pr);
     return true;
   }
   function updateMasterViz(pr) {
@@ -2380,7 +2381,7 @@ export function createZones(scene, host) {
     m.position.set(p.x, p.y + 1.1, p.z); group.add(m);
     if (o.ty != null) by = o.ty;
     S.shots.push({ kind: k, m, ax: p.x, ay: p.y + 1.1, az: p.z, bx: bx2, by, bz, x: p.x, y: p.y + 1.1, z: p.z, t: 0, t0: t, dur: o.dur || 0.55, landed: false, dead: false, src: o.src || 'tool', hitMir: !!o.hitMir });
-    if (!o.src) S.heldTool = null; tst(o.msg || (k === 'bubble' ? '🫧 Bubble shot!' : '✨ Shiny pebble thrown!'), 1200); ctx.audio?.blip?.(3);
+    if (!o.src) S.heldTool = null; actTip(o.src === 'sling' ? 'sling' : o.src === 'pouch' ? 'pouch' : 'throw', o.msg || (k === 'bubble' ? '🫧 Bubble shot!' : '✨ Shiny pebble thrown!'), p); ctx.audio?.blip?.(3);
     return true;
   }
   function cutWebAt(x, z) {
@@ -2857,6 +2858,12 @@ export function createZones(scene, host) {
     for (const im of [trunk, canopy, bush, flower]) { im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; group.add(im); }
   }
   function tst(s, d) { if (recipe && recipe.kid) return; ctx.toast(s, d); emitNet('toast', { text: s, ms: d }); }
+  // l20m: text tip only the first time per interaction kind; later just a sparkle (sound is already played by the caller).
+  function actTip(kind, s, pr) {
+    if (recipe && recipe.kid) return;
+    if (ctx.actTip) ctx.actTip(kind, s, pr);
+    else tst(s, 10000);
+  }
   // ---- Pip kid tips (Fern act2-kid-tips.md / act3 sheets): recipe.pip = [[trigger | [triggers], line], …] ----
   // triggers: 'start' · 'z:N' (cross local z) · 'xlt:N' (go west of x) · 'sig:K' / 'sig:K+3' (3 s later) · 'near:KIND[:R]' (enemy or prop kind) · 'stuck:PUZZLE'
   let pipDone = new Set(), pipPend = null, pipSigT = {};
@@ -3418,13 +3425,13 @@ export function createZones(scene, host) {
     if (a2 && pr.act === 'shove' && pr.ice && a2.season === 'winter') { pr.to = pr.ice; if (pr.iceSig) pr.sig = pr.iceSig; tst('⛸️ On the ice it slides a looong way!', 1800); }
     switch (pr.act) {
       case 'bell': ringBell(pr); break;
-      case 'lever': pr.done = true; pr.arm.rotation.z = -0.5; pr.knob.position.x = 0.3; setSig(pr.sig); ctx.audio?.sample?.('ui2/lantern-click', 0.5); tst(`🎚️ ${pr.label} pulled!`, 1800); break;
+      case 'lever': pr.done = true; pr.arm.rotation.z = -0.5; pr.knob.position.x = 0.3; setSig(pr.sig); ctx.audio?.sample?.('ui2/lantern-click', 0.5); actTip('lever', `🎚️ ${pr.label} pulled!`, pr); break;
       case 'slip': {
         if (!atB && pr.needIn && !isOn(pr.needIn)) { say('🔒 ' + (pr.needWhy || 'Closed'), 2400); return true; }
-        const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.55, 0.3); tst('🕳️ Slipped through!', 1000); break;
+        const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.55, 0.3); actTip('slip', '🕳️ Slipped through!', pr); break;
       }
-      case 'vine': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.1, z: to.z }, 1.1, 0); tst(atB ? '🌿 Climbing down' : '🌿 Climbing up the vine!', 1200); break; }
-      case 'dig': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.9, -1.6); if (!pr.done) { pr.done = true; setSig(pr.sig); if (pr.friend) { setSig('friend:' + pr.friend); ctx.valley?.addFriend?.(pr.friend); tst(pr.friend === 'foxkit' ? '🦊 A fox kit wriggles out — you can call it if you like!' : '⛏️ Dug through the tunnel!', 1800); } else tst('⛏️ Dug through the tunnel!', 1200); } break; }
+      case 'vine': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y + 0.1, z: to.z }, 1.1, 0); actTip('vine', atB ? '🌿 Climbing down' : '🌿 Climbing up the vine!', pr); break; }
+      case 'dig': { const to = atB ? pr : pr.b; tween(p, { x: to.x, y: to.y, z: to.z }, 0.9, -1.6); if (!pr.done) { pr.done = true; setSig(pr.sig); if (pr.friend) { setSig('friend:' + pr.friend); ctx.valley?.addFriend?.(pr.friend); actTip('dig', pr.friend === 'foxkit' ? '🦊 A fox kit wriggles out — you can call it if you like!' : '⛏️ Dug through the tunnel!', pr); } else actTip('dig', '⛏️ Dug through the tunnel!', pr); } break; }
       case 'throw': {
         if (pr.from && (dFlat(p, pr.from) > pr.from.r || p.y < pr.from.minY - 0.3)) { say('🌰 ' + (pr.fromWhy || 'Get to a better spot to throw from'), 2600); return true; }
         throwAcorn(p, pr); break;
@@ -3432,35 +3439,35 @@ export function createZones(scene, host) {
       case 'plank': {
         pr.cross.on = true; pr.holder.visible = true; pr.s.off = false; pr.ghost.visible = false; clearWaterIn(pr.cross.x0, pr.cross.z0, pr.cross.x1, pr.cross.z1);
         for (const q of props) if (q.act === 'plank' && q.holder === pr.holder) { q.done = true; if (q.icon) q.icon.visible = false; }
-        setSig(pr.sig); tst(`🪵 ${pr.label}: Plank Bridge built!${pr.cross.thin ? ' (too thin for Bear)' : ''}`, 2400); ctx.audio?.chime?.(); break;
+        setSig(pr.sig); actTip('plank', `🪵 ${pr.label}: Plank Bridge built!${pr.cross.thin ? ' (too thin for Bear)' : ''}`, pr); ctx.audio?.chime?.(); break;
       }
       case 'shove': {
         pr.done = true; const s = pr.s, to = pr.to;
         pr.anim = { t: 0, a: { x: pr.from.x, z: pr.from.z, top: pr.from.top }, b: to };
         if (pr.ghost) pr.ghost.visible = false;
-        tst(`💪 Shove! ${pr.label} slides into place`, 1800); ctx.audio?.sample?.('build/place-thunk', 0.5);
+        actTip('shove', `💪 Shove! ${pr.label} slides into place`, pr); ctx.audio?.sample?.('build/place-thunk', 0.5);
         break;
       }
       case 'smash': {
         pr.done = true; pr.s.off = true; pr.m.visible = false; pr.G.visible = false; setSig(pr.sig);
-        fx(pr.x, pr.y + 1.2, pr.z); tst(`💥 Poof! ${pr.label} tumbles open in a puff of leaves`, 2000); ctx.audio?.sample?.('build/dismantle-pop-apart', 0.5); break;
+        fx(pr.x, pr.y + 1.2, pr.z); actTip('smash', `💥 Poof! ${pr.label} tumbles open in a puff of leaves`, pr); ctx.audio?.sample?.('build/dismantle-pop-apart', 0.5); break;
       }
     }
     if (pr.icon && pr.done && !pr.two) pr.icon.visible = false;
     return true;
   }
   function ringBell(pr) {
-    if (pr.kind === 'tbell') { pr.ringT = t; pr.onRing?.(); ctx.audio?.sample?.('contest/win-jingle', 0.4); return; }
+    if (pr.kind === 'tbell') { pr.ringT = t; pr.onRing?.(); ctx.audio?.sample?.('contest/win-jingle', 0.4); actTip('bell', `🔔 Ding! ${pr.label} rang`, pr); return; }
     if (pr.done) return;
     if (pr.need && !isOn(pr.need)) { say('🔒 ' + (pr.needWhy || 'Not yet'), 2400); return; }
     pr.done = true; pr.ringT = t; setSig(pr.sig); if (pr.icon) pr.icon.visible = false;
     if (pr.lantern) { pr.bell.material = mat(0xffe08a, 1.0); const L = new THREE.PointLight(0xffd27a, 2, 9); L.position.copy(pr.G.position); group.add(L); }
-    ctx.audio?.sample?.(pr.lantern ? 'ui2/lantern-click' : 'contest/win-jingle', 0.45); tst(pr.lantern ? `🏮 ${pr.label} lit!` : `🔔 Ding! ${pr.label} rang`, 1800);
+    ctx.audio?.sample?.(pr.lantern ? 'ui2/lantern-click' : 'contest/win-jingle', 0.45); actTip('bell', pr.lantern ? `🏮 ${pr.label} lit!` : `🔔 Ding! ${pr.label} rang`, pr);
   }
   function throwAcorn(p, pr) {
     const a = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.4, 0.35), mat(0x8b5a2b)); a.position.set(p.x, p.y + 1.2, p.z); group.add(a);
     pr.done = true; pr.proj = { m: a, t: 0, a: a.position.clone(), b: new THREE.Vector3(pr.x, pr.y, pr.z) };
-    tst('🌰 Throw!', 900); ctx.audio?.blip?.(3);
+    actTip('throw', '🌰 Throw!', pr); ctx.audio?.blip?.(3);
   }
   /** Interact / Act button: returns true if a puzzle prop handled it */
   function act() {
@@ -3484,7 +3491,7 @@ export function createZones(scene, host) {
     if (!pr && a2 && useGear(p)) return true;
     if (!pr) {
       const m = props.find(q => q.kind === 'plate' && dFlat(p, q) < 2.2);
-      if (m) { say(`${m.plate.heavy ? '🐻 Heavy plate — only Bear is heavy enough' : '🟩 Stand here and it stays held'} · then swap to another friend`, 2400); return true; }
+      if (m) { actTip('plate', `${m.plate.heavy ? '🐻 Heavy plate — only Bear is heavy enough' : '🟩 Stand here and it stays held'} · then swap to another friend`, m); return true; }
       return false;
     }
     return doAct(pr, p);
@@ -3692,7 +3699,7 @@ export function createZones(scene, host) {
       if (holder !== pl.holder) {
         const labelOf = idd => { if (typeof idd === 'string' && idd.includes(':')) { const k = idd.split(':')[0]; return EN_NAME[k] || k; } return nameOf(idd); };
         if (holder && holder !== cur) tst(`📌 ${labelOf(holder)} is holding the ${pl.label}!`, 2000);
-        else if (holder && !String(holder).includes(':')) tst(`🟩 ${pl.label} held — swap to a friend, ${nameOf(holder)} will stay put`, 2200);
+        else if (holder && !String(holder).includes(':')) actTip('plate', `🟩 ${pl.label} held — swap to a friend, ${nameOf(holder)} will stay put`, pl);
         pl.holder = holder;
       }
       setSig(pl.sig, !!holder);
