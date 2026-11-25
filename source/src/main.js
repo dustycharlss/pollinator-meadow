@@ -683,6 +683,7 @@ function stepPlayer(dt, t, id, frame) {
   }
   p.boostCd = Math.max(0, p.boostCd - dt); p.digCd = Math.max(0, p.digCd - dt); p.digT = Math.max(0, p.digT - dt); p.boostT = Math.max(0, p.boostT - dt);
   if (isView) $('bAct').classList.toggle('cd', (sp.ground ? p.digCd : p.boostCd) > 0);
+  if (isView) { const ba = $('bAct'), ck = CLASS_OF[cur] || 'trickster'; if (ba && ba.dataset.cls !== ck) ba.dataset.cls = ck; } // l20p: class-coloured action sprite
   // --- jumping
   if (p.grounded) { p.coyote = 0.12; p.jumpsLeft = mv.jumps - 1; p.airT = 0; } else { p.coyote -= dt; p.airT += dt; }
   if (frame.jumpPressed) { frame.jumpPressed = false; p.buf = 0.14; }
