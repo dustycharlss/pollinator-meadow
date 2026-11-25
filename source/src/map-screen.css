@@ -235,8 +235,8 @@ body #valley.ov:has(#mapScreen.msClean:not([data-view="world"])){background:var(
 #mapScreen.msClean:not([data-view="world"]) .msTitle{font-weight:900;font-size:clamp(19px,5.8vw,24px);text-align:center;color:var(--map-ink)}
 #mapScreen.msClean:not([data-view="world"]) .msChip{min-width:0;height:36px;padding:0 11px 0 8px;border-radius:18px;background:var(--cl-card);box-shadow:var(--cl-shadow-sm);font:900 15px/1 var(--cl-font);gap:5px}
 #mapScreen.msClean:not([data-view="world"]) .msChip b{font-weight:900}
-#mapScreen.msClean:not([data-view="world"]) .msTabs{grid-area:tabs;display:flex;gap:4px;height:46px;padding:4px;border-radius:23px;background:rgba(255,250,240,.78);box-shadow:inset 0 2px 0 rgba(122,72,40,.08);width:100%;min-width:0}
-#mapScreen.msClean:not([data-view="world"]) .msTab{flex:1 1 0;width:0;min-width:0;max-width:none;height:38px;padding:0 6px;margin:0;border:0;border-radius:19px;background:none;background-image:none;
+#mapScreen.msClean:not([data-view="world"]) .msTabs{grid-area:tabs;display:flex;gap:4px;height:52px;padding:4px;border-radius:26px;background:rgba(255,250,240,.78);box-shadow:inset 0 2px 0 rgba(122,72,40,.08);width:100%;min-width:0}
+#mapScreen.msClean:not([data-view="world"]) .msTab{flex:1 1 0;width:0;min-width:0;max-width:none;height:44px;min-height:44px;padding:0 6px;margin:0;border:0;border-radius:22px;background:none;background-image:none;
   display:flex;align-items:center;justify-content:center;gap:6px;font:900 15px/1 var(--cl-font);color:var(--cl-ink2);box-shadow:none;overflow:hidden}
 #mapScreen.msClean:not([data-view="world"]) .msTab.on{background:linear-gradient(#ffe48a,#ffcf4a);color:var(--map-ink);box-shadow:0 3px 0 #d9a226,0 5px 10px rgba(180,120,20,.25)}
 #mapScreen.msClean:not([data-view="world"]) .msTabIc{width:18px;height:18px}
@@ -309,8 +309,6 @@ body #valley.ov:has(#mapScreen.msClean:not([data-view="world"])){background:var(
 @media (orientation:landscape) and (max-height:420px){
   #mapScreen.msClean:not([data-view="world"]) .msFrame{grid-template-columns:minmax(0,1fr) 210px}
   #mapScreen.msClean:not([data-view="world"]) .msHead{gap:6px}
-  #mapScreen.msClean:not([data-view="world"]) .msTabs{height:42px}
-  #mapScreen.msClean:not([data-view="world"]) .msTab{height:34px}
   #mapScreen.msClean:not([data-view="world"]) .msThumb{max-height:78px}
   #mapScreen.msClean:not([data-view="world"]) .msSubline{display:none}
   #mapScreen.msClean:not([data-view="world"]) .msPlay{height:46px}
