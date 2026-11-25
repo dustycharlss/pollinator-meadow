@@ -833,10 +833,15 @@ function declutterOn(r) {
   if (ADVENTURE) { const rs = new Set([...Object.values(riders), ...Object.values(baseRiders)]); for (let i = DCL.W[1]; i < DCL.AMB[0] && i < C.length; i++) if (!rs.has(C[i])) dclLayer(C[i]); } // meadow swarms between riders and ambient
   for (const [a, b] of [DCL.NEST, DCL.TERR, DCL.HELP, ...(ADVENTURE ? [DCL.AMB] : [])]) for (let i = a; i < b && i < C.length; i++) dclLayer(C[i]); // art pass: the meadow's big ambient animals stay out of campaign levels (critters.js adds small ones)
   for (const so of world.solids) if (so.kind !== 'zone' && so.kind !== 'pond' && !so.off && inR(so.x, so.z, 2)) { so.off = true; DCL.solids.push(so); }
-  // t159u: the meadow's grass ground sat above level creeks and hid the water — dip it under every level water rect
-  const G = world.ground, D = zones?.deepRects?.() || [];
-  if (G && D.length) { const pa = G.geometry.attributes.position, tf = G.matrixWorld, v = new THREE.Vector3(), save = [];
-    for (let i = 0; i < pa.count; i++) { v.set(pa.getX(i), pa.getY(i), pa.getZ(i)).applyMatrix4(tf); if (D.some(r => v.x > r.x0 - 1.6 && v.x < r.x1 + 1.6 && v.z > r.z0 - 1.6 && v.z < r.z1 + 1.6)) { save.push([i, pa.getY(i)]); pa.setY(i, pa.getY(i) - 8); } }
+  // t159u: dip the meadow grass under level creeks so the water shows.
+  // l20k: also dip it under the whole level rect. In non-cave campaign levels the meadow
+  // ground stayed on layer 0 and sat up to a metre above the L1 (sunny_hollow) and
+  // Trailhead exit floors, so Bear and Bee clipped into the visible dirt by the pink stone and flag.
+  const G = world.ground, D = zones?.deepRects?.() || [], R = DCL.rect;
+  if (G && (D.length || R)) { const pa = G.geometry.attributes.position, tf = G.matrixWorld, v = new THREE.Vector3(), save = [];
+    const inWater = (x, z) => D.some(r => x > r.x0 - 1.6 && x < r.x1 + 1.6 && z > r.z0 - 1.6 && z < r.z1 + 1.6);
+    const inLevel = (x, z) => R && x > R.x0 - 6 && x < R.x1 + 6 && z > R.z0 - 6 && z < R.z1 + 6;
+    for (let i = 0; i < pa.count; i++) { v.set(pa.getX(i), pa.getY(i), pa.getZ(i)).applyMatrix4(tf); if (inWater(v.x, v.z) || inLevel(v.x, v.z)) { save.push([i, pa.getY(i)]); pa.setY(i, pa.getY(i) - 8); } }
     if (save.length) { pa.needsUpdate = true; G.geometry.computeBoundingSphere(); DCL.ground = save; } }
 }
 function declutterOff() {
