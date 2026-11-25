@@ -1503,7 +1503,8 @@ function startValleyPatch(patchId, opts = {}) {
     for (const R of [zones?.root?.(), critters?.group, ...hiddenSpr]) R?.traverse(o => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isSprite || o.isLine)) { o.frustumCulled = false; unculled.push(o); } });
     // No renderer.compile(scene): it links every material in the scene, including the hidden sandbox meadow
     // (~70 programs a level never draws), which then queue ahead of the level's own first draws.
-    look.render();
+    let unWarm = null; try { unWarm = tiers?.warm?.(); } catch (e) {} // l20r F1: the hub dew cluster (layer-hidden until the camera settles) is drawn once here
+    try { look.render(); } finally { try { unWarm?.(); } catch (e) {} }
   } catch (e) {}
   for (const o of unculled) o.frustumCulled = true;
   for (const o of hiddenSpr) o.visible = false;

@@ -59,6 +59,12 @@ export function createTiers(scene, ctx) {
   const land = (tries = 40, rMax = 120) => { for (let i = 0; i < tries; i++) { const a = Math.random() * 6.283, d = 25 + Math.random() * rMax, x = Math.cos(a) * d, z = Math.sin(a) * d; if (heightAt(x, z) > WATER_Y + 0.8 && Math.hypot(x - POND.x, z - POND.z) > POND.r + 4) return { x, z }; } return { x: 30, z: 30 }; };
   const say = (k, ms = 3200) => { if (TI.said[k]) return; TI.said[k] = 1; toast((k === 'p' ? '🌼 ' : k === 'd' ? '💧 ' : k === 's' ? '🌟 ' : '') + KID[k], ms); };
   TI.say = say;
+  // l20r F1: the level-start warm render (main.js) draws a throwaway dew cluster (drop + glow + beam, layer 0, unculled, tiers root
+  // forced visible) so those programs link then and not 2-3 s into play, when the hub cluster (placed on the first update, parked
+  // until the camera settles) first shows. Returns a restore function.
+  TI.warm = () => { const g = new THREE.Group(), d = dropMesh(), gl = glow('d', 2.4), beam = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 14, 6, 1, true), new THREE.MeshBasicMaterial({ color: col('d'), transparent: true, opacity: 0.35, depthWrite: false }));
+    g.add(d, gl, beam); g.traverse(q => { q.layers.set(0); q.frustumCulled = false; }); const rv = root.visible; root.visible = true; root.add(g);
+    return () => { root.remove(g); root.visible = rv; beam.geometry.dispose(); beam.material.dispose(); }; };
   const P = () => ctx.player(), sp = () => ctx.cur();
   const cls = id => SIZE_CLASS[id] || 'medium';
   // ---------- T2 Dewdrop clusters
