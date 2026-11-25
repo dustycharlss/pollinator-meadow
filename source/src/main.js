@@ -333,10 +333,12 @@ function layoutTip() {
   b.style.top = top ? top + 'px' : '';
 }
 function dismissTip(byUser) {
-  if (byUser) commitTip(); else if (tipPend) { /* timed out after 10 s: already committed at 2 s */ commitTip(); }
+  // l20p T1: a close before the tip has been visible 2 s does not save the kind (it shows again next time);
+  // a close at 2 s or later (or the 10 s timeout) saves it.
+  if (tipPend) { if (performance.now() - tipPend.at >= 2000) commitTip(); else { clearTimeout(tipPend.t); tipPend = null; } }
   const b = $('tipBox'); if (b) { b.classList.remove('on'); b.replaceChildren(); b.style.top = ''; }
   if (tipT) { clearTimeout(tipT); tipT = 0; }
-  if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
+  if (toastDoc) { const tb = $('tipBox'); if (tb) tb.removeEventListener('pointerdown', toastDoc); toastDoc = null; }
 }
 function dismissToast() {
   const t = $('toast');
@@ -358,15 +360,17 @@ function toast(msg, ms = 2400) {
 function toastTip(msg, ms = TIP_MS) {
   let b = $('tipBox');
   if (!b) { b = document.createElement('div'); b.id = 'tipBox'; b.setAttribute('role', 'status'); document.body.appendChild(b); }
-  if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
+  if (toastDoc) { b.removeEventListener('pointerdown', toastDoc); toastDoc = null; }
+  document.body.appendChild(b); // l20p T2: last in the body so it stacks above the same-z #pipCard
   b.replaceChildren();
   const tx = document.createElement('span'); tx.className = 'tipTx'; tx.textContent = skinText(msg);
   const x = document.createElement('button'); x.type = 'button'; x.className = 'tipX'; x.setAttribute('aria-label', 'Close tip'); x.textContent = '×';
   b.append(tx, x); b.classList.add('on', 'tipBox');
   const close = ev => { ev && ev.stopPropagation && ev.stopPropagation(); dismissTip(true); };
   x.addEventListener('click', close);
-  toastDoc = ev => { if (b.contains(ev.target) && (ev.target === x || ev.target.closest('.tipX'))) return; close(ev); };
-  document.addEventListener('pointerdown', toastDoc, true);
+  // l20p T1: only the × or a tap ON the tip closes it; joystick / world / other pointerdowns leave it up.
+  toastDoc = ev => { if (ev.target === x || (ev.target.closest && ev.target.closest('.tipX'))) return; close(ev); };
+  b.addEventListener('pointerdown', toastDoc);
   const measure = () => { const o = $('objT'); const h = o && getComputedStyle(o).display !== 'none' ? o.getBoundingClientRect().height : 0; document.body.style.setProperty('--objH', Math.round(h) + 'px'); layoutTip(); };
   measure(); requestAnimationFrame(measure); if (tipT) clearTimeout(tipT); tipT = setTimeout(() => dismissTip(), ms);
 }
@@ -376,7 +380,7 @@ let tipPend = null;
 function commitTip() { if (tipPend) { markInteractTip(tipPend.kind); clearTimeout(tipPend.t); tipPend = null; } }
 function actTip(kind, msg, pos) {
   if (tipPend && tipPend.kind === kind) return; // this tip is already up
-  if (!seenInteractTip(kind)) { if (tipPend) { clearTimeout(tipPend.t); tipPend = null; } toastTip(msg, TIP_MS); tipPend = { kind, t: setTimeout(commitTip, 2000) }; }
+  if (!seenInteractTip(kind)) { if (tipPend) { clearTimeout(tipPend.t); tipPend = null; } toastTip(msg, TIP_MS); tipPend = { kind, at: performance.now(), t: setTimeout(commitTip, 2000) }; }
   else if (pos && fx) { tipSparkles++; fx.burst(pos.x, (pos.y || 0) + 0.8, pos.z, 16, 5); }
 }
 function setHint(s) { $('hint').textContent = s; }
