@@ -192,7 +192,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   let patchLook = null, Pnow = B, masterLetter = null, lerpFromP = null, lerpToP = null, lerpU = 1, lastTuneT = 0;
   const fills = [];
   const tc = new THREE.Color(), dirB = SUN_B.clone(), dirO = new THREE.Vector3(), LT = C(B.quality.low.bakeGrade.lightTint), ST = C(B.quality.low.bakeGrade.skyTint), HZ = C(B.grade.hazeColor);
-  const snapLs = new THREE.Vector3(), snapUp = new THREE.Vector3(0, 1, 0);
+  const snapLs = new THREE.Vector3(), snapUp = new THREE.Vector3(0, 1, 0), snapUpT = new THREE.Vector3(), snapZero = new THREE.Vector3(), snapRot = new THREE.Matrix4(), snapRotInv = new THREE.Matrix4();
   const cHS = C(B.hemi.sky), cHG = C(B.hemi.ground), cSun = C(B.sun.color), cFog = C(B.fog.color);
   const qBucket = () => QMAP[tierName] || 'medium';
   function canCastShadow(o) {
@@ -326,13 +326,15 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     if (wantSh) {
       const sc = sun.shadow.camera, mapW = sun.shadow.mapSize.x || 1024, mapH = sun.shadow.mapSize.y || mapW;
       const texX = (sc.right - sc.left) / mapW, texY = (sc.top - sc.bottom) / mapH;
-      sc.position.copy(tg).addScaledVector(dirO, dist);
-      sc.up.copy(snapUp); if (Math.abs(dirO.y) > 0.95) sc.up.set(0, 0, 1);
-      sc.lookAt(tg); sc.updateMatrixWorld();
-      snapLs.copy(tg).applyMatrix4(sc.matrixWorldInverse);
+      // l20n: snap in a FIXED light frame (rotation only, no translation). Centring a camera on tg first made
+      // the light-space x/y always 0, so the old rounding was a no-op and edges crawled.
+      snapUpT.copy(snapUp); if (Math.abs(dirO.y) > 0.95) snapUpT.set(0, 0, 1);
+      snapRot.lookAt(dirO, snapZero, snapUpT); snapRotInv.copy(snapRot).transpose();
+      snapLs.copy(tg).applyMatrix4(snapRotInv);
       if (texX) snapLs.x = Math.round(snapLs.x / texX) * texX;
       if (texY) snapLs.y = Math.round(snapLs.y / texY) * texY;
-      tg.copy(snapLs.applyMatrix4(sc.matrixWorld));
+      tg.copy(snapLs.applyMatrix4(snapRot));
+      sc.position.copy(tg).addScaledVector(dirO, dist); sc.up.copy(snapUpT); sc.lookAt(tg); sc.updateMatrixWorld();
     }
     sun.position.copy(tg).addScaledVector(dirO, dist);
     sun.target.updateMatrixWorld(); sun.updateMatrixWorld();
