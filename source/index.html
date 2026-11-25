@@ -1028,10 +1028,10 @@ body.adv #pipCard button{min-width:44px!important;min-height:44px!important;padd
 #toast{font-size:calc(17px * var(--text,1))}
 body.adv #toast{font-size:calc(14px * var(--text,1));max-width:min(86vw,calc(330px * var(--text,1)))}
 /* l20n: first-time tips have their own box (was #toast.tipBox, which the next toast cleared) */
-#tipBox{position:fixed;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 8px + var(--objH, 0px));transform:translateX(-50%);display:none;align-items:flex-start;gap:8px;text-align:left;background:var(--cream,#fff8e6);border:3px solid var(--ink,#2b2340);color:var(--ink,#2b2340);box-shadow:0 3px 0 var(--ink,#2b2340);border-radius:12px;padding:6px 10px 6px 12px;font-weight:800;font-size:calc(14px * var(--text,1));line-height:1.25;max-width:min(86vw,calc(330px * var(--text,1)));box-sizing:border-box;z-index:7;pointer-events:auto}
+#tipBox{position:fixed;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 8px + var(--objH, 0px));transform:translateX(-50%);display:none;align-items:flex-start;gap:8px;text-align:left;background:var(--cream,#fff8e6);border:3px solid var(--ink,#2b2340);color:var(--ink,#2b2340);box-shadow:0 3px 0 var(--ink,#2b2340);border-radius:12px;padding:6px 10px 6px 12px;font-weight:800;font-size:calc(14px * var(--text,1));line-height:1.25;max-width:min(86vw,calc(330px * var(--text,1)));box-sizing:border-box;z-index:9;pointer-events:auto}/* l20p T2: z9 + appended last = above the z9 #pipCard coach card, below .ov (z10) */
 #tipBox.on{display:flex}
 #tipBox .tipTx{flex:1;min-width:0;padding-top:4px}
-#tipBox .tipX{flex:none;width:32px;height:32px;margin:-2px -4px -2px 0;border:0;background:transparent;color:inherit;font:800 26px/1 system-ui;cursor:pointer;padding:0}
+#tipBox .tipX{flex:none;width:36px;height:36px;min-width:36px;min-height:36px;margin:-4px -6px -4px 0;border:0;background:transparent;color:inherit;font:800 26px/1 system-ui;cursor:pointer;padding:0}
 body:not(.inRound) #tipBox,body.kidTut #tipBox{display:none!important}
 body.adv #pipCard>div{font-size:calc(12px * var(--text,1))!important}
 body.adv #pipCard{max-width:min(calc(220px * var(--text,1)),62vw)!important}
