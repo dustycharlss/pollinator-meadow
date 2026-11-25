@@ -4453,7 +4453,22 @@ export function createZones(scene, host) {
       if (recipe.hub) hubInit();
     }
   }
+  // l20p: roots for the proximity outline (interactables only). Cached per level; positions come from the prop.
+  let olCache = null, olKey = null;
+  function outlineTargets() {
+    if (!recipe) return [];
+    const k0 = id + ':' + props.length + ':' + gates.length; if (olCache && olKey === k0) return olCache;
+    const out = [], seen = new Set(), obj = v => v && v.isObject3D ? v : null;
+    for (const q of props) {
+      if (!q || q.kind === 'marker' || q.kind === 'target' && q.r > 6) continue;
+      const root = obj(q.G) || obj(q.plate && q.plate.m) || obj(q.m) || obj(q.bell) || obj(q.b) || obj(q.holder) || obj(q.arm);
+      if (!root || seen.has(root)) continue; seen.add(root); out.push({ root, x: q.x, z: q.z });
+    }
+    for (const g of gates) { const root = obj(g.m); if (!root || seen.has(root)) continue; seen.add(root); const w = new THREE.Vector3(); root.getWorldPosition(w); out.push({ root, x: w.x, z: w.z }); }
+    olCache = out; olKey = k0; return out;
+  }
   return {
+    outlineTargets,
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, warmTick: cam => { try { if (recipe && recipe.kid) { if (!kid) kidInit(); if (kid.i < 0) kidCard(0, kidDom()); } /* tutorial: build trails + draw the step-0 card in the load hitch (UI only: no pickups, herding, signals or timers) */ /* build-only: hidden trail meshes + body class, no pickups/herding/timers */ if (a2 && a2.escorts.length) updEscort(0, cam, ctx.getP(), ctx.cur()); } catch (e) {} }, primeReadyVisuals, root: () => group, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, complete, tweening: () => !!tw, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
     camRoomAt: (x, z) => camRooms.find(r => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1) || null,
