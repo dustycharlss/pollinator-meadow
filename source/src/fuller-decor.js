@@ -40,7 +40,7 @@ export const CUTS = {
   mill_pond: { low: LITE, high: { clutterSets: 99, vignettes: true } }, // l20n 317/241; l20p c8 318/244
   frost_hollow: { all: { ...LITE, noNooks: true, keep: ['snowy-tree', 'snow-tuft'] } }, // l20q: restores snowy-tree + snow-tuft (Beans re-check)
   // l20n 283/232; l20p c8 290/240; LITE 282-287 (c10, final): + noNooks
-  trailhead_trials: { low: { none: true } }, // l20n Low 390; l20p c8 403
+  trailhead_trials: { low: { none: true }, all: { noFrog: true } }, // l20n Low 390; l20p c8 403. l20q: the shoreline frog fallback costs +4 draws (High mechanic-landscape 497 vs l20n 494) -> noFrog
 };
 
 export function createFullerDecor({ group, L2W, rims = () => [], runs = () => [], walls = () => [], nooks = () => [], tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {

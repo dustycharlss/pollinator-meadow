@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { loadGLB } from './models.js';
 import { mergeAtlasRig } from './act3-atlas.js';
 import FULLER_MIX from './critter-mix.json';
+import { cutFor } from './fuller-decor.js';
 
 // size = target longest extent in game metres (the player bee is 1.35 m); fly = [min,max] height; spd = m/s cap; r = wander leash
 export const CRITTERS = {
@@ -157,7 +158,7 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
           if (start && Math.hypot(x - start.x, z - start.z) < 5) continue; // out of the player's path at the start
           ok = true;
         }
-        if (!ok && kind === 'frog' && deep.length && tier() !== 'low') { // l20q: no spot in 30 tries (trailhead_trials) -> nearest shoreline spot (1 m outside a water rect); Low keeps l20n (no frog)
+        if (!ok && kind === 'frog' && deep.length && tier() !== 'low' && !cutFor(patchId, tier()).noFrog) { // l20q: no spot in 30 tries (trailhead_trials) -> nearest shoreline spot (1 m outside a water rect); Low keeps l20n (no frog)
           let bd = 1e9;
           for (const r of deep) for (let k = 0; k < 64; k++) { const u = k / 64, e = k % 4, sx = e < 2 ? r.x0 + (r.x1 - r.x0) * u : (e === 2 ? r.x0 - 1 : r.x1 + 1), sz = e < 2 ? (e === 0 ? r.z0 - 1 : r.z1 + 1) : r.z0 + (r.z1 - r.z0) * u;
             if (sx < rect.x0 + 1 || sx > rect.x1 - 1 || sz < rect.z0 + 1 || sz > rect.z1 - 1 || inW(sx, sz)) continue;
