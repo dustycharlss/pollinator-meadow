@@ -4111,7 +4111,20 @@ export function createZones(scene, host) {
     } else D.H.style.display = 'none';
   }
   function kidObjective() {
-    const st = kid && kid.steps[kid.slip >= 0 ? kid.slip : kid.i]; if (!st || !st.tgt) return null;
+    // l20k: the first Trailhead card ("Tap Sneak") has no world tgt, and a finished
+    // trail should still point at the exit. Walk forward to the next tgt, else the flag.
+    const exitObj = () => exitAt ? { text: 'Walk to the 🏁 exit', cls: null, color: '#ffd23f', x: exitAt.x, y: (exitAt.y || baseY) + 1, z: exitAt.z } : null;
+    if (!kid || !kid.steps) return exitObj();
+    const steps = kid.steps;
+    const allDone = !!keyDone || steps.every((s, i) => kid.latch[i] || (typeof s.done === 'function' && s.done()));
+    if (allDone) return exitObj();
+    const idx = kid.slip >= 0 ? kid.slip : kid.i;
+    let st = idx >= 0 ? steps[idx] : null;
+    if (!st || !st.tgt) {
+      const from = Math.max(0, idx);
+      st = steps.slice(from).find(s => s.tgt) || steps.find(s => s.tgt);
+    }
+    if (!st || !st.tgt) return exitObj();
     const [x, y, z] = typeof st.tgt === 'function' ? st.tgt() : st.tgt, c = st.color;
     return { text: st.say, cls: c || null, color: c ? CLASSES[c].color : '#ffd23f', x: A.x + x, y: gy(x, z) + y, z: A.z + z, pr: props.find(q => st.glow && st.glow.includes(q.sig) && q.act) || null };
   }
