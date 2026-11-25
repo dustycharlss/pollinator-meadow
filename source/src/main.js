@@ -963,7 +963,7 @@ function updateCamera(dt) {
 }
 
 // ---------- compass arrow ----------
-let arrowT = 0, nearestBloom = -1, assistHold = 0, assistForce = false, _ax = 0, _az = 0, _ah = false;
+let arrowT = 0, nearestBloom = -1, assistHold = 0, assistForce = false, assistClock = 0, _ax = 0, _az = 0, _ah = false;
 function updateAssist(dt, t) {
   if (!homeInd) homeInd = createHomeInd(scene);
   const p = P[cur];
@@ -975,17 +975,19 @@ function updateAssist(dt, t) {
   const vx = p.x - _ax, vz = p.z - _az; _ax = p.x; _az = p.z;
   const spd = Math.hypot(vx, vz);
   const approaching = has && spd > 0.02 && (vx * dx + vz * dz) / (spd * dist) > 0.35;
-  if (approaching || (has && idle < 0.25 && _ah)) assistHold = t + 30;
-  const show = !!(has && (assistForce || (t >= assistHold && idle >= 30)) && !approaching);
+  // Game-time clock (dt only runs while playing and unpaused, and from T.step via frameSim).
+  assistClock += dt;
+  if (!has) { assistHold = assistClock; _ah = false; }
+  if (approaching || (has && idle < 0.25 && _ah)) assistHold = assistClock + 30;
+  const show = !!(has && (assistForce || (assistClock >= assistHold && idle >= 30)) && !approaching);
   _ah = show;
   const h = (SPECIES[cur] && SPECIES[cur].coll && SPECIES[cur].coll.h) || 1.4;
   const y = (p.floorY ?? p.y) + h + 0.85;
   const ang = has ? Math.atan2(dx, dz) : 0;
-  homeInd.updateAssist({ x: p.x, y, z: p.z, ang, show, color: (o && o.color) || '#ffd23f', t, dt, bob: !reduceOn() });
+  homeInd.updateAssist({ x: p.x, y, z: p.z, ang, show, color: (o && o.color) || '#ffd23f', t, dt, bob: !reduceOn(), cam: camera });
 }
 function updateArrow(dt, t) {
   const sp = SPECIES[cur], p = P[cur], n = nests[cur]; arrowT -= dt;
-  updateAssist(dt, t);
   if (valleySession && zones && zones.active()) { // in a level the foot ring points at the next objective (not flowers)
     const o = zones.objective(), A = $('arrowA'); A.style.opacity = 0; $('arrowL').textContent = '';
     if (!homeInd) homeInd = createHomeInd(scene);
@@ -2230,6 +2232,8 @@ function worldTick(dt, st) {
 function frameSim(sdt, t, st) {
   terr.growMul = 0; terr.update(sdt, camera.position, night);
   build.update(playing && !paused ? sdt : 0, t, playing ? P[cur] : null, st);
+  // Assist lives here so T.step (sim-idle probes) advances the 30 s game-time timer.
+  if (playing && !paused) updateAssist(sdt, t);
 }
 let _smK = null, _smV = null, _smS = 0;
 function speedMv(m) { if (_smK === m && _smS === adm.speed) return _smV; const f = adm.speed, o = Object.assign({}, m, { run: m.run * f }); if (m.fly) o.fly = Object.assign({}, m.fly, m.fly.speed ? { speed: m.fly.speed * f } : {}); _smK = m; _smS = f; _smV = o; return o; }
