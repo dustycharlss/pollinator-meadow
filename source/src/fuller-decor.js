@@ -25,7 +25,7 @@ const OFF = k => new RegExp('[?&]fuller=(0|[^&]*no' + k + ')').test(Q);
 // Per-level cuts made to stay inside the draw budget (filled in from the per-level census; see l20b-notes ## l20p).
 export const CUTS = {};
 
-export function createFullerDecor({ group, L2W, tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {
+export function createFullerDecor({ group, L2W, rims = () => [], tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {
   let root = null, token = 0, info = null;
   function clear() { token++; if (root) { root.removeFromParent(); root.traverse(o => { if (o.isInstancedMesh) o.dispose(); }); root = null; } info = null; setRouteClip(null); }
   async function build(levelId) {
@@ -39,7 +39,7 @@ export function createFullerDecor({ group, L2W, tier = () => 'high', anchor = ()
     const D = L.declutter || {};
     setRouteClip({ route: (D.route || []).map(([x, z]) => [A.x + x, A.z + z]), half: D.routeHalfWidth || 2.5, lane: D.lane ? [A.x + D.lane[0], A.x + D.lane[1], A.z + D.lane[2], A.z + D.lane[3]] : null, keep: (D.keepClear || []).map(k => ({ x: A.x + (k.x ?? k[0]), z: A.z + (k.z ?? k[1]), r: k.r ?? k[2] ?? 1.5 })) });
     // collect placements per key: [x, z, scale, yaw, yOff]
-    const byKey = new Map(); const add = (key, x, z, s, yaw) => { if (!byKey.has(key)) byKey.set(key, []); byKey.get(key).push([x, z, s, yaw]); };
+    const byKey = new Map(); const add = (key, x, z, s, yaw, yo = 0) => { if (!byKey.has(key)) byKey.set(key, []); byKey.get(key).push([x, z, s, yaw, yo]); };
     if (!OFF('decor')) for (const d of L.decor || []) { if (cut.decor && cut.decor.includes(d.key)) continue; add(d.key, d.x, d.z, d.s ?? 1, d.yaw || 0); }
     if (!OFF('vig') && !cut.vignettes) for (const v of L.vignettes || []) add(v.key, v.x, v.z, v.s ?? 1, v.yaw || 0);
     if (!OFF('clutter')) {
@@ -50,6 +50,12 @@ export function createFullerDecor({ group, L2W, tier = () => 'high', anchor = ()
         let n = 0; for (const c of L.clutter[key]) { n++; if ((n % (T.keepEvery || 1)) !== 0 && T.keepEvery > 1) continue; if (dRoute(c[0], c[1]) > (T.maxDistance || 60)) continue; add(key, c[0], c[1], c[2] ?? 1, c[3] || 0); }
       }
     }
+    // wall kit for the level rim: low hedge 2 m runs + end posts (one InstancedMesh per piece part). Colliders unchanged.
+    const R = OFF('kit') || cut.kit ? [] : rims();
+    if (R.length) { for (const r of R) { const along = Math.max(r.ww, r.dd), xAxis = r.ww >= r.dd, n = Math.floor(along / 2), rem = along - n * 2, s0 = -along / 2;
+      for (let i = 0; i < n; i++) { const c = s0 + 1 + i * 2; add('fuller/walls/hedge-2m-h1.6', xAxis ? r.x + c : r.x, xAxis ? r.z : r.z + c, 1, xAxis ? 0 : Math.PI / 2, -0.3); }
+      for (const c of [s0, -s0]) add('fuller/walls/hedge-post-h1.6', xAxis ? r.x + c : r.x, xAxis ? r.z : r.z + c, 1, 0, -0.3);
+      if (rem > 0.2) add('fuller/walls/hedge-post-h1.6', xAxis ? r.x + s0 + n * 2 + rem / 2 : r.x, xAxis ? r.z : r.z + s0 + n * 2 + rem / 2, 1, 0, -0.3); } }
     const lm = !OFF('lm') && !cut.landmark && L.landmark && L.landmark.key ? L.landmark : null;
     const keys = [...byKey.keys()]; if (lm) keys.push(lm.key);
     const P = await Promise.all(keys.map(partsOf)); if (my !== token) return null;
@@ -61,12 +67,13 @@ export function createFullerDecor({ group, L2W, tier = () => 'high', anchor = ()
       for (const part of P[ki]) {
         const im = new THREE.InstancedMesh(part.geo, part.mat, pl.length); im.name = 'fuller:' + key.split('/').pop();
         im.castShadow = false; im.receiveShadow = true; im.userData.fullerDecor = true; im.userData.noOutline = true;
-        pl.forEach(([x, z, s, yaw], i) => { const w = L2W(x, z, 0); V.set(w.x, w.y, w.z); Q4.setFromAxisAngle(Y, yaw); S.setScalar(s); M.compose(V, Q4, S).multiply(part.m4); im.setMatrixAt(i, M); });
+        pl.forEach(([x, z, s, yaw, yo], i) => { const w = L2W(x, z, yo || 0); V.set(w.x, w.y, w.z); Q4.setFromAxisAngle(Y, yaw); S.setScalar(s); M.compose(V, Q4, S).multiply(part.m4); im.setMatrixAt(i, M); });
         im.instanceMatrix.needsUpdate = true; im.computeBoundingSphere(); im.computeBoundingBox?.(); im.frustumCulled = true;
         root.add(im); draws++; inst += pl.length;
       }
     });
     group.add(root);
+    if (R.length && byKey.has('fuller/walls/hedge-2m-h1.6')) { const ok = P[keys.indexOf('fuller/walls/hedge-2m-h1.6')]; if (ok && ok.length) for (const r of R) r.m.visible = false; }
     info = { levelId, keys: keys.length, draws, inst, tier: tn };
     if (typeof window !== 'undefined') window.__fullerDecor = info;
     return info;

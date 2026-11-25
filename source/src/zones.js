@@ -546,6 +546,7 @@ export function createZones(scene, host) {
   // three-class puzzle state
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
+  const rimSpecs = []; // l20p
   let sig = {}, props = [], gates = [], plates = [], puzzles = [], deep = [], crossings = [], steps = [], tw = null, lastProg = 0, hintT = 0, bearPad = null, windT = 0, introQ = [];
   let hintSt = null, hintCool = new Map(), hintSpr = {};
   function hintSprite(c) {
@@ -891,6 +892,7 @@ export function createZones(scene, host) {
         addSolid({ type: 'box', x: A.x + x, z: A.z + z, hx: ww / 2, hz: dd / 2, yaw: 0, y0: g - 6, top: g + H, kind: 'zone' });
         // low visible hedge so the edge reads
         const m = new THREE.Mesh(new THREE.BoxGeometry(ww, 1.6, dd), mat(COL.hedge)); m.position.set(A.x + x, g + 0.5, A.z + z); group.add(m);
+        rimSpecs.push({ m, x, z, ww, dd }); // l20p: fuller-decor swaps this box for hedge kit pieces once they load
       }
     },
     tree(x, z, s = 1, base = 0, leaf = 0x3f8a35, glb) {
@@ -1380,7 +1382,7 @@ export function createZones(scene, host) {
   const sprite = (e, s) => emojiSprite(e, s);
   const bx = (w, h, d, c, x, y, z, e = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c, e)); m.position.set(x, y, z); return m; };
   const L2W = (x, z, base = 0) => ({ x: A.x + x, y: gy(x, z) + base, z: A.z + z });
-  const fdecor = createFullerDecor({ group, L2W: (x, z, h) => L2W(x, z, h), tier: () => (ctx.look && ctx.look.tier) || 'high', anchor: () => A }); // l20p
+  const fdecor = createFullerDecor({ group, L2W: (x, z, h) => L2W(x, z, h), rims: () => rimSpecs, tier: () => (ctx.look && ctx.look.tier) || 'high', anchor: () => A }); // l20p
   const posOfId = id => id === ctx.cur() ? ctx.getP() : ctx.parked(id);
   const idOfCls = c => ctx.crewIds().find(i => CLASS_OF[i] === c);
   function moveTween(q, to, dur, arc, done) { AA().movers.push({ q, a: { x: q.x, y: q.y, z: q.z }, b: to, t: 0, d: dur, arc, done }); }
@@ -2919,7 +2921,7 @@ export function createZones(scene, host) {
     for (const s of solids) s.off = true;
     solids = []; picks = []; hoops = []; nightDews = []; star = null;
     fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady'); syncObjH();
-    sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
+    rimSpecs.length = 0; sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
     instWalls = []; decoJobs = new Map(); camRooms = []; caveChunks = []; for (const rec of atlasInsts) { const im = rec.im || rec; if (im.parent) im.parent.remove(im); } atlasInsts = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
