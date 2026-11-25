@@ -2616,6 +2616,7 @@ async function boot() {
   buildCards(); loop(performance.now());
   buildLens(); refreshTitle(); syncMixUi(); $('sMute').checked = !!settings.mute; applyMix(); applyAccess(); audio.setMute(settings.mute);
   const X = { round, terr, build, adm, rivals, goals, onb, items, looks, save, get weather() { return weather; },
+    get valley() { return valley; }, get zones() { return zones; }, startValleyPatch,
     endRound: () => { if (playing && !round.over) round.finish(); }, restartRound: () => startNew(round.len),
     clearTerritory: () => { build.clear(); tiers && tiers.reset(); terr.resetBlooms(); terr.refresh(); renderBTray(true); },
     growMax: () => { for (const q of build.placed || []) if ((q.type === 'outpost' || q.type === 'marker')) terr.grow(q.id, 99); },
