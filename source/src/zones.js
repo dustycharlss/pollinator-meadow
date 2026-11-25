@@ -2249,9 +2249,12 @@ export function createZones(scene, host) {
     V.sling = new THREE.Group(); V.sling.add(bx(0.1, 0.5, 0.1, 0x8b5a2b, 0, 0, 0), bx(0.08, 0.36, 0.08, 0x8b5a2b, -0.12, 0.38, 0), bx(0.08, 0.36, 0.08, 0x8b5a2b, 0.12, 0.38, 0), bx(0.34, 0.04, 0.04, 0xe5485a, 0, 0.52, 0), bx(0.14, 0.14, 0.14, 0xffe680, 0, 0.52, -0.08, 0.6));
     for (const k of ['pouch', 'glider', 'sling']) {
       V[k].visible = false; V[k].userData.isGearViz = true; group.add(V[k]);
+      // l20i: the merged worn-gear meshes follow the worn state on their own flag too, so unworn gear
+      // (pouch / glider parked at the origin) leaves no visible gearMerged mesh behind.
+      const G = V[k]; G.userData.gm = []; G.userData.show = on => { on = !!on; G.visible = on; for (const m of G.userData.gm) m.visible = on; };
       const H = new THREE.Group(); V[k].add(H); const fb = V[k].children.filter(c => c !== H);
       const box = { visible: true }; Object.defineProperty(box, 'visible', { set(v) { fb.forEach(c => { if (c !== V.bub) c.visible = v; }); } });
-      gearModel(k, H, box, o => { if (k === 'pouch') { V.bubM = []; o.traverse(n => { if (/^bubble/.test(n.name)) V.bubM.push(n); }); V.bub.visible = false; V.bubOff = true; }
+      gearModel(k, H, box, o => { o.traverse(n => { if (n.isMesh && n.name === 'gearMerged') { G.userData.gm.push(n); n.visible = G.visible; } }); if (k === 'pouch') { V.bubM = []; o.traverse(n => { if (/^bubble/.test(n.name)) V.bubM.push(n); }); V.bub.visible = false; V.bubOff = true; }
         if (k === 'glider') H.rotation.y = Math.PI; if (k === 'sling') H.position.y = -0.1; });
     }
     return (S.gviz = V);
@@ -2274,7 +2277,7 @@ export function createZones(scene, host) {
       if (wet) { S.pouch.full = true; ctx.onGear?.(); ctx.audio?.sample?.('act3/bubble-splash', 0.5); if (sid === cur) tst('🫧 Glug! The Bubble Pouch is full — tap Interact to shoot the bubble', 2200); setSig('pouch:full'); }
     }
     if (!pouchOn || !S.pouch.full) setSig('pouch:full', false);
-    V.pouch.visible = !!pouchOn; if (pouchOn) { const yw = sq.yaw || 0; V.pouch.position.set(sq.x - Math.cos(yw) * 0.35, sq.y + 0.55, sq.z + Math.sin(yw) * 0.35); V.pouch.rotation.y = yw; if (V.bubOff) { for (const n of V.bubM) n.visible = S.pouch.full; } else V.bub.visible = S.pouch.full; V.bub.scale.setScalar(1 + Math.sin(t * 5) * 0.08); }
+    V.pouch.userData.show(pouchOn); if (pouchOn) { const yw = sq.yaw || 0; V.pouch.position.set(sq.x - Math.cos(yw) * 0.35, sq.y + 0.55, sq.z + Math.sin(yw) * 0.35); V.pouch.rotation.y = yw; if (V.bubOff) { for (const n of V.bubM) n.visible = S.pouch.full; } else V.bub.visible = S.pouch.full; V.bub.scale.setScalar(1 + Math.sin(t * 5) * 0.08); }
     // 🍃 Leaf Glider: slow fall + rides the wind (current Trickster only)
     const tid = idOfCls('trickster'), tq = tid && posOfId(tid), gOn = gearOn('glider') && tq;
     let gliding = false;
@@ -2285,10 +2288,10 @@ export function createZones(scene, host) {
     }
     if (p.grounded) S.glide = 0;
     if (gliding && !S.wasGlide) setSig('glided'); S.wasGlide = gliding;
-    V.glider.visible = !!gOn; if (gOn) { const yw = tq.yaw || 0, up = gliding ? 1.9 : 1.25; V.glider.position.set(tq.x, tq.y + up, tq.z); V.glider.rotation.set(gliding ? -0.12 : 0.25, yw, gliding ? Math.sin(t * 3) * 0.08 : 0); V.glider.scale.setScalar(gliding ? 1 : 0.55); }
+    V.glider.userData.show(gOn); if (gOn) { const yw = tq.yaw || 0, up = gliding ? 1.9 : 1.25; V.glider.position.set(tq.x, tq.y + up, tq.z); V.glider.rotation.set(gliding ? -0.12 : 0.25, yw, gliding ? Math.sin(t * 3) * 0.08 : 0); V.glider.scale.setScalar(gliding ? 1 : 0.55); }
     // 🪨 Pebble Sling on Bear's side
     const bid = idOfCls('bruiser'), bq = bid && posOfId(bid), sOn = gearOn('sling') && bq;
-    V.sling.visible = !!sOn; if (sOn) { const yw = bq.yaw || 0, sw = t - S.slingT < 0.3 ? -1.2 : 0; V.sling.position.set(bq.x + Math.cos(yw) * 0.95, bq.y + 1.3, bq.z - Math.sin(yw) * 0.95); V.sling.rotation.set(sw, yw, 0.2); }
+    V.sling.userData.show(sOn); if (sOn) { const yw = bq.yaw || 0, sw = t - S.slingT < 0.3 ? -1.2 : 0; V.sling.position.set(bq.x + Math.cos(yw) * 0.95, bq.y + 1.3, bq.z - Math.sin(yw) * 0.95); V.sling.rotation.set(sw, yw, 0.2); }
     // embers: spring dims them (safe to cross), touching a hot patch = gentle soot-puff bonk
     let gustEnd = false;
     for (const em of S.embers) {
@@ -4277,7 +4280,7 @@ export function createZones(scene, host) {
     if (a2) {
       try {
         const V = gearViz();
-        for (const k of ['pouch', 'glider', 'sling']) if (V[k] && !V[k].visible) { V[k].visible = true; hidden.push(V[k]); }
+        for (const k of ['pouch', 'glider', 'sling']) if (V[k] && !V[k].visible) { V[k].userData.show(true); hidden.push(V[k]); }
       } catch (e) {}
     }
     // late sprites (gear / emoji / text badges, pops) that can first appear just after GO: warm the sprite program
@@ -4311,7 +4314,7 @@ export function createZones(scene, host) {
       }
       for (const o of set) { group.add(o); temp.push(o); }
     } catch (e) {}
-    const undo = () => { for (const o of hidden) o.visible = false; for (const o of temp) { if (o && o._iconUnwarm) o._iconUnwarm(); else o.parent?.remove(o); } };
+    const undo = () => { for (const o of hidden) { if (o.userData.show) o.userData.show(false); else o.visible = false; } for (const o of temp) { if (o && o._iconUnwarm) o._iconUnwarm(); else o.parent?.remove(o); } };
     if (!recipe.kid) return undo;
     if (!kid) kidInit();
     for (const G of kid.trails) { if (!G.visible) { G.visible = true; hidden.push(G); } }

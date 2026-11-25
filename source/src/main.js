@@ -2437,7 +2437,7 @@ async function boot() {
   // then again as |presetB when the periodic restyle reaches it (a double compile mid-play).
   critters = createCritters(scene, { heightAt, tier: () => look.tier, prep: obj => { look.styleScene({ children: [obj] }); if (typeof renderer.compile === 'function') renderer.compile(obj, camera, scene); } });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
-  tiers = createTiers(scene, { adventure: ADVENTURE, heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
+  tiers = createTiers(scene, { adventure: () => ADVENTURE && !!valleySession && valleySession.patchId !== HUB_ID, /* l20i: per level at runtime; the meadow hub keeps its dew clusters */ heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
     deposit: () => nestCheck(P[cur], SPECIES[cur], state.sT || 0, true), gatherAt: r => gather(P[cur], SPECIES[cur], state.sT || 0, r, true, true),
     addStep: (x, y, z) => { world.solids.push({ type: 'cyl', x, z, r: 1.1, y0: y - 1, top: y + 1.4, kind: 'decor' }); fx.burst(x, y + 1, z, 10, 3); }, yaw: () => P[cur].yaw, onChange: () => updateRoundHud(true) });
