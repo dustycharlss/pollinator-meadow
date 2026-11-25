@@ -86,7 +86,7 @@ export function createOutlines(renderer) {
   const measC = new THREE.Vector3(1e9, 0, 0), measF = new THREE.Vector3(), lastC = new THREE.Vector3(), lastF = new THREE.Vector3(); let measFov = 0, lastFov = 0;
   let measFrame = -1, shownAtRender = 0, measX = NaN, measZ = NaN, lastPX = NaN, lastPZ = NaN;
   /** cands: [{ root, x, z }] ; p: active player {x,z} */
-  const _cf = new THREE.Vector3();
+  const _cf = new THREE.Vector3(), _wp = new THREE.Vector3();
   function update(p, tier, cands, cam) {
     frameN++; lastCands = cands ? cands.length : -1;
     if (skipCustomShaders() || !p) { if (shown) { for (const e of byRoot.values()) for (const k of e.hulls) k.h.visible = false; shown = 0; } return; }
@@ -118,7 +118,9 @@ export function createOutlines(renderer) {
     for (const { c, d } of W) {
       const e = hullsFor(c.root); if (!e.hulls.length) continue;
       const t = Math.min(1, Math.max(0, (9 - d) / 4)), fade = t * t * (3 - 2 * t);
-      const w = 0.035 * fade * Math.min(1.6, Math.max(0.7, e.r / 0.6));
+      // l20q: base width grows with the camera distance (~2-3 px on phones): max(0.035, 0.0045 * camDist); the 9 -> 5 m fade stays on player distance
+      let camDist = 0; if (cam) { c.root.getWorldPosition(_wp); camDist = cam.position.distanceTo(_wp); }
+      const w = Math.max(0.035, 0.0045 * camDist) * fade * Math.min(1.6, Math.max(0.7, e.r / 0.6));
       for (const k of e.hulls) {
         const ok = w >= 0.002 && used < lim && k.o.visible;
         if (ok) { k.o.getWorldScale(S); k.h.userData.w = w / Math.max(1e-4, Math.max(Math.abs(S.x), Math.abs(S.y), Math.abs(S.z))); used++; }
