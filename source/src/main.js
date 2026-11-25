@@ -979,7 +979,7 @@ function updateAssist(dt, t) {
   assistClock += dt;
   if (!has) { assistHold = assistClock; _ah = false; }
   if (approaching || (has && idle < 0.25 && _ah)) assistHold = assistClock + 30;
-  const show = !!(has && (assistForce || (assistClock >= assistHold && idle >= 30)) && !approaching);
+  const show = !paused && !!(has && (assistForce || (assistClock >= assistHold && idle >= 30)) && !approaching);
   _ah = show;
   const h = (SPECIES[cur] && SPECIES[cur].coll && SPECIES[cur].coll.h) || 1.4;
   const y = (p.floorY ?? p.y) + h + 0.85;
@@ -2233,7 +2233,7 @@ function frameSim(sdt, t, st) {
   terr.growMul = 0; terr.update(sdt, camera.position, night);
   build.update(playing && !paused ? sdt : 0, t, playing ? P[cur] : null, st);
   // Assist lives here so T.step (sim-idle probes) advances the 30 s game-time timer.
-  if (playing && !paused) updateAssist(sdt, t);
+  if (playing) updateAssist(paused ? 0 : sdt, t);
 }
 let _smK = null, _smV = null, _smS = 0;
 function speedMv(m) { if (_smK === m && _smS === adm.speed) return _smV; const f = adm.speed, o = Object.assign({}, m, { run: m.run * f }); if (m.fly) o.fly = Object.assign({}, m.fly, m.fly.speed ? { speed: m.fly.speed * f } : {}); _smK = m; _smS = f; _smV = o; return o; }

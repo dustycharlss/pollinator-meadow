@@ -50,6 +50,8 @@ export function createHomeInd(scene) {
       halo.material.opacity = 0.22 * fade; edge.material.opacity = 0.45 * fade;
     },
     updateAssist({ x, y, z, ang, show, color, t, dt, bob = true, cam = null }) {
+      // dt==0 is the pause path: snap the chevron off instead of freezing mid-fade.
+      if (!show && dt <= 0) { aFade = 0; assist.visible = false; return; }
       aFade += ((show ? 1 : 0) - aFade) * Math.min(1, dt * 6);
       assist.visible = aFade > 0.02; if (!assist.visible) return;
       const lift = bob ? 0.1 * Math.sin(t * 3.2) : 0;

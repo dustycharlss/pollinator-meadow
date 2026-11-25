@@ -597,7 +597,7 @@ export function createZones(scene, host) {
     for (const pl of plates) {
       if (!pl.heavy || !pl.m || !pl.m.material) continue;
       const lit = !!(hintSt && hintSt.pr && (hintSt.pr.plate === pl || (Math.hypot((hintSt.pr.x || 0) - pl.x, (hintSt.pr.z || 0) - pl.z) < 0.5)));
-      pl.m.material.emissiveIntensity = lit ? 0.55 : 0.18;
+      pl.m.material.emissiveIntensity = lit ? 1.0 : 0.06;
     }
   }
   const mats = new Map();
@@ -1044,7 +1044,7 @@ export function createZones(scene, host) {
       const g = gy(x, z) + (o.base || 0), heavy = !!o.heavy;
       // l20k: class-locked (heavy/bruiser) plates get their own material so a faint class glow can
       // brighten with the wrong-character hint without extra draws; icon sits on the plate.
-      const pm = heavy ? mat(cueHex('bruiser'), 0.18).clone() : mat(cueHex('trickster'), 0.15);
+      const pm = heavy ? mat(cueHex('bruiser'), 0.06).clone() : mat(cueHex('trickster'), 0.15);
       const m = new THREE.Mesh(new THREE.BoxGeometry(heavy ? 2.6 : 2.0, 0.3, heavy ? 2.6 : 2.0), pm); m.position.set(A.x + x, g + 0.12, A.z + z); group.add(m);
       const rim = new THREE.Mesh(new THREE.BoxGeometry(heavy ? 3.0 : 2.4, 0.12, heavy ? 3.0 : 2.4), mat(0x6a6a68)); rim.position.set(A.x + x, g + 0.04, A.z + z); group.add(rim);
       const icY = heavy ? g + 0.48 : g + 2.2, icS = heavy ? 0.55 : 0.9;
