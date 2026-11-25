@@ -2348,7 +2348,7 @@ export function createZones(scene, host) {
   }
   function gearViz() {
     const S = a2; if (S.gviz) return S.gviz; const V = {};
-    V.pouch = new THREE.Group(); V.pouch.add(bx(0.34, 0.36, 0.22, 0x5ab8ff, 0, 0, 0, 0.2), bx(0.36, 0.08, 0.24, 0x2f6aa8, 0, 0.18, 0)); V.bub = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), new THREE.MeshLambertMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.75, emissive: 0x3aa0e8, emissiveIntensity: 0.5 })); V.bub.position.y = 0.38; V.pouch.add(V.bub);
+    V.pouch = new THREE.Group(); V.pouch.add(bx(0.34, 0.36, 0.22, 0x5ab8ff, 0, 0, 0, 0.2), bx(0.36, 0.08, 0.24, 0x2f6aa8, 0, 0.18, 0)); V.bub = new THREE.Mesh(fullerGeo('bubble-cube', 0.44, () => new THREE.SphereGeometry(0.22, 10, 8)) /* l20q: Beans's blocky bubble (sphere fallback) */, new THREE.MeshLambertMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.75, emissive: 0x3aa0e8, emissiveIntensity: 0.5 })); V.bub.position.y = 0.38; V.pouch.add(V.bub);
     V.glider = new THREE.Group(); const lf = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.06, 1.3), mat(0x6fbf4a, 0.15)); V.glider.add(lf, bx(0.08, 0.08, 1.4, 0x3f8a35, 0, 0.04, 0), bx(0.06, 0.9, 0.06, 0x8b6a45, 0, -0.45, 0)); for (const sx of [-1, 1]) V.glider.add(bx(0.7, 0.05, 0.9, 0x5fae4a, sx * 1.25, 0.08, -0.1));
     V.sling = new THREE.Group(); V.sling.add(bx(0.1, 0.5, 0.1, 0x8b5a2b, 0, 0, 0), bx(0.08, 0.36, 0.08, 0x8b5a2b, -0.12, 0.38, 0), bx(0.08, 0.36, 0.08, 0x8b5a2b, 0.12, 0.38, 0), bx(0.34, 0.04, 0.04, 0xe5485a, 0, 0.52, 0), bx(0.14, 0.14, 0.14, 0xffe680, 0, 0.52, -0.08, 0.6));
     for (const k of ['pouch', 'glider', 'sling']) {
