@@ -72,6 +72,8 @@ export function createMapScreen(root, ctx) {
   const $ = id => root.querySelector('#' + id);
   const el = $('mapScreen'), grid = $('vGrid'), world = $('msWorld');
   if (/[?&]mapart=css\b/.test(location.search)) el.classList.add('msCssTiles');
+  /* l20n: CLEAN GRID level select (Squid mockup levelselect-mock-grid.png); ?mapart=old keeps the framed look */
+  if (!/[?&]mapart=old\b/.test(location.search)) el.classList.add('msClean');
   // chrome art as inline custom properties with absolute URLs (keeps the PNGs out of the CSS bundle and
   // lets Squid's revised chrome drop into ui/map/ without a rebuild)
   for (const n of ['chrome/chip', 'chrome/tab', 'chrome/tab-selected', 'chrome/card-thumb-frame', 'chrome/toggle-timed-off', 'chrome/toggle-timed-on', 'chrome/btn-play-normal', 'chrome/btn-play-pressed', 'chrome/btn-play-disabled', 'chrome/map-well', 'chrome/select-panel', 'chrome/frame']) {
@@ -103,19 +105,22 @@ export function createMapScreen(root, ctx) {
 
   function renderGrid(key) {
     const cur = ctx.current(), sel = S.sel[key], list = tilesFor(key);
+    /* l20n: one NEW chip, on the next level to play (mockup) */
+    const nextNew = list.find(t => t.kind !== 'tutorial' && tileState(t).face === 'new' && !tileState(t).locked)?.id;
     if (!list.length) { grid.innerHTML = `<div class="msEmpty">${thumbPicture(key + '_region', 'panel', 'msEmptyPic', false) || ''}<b>${esc(GRID.acts[key].subtitle)} · ${esc(GRID.acts[key].title)}</b><span>New friends to rescue are on the way!</span></div>`; return; }
     grid.innerHTML = list.map(t => {
       const s = tileState(t), isSel = sel === t.id, isCur = cur === t.id;
       const face = isCur && !s.locked ? 'current' : isSel ? 'selected' : s.face;
-      const d = ctx.def(t.id), pic = thumbPicture(t.id, 'tile', 'tPic'), fb = !pic && ctx.fallbackThumb?.(t.id);
+      const d = ctx.def(t.id), pic = thumbPicture(t.id, 'tile', 'tPic', !el.classList.contains('msClean')), fb = !pic && ctx.fallbackThumb?.(t.id);
       const label = `${t.n ? t.n + ' · ' : ''}${t.name}${s.locked ? ' · locked' : ''}${s.scored ? ` · ${s.n} of 3 stars` : ''}`;
-      return `<button type="button" role="option" class="vt msTile${s.locked ? ' lock' : ''}${t.kind === 'tutorial' ? ' tut' : ''}${pic ? '' : ' fb'}" data-id="${t.id}" data-face="${face}" data-state="${s.face}"${isSel ? ' aria-selected="true"' : ''}${isCur ? ' data-current="1"' : ''} aria-label="${esc(label)}" title="${esc(t.name)}">
+      return `<button type="button" role="option" class="vt msTile${s.locked ? ' lock' : ''}${t.kind === 'tutorial' ? ' tut' : ''}${pic ? '' : ' fb'}" data-id="${t.id}" data-face="${face}" data-state="${s.face}" data-stars="${s.locked || t.kind === 'tutorial' ? '' : s.n}"${isSel ? ' aria-selected="true"' : ''}${isCur ? ' data-current="1"' : ''} aria-label="${esc(label)}" title="${esc(t.name)}">
 <span class="tSq"><span class="tFace" style="--face:url(${abs(UI + 'tiles/tile-' + face + '.png')});--face2x:url(${abs(UI + 'tiles/tile-' + face + '@2x.png')})"></span>
 <span class="tThumb">${pic || (fb ? `<img src="${fb}" alt="" loading="lazy" draggable="false">` : '')}${pic ? '' : `<i class="tEm">${d?.emoji || ''}</i>`}</span>
-${t.n ? `<span class="tNum">${t.n}</span>` : ''}
 ${t.kind === 'tutorial' ? img2x('nodes/badge-trail', 'tBadge') : s.challenge ? img2x('nodes/badge-challenge', 'tBadge') : ''}
+${t.id === nextNew && !isCur ? '<span class="tNew">NEW</span>' : ''}
+${s.locked ? '<span class="tLock" aria-hidden="true">🔒</span>' : ''}
 ${s.seed ? img2x('nodes/marker-starseed', 'tSeed') : ''}</span>
-<span class="msSr">${esc(t.name)}</span><span class="tRow">${s.scored ? img2x('nodes/stars-' + Math.min(3, s.n), 'tStars') : ''}</span></button>`;
+<span class="msSr">${esc(t.name)}</span><span class="tRow">${t.n ? `<span class="tNum">${t.n}</span>` : t.kind === 'tutorial' ? '<span class="tNum tT">T</span>' : ''}${t.kind === 'tutorial' ? '<span class="tPr">Practice</span>' : s.locked ? '<span class="tPr tLk">Locked</span>' : img2x('nodes/stars-' + Math.min(3, s.n), 'tStars', `${s.n} of 3 stars`)}</span></button>`;
     }).join('');
   }
 
