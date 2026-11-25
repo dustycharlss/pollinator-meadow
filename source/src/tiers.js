@@ -42,8 +42,15 @@ export function createTiers(scene, ctx) {
   // hidden on adventure patches (L20 etc.), shown in the meadow hub and the free meadow.
   const adv = () => !!(typeof ctx.adventure === 'function' ? ctx.adventure() : ctx.adventure);
   let wasAdv = false;
-  // the level declutter parks gather-era roots on layer 1; in the meadow hub only the dew clusters are put back on layer 0
-  const unpark = () => { for (const cl of TI.clusters) if (cl.g.userData._dl != null) cl.g.traverse(q => { if (q.userData._dl != null) { q.layers.mask = q.userData._dl; delete q.userData._dl; } }); };
+  // The level declutter parks gather-era roots on layer 1. In the meadow hub (root parked) draw only the
+  // nearest dew cluster within 45 m of the player (≤ ~11 draws), so hub views stay inside the draw budget;
+  // with no declutter (free meadow) every cluster draws as before.
+  const setLay = (cl, on) => { if (cl.g.layers.mask === (on ? 1 : 2) && cl.g.userData._dl == null) return; cl.g.traverse(q => { if (q.userData._dl != null) delete q.userData._dl; q.layers.set(on ? 0 : 1); }); };
+  const unpark = p => {
+    const parked = root.userData._dl != null; let best = null, bd = 45;
+    if (parked && p) for (const cl of TI.clusters) { const d = Math.hypot(cl.x - p.x, cl.z - p.z); if (d < bd) { bd = d; best = cl; } }
+    for (const cl of TI.clusters) setLay(cl, !parked || cl === best);
+  };
   const land = (tries = 40, rMax = 120) => { for (let i = 0; i < tries; i++) { const a = Math.random() * 6.283, d = 25 + Math.random() * rMax, x = Math.cos(a) * d, z = Math.sin(a) * d; if (heightAt(x, z) > WATER_Y + 0.8 && Math.hypot(x - POND.x, z - POND.z) > POND.r + 4) return { x, z }; } return { x: 30, z: 30 }; };
   const say = (k, ms = 3200) => { if (TI.said[k]) return; TI.said[k] = 1; toast((k === 'p' ? '🌼 ' : k === 'd' ? '💧 ' : k === 's' ? '🌟 ' : '') + KID[k], ms); };
   TI.say = say;
@@ -147,8 +154,7 @@ export function createTiers(scene, ctx) {
   TI.update = (dt, t, playing) => {
     if (adv()) { wasAdv = true; root.visible = false; carryObj.visible = false; return; }
     if (wasAdv) { wasAdv = false; root.visible = true; if (!TI.clusters.length) { spawnCluster(); spawnCluster(); } }
-    unpark();
-    const p = P(); if (!p) return; const id = sp(), B = ctx.build;
+    const p = P(); unpark(p); if (!p) return; const id = sp(), B = ctx.build;
     // dew
     TI.spawnT = (TI.spawnT || 0) + dt; if (TI.spawnT > 20 && TI.clusters.length < 3) { TI.spawnT = 0; spawnCluster(); }
     const echo = B.count('echo_tower') > 0;
