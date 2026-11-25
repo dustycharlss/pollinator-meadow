@@ -926,9 +926,29 @@ function updateCamera(dt) {
 }
 
 // ---------- compass arrow ----------
-let arrowT = 0, nearestBloom = -1;
+let arrowT = 0, nearestBloom = -1, assistHold = 0, assistForce = false, _ax = 0, _az = 0, _ah = false;
+function updateAssist(dt, t) {
+  if (!homeInd) homeInd = createHomeInd(scene);
+  const p = P[cur];
+  const on = settings.arrowAssist !== false;
+  const o = (on && valleySession && zones && zones.active()) ? zones.objective() : null;
+  const has = !!(o && o.x != null);
+  const idle = has && zones.idleSec ? zones.idleSec() : 0;
+  const dx = has ? o.x - p.x : 0, dz = has ? o.z - p.z : 0, dist = Math.hypot(dx, dz) || 1;
+  const vx = p.x - _ax, vz = p.z - _az; _ax = p.x; _az = p.z;
+  const spd = Math.hypot(vx, vz);
+  const approaching = has && spd > 0.02 && (vx * dx + vz * dz) / (spd * dist) > 0.35;
+  if (approaching || (has && idle < 0.25 && _ah)) assistHold = t + 30;
+  const show = !!(has && (assistForce || (t >= assistHold && idle >= 30)) && !approaching);
+  _ah = show;
+  const h = (SPECIES[cur] && SPECIES[cur].coll && SPECIES[cur].coll.h) || 1.4;
+  const y = (p.floorY ?? p.y) + h + 0.85;
+  const ang = has ? Math.atan2(dx, dz) : 0;
+  homeInd.updateAssist({ x: p.x, y, z: p.z, ang, show, color: (o && o.color) || '#ffd23f', t, dt, bob: !reduceOn() });
+}
 function updateArrow(dt, t) {
   const sp = SPECIES[cur], p = P[cur], n = nests[cur]; arrowT -= dt;
+  updateAssist(dt, t);
   if (valleySession && zones && zones.active()) { // in a level the foot ring points at the next objective (not flowers)
     const o = zones.objective(), A = $('arrowA'); A.style.opacity = 0; $('arrowL').textContent = '';
     if (!homeInd) homeInd = createHomeInd(scene);
@@ -1773,6 +1793,7 @@ function applyAccess() {
   if ($('sReduce')) $('sReduce').checked = reduceOn();
   if ($('sReduceH')) $('sReduceH').textContent = settings.reduceMotion == null ? 'Uses your device setting until you change it.' : 'Saved for this device.';
   if ($('sEasy')) $('sEasy').checked = easyOn();
+  if ($('sArrow')) $('sArrow').checked = settings.arrowAssist !== false;
   if ($('sCB')) $('sCB').checked = !!settings.colorBlind;
   const readOn = !!settings.readAloud;
   if ($('sRead')) $('sRead').checked = readOn;
@@ -1786,6 +1807,7 @@ function applyAccess() {
 $('sText')?.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings.textSize = b.dataset.v; saveSettings(settings); applyAccess(); audio.blip(2); });
 $('sReduce') && ($('sReduce').onchange = () => { settings.reduceMotion = $('sReduce').checked; saveSettings(settings); applyAccess(); });
 $('sEasy') && ($('sEasy').onchange = () => { settings.easyMode = $('sEasy').checked; saveSettings(settings); applyAccess(); });
+$('sArrow') && ($('sArrow').onchange = () => { settings.arrowAssist = $('sArrow').checked; saveSettings(settings); if (!settings.arrowAssist) { assistForce = false; if (homeInd) homeInd.updateAssist({ x: 0, y: 0, z: 0, ang: 0, show: false, color: '#ffd23f', t: 0, dt: 1, bob: false }); } applyAccess(); });
 $('sCB') && ($('sCB').onchange = () => { settings.colorBlind = $('sCB').checked; saveSettings(settings); applyAccess(); toast(settings.colorBlind ? '🎨 Color-blind class colors on (rings update on the next level)' : '🎨 Class colors back to normal', 2200); });
 $('sRead') && ($('sRead').onchange = () => { settings.readAloud = $('sRead').checked; saveSettings(settings); applyAccess(); if (!settings.readAloud) audio.stopVoice?.(); });
 $('sReadTest') && ($('sReadTest').onclick = () => { if (!settings.readAloud) return; audio.start(); audio.speak('settings.readAloud'); });
@@ -2768,6 +2790,12 @@ async function boot() {
   window.__game = { FEATURES: Object.assign({}, FEATURES, lobby ? { n2: true, n3: true, lobby: true, directAllowed: true, iceTransportPolicy: 'all', relayOnly: false, signalling: 'dev-nostr', nostrAllowed: true } : { n2: false, n3: false, directAllowed: false, iceTransportPolicy: 'relay', relayOnly: true, signalling: 'cloudflare-signalroom', nostrAllowed: false, nostrFallback: false }), look, DCL, slots, stepPlayer, net, lobby, perf: { status: () => look.status(), setMode: m => look.perf.setMode(m), getMode: () => look.perf.getMode(), tier: () => look.tier }, get critters() { return critters; }, perfTier: () => look.tier, get tiers() { return tiers; }, startValleyPatch, levelFlow, creditLevelResult, hostContinueLevel, applyHostContinue, forceLevelComplete: (res) => { try { net?.abortReadyWait?.({ keepComplete: true }); } catch (e) {} try { if (net && net.role) audio.music?.jingle?.('coop'); } catch (e) {} const r = res || (zones && zones.result && zones.result()) || { id: zones?.status?.()?.id, n: 1, petals: 0, petalsTotal: 0, stars: {}, time: 0, end: [] }; if (valleySession) valleySession.ending = true; creditLevelResult(r, valleySession, []); const def = valley?.def?.(r.id); levelFlow?.showComplete?.({ result: { ...r, name: def?.name }, isHost: !!(net && net.isHost), onContinue: () => hostContinueLevel() }); if (net && net.isHost) net.onHostEvent?.({ type: 'complete', kind: 'complete', result: r, id: r.id }); }, showIntroCard, dismissIntroCard, hasIntroCard, get introCard() { return introCardId(); }, presentLevelTips, fillHowTips, openHow, dismissLevelTips, speak: id => audio.speak(id), openMap: v => openValleyMap(v), get mapUI() { return mapUI; }, get crew() { return crew; }, get zones() { return zones; }, get a2() { return zones && zones.getA2 && zones.getA2(); }, aimMirror: id => zones && zones.aimMirror && zones.aimMirror(id), get valley() { return valley; }, get healAmt() { return healAmt; }, get riders() { return riders; }, get wheels() { return wheels; }, get homeInd() { return homeInd; }, openHub, settings, audio, enterFree, fp, get freePlay() { return !!round.free; }, mix: { get: mixGet, sync: syncMixUi }, tech, get lead() { return lead; }, setLead, price, priceFor, buildInfo, openTech, closeTech, get techOpen() { return techOpen; }, ARCH, TREES, openPick, statsTable, updateInfoCard, renderSelCard, helpers, hazards, rivals, goals, onb, items, looks, rts, enterRts, exitRts, toggleRts, possessHelper, releaseHelper, rtsTap, worldToScreen, setTrayMode, get cur() { return cur; }, THREE, cam, gearFx, gearSet, buyGear, openShop, closeShop, gearSave: () => save.gear, riders, SPECIES, clock, weather, babies, SU, meadow, ringMesh, abOf, ABILITIES, stepN(n, dt = 1 / 60) { for (let i = 0; i < n; i++) { state.sT = (state.sT || 0) + dt; simT += dt; worldTick(dt, state.sT); frameSim(dt, state.sT, simT); updateNight(dt); if (build.active) build.updateGhost(P[cur], cam.yaw, state.sT); } }, camStep(n = 30, dt = 1 / 30) { for (let i = 0; i < n; i++) { updateCamera(dt); if (build.active) updateBuildUi(dt, state.sT || 0); } }, round, terr, build, admin, adm, startNew, setBuild, toggleBuild, openPause, showResults, refreshTitle, X, get simT() { return simT; }, coop, music: audio.music, SPECIAL, swap: swapNext, openJournal, closeJournal, shadows, marks, stepParked, get guide() { return guide; }, scene, camera, renderer, world, P, nests, ambient, state, select: selectSpecies, setNight, input, cam, get cur() { return cur; }, get playing() { return playing; }, play: () => $('play').click(),
     tp: (x, z, up = 0) => { const p = P[cur]; p.x = x; p.z = z; p.y = world.phys.floor(x, z, 99, 99).y + up; p.vx = p.vz = p.vy = 0; },
     teleportNearFlower: () => { const B = world.blooms; const arr = B.byPol[polOf(cur)]; const i = arr[0]; const p = P[cur]; p.x = B.x[i] - 1; p.z = B.z[i]; p.y = Math.max(heightAt(p.x, p.z), B.y[i] - 0.5); p.vy = 0; } };
+  window.__game.assistCtl = {
+    get shown() { return !!(homeInd && homeInd.assistOn()); },
+    force(v = true) { assistForce = !!v; assistHold = 0; if (v && zones && zones.nudgeIdle) zones.nudgeIdle(31); },
+    get idle() { return zones && zones.idleSec ? zones.idleSec() : 0; },
+    get target() { const o = zones && zones.objective && zones.objective(); return o && o.x != null ? { x: o.x, y: o.y, z: o.z, text: o.text, cls: o.cls, color: o.color } : null; },
+  };
 }
 
 let last = performance.now(), fpsAcc = 0, fpsN = 0;

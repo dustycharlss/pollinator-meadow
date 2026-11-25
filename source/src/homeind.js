@@ -12,9 +12,19 @@ export function createHomeInd(scene) {
   const arrow = new THREE.Group(); const am = new THREE.Mesh(gAr, mat()); arrow.add(am);
   const edge = new THREE.Mesh(gAr.clone().scale(1.22, 1, 1.18), mat()); edge.material.color.set(0x1a2a20); edge.material.opacity = 0.45; edge.position.y = -0.01; arrow.add(edge);
   for (const o of [pip, arrow]) { o.visible = false; o.renderOrder = 4; o.traverse(m => { m.frustumCulled = false; m.renderOrder = 4; }); scene.add(o); }
-  let fade = 0;
+  // l20k Arrow assist: one shared overhead chevron (fill + dark edge = 2 draws, MeshBasic, no shadows).
+  const assist = new THREE.Group();
+  const asFill = new THREE.Mesh(gAr, mat());
+  const asEdge = new THREE.Mesh(gAr.clone().scale(1.22, 1, 1.18), mat());
+  asEdge.material.color.set(0x1a2a20); asEdge.material.opacity = 0.6; asEdge.position.y = -0.012;
+  assist.add(asEdge, asFill);
+  assist.visible = false; assist.renderOrder = 6;
+  assist.traverse(m => { m.frustumCulled = false; m.renderOrder = 6; m.castShadow = false; m.receiveShadow = false; });
+  scene.add(assist);
+  let fade = 0, aFade = 0;
   return {
-    pip, arrow,
+    pip, arrow, assist,
+    assistOn: () => assist.visible && aFade > 0.02,
     update({ x, y, z, R, ang, show, color, mode, t, dt, far }) {
       fade += ((show ? 1 : 0) - fade) * Math.min(1, dt * 6);
       const ringOn = mode !== 'arrow', o = ringOn ? pip : arrow, other = ringOn ? arrow : pip; other.visible = false;
@@ -27,6 +37,17 @@ export function createHomeInd(scene) {
       o.traverse(m => { if (m.material && m !== halo && m !== edge) { m.material.color.set(color); m.material.opacity = 0.92 * fade; } });
       halo.material.opacity = 0.22 * fade; edge.material.opacity = 0.45 * fade;
     },
-    hide() { pip.visible = arrow.visible = false; fade = 0; },
+    updateAssist({ x, y, z, ang, show, color, t, dt, bob = true }) {
+      aFade += ((show ? 1 : 0) - aFade) * Math.min(1, dt * 6);
+      assist.visible = aFade > 0.02; if (!assist.visible) return;
+      const lift = bob ? 0.1 * Math.sin(t * 3.2) : 0;
+      assist.position.set(x, y + lift, z);
+      assist.rotation.y = ang + Math.PI;
+      assist.scale.setScalar(0.58);
+      asFill.material.color.set(color || '#ffd23f');
+      asFill.material.opacity = 0.95 * aFade;
+      asEdge.material.opacity = 0.6 * aFade;
+    },
+    hide() { pip.visible = arrow.visible = assist.visible = false; fade = 0; aFade = 0; },
   };
 }
