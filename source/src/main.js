@@ -46,6 +46,7 @@ import { createCritters } from './critters.js';
 export const ADVENTURE = true;
 document.body.classList.toggle('adv', ADVENTURE);
 import { createOutlines, OUTLINE_SELF } from './outline.js';
+import CRIT_J from './critter-journal.json';
 import { CLASSES, CLASS_OF, CLASS_ORDER, classOf, badgeImg, setColorBlind } from './classes.js';
 import { createCrew, STARTER_CREW, SKILLS, crewTags, priceForCrew, isFlyer, crewValid } from './crew.js';
 import { createContests } from './contests.js';
@@ -106,6 +107,7 @@ renderer.debug.onShaderError = (gl, program, vs, fs) => {
   // Safety net: swap to Squid's phone-safe kit and keep booting instead of failing the loader.
   armShaderFallback(msg);
 };
+canvas.addEventListener('pointerdown', ev => { try { if (playing && !paused && critters && critters.pick) critters.pick(ev.clientX, ev.clientY, camera, innerWidth, innerHeight); } catch (e) {} }, { passive: true }); // l20p: tap a critter to spot it
 canvas.addEventListener('webglcontextlost', ev => {
   ev.preventDefault();
   if (!window.__bootReady) window.__bootFail?.(new Error('WebGL context lost during load'));
@@ -124,6 +126,7 @@ const audio = createAudio();
 const input = createInput(canvas);
 const SAVE_KEY = 'pollinator-meadow-v1';
 let save = { units: {}, species: 'bee', dew: [], coop: { stage: {} }, journal: {} }; try { save = Object.assign(save, JSON.parse(localStorage.getItem(SAVE_KEY) || '{}')); } catch (e) {}
+save.critterSeen = save.critterSeen || {}; // l20p critter journal: { kind: { first, count } }
 save.pos = save.pos || {}; save.coop = save.coop || { stage: {} }; save.coop.stage = save.coop.stage || {}; save.journal = save.journal || {};
 save.gear = save.gear || {}; for (const id of SPECIES_ORDER) { const g = save.gear[id] = save.gear[id] || { t: [0, 0, 0], bank: save.units[id] || 0 }; g.t = (g.t || [0, 0, 0]).map(v => Math.max(0, Math.min(3, v | 0))); g.bank = g.bank || 0; }
 const settings = loadSettings();
@@ -539,8 +542,55 @@ function journalUnlock(key, label) {
     toast('📖 New journal page: ' + label, 3200); audio.blip(5); }
   if ($('journal').classList.contains('on')) renderJournal(); return true;
 }
-let jTab = FEATURES.teamFoods ? 0 : 1; const jPages = [0, 0, 0];
-const JTABS = [() => SPECIAL, () => SPECIES_ORDER.map(id => ({ id: 'a:' + id, sp: SPECIES[id] })), () => MOMENTS.map(m => ({ ...m, id: 'm:' + m.id }))];
+let jTab = FEATURES.teamFoods ? 0 : 1; const jPages = [0, 0, 0, 0];
+const JTABS = [() => SPECIAL, () => SPECIES_ORDER.map(id => ({ id: 'a:' + id, sp: SPECIES[id] })), () => MOMENTS.map(m => ({ ...m, id: 'm:' + m.id })), () => CRIT_J.entries];
+// ---- l20p: Critter Spotting tab (3x4 cards; tap a card for its page). Gentle: nothing is gated on it. ----
+const CRIT_N = CRIT_J.entries.length;
+const critSeenN = () => CRIT_J.entries.filter(e => save.critterSeen[e.id]).length;
+const lvName = id => { try { return (valley && valley.def(id) && valley.def(id).name) || (id === 'meadow_hub' ? 'the Meadow' : String(id || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())); } catch (e) { return id; } };
+const WET = new Set(['creek_bend', 'mill_pond', 'flooded_mill', 'log_jam']);
+function critHint(e) {
+  const when = e.time === 'night' ? ' at night' : e.time === 'day' ? ' in the daytime' : '';
+  const wet = ['frog', 'fish', 'dragonfly'].includes(e.id) || (e.foundIn || []).filter(i => WET.has(i)).length > (e.foundIn || []).length / 2;
+  const ord = PATCHES.map(q => q && (q.id || q)), fi = (e.foundIn || []).filter(i => i !== 'meadow_hub'), here = valleySession && valleySession.patchId;
+  const pickL = fi.includes(here) ? here : fi.slice().sort((a, b) => ((ord.indexOf(a) + 999) % 999) - ((ord.indexOf(b) + 999) % 999))[0];
+  const at = wet ? 'near water' : (pickL ? 'in ' + lvName(pickL) : 'around the meadow');
+  return 'Look ' + at + when + '!';
+}
+let critOpen = null;
+function critterSpotted(kind) {
+  const e = CRIT_J.entries.find(q => q.id === kind); if (!e) return;
+  const was = save.critterSeen[kind];
+  if (was) { was.count = (was.count || 1) + 1; persist(); return; }
+  const lv = (valleySession && valleySession.patchId) || 'meadow_hub';
+  save.critterSeen[kind] = { first: lv, count: 1 }; persist();
+  try { audio.chime(); } catch (err) {}
+  toast('📖 New friend: ' + e.name + '!', 3000);
+  $('bJournal').classList.add('critNew'); $('bPause').classList.add('pulse');
+  if ($('journal').classList.contains('on') && jTab === 3) renderJournal();
+}
+function renderCritters() {
+  const box = $('jCrit'), all = CRIT_J.entries, n = critSeenN();
+  $('jPg').style.display = 'none'; document.querySelector('#journal .nav').style.display = 'none'; box.style.display = '';
+  document.querySelector('#journal .book').classList.toggle('goldLeaf', n >= CRIT_N);
+  $('jCount').textContent = n + ' / ' + CRIT_N + ' spotted';
+  const img = (a, b, cls) => `<img class="${cls}" src="${a}" srcset="${a} 1x, ${b || a} 2x" alt="">`;
+  if (critOpen) {
+    const e = all.find(q => q.id === critOpen), sv = save.critterSeen[critOpen];
+    box.innerHTML = `<div class="cPage">${sv ? img(e.icon, e.icon2x, 'cBig') : img(e.unspotted, e.unspotted.replace('.png', '@2x.png'), 'cBig')}
+      <div class="cTx"><div class="nm">${sv ? e.name : '??? Not spotted yet'}</div>
+      <p>${sv ? e.fact : '💡 ' + critHint(e)}</p>
+      ${sv ? `<p class="cMeta">First seen in ${lvName(sv.first)} · seen ${sv.count} time${sv.count === 1 ? '' : 's'}</p>` : ''}
+      ${sv ? `<img class="cStamp" src="ui/fuller/journal/stamp-spotted.png" alt="Spotted!">` : ''}</div>
+      <button class="cBack" type="button">◀ All critters</button></div>`;
+    box.querySelector('.cBack').onclick = () => { critOpen = null; renderJournal(true); };
+  } else {
+    box.innerHTML = '<div class="cGrid">' + all.map(e => { const sv = save.critterSeen[e.id];
+      return `<button class="cCard ${sv ? 'got' : ''}" data-c="${e.id}" type="button">${sv ? img(e.icon, e.icon2x, 'cIc') : img(e.unspotted, e.unspotted.replace('.png', '@2x.png'), 'cIc')}
+        <b>${sv ? e.name : '???'}</b>${sv ? '<img class="cSt" src="ui/fuller/journal/stamp-spotted.png" alt="">' : `<small>${critHint(e)}</small>`}</button>`; }).join('') + '</div>';
+    box.querySelectorAll('.cCard').forEach(b => b.onclick = () => { critOpen = b.dataset.c; renderJournal(true); });
+  }
+}
 function openJournal(page, tab) {
   if (shopOpen) return;
   if (tab != null) jTab = tab; if (jTab === 0 && !FEATURES.teamFoods) jTab = 1;
@@ -550,7 +600,15 @@ function openJournal(page, tab) {
   $('journal').classList.add('on'); input.active = false; paused = true; $('bJournal').classList.remove('pulse'); $('bPause').classList.remove('pulse');
 }
 function closeJournal() { $('journal').classList.remove('on'); syncPause(); }
+function tabCounts() {
+  const tc = [specialFound(), SPECIES_ORDER.filter(i => save.journal['a:' + i]).length, MOMENTS.filter(m => save.journal['m:' + m.id]).length, critSeenN()];
+  document.querySelectorAll('#jTabs button').forEach(b => { b.classList.toggle('act', +b.dataset.t === jTab); b.querySelector('small').textContent = tc[+b.dataset.t] + '/' + JTABS[+b.dataset.t]().length; });
+  return tc;
+}
 function renderJournal(anim) {
+  $('bJournal').classList.remove('critNew');
+  if (jTab === 3) { renderCritters(); tabCounts(); return; }
+  $('jPg').style.display = ''; document.querySelector('#journal .nav').style.display = ''; $('jCrit').style.display = 'none'; critOpen = null;
   const list = JTABS[jTab](), jPage = (jPages[jTab] = Math.min(jPages[jTab], list.length - 1)), d = list[jPage], got = save.journal[d.id];
   const art = $('jArt'), jt = $('jTeam');
   $('jGuide').style.display = 'none'; $('jFact').style.display = got ? '' : 'none'; $('jHint').style.display = got ? 'none' : '';
@@ -575,9 +633,8 @@ function renderJournal(anim) {
     $('jFact').textContent = got ? d.fact : ''; $('jHint').textContent = '💡 ' + d.hint;
   }
   $('jFact').style.whiteSpace = 'pre-line';
-  const tc = [specialFound(), SPECIES_ORDER.filter(i => save.journal['a:' + i]).length, MOMENTS.filter(m => save.journal['m:' + m.id]).length];
+  const tc = tabCounts();
   $('jCount').textContent = tc[jTab] + ' / ' + list.length + ' found';
-  document.querySelectorAll('#jTabs button').forEach(b => { b.classList.toggle('act', +b.dataset.t === jTab); b.querySelector('small').textContent = tc[+b.dataset.t] + '/' + JTABS[+b.dataset.t]().length; });
   $('jDots').innerHTML = list.map((s, i) => `<i class="${save.journal[s.id] ? 'f' : ''} ${i === jPage ? 'c' : ''}" data-i="${i}"></i>`).join('');
   $('jDots').querySelectorAll('i').forEach(e => e.onclick = () => { jPages[jTab] = +e.dataset.i; renderJournal(true); });
   $('jPrev').disabled = jPage === 0; $('jNext').disabled = jPage === list.length - 1;
@@ -2530,7 +2587,7 @@ async function boot() {
   DCL.TERR[1] = scene.children.length; zones = createZones(scene, { look, easy: () => easyOn(), reduceMotion: () => reduceOn(), phys: world.phys, heightAt, meadowHeightAt, setZoneHeight, toast: (a, b) => toast(a, b), actTip, audio, getP: () => P[cur], cur: () => cur, driven: () => { const d = (slots.driven() || []).slice(); if (net && net.isHost && net.remoteBodies) { for (const id of net.remoteBodies()) if (id && !d.includes(id)) d.push(id); } return d; }, crewIds: () => crew ? crew.get() : [], parked: id => P[id], camYaw: y => { cam.yaw = y; }, onPick: () => { round.addRes('p', 1); updateRoundHud?.(true); }, speciesName: id => `${skinEm(id)} ${skinName(id)}`, getHeal: () => healAmt, fx: (x, y, z) => fx && fx.burst(x, y, z, 24, 6), helpers: () => helpers ? helpers.list : [], addHeal: n => { if (valleySession) { healAmt = Math.min(1, healAmt + n); valley?.setHeal(valleySession.patchId, healAmt); updateHealUi(); } }, setNight: v => setNight(v, true), setTime: (mode, auto) => setTimeOfDay(mode, auto), holdClock, onSneak: v => { const b = $('bSneak'); if (b) { b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); b.querySelector('b').textContent = v ? 'Sneaking' : 'Sneak'; } }, onGear: () => renderCrewDock(), friends: () => valley ? valley.friends() : [], onHub: k => onHubStation(k), settings: () => settings, isNetClient: () => !!(net && net.isClient), swoop: () => { cam.swoop = 0.9; }, onNetEvent: ev => net?.onHostEvent?.(ev) });
   // Each critter is pastel-styled and linked before its first frame: unstyled it would link once,
   // then again as |presetB when the periodic restyle reaches it (a double compile mid-play).
-  critters = createCritters(scene, { heightAt, tier: () => look.tier, prep: obj => { look.styleScene({ children: [obj] }); if (typeof renderer.compile === 'function') renderer.compile(obj, camera, scene); } });
+  critters = createCritters(scene, { heightAt, tier: () => look.tier, getPlayer: () => (playing && !paused ? P[cur] : null), onSpot: k => critterSpotted(k), prep: obj => { look.styleScene({ children: [obj] }); if (typeof renderer.compile === 'function') renderer.compile(obj, camera, scene); } });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
   tiers = createTiers(scene, { adventure: () => ADVENTURE && !!valleySession && valleySession.patchId !== HUB_ID, /* l20i: per level at runtime; the meadow hub keeps its dew clusters */
     hubDew: () => { if (!inHub() || !zones?.homePos) return null; const h = zones.homePos(); return h ? { x: h.x + 3.5, z: h.z + 9.5 } : null; }, /* l20j: hub dew cluster on the open glade (local 3.5, 3.5): ahead of the spawn camera, >2 m from the spawn spot (4,-2) so it is not auto-collected, clear of the banners (±3, 8.5), Trail Board (0,10) and Pond Dock (7.5,7) */ heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,

@@ -1186,6 +1186,26 @@ body:not(.inRound) #bFlag{display:none!important}
 #btns .wb b{display:block;max-width:50px}
 #bJournal.pulse,#bPause.pulse{border:0}
 </style>
+<style id="fullerJournal">/* l20p P5: Critters tab (ui/fuller/journal art) */
+#jCrit{max-height:min(60vh,520px);overflow:auto;-webkit-overflow-scrolling:touch}
+#jCrit .cGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#jCrit .cCard{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 6px;min-height:104px;border:0;border-radius:14px;background:url(ui/fuller/journal/entry-card.png) center/100% 100% no-repeat;color:#3b2614;font-family:inherit;cursor:pointer}
+#jCrit .cCard .cIc{width:56px;height:56px}
+#jCrit .cCard b{font-size:12.5px}
+#jCrit .cCard small{font-size:10.5px;line-height:1.15;color:#6a4a2a;font-style:italic}
+#jCrit .cCard .cSt{position:absolute;right:2px;bottom:2px;width:44px;height:44px;transform:rotate(-12deg);pointer-events:none}
+#jCrit .cPage{position:relative;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;padding:10px;border-radius:18px;background:url(ui/fuller/journal/page-frame.png) center/100% 100% no-repeat;color:#3b2614}
+#jCrit .cBig{width:112px;height:112px;flex:0 0 112px}
+#jCrit .cTx{flex:1;min-width:150px;padding-bottom:58px}
+#jCrit .cMeta{font-weight:700;color:#2f5a2a}
+#jCrit .cStamp{position:absolute;right:10px;bottom:52px;width:64px;height:64px;transform:rotate(-12deg);animation:cStamp .25s ease-out}
+@keyframes cStamp{from{transform:rotate(-12deg) scale(1.3)}to{transform:rotate(-12deg) scale(1)}}
+html.reduceMotion #jCrit .cStamp{animation:none}
+#jCrit .cBack{flex-basis:100%;margin-top:4px}
+.book.goldLeaf{border-color:#d9a520;box-shadow:0 10px 40px rgba(0,0,0,.5),inset 0 0 0 3px #f3cf5a}
+#bJournal.critNew::after{content:"";position:absolute;right:-6px;top:-6px;width:22px;height:22px;background:url(ui/fuller/journal/badge-new.png) center/contain no-repeat}
+.book .tabs button{min-width:0}
+</style>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -1369,8 +1389,9 @@ body:not(.inRound) #bFlag{display:none!important}
 
 <div class="ov" id="journal"><div class="book">
   <div class="hd"><h2>📖 Field Journal</h2><span id="jCount" style="font-weight:700"></span></div>
-  <div class="tabs" id="jTabs"><button data-t="0">🍯 Foods <small></small></button><button data-t="1">🐾 Animals <small></small></button><button data-t="2">🌦️ Moments <small></small></button></div>
+  <div class="tabs" id="jTabs"><button data-t="0">🍯 Foods <small></small></button><button data-t="1">🐾 Animals <small></small></button><button data-t="2">🌦️ Moments <small></small></button><button data-t="3">🐞 Critters <small></small></button></div>
   <div class="pg flip" id="jPg"><div class="art" id="jArt"></div><div class="txt"><div class="nm" id="jName"></div><div class="tm" id="jTeam"></div><p id="jFact"></p><p class="ht" id="jHint"></p><button class="g" id="jGuide">📍 Guide me there</button></div></div>
+  <div id="jCrit" style="display:none"></div>
   <div class="nav"><button id="jPrev">◀</button><div class="dots" id="jDots"></div><button id="jNext">▶</button></div>
   <div style="text-align:center;margin-top:10px"><button id="jClose">Back to the meadow</button></div>
 </div></div>

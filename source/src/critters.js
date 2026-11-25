@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { loadGLB } from './models.js';
 import { mergeAtlasRig } from './act3-atlas.js';
+import FULLER_MIX from './critter-mix.json';
 
 // size = target longest extent in game metres (the player bee is 1.35 m); fly = [min,max] height; spd = m/s cap; r = wander leash
 export const CRITTERS = {
@@ -33,6 +34,7 @@ const BIOME = {
   night_market: { firefly: 6, moth: 3 }, owl_wood: { firefly: 6, moth: 3, butterfly: 2 }, moon_meadow: { firefly: 6, moth: 3, butterfly: 2 },
   storm_orchard: { 'small-bird': 2, butterfly: 2, ladybug: 2 }, grand_garden: { butterfly: 4, snail: 2, ladybug: 3, 'small-bird': 2, frog: 1 },
 };
+Object.assign(BIOME, FULLER_MIX); // l20p: Beans's per-level critter mixes (14 levels; existing types only)
 export const CAPS = { low: 6, med: 12, high: 18, ultra: 26 };
 
 const tmpl = new Map();
@@ -73,7 +75,8 @@ function retargetClip(root, clip) {
 }
 
 /** prep(obj): optional hook run on each new critter before it joins the scene (main styles + compiles it there). */
-export function createCritters(scene, { heightAt, tier = () => 'med', prep = null } = {}) {
+const FLYER = new Set(['butterfly', 'small-bird', 'dragonfly', 'moth', 'bat']);
+export function createCritters(scene, { heightAt, tier = () => 'med', prep = null, getPlayer = null, onSpot = null } = {}) {
   const group = new THREE.Group(); group.name = 'critters'; scene.add(group);
   let list = [], token = 0;
   const batches = []; // step 6: same-kind atlas-rig parts share one InstancedMesh; originals stay on the clip nodes (hidden) so flaps still drive matrices
@@ -138,11 +141,13 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
       // Prefetched templates place synchronously, so the critters are in the level's warm-up draw.
       const T = ready.has(kind) ? ready.get(kind) : await template(kind); if (my !== token) return; if (!T) continue; const D = CRITTERS[kind];
       const flockX = rect.x0 + 3 + rnd() * (rect.x1 - rect.x0 - 6), flockZ = rect.z0 + 3 + rnd() * (rect.z1 - rect.z0 - 6);
+      let fX = flockX, fZ = flockZ;
       for (let i = 0; i < n && placed < cap; i++) {
+        if (i && i % 4 === 0) { fX = rect.x0 + 3 + rnd() * (rect.x1 - rect.x0 - 6); fZ = rect.z0 + 3 + rnd() * (rect.z1 - rect.z0 - 6); } // l20p: spread big flocks
         let x = 0, z = 0, ok = false;
         for (let tries = 0; tries < 30 && !ok; tries++) {
           if (D.swim) { const r = deep[(rnd() * deep.length) | 0]; x = r.x0 + 0.6 + rnd() * Math.max(0.1, r.x1 - r.x0 - 1.2); z = r.z0 + 0.6 + rnd() * Math.max(0.1, r.z1 - r.z0 - 1.2); ok = true; break; }
-          x = flockX + (rnd() - 0.5) * 8; z = flockZ + (rnd() - 0.5) * 8;
+          x = fX + (rnd() - 0.5) * 8; z = fZ + (rnd() - 0.5) * 8;
           if (x < rect.x0 + 1 || x > rect.x1 - 1 || z < rect.z0 + 1 || z > rect.z1 - 1) continue;
           if ((D.ground || kind === 'frog') && inW(x, z)) continue;
           if (kind === 'frog' && deep.length && !inW(x, z, 2.5)) continue;
@@ -171,10 +176,14 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
     c.obj.position.set(c.x, y, c.z); c.obj.rotation.y = c.yaw;
   }
   let acc = 0;
+  // l20p: Critter Spotting. Stay within 4 m (6 m for flyers) of a visible critter for 0.8 s, or tap it. No fail states.
+  function spot(c) { if (c.spotted) return; c.spotted = true; try { onSpot && onSpot(c.kind); } catch (e) {} }
   function update(dt, t, night, cam) {
     if (!list.length) return; acc += dt; if (acc < 1 / 30) return; const d = acc; acc = 0; // 30 Hz is plenty for slow background motion
+    const pl = onSpot && getPlayer ? getPlayer() : null;
     for (const c of list) {
       const D = c.D, on = D.always || (D.night ? night > 0.5 : night <= 0.5) || (D.cave && c.kind === 'bat'); c.obj.visible = !!on; if (!on) continue;
+      if (pl && !c.spotted) { const rr = FLYER.has(c.kind) ? 6 : 4; if (Math.hypot(c.x - pl.x, c.z - pl.z) < rr) { c.dw = (c.dw || 0) + d; if (c.dw >= 0.8) spot(c); } else c.dw = 0; }
       const far = !!(cam && Math.hypot(c.x - cam.x, c.z - cam.z) > 60);
       c.mixer.update(d);
       c.obj.updateMatrixWorld(true);
@@ -190,5 +199,13 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
   }
   /** Background-load every template (no scene, no compile) so later spawns are synchronous. */
   function prefetch() { for (const k of Object.keys(CRITTERS)) template(k).catch(() => {}); }
-  return { spawn, clear, update, prefetch, get list() { return list; }, group };
+  const _v = new THREE.Vector3();
+  /** l20p: tap/click spotting. sx/sy = client px; picks the nearest visible critter within 48 px. */
+  function pick(sx, sy, camera, w, h) {
+    if (!onSpot || !camera) return null; let best = null, bd = 48;
+    for (const c of list) { if (!c.obj.visible) continue; _v.setFromMatrixPosition(c.obj.matrixWorld); _v.project(camera); if (_v.z > 1) continue;
+      const px = (_v.x * 0.5 + 0.5) * w, py = (-_v.y * 0.5 + 0.5) * h, dd = Math.hypot(px - sx, py - sy); if (dd < bd) { bd = dd; best = c; } }
+    if (best) spot(best); return best ? best.kind : null;
+  }
+  return { spawn, clear, update, prefetch, pick, get list() { return list; }, group };
 }
