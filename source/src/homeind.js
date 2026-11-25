@@ -17,6 +17,12 @@ export function createHomeInd(scene) {
   const asFill = new THREE.Mesh(gAr, mat());
   const asEdge = new THREE.Mesh(gAr.clone().scale(1.22, 1, 1.18), mat());
   asEdge.material.color.set(0x1a2a20); asEdge.material.opacity = 0.6; asEdge.position.y = -0.012;
+  // FrontSide: DoubleSide was 2 draws per mesh (4 total). Chevrons face +Y after rotateX.
+  for (const m of [asFill, asEdge]) {
+    m.material.side = THREE.FrontSide;
+    m.userData.noCast = true;
+    m.userData.noPastel = true;
+  }
   assist.add(asEdge, asFill);
   assist.visible = false; assist.renderOrder = 6;
   assist.traverse(m => { m.frustumCulled = false; m.renderOrder = 6; m.castShadow = false; m.receiveShadow = false; });
