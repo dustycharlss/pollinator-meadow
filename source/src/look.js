@@ -7,7 +7,8 @@
 // Phones never go past 'high'. Day/night, seasons, weather and moody night still come from main.js updateNight();
 // tune() blends the day share of that toward preset B every frame.
 import * as THREE from 'three';
-import { PRESET_B as B, pastelize, createComposerB, cssOverlayB, sunDirectionB, isSoftGl } from './preset-B.js';
+import { PRESET_B as B, pastelize, createComposerB, cssOverlayB, sunDirectionB, isSoftGl, lutReady } from './preset-B.js';
+import { fullerLevel, NIGHT_LEVELS } from './fuller.js';
 import { skipCustomShaders, cullWorldFx, isCaveLevel } from './l20-fallback.js';
 import { initPerf } from './perf.js';
 import LOOK_L20 from './look-targets/L20-mirror-caves.json';
@@ -361,7 +362,10 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
         o.intensity = 0; if (c && !Number.isFinite(c.r + c.g + c.b)) c.setRGB(1, 1, 1);
       } });
   }
-  function render() { if ((lightChk++ % 30) === 0) guardLights(); renderer.info.reset(); if (composer) composer.render(); else renderer.render(scene, camera); }
+  // l20p: Mint Meadow LUT strength (0 until the strip has loaded; 0.5 on night levels; ?lut=0 for A/B).
+  const lutOff = /[?&]lut=0/.test(location.search);
+  function lutStrength() { const g = (Pnow && Pnow.grade) || B.grade; if (lutOff || !lutReady()) return 0; return NIGHT_LEVELS.has(fullerLevel()) ? (g.lutNight ?? B.grade.lutNight ?? 0.5) : (g.lutIntensity ?? B.grade.lutIntensity ?? 1); }
+  function render() { if ((lightChk++ % 30) === 0) guardLights(); if (gradePass && gradePass.uniforms.lutI) gradePass.uniforms.lutI.value = lutStrength(); renderer.info.reset(); if (composer) composer.render(); else renderer.render(scene, camera); }
   /** 3 s boot probe after load (audit §7.3): step down once at once if the start tier is clearly too heavy. */
   let probeT0 = 0;
   function frame(now) {

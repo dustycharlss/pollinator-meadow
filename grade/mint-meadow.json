@@ -1,0 +1,81 @@
+{
+ "name": "Mint Meadow (replaces the Golden Hour Pastel grade values for preset B)",
+ "apply": "after tone mapping + OutputPass, as a final LUT pass (THREE LUTPass with LUTCubeLoader or LUTImageLoader). LUT intensity 1.0; 0.0 = old look for A/B.",
+ "lut": {
+  "cube": "fuller/grade/mint-meadow-32.cube",
+  "strip": "fuller/grade/mint-meadow-32-strip.png",
+  "neutral": "fuller/grade/neutral-32-strip.png",
+  "size": 32
+ },
+ "lookChanges": {
+  "lift": {
+   "from": "#1a0e28",
+   "to": "#0f1a16",
+   "why": "lavender shadows \u2192 soft mint shadows"
+  },
+  "gain": {
+   "from": "#fff0dc",
+   "to": "#fbfff2",
+   "why": "less orange in highlights"
+  },
+  "peachHaze": {
+   "from": [
+    "#ffd9b0",
+    0.035
+   ],
+   "to": [
+    "#ffe6c8",
+    0.018
+   ]
+  },
+  "vignette": {
+   "from": [
+    "#c0708a",
+    0.22
+   ],
+   "to": [
+    "#5c7a68",
+    0.12
+   ],
+   "why": "lighter, green-grey not rose; keeps the frame open on phones"
+  },
+  "bloomThreshold": {
+   "from": 0.78,
+   "to": 0.82,
+   "why": "stops pale meadow ground blooming out"
+  },
+  "saturation": 1.04,
+  "contrast": 1.0,
+  "hemiSky": "#cfeedd",
+  "hemiGround": "#e8d8b8",
+  "fogColour": "#d8efe2",
+  "clearColour": "#cfe9dc"
+ },
+ "tiers": {
+  "low": "no post pass: bake the look into lights/fog only (hemiSky, hemiGround, fogColour, sun #fff4e0 \u00d70.95); skip the LUT and vignette",
+  "med": "LUT pass only (one fullscreen draw, 32\u00b3 3D texture); vignette folded into the same shader",
+  "high/ultra": "LUT + existing bloom"
+ },
+ "nightLevels": "moon_meadow, owl_wood, night_market: keep their current night palette; use LUT intensity 0.5 so greens still read mint",
+ "license": "CC0 (original)",
+ "presetB_dropIn": {
+  "grade": {
+   "saturation": 1.04,
+   "contrast": 1.0,
+   "brightness": 0.0,
+   "lift": "#0f1a16",
+   "gain": "#fbfff2",
+   "vignette": 0.12,
+   "vignetteColor": "#5c7a68",
+   "haze": 0.018,
+   "hazeColor": "#ffe6c8"
+  },
+  "bloom.threshold": 0.82,
+  "quality.low.bakeGrade": {
+   "lightTint": "#f6f8e6",
+   "skyTint": "#e6f4e6",
+   "hazeMix": 0.12
+  },
+  "where": "source/src/preset-B.js grade block (line ~45) and quality.low.bakeGrade (line ~57); look.js reads these keys already"
+ }
+}

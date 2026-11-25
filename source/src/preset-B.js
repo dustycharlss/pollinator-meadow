@@ -41,9 +41,10 @@ export const PRESET_B = {
   shadow: { type: 'PCFSoft', mapSize: 4096, bias: -0.0008, normalBias: 0.02, radius: 6, intensity: 1.0,
             camera: { left: -26, right: 26, top: 22, bottom: -22, near: 1, far: 160 },
             lengthPerMetre: 3.27 },   // 1 / tan(17 deg): a 1 m tall block casts a ~3.3 m shadow
-  bloom: { strength: 0.45, radius: 0.7, threshold: 0.78 },
-  grade: { saturation: 1.0, contrast: 1.0, brightness: 0.0, lift: '#1a0e28', gain: '#fff0dc',
-           vignette: 0.22, vignetteColor: '#c0708a', haze: 0.035, hazeColor: '#ffd9b0' },
+  bloom: { strength: 0.45, radius: 0.7, threshold: 0.82 },
+  // l20p: "Mint Meadow" grade (Beans, fuller/grade/mint-meadow.json presetB_dropIn). Was lift #1a0e28, gain #fff0dc, vignette 0.22 #c0708a, haze 0.035 #ffd9b0.
+  grade: { saturation: 1.04, contrast: 1.0, brightness: 0.0, lift: '#0f1a16', gain: '#fbfff2',
+           vignette: 0.12, vignetteColor: '#5c7a68', haze: 0.018, hazeColor: '#ffe6c8', lut: 'grade/mint-meadow-32-strip.png', lutIntensity: 1.0, lutNight: 0.5 },
   skyGlow: { wide: 0.25, widePower: 6, core: 0.4, corePower: 60 },
   pollen: { count: 46, radius: 0.035, color: '#fff0c8', hdrBoost: 1.6, heightMin: 0.6, heightMax: 3.4,
             motion: { bobAmp: 0.12, bobHz: [0.25, 0.5], swirlRadius: 0.25, swirlHz: [0.05, 0.12], riseSpeed: 0.04, wrapHeight: 3.4 } },
@@ -54,7 +55,7 @@ export const PRESET_B = {
     // low has no post: the grade's warm gain + peach haze are folded into the lights/sky/fog colours instead, and the vignette
     // can be a CSS overlay (see cssOverlayB) so it costs no GPU pass.
     low:    { pixelRatioMax: 1,   shadowMap: 1024, shadowType: 'PCF',     bloom: false, bloomScale: 0,   grade: false, msaa: 0, pollen: 12, grassDensity: 0.3, fogFar: 70,
-              bakeGrade: { lightTint: '#ffe6c4', skyTint: '#ffd8b0', hazeMix: 0.2 } }
+              bakeGrade: { lightTint: '#f6f8e6', skyTint: '#e6f4e6', hazeMix: 0.12 } }
   }
 };
 
@@ -166,20 +167,38 @@ export function applyPresetB(scene, renderer, opts = {}, P = PRESET_B) {
   return { sun, hemi, sky, motes, sunDir: dir, quality: { name: qn, ...Q }, bloom: Q.bloom ? { ...P.bloom } : null, grade: Q.grade ? { ...P.grade } : null, preset: P };
 }
 
+let lutTex = null;
+/** l20p: the Mint Meadow LUT strip (shared, loaded once). Filtering is linear inside a tile; B is blended in the shader. */
+function lutTexture(g) {
+  if (!g || !g.lut || typeof document === 'undefined') return null;
+  if (lutTex) return lutTex;
+  const base = (import.meta.env && import.meta.env.BASE_URL) || './';
+  lutTex = new THREE.TextureLoader().load(base + g.lut, t => { t.userData.ready = true; });
+  lutTex.colorSpace = THREE.NoColorSpace; lutTex.generateMipmaps = false; lutTex.minFilter = THREE.LinearFilter; lutTex.magFilter = THREE.LinearFilter; lutTex.flipY = false;
+  return lutTex;
+}
+export function lutReady() { return !!(lutTex && lutTex.userData.ready); }
+
 /** Final colour grade (lift/gain/sat/contrast, peach haze, rose vignette) as a ShaderPass. Runs after OutputPass (sRGB). */
 export function makeGradePassB(P = PRESET_B) {
   const g = P.grade;
   const pass = new ShaderPass({
     uniforms: { tDiffuse: { value: null }, sat: { value: g.saturation }, contrast: { value: g.contrast }, bright: { value: g.brightness }, lift: { value: col(g.lift) }, gain: { value: col(g.gain) },
-      vignette: { value: g.vignette }, vigColor: { value: col(g.vignetteColor) }, haze: { value: g.haze }, hazeColor: { value: col(g.hazeColor) } },
+      vignette: { value: g.vignette }, vigColor: { value: col(g.vignetteColor) }, haze: { value: g.haze }, hazeColor: { value: col(g.hazeColor) },
+      lut: { value: lutTexture(g) }, lutI: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-    fragmentShader: `uniform sampler2D tDiffuse; uniform float sat, contrast, bright, vignette, haze; uniform vec3 lift, gain, vigColor, hazeColor; varying vec2 vUv;
+    fragmentShader: `uniform sampler2D tDiffuse, lut; uniform float sat, contrast, bright, vignette, haze, lutI; uniform vec3 lift, gain, vigColor, hazeColor; varying vec2 vUv;
+      // l20p: 32^3 LUT as a 1024x32 strip (x = R + 32*B, y = G), folded into this pass so it costs no extra fullscreen draw.
+      vec3 lut32(vec3 c){ c = clamp(c, 0.0, 1.0); float b = c.b * 31.0, b0 = floor(b), b1 = min(b0 + 1.0, 31.0);
+        float x = (c.r * 31.0 + 0.5) / 1024.0, y = (c.g * 31.0 + 0.5) / 32.0;
+        vec3 s0 = texture2D(lut, vec2(x + b0 / 32.0, y)).rgb, s1 = texture2D(lut, vec2(x + b1 / 32.0, y)).rgb; return mix(s0, s1, b - b0); }
       void main(){ vec3 c = texture2D(tDiffuse, vUv).rgb;
         c = c * gain + lift * (1.0 - c) * 0.5; c += bright;
         float l = dot(c, vec3(0.2126, 0.7152, 0.0722)); c = mix(vec3(l), c, sat); c = (c - 0.5) * contrast + 0.5;
         float d = distance(vUv, vec2(0.5));
         c = mix(c, hazeColor, haze * (1.0 - smoothstep(0.0, 0.7, vUv.y)) * 0.6 + haze * 0.3);
         c = mix(c, c * vigColor * 1.2, smoothstep(0.38, 0.95, d) * vignette);
+        if (lutI > 0.0) c = mix(c, lut32(c), lutI);
         gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0); }`
   });
   pass.name = 'presetB-grade'; return pass;

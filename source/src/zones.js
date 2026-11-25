@@ -10,6 +10,7 @@ import { skinText } from './skins.js';
 import { loadGLB, lambertFrom } from './models.js';
 import { swatchUV, atlasMaterial, writeAtlasUV, mergeAtlasRig } from './act3-atlas.js';
 import { createIconSheet } from './act3-icons.js';
+import { setFullerLevel } from './fuller.js';
 import { setCaveLevel, installFallbackHooks, isShaderFallback, fallbackMaterial, applyGhostMaterial, refreshFallbackMaterials } from './l20-fallback.js';
 import { lodify, lodFor } from './lod.js';
 import { canShowFriendsStation } from './net/flags.js';
@@ -2907,7 +2908,7 @@ export function createZones(scene, host) {
   }
   const say = (s, d = 2200) => { if (t - msgT > 1.6) { msgT = t; tst(s, d); } };
   function clear() {
-    setCaveLevel(false);
+    setCaveLevel(false); setFullerLevel(null);
     WATER_RECTS.length = 0; setZoneHeight(null);
     sampleH = null; waterMeshes = []; caveChunks = [];
     for (const s of solids) s.off = true;
@@ -3295,6 +3296,7 @@ export function createZones(scene, host) {
   function load(pid, anchor) {
     clear(); matLive = false; recipe = MAPS[pid]; if (!recipe) return; id = pid;
     setCaveLevel(!!(recipe.caveFloor || recipe.id === 'mirror_caves' || pid === 'mirror_caves'));
+    setFullerLevel(recipe.id || pid);
     installFallbackHooks({ zoneGroup: group, scene }); babyMixers.length = 0; pipDone = new Set(); pipPend = null; pipSigT = {}; picked = 0; petalV = 0; keyDone = false; t = 0; lastProg = 0; hintT = 0; hintCool = new Map(); hintSpr = {}; hintSt = null; try { clearWrongHint(); } catch (e) {}
     if (recipe.ambience) ctx.audio?.levelAmb?.(recipe.ambience);
     A = { x: anchor.x, z: anchor.z };
