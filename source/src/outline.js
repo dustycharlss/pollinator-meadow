@@ -121,8 +121,10 @@ export function createOutlines(renderer) {
       // l20q: base width grows with the camera distance (~2-3 px on phones): max(0.035, 0.0045 * camDist); the 9 -> 5 m fade stays on player distance
       let camDist = 0; if (cam) { c.root.getWorldPosition(_wp); camDist = cam.position.distanceTo(_wp); }
       const w = Math.max(0.035, 0.0045 * camDist) * fade * Math.min(1.6, Math.max(0.7, e.r / 0.6));
+      // l20q: the cap is per character: outline a root only if ALL its visible meshes fit under the cap (no partial outlines)
+      const need = e.hulls.reduce((a, k) => a + (k.o.visible ? 1 : 0), 0), fits = w >= 0.002 && need > 0 && used + need <= lim;
       for (const k of e.hulls) {
-        const ok = w >= 0.002 && used < lim && k.o.visible;
+        const ok = fits && k.o.visible;
         if (ok) { k.o.getWorldScale(S); k.h.userData.w = w / Math.max(1e-4, Math.max(Math.abs(S.x), Math.abs(S.y), Math.abs(S.z))); used++; }
         k.h.visible = ok;
       }
