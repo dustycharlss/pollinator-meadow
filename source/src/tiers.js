@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { WATER_Y, POND } from './data.js';
 import { TIER_LOOK, CATALOG } from './build.js';
+import { fullerGeo } from './fuller-geo.js';
 
 export const SIZE_CLASS = { bee: 'tiny', butterfly: 'tiny', hummingbird: 'tiny', moth: 'tiny', bat: 'tiny', bumblebee: 'medium', robin: 'medium', raccoon: 'medium', opossum: 'medium', bear: 'bear' };
 const CLASS_ICON = { tiny: '🐝', medium: '🦝', bear: '🐻' };
@@ -25,7 +26,9 @@ function glowTex(hex) {
 const t0 = c => c;
 function glow(k, s) { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(TIER_LOOK[k].col), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.scale.setScalar(s); return m; }
 function starGeo(r = 0.7) { const s = new THREE.Shape(); for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; i ? s.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : s.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); } return new THREE.ExtrudeGeometry(s, { depth: 0.22, bevelEnabled: false }).center(); }
-function dropMesh(s = 0.45) { const g = new THREE.Group(), m = new THREE.MeshBasicMaterial({ color: col('d') }); const b = new THREE.Mesh(new THREE.SphereGeometry(s, 12, 10), m); const c = new THREE.Mesh(new THREE.ConeGeometry(s * 0.86, s * 1.5, 12), m); c.position.y = s * 1.05; g.add(b, c); return g; }
+function dropMesh(s = 0.45) { const g = new THREE.Group(), m = new THREE.MeshBasicMaterial({ color: col('d') });
+  { const bg = fullerGeo('dewdrop', s * 2.9, () => null); if (bg) { const b = new THREE.Mesh(bg, m); b.position.y = s * 0.4; g.add(b); return g; } } // l20q: blocky dewdrop (1 mesh, was sphere + cone = 2 draws)
+  const b = new THREE.Mesh(new THREE.SphereGeometry(s, 12, 10), m); const c = new THREE.Mesh(new THREE.ConeGeometry(s * 0.86, s * 1.5, 12), m); c.position.y = s * 1.05; g.add(b, c); return g; }
 function starMesh(r) { return new THREE.Mesh(starGeo(r), new THREE.MeshBasicMaterial({ color: col('s') })); }
 function label() {
   const c = document.createElement('canvas'); c.width = 512; c.height = 128; const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
