@@ -157,6 +157,13 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
           if (start && Math.hypot(x - start.x, z - start.z) < 5) continue; // out of the player's path at the start
           ok = true;
         }
+        if (!ok && kind === 'frog' && deep.length && tier() !== 'low') { // l20q: no spot in 30 tries (trailhead_trials) -> nearest shoreline spot (1 m outside a water rect); Low keeps l20n (no frog)
+          let bd = 1e9;
+          for (const r of deep) for (let k = 0; k < 64; k++) { const u = k / 64, e = k % 4, sx = e < 2 ? r.x0 + (r.x1 - r.x0) * u : (e === 2 ? r.x0 - 1 : r.x1 + 1), sz = e < 2 ? (e === 0 ? r.z0 - 1 : r.z1 + 1) : r.z0 + (r.z1 - r.z0) * u;
+            if (sx < rect.x0 + 1 || sx > rect.x1 - 1 || sz < rect.z0 + 1 || sz > rect.z1 - 1 || inW(sx, sz)) continue;
+            if (start && Math.hypot(sx - start.x, sz - start.z) < 5) continue;
+            const d = Math.hypot(sx - fX, sz - fZ); if (d < bd) { bd = d; x = sx; z = sz; ok = true; } }
+        }
         if (!ok) continue;
         const obj = T.root.clone(true); obj.scale.setScalar(T.scale); obj.userData.critter = kind;
         const mixer = new THREE.AnimationMixer(obj);
