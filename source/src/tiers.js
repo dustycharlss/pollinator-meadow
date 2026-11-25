@@ -48,7 +48,9 @@ export function createTiers(scene, ctx) {
   const setLay = (cl, on) => { if (cl.g.layers.mask === (on ? 1 : 2) && cl.g.userData._dl == null) return; cl.g.traverse(q => { if (q.userData._dl != null) delete q.userData._dl; q.layers.set(on ? 0 : 1); }); };
   const unpark = p => {
     const parked = root.userData._dl != null; let best = null, bd = 45;
-    if (parked && p) for (const cl of TI.clusters) { const d = Math.hypot(cl.x - p.x, cl.z - p.z); if (d < bd) { bd = d; best = cl; } }
+    // l20p: hub draw cap during the post-teleport / spawn camera swing (frames up to 245 High vs 237 settled): no dew cluster is
+    // selected or drawn until the camera has settled (main.js cam.settled), then the nearest one is picked as before.
+    if (parked && p && (!ctx.camSettled || ctx.camSettled())) for (const cl of TI.clusters) { const d = Math.hypot(cl.x - p.x, cl.z - p.z); if (d < bd) { bd = d; best = cl; } }
     for (const cl of TI.clusters) setLay(cl, !parked || cl === best);
   };
   const land = (tries = 40, rMax = 120) => { for (let i = 0; i < tries; i++) { const a = Math.random() * 6.283, d = 25 + Math.random() * rMax, x = Math.cos(a) * d, z = Math.sin(a) * d; if (heightAt(x, z) > WATER_Y + 0.8 && Math.hypot(x - POND.x, z - POND.z) > POND.r + 4) return { x, z }; } return { x: 30, z: 30 }; };

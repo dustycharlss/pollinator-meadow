@@ -1043,6 +1043,17 @@ function updateCamera(dt) {
     if (cam.shopK < 0.999) { cx = fx + (cx - fx) * cam.shopK; cy = fy + (cy - fy) * cam.shopK; cz = fz + (cz - fz) * cam.shopK; cy = Math.max(cy, heightAt(cx, cz) + 0.9); }
   }
   camera.position.set(cx, cy, cz); tmpV.set(cam.fx + ox, focusY + oy, cam.fz + oz); camera.lookAt(tmpV);
+  { // l20p: camera-settle flag (hub draw cap). A player jump > 3 m between camera frames (teleport / spawn / respawn) unsettles it;
+    // it settles once the camera-to-player offset moves < 2 m/s (slow pitch easing allowed) with the focus lag < 1 m and the zoom eased, for 0.25 s (8 s fallback).
+    const pl = P[cur];
+    if (playing && pl) {
+      if (cam.sx == null || Math.hypot(pl.x - cam.sx, pl.z - cam.sz) > 3) { cam.settled = false; cam.settleT = 0; cam.unsetT = 0; }
+      const rx = cx - pl.x, ry = cy - pl.y, rz = cz - pl.z, sr = cam.srel, dr = sr ? Math.hypot(rx - sr[0], ry - sr[1], rz - sr[2]) : 99; cam.srel = [rx, ry, rz];
+      if (!cam.settled && dt > 0) { cam.unsetT += dt; const calm = dr / dt < 2 && Math.hypot(cam.fx - pl.x, cam.fz - pl.z) < 1 && Math.abs(cam.zoom - (cam.zoomT ?? 1)) < 0.03;
+        cam.settleT = calm ? cam.settleT + dt : 0; if (cam.settleT >= 0.25 || cam.unsetT > 8) cam.settled = true; }
+      cam.sx = pl.x; cam.sz = pl.z;
+    }
+  }
   const baseFov = innerWidth / innerHeight < 1 ? 70 : 62; const wantFov = baseFov + (p.boostT > 0 && boostFovOn() ? 6 : 0); cam.fov += (wantFov - cam.fov) * Math.min(1, dt * 4); if (Math.abs(camera.fov - cam.fov) > 0.05) { camera.fov = cam.fov; camera.updateProjectionMatrix(); world.resize(innerHeight * renderer.getPixelRatio(), camera.fov); }
 }
 
@@ -2594,7 +2605,7 @@ async function boot() {
   // then again as |presetB when the periodic restyle reaches it (a double compile mid-play).
   critters = createCritters(scene, { heightAt, tier: () => look.tier, getPlayer: () => (playing && !paused ? P[cur] : null), onSpot: k => critterSpotted(k), prep: obj => { look.styleScene({ children: [obj] }); if (typeof renderer.compile === 'function') renderer.compile(obj, camera, scene); } });
   DCL.HELP[0] = scene.children.length; helpers = createHelpers(scene, { world, heightAt, nests, round, territory: terr, fx, toast, build, adm, audio, tech: () => tech, price: t => price(t), night: () => night, onDeliver: (sp, amt) => bonusRes(sp, amt), spdMul: () => tiers ? tiers.helperMul() : 1, voice: (sp, v, g) => voice(sp, v, g), player: () => P[cur] });
-  tiers = createTiers(scene, { adventure: () => ADVENTURE && !!valleySession && valleySession.patchId !== HUB_ID, /* l20i: per level at runtime; the meadow hub keeps its dew clusters */
+  tiers = createTiers(scene, { camSettled: () => !!cam.settled && P[cur] && Math.hypot(P[cur].x - cam.sx, P[cur].z - cam.sz) <= 3, adventure: () => ADVENTURE && !!valleySession && valleySession.patchId !== HUB_ID, /* l20i: per level at runtime; the meadow hub keeps its dew clusters */
     hubDew: () => { if (!inHub() || !zones?.homePos) return null; const h = zones.homePos(); return h ? { x: h.x + 3.5, z: h.z + 9.5 } : null; }, /* l20j: hub dew cluster on the open glade (local 3.5, 3.5): ahead of the spawn camera, >2 m from the spawn spot (4,-2) so it is not auto-collected, clear of the banners (±3, 8.5), Trail Board (0,10) and Pond Dock (7.5,7) */ heightAt, round, fx, toast, audio, build, helpers: () => helpers, player: () => P[cur], cur: () => cur, nests, terr,
     ping: (x, z, c) => ping(x, z, c || 0xc77dff), setNight: v => { if (curNight !== v) setNight(v); }, nocturnal: () => !!SPECIES[cur].nocturnal,
     deposit: () => nestCheck(P[cur], SPECIES[cur], state.sT || 0, true), gatherAt: r => gather(P[cur], SPECIES[cur], state.sT || 0, r, true, true),
