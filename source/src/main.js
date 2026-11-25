@@ -3155,7 +3155,7 @@ function loop(now) {
       if (helpers && helpers.list) for (const h of helpers.list) if (h.obj) oc.push({ root: h.obj, x: h.x, z: h.z });
       if (zones && zones.outlineTargets) for (const q of zones.outlineTargets()) oc.push(q);
     }
-    outlines.update(pp, look.tier, oc); }
+    outlines.update(pp, look.tier, oc, camera); }
   // art pass: the title art covers the whole screen, so skip drawing the 3D world behind it (one frame every ~2 s keeps shaders warm)
   const covered = !playing && $('title').classList.contains('on');
   state.covT = (state.covT || 0) - rdt; if (!covered || state.covT <= 0) { state.covT = 2; look.render(); }

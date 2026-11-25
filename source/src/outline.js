@@ -81,9 +81,11 @@ export function createOutlines(renderer) {
     byRoot.set(root, e); return e;
   }
   const W = [];
+  const measC = new THREE.Vector3(1e9, 0, 0), measF = new THREE.Vector3(), lastC = new THREE.Vector3(), lastF = new THREE.Vector3(); let measFov = 0, lastFov = 0;
   let measFrame = -1, shownAtRender = 0, measX = NaN, measZ = NaN, lastPX = NaN, lastPZ = NaN;
   /** cands: [{ root, x, z }] ; p: active player {x,z} */
-  function update(p, tier, cands) {
+  const _cf = new THREE.Vector3();
+  function update(p, tier, cands, cam) {
     frameN++; lastCands = cands ? cands.length : -1;
     if (skipCustomShaders() || !p) { if (shown) { for (const e of byRoot.values()) for (const k of e.hulls) k.h.visible = false; shown = 0; } return; }
     const cap = CAP[tier] ?? 8, budget = BUDGET[tier] ?? 240;
@@ -92,9 +94,12 @@ export function createOutlines(renderer) {
     // start / respawn) no hulls are shown until a fresh frame has been measured at the new spot, so a stale cheap
     // frame can never let hulls push a heavy view over budget.
     const info = renderer && renderer.info && renderer.info.render, calls = info ? info.calls : 0, fr = info ? info.frame : -1;
-    if (fr !== measFrame) { measFrame = fr; if (calls) { lastBudgetBase = Math.max(0, calls - shownAtRender); measX = lastPX; measZ = lastPZ; } }
+    if (fr !== measFrame) { measFrame = fr; if (calls) { lastBudgetBase = Math.max(0, calls - shownAtRender); measX = lastPX; measZ = lastPZ; measC.copy(lastC); measF.copy(lastF); measFov = lastFov; } }
     lastPX = p.x; lastPZ = p.z;
-    const jumped = !(Math.hypot(p.x - measX, p.z - measZ) <= 2);
+    // the camera view also changes the draw count (turning, zooming): treat a camera move / turn / zoom since the measured frame as a jump too
+    if (cam) { cam.getWorldDirection(_cf); lastC.copy(cam.position); lastF.copy(_cf); lastFov = cam.fov; }
+    const camMoved = cam && (lastC.distanceTo(measC) > 1.5 || lastF.dot(measF) < 0.995 || Math.abs(lastFov - measFov) > 2);
+    const jumped = camMoved || !(Math.hypot(p.x - measX, p.z - measZ) <= 2);
     const room = jumped ? 0 : calls ? Math.max(0, budget - lastBudgetBase) : cap;
     W.length = 0;
     for (const c of cands) {

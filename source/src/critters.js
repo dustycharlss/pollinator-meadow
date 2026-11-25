@@ -34,6 +34,7 @@ const BIOME = {
   night_market: { firefly: 6, moth: 3 }, owl_wood: { firefly: 6, moth: 3, butterfly: 2 }, moon_meadow: { firefly: 6, moth: 3, butterfly: 2 },
   storm_orchard: { 'small-bird': 2, butterfly: 2, ladybug: 2 }, grand_garden: { butterfly: 4, snail: 2, ladybug: 3, 'small-bird': 2, frog: 1 },
 };
+const BIOME_L20N = { ...BIOME };
 Object.assign(BIOME, FULLER_MIX); // l20p: Beans's per-level critter mixes (14 levels; existing types only)
 export const CAPS = { low: 6, med: 12, high: 18, ultra: 26 };
 
@@ -130,11 +131,10 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
   /** Spawn for a level. rect = world {x0,x1,z0,z1}; deep = water rects; avoid(x,z) true near the start / paths; waterY for fish. */
   async function spawn(patchId, { rect, deep = [], waterY = null, start = null } = {}) {
     clear(); const my = token; if (!rect) return;
-    const want = { ...(BIOME[patchId] || DAY) }; if (deep.length && !BIOME[patchId]) { want.frog = 2; want.dragonfly = 1; }
+    // l20p: Low keeps l20n's critter mix (Beans's mixes change which rigs are drawn: +4..+11 draws on Low at the census spots).
+    const B = tier() === 'low' ? BIOME_L20N : BIOME;
+    const want = { ...(B[patchId] || DAY) }; if (deep.length && !B[patchId]) { want.frog = 2; want.dragonfly = 1; }
     if (!deep.length || waterY == null) delete want.fish;
-    // l20p: the snail rig draws as 4 merged parts. l20n's Low mixes rounded single snails away; Beans's mixes ask for 2,
-    // which kept 1 on Low (+4 draws, log_jam Low 160 -> 171). Keep l20n's Low behaviour for the fuller mixes.
-    if (tier() === 'low' && FULLER_MIX[patchId] && (want.snail || 0) <= 2) delete want.snail;
     const cap = CAPS[tier()] || 12, tot = Object.values(want).reduce((a, b) => a + b, 0), f = Math.min(1, cap / Math.max(1, tot));
     const kinds = Object.entries(want).map(([k, n]) => [k, Math.max(f < 1 && n <= 1 ? 0 : 1, Math.round(n * f))]);
     let R = 1234 + patchId.length * 77; const rnd = () => (R = (R * 16807) % 2147483647) / 2147483647;
