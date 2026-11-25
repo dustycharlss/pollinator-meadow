@@ -3326,8 +3326,9 @@ export function createZones(scene, host) {
     nookSpecs.push({ ...n, px, pz, hx: n.wallX + e * 0.5, e });
   }
   /** l20p: which nooks have their lane approach or pocket blocked by another solid (probe / data check). */
-  function nookCheck() {
-    return nookSpecs.map(n => { const e = n.e, [rx0, rx1, rz0, rz1] = n.rect, hits = [];
+  function nookCheck(extra) { // l20q: extra = hypothetical specs [{z, wallX, side, rect}] (slide candidates for the blocked nooks)
+    const specs = extra ? extra.map(n => { const e = n.side === 'east' ? 1 : -1; return { ...n, hx: n.wallX + e * 0.5, e }; }) : nookSpecs;
+    return specs.map(n => { const e = n.e, [rx0, rx1, rz0, rz1] = n.rect, hits = [];
       const R = [[Math.min(n.wallX, n.wallX - e * 1.6), Math.max(n.wallX, n.wallX - e * 1.6), n.z - 0.9, n.z + 0.9, 'approach'], [Math.min(n.wallX + e, n.wallX + e * 2.4), Math.max(n.wallX + e, n.wallX + e * 2.4), rz0, rz1, 'pocket']];
       for (const so of solids) { if (so.off || so.type !== 'box' || Math.max(so.hx, so.hz) > 15) continue; const lx = so.x - A.x, lz = so.z - A.z;
         if (Math.abs(lx - n.hx) < 0.6 && Math.abs(so.hx - 0.5) < 0.05) continue; // the lane hedge itself
