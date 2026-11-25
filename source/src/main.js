@@ -994,7 +994,7 @@ function declutterTick() {
     if (shadows[id]) shadows[id].visible = shadows[id].visible && show;
     if (marks[id] && !crewL.includes(id)) marks[id].visible = false;
     else if (marks[id] && marks[id].visible) { // parked-friend pins: small, and gone when right next to the camera
-      const m = marks[id], dc = m.position.distanceTo(camera.position); const w = dc < 9 ? 0.001 : Math.min(2.2, 1.2 + dc * 0.04); m.scale.set(w, w / 2, 1);
+      const m = marks[id], dc = m.position.distanceTo(camera.position); if (dc < 9) { m.visible = false; continue; } const w = Math.min(2.2, 1.2 + dc * 0.04); m.scale.set(w, w / 2, 1); // l20q: a pin right next to the camera is hidden (was drawn at scale 0.001: a wasted draw)
     }
   }
 }
