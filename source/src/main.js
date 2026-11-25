@@ -330,7 +330,9 @@ function layoutTip() {
   const b = $('tipBox'); if (!b || !b.classList.contains('on')) return;
   const t = $('toast'); let top = 0;
   if (t && t.classList.contains('on') && getComputedStyle(t).display !== 'none') { const r = t.getBoundingClientRect(); if (r.height > 0) top = Math.round(r.bottom + 8); }
-  b.style.top = top ? top + 'px' : '';
+  // l20p: while the tip is up it only ever moves DOWN (to clear a new toast), never back up when the toast hides, so the ×
+  // does not jump out from under a finger (T1: a missed × tap no longer closes the tip through the world tap).
+  const cur = parseInt(b.style.top, 10) || 0; if (top > cur) b.style.top = top + 'px';
 }
 function dismissTip(byUser) {
   // l20p T1: a close before the tip has been visible 2 s does not save the kind (it shows again next time);
@@ -363,6 +365,7 @@ function toastTip(msg, ms = TIP_MS) {
   if (toastDoc) { b.removeEventListener('pointerdown', toastDoc); toastDoc = null; }
   document.body.appendChild(b); // l20p T2: last in the body so it stacks above the same-z #pipCard
   b.replaceChildren();
+  b.style.top = ''; // a new tip lays out fresh (layoutTip below only moves it down while it is up)
   const tx = document.createElement('span'); tx.className = 'tipTx'; tx.textContent = skinText(msg);
   const x = document.createElement('button'); x.type = 'button'; x.className = 'tipX'; x.setAttribute('aria-label', 'Close tip'); x.textContent = '×';
   b.append(tx, x); b.classList.add('on', 'tipBox');
