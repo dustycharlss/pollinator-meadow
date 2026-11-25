@@ -978,7 +978,7 @@ function updateCamera(dt) {
     if (cam.shopK < 0.999) { cx = fx + (cx - fx) * cam.shopK; cy = fy + (cy - fy) * cam.shopK; cz = fz + (cz - fz) * cam.shopK; cy = Math.max(cy, heightAt(cx, cz) + 0.9); }
   }
   camera.position.set(cx, cy, cz); tmpV.set(cam.fx + ox, focusY + oy, cam.fz + oz); camera.lookAt(tmpV);
-  const baseFov = innerWidth / innerHeight < 1 ? 70 : 62; const wantFov = baseFov + (p.boostT > 0 ? 6 : 0); cam.fov += (wantFov - cam.fov) * Math.min(1, dt * 4); if (Math.abs(camera.fov - cam.fov) > 0.05) { camera.fov = cam.fov; camera.updateProjectionMatrix(); world.resize(innerHeight * renderer.getPixelRatio(), camera.fov); }
+  const baseFov = innerWidth / innerHeight < 1 ? 70 : 62; const wantFov = baseFov + (p.boostT > 0 && boostFovOn() ? 6 : 0); cam.fov += (wantFov - cam.fov) * Math.min(1, dt * 4); if (Math.abs(camera.fov - cam.fov) > 0.05) { camera.fov = cam.fov; camera.updateProjectionMatrix(); world.resize(innerHeight * renderer.getPixelRatio(), camera.fov); }
 }
 
 // ---------- compass arrow ----------
@@ -1839,6 +1839,8 @@ $('sParRow').onclick = () => parentGate(() => openOv('parentInfo')); $('parBack'
 const TEXT_STEPS = { s: 0.85, m: 1, l: 1.15, xl: 1.3 };
 var mqReduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 // function declarations (hoisted): read by the camera, fx and zones before this block is reached
+// l20p: Buzz Boost zoom-out setting (Kids & access). Defaults on, or off when Reduce Motion is on.
+function boostFovOn() { try { if (!settings) return true; } catch (e) { return true; } return settings.boostFov ?? !reduceOn(); }
 function reduceOn() { try { if (!settings) return false; } catch (e) { return false; } if (settings.reduceMotion == null) { mqReduce = mqReduce || (window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null); return !!mqReduce?.matches; } return !!settings.reduceMotion; }
 function easyOn() { try { return !!settings?.easyMode; } catch (e) { return false; } }
 function applyAccess() {
@@ -1850,6 +1852,7 @@ function applyAccess() {
   setColorBlind(!!settings.colorBlind);
   const ts = $('sText'); if (ts) for (const b of ts.querySelectorAll('button')) b.classList.toggle('on', b.dataset.v === settings.textSize);
   if ($('sReduce')) $('sReduce').checked = reduceOn();
+  if ($('sBoostFov')) $('sBoostFov').checked = boostFovOn();
   if ($('sReduceH')) $('sReduceH').textContent = settings.reduceMotion == null ? 'Uses your device setting until you change it.' : 'Saved for this device.';
   if ($('sEasy')) $('sEasy').checked = easyOn();
   if ($('sArrow')) $('sArrow').checked = settings.arrowAssist !== false;
@@ -1865,6 +1868,7 @@ function applyAccess() {
 }
 $('sText')?.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings.textSize = b.dataset.v; saveSettings(settings); applyAccess(); audio.blip(2); });
 $('sReduce') && ($('sReduce').onchange = () => { settings.reduceMotion = $('sReduce').checked; saveSettings(settings); applyAccess(); });
+$('sBoostFov') && ($('sBoostFov').onchange = () => { settings.boostFov = $('sBoostFov').checked; saveSettings(settings); applyAccess(); });
 $('sEasy') && ($('sEasy').onchange = () => { settings.easyMode = $('sEasy').checked; saveSettings(settings); applyAccess(); });
 $('sArrow') && ($('sArrow').onchange = () => { settings.arrowAssist = $('sArrow').checked; saveSettings(settings); if (!settings.arrowAssist) { assistForce = false; if (homeInd) homeInd.updateAssist({ x: 0, y: 0, z: 0, ang: 0, show: false, color: '#ffd23f', t: 0, dt: 1, bob: false }); } applyAccess(); });
 $('sCB') && ($('sCB').onchange = () => { settings.colorBlind = $('sCB').checked; saveSettings(settings); applyAccess(); toast(settings.colorBlind ? '🎨 Color-blind class colors on (rings update on the next level)' : '🎨 Class colors back to normal', 2200); });
