@@ -132,6 +132,9 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
     clear(); const my = token; if (!rect) return;
     const want = { ...(BIOME[patchId] || DAY) }; if (deep.length && !BIOME[patchId]) { want.frog = 2; want.dragonfly = 1; }
     if (!deep.length || waterY == null) delete want.fish;
+    // l20p: the snail rig draws as 4 merged parts. l20n's Low mixes rounded single snails away; Beans's mixes ask for 2,
+    // which kept 1 on Low (+4 draws, log_jam Low 160 -> 171). Keep l20n's Low behaviour for the fuller mixes.
+    if (tier() === 'low' && FULLER_MIX[patchId] && (want.snail || 0) <= 2) delete want.snail;
     const cap = CAPS[tier()] || 12, tot = Object.values(want).reduce((a, b) => a + b, 0), f = Math.min(1, cap / Math.max(1, tot));
     const kinds = Object.entries(want).map(([k, n]) => [k, Math.max(f < 1 && n <= 1 ? 0 : 1, Math.round(n * f))]);
     let R = 1234 + patchId.length * 77; const rnd = () => (R = (R * 16807) % 2147483647) / 2147483647;

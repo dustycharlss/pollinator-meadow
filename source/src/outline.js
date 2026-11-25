@@ -81,14 +81,21 @@ export function createOutlines(renderer) {
     byRoot.set(root, e); return e;
   }
   const W = [];
+  let measFrame = -1, shownAtRender = 0, measX = NaN, measZ = NaN, lastPX = NaN, lastPZ = NaN;
   /** cands: [{ root, x, z }] ; p: active player {x,z} */
   function update(p, tier, cands) {
     frameN++; lastCands = cands ? cands.length : -1;
     if (skipCustomShaders() || !p) { if (shown) { for (const e of byRoot.values()) for (const k of e.hulls) k.h.visible = false; shown = 0; } return; }
     const cap = CAP[tier] ?? 8, budget = BUDGET[tier] ?? 240;
-    const calls = renderer && renderer.info && renderer.info.render ? renderer.info.render.calls : 0;
-    const base = Math.max(0, calls - shown); if (calls) lastBudgetBase = base;
-    const room = calls ? Math.max(0, budget - lastBudgetBase) : cap;
+    // Budget base = last real frame's calls minus the hulls drawn in it. Only re-measured when a new frame was rendered
+    // (sim steps without a render keep the old base), and after a jump of > 2 m since that frame (teleport / level
+    // start / respawn) no hulls are shown until a fresh frame has been measured at the new spot, so a stale cheap
+    // frame can never let hulls push a heavy view over budget.
+    const info = renderer && renderer.info && renderer.info.render, calls = info ? info.calls : 0, fr = info ? info.frame : -1;
+    if (fr !== measFrame) { measFrame = fr; if (calls) { lastBudgetBase = Math.max(0, calls - shownAtRender); measX = lastPX; measZ = lastPZ; } }
+    lastPX = p.x; lastPZ = p.z;
+    const jumped = !(Math.hypot(p.x - measX, p.z - measZ) <= 2);
+    const room = jumped ? 0 : calls ? Math.max(0, budget - lastBudgetBase) : cap;
     W.length = 0;
     for (const c of cands) {
       if (!c || !c.root) continue; let vis = true; for (let o = c.root; o; o = o.parent) if (!o.visible) { vis = false; break; }
@@ -113,7 +120,7 @@ export function createOutlines(renderer) {
       keep.add(c.root);
     }
     if (shown || used) for (const [root, e] of byRoot) if (!keep.has(root)) for (const k of e.hulls) k.h.visible = false;
-    shown = used;
+    shown = used; shownAtRender = used;
     if (byRoot.size > 400) { for (const [root, e] of byRoot) if (!root.parent) { for (const k of e.hulls) k.h.removeFromParent(); byRoot.delete(root); } }
   }
   function forget() { for (const [root, e] of byRoot) if (!root.parent || !root.visible) { for (const k of e.hulls) { k.h.visible = false; } } }

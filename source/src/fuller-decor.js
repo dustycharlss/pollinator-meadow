@@ -21,6 +21,8 @@ function partsOf(key) {
 }
 // Off switch for A/B and for draw bisecting: ?fuller=0 (none), ?fuller=nodecor / noclutter / novig / nolm.
 const Q = typeof location !== 'undefined' ? location.search : '';
+/** ?cuts=0 previews every level with all budget cuts restored (see /workspace/boot-wip/l20p-decor-cuts.md). */
+const NOCUTS = /[?&]cuts=0\b/.test(Q);
 const OFF = k => new RegExp('[?&]fuller=(0|[^&]*no' + k + ')').test(Q);
 // Per-level cuts made to stay inside the draw budget (filled in from the per-level census; see l20b-notes ## l20p).
 // Keys: per tier ('low'/'med'/'high'/'ultra') or 'all'. { clutterSets: n (drop the last n sets), vignettes: true, decor: [keys], landmark: true, kit: true, none: true }
@@ -38,7 +40,7 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
     if (OFF('') && /[?&]fuller=0/.test(Q)) return null;
     const ld = LEVELS['./fuller-levels/' + levelId + '.json']; if (!ld) return null;
     const L = await ld(); if (my !== token) return null;
-    const tn = tier(), cut = (CUTS[levelId] && (CUTS[levelId][tn] || CUTS[levelId].all)) || {}, T = (SETS.tiers && SETS.tiers[tn === 'med' ? 'med' : tn]) || SETS.tiers.high;
+    const tn = tier(), cut = NOCUTS ? {} : (CUTS[levelId] && (CUTS[levelId][tn] || CUTS[levelId].all)) || {}, T = (SETS.tiers && SETS.tiers[tn === 'med' ? 'med' : tn]) || SETS.tiers.high;
     const A = anchor();
     if (cut.none) { info = { levelId, keys: 0, draws: 0, inst: 0, tier: tn, cut: 'none' }; if (typeof window !== 'undefined') window.__fullerDecor = info; return info; }
     // route corridor for declutter (level-local → world)
