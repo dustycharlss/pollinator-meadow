@@ -33,7 +33,7 @@ export const PRESET_B = {
   // shader colour lift applied to model materials (animals at strength 0.5, props at 1, terrain/water at 0)
   materialAdjust: { saturation: 0.9, lighten: 0.12, pastel: 0.2, warm: 0.0, animalStrength: 0.5, roughness: 0.75, metalness: 0 },
   sun: { color: '#ffc39a', intensity: 3.0, azimuthDeg: 72, elevationDeg: 17,
-         // azimuth is camera-relative: 0 = behind the camera, +90 = screen-right. World dir for the frame camera (looking down -Z):
+         // azimuth/elevation are world-space: 0 = +Z (behind a camera looking down -Z), +90 = +X. worldDir matches az 72 / el 17.
          worldDir: [0.913, 0.292, 0.284], distance: 60 },
   hemi: { sky: '#cdbfff', ground: '#ffd2b4', intensity: 2.0 },
   fog: { color: '#ffd6c8', near: 30, far: 95 },
@@ -60,11 +60,14 @@ export const PRESET_B = {
 
 const col = (h) => new THREE.Color(h);
 
-/** World-space unit vector toward the sun. Pass the gameplay camera to keep the frame's camera-relative angle. */
-export function sunDirectionB(camera, P = PRESET_B) {
-  if (!camera) return new THREE.Vector3(...P.sun.worldDir).normalize();
-  const az = THREE.MathUtils.degToRad(P.sun.azimuthDeg), el = THREE.MathUtils.degToRad(P.sun.elevationDeg);
-  const f = new THREE.Vector3(); camera.getWorldDirection(f); f.y = 0; f.normalize(); const r = new THREE.Vector3(-f.z, 0, f.x);
+/** World-space unit vector toward the sun.
+ *  Azimuth/elevation are fixed in world axes (az 0 = +Z, +90 = +X) so orbiting the view never swings the light.
+ *  The camera argument is ignored; it is kept so existing callers do not need a signature change. */
+export function sunDirectionB(_camera, P = PRESET_B) {
+  if (P.sun.azimuthDeg == null && P.sun.elevationDeg == null && P.sun.worldDir)
+    return new THREE.Vector3(...P.sun.worldDir).normalize();
+  const az = THREE.MathUtils.degToRad(P.sun.azimuthDeg ?? 72), el = THREE.MathUtils.degToRad(P.sun.elevationDeg ?? 17);
+  const f = new THREE.Vector3(0, 0, -1), r = new THREE.Vector3(1, 0, 0);
   return f.multiplyScalar(-Math.cos(az) * Math.cos(el)).addScaledVector(r, Math.sin(az) * Math.cos(el)).add(new THREE.Vector3(0, Math.sin(el), 0)).normalize();
 }
 

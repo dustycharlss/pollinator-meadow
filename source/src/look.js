@@ -192,6 +192,7 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
   let patchLook = null, Pnow = B, masterLetter = null, lerpFromP = null, lerpToP = null, lerpU = 1, lastTuneT = 0;
   const fills = [];
   const tc = new THREE.Color(), dirB = SUN_B.clone(), dirO = new THREE.Vector3(), LT = C(B.quality.low.bakeGrade.lightTint), ST = C(B.quality.low.bakeGrade.skyTint), HZ = C(B.grade.hazeColor);
+  const snapLs = new THREE.Vector3(), snapUp = new THREE.Vector3(0, 1, 0);
   const cHS = C(B.hemi.sky), cHG = C(B.hemi.ground), cSun = C(B.sun.color), cFog = C(B.fog.color);
   const qBucket = () => QMAP[tierName] || 'medium';
   function canCastShadow(o) {
@@ -308,17 +309,33 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     const fogNear = owned && P.fog ? P.fog.near : B.fog.near;
     scene.fog.color.lerp(cFog, k); scene.fog.near = lerp(scene.fog.near, fogNear, k); scene.fog.far = lerp(scene.fog.far, fogFar, k);
     if (L.bake && !owned) { sun.color.lerp(tc.copy(sun.color).multiply(LT), k); hemi.color.lerp(tc.copy(hemi.color).multiply(LT), k); hemi.groundColor.lerp(tc.copy(hemi.groundColor).multiply(LT), k); scene.fog.color.lerp(HZ, ((P.quality && P.quality.low && P.quality.low.bakeGrade && P.quality.low.bakeGrade.hazeMix) || B.quality.low.bakeGrade.hazeMix) * k); }
-    // sun: a look target snaps to its elevation/azimuth (L23 is 24°). Do not use sun.position.normalize()
-    // (that's the world point, ~57° from the origin on Act 3 maps). Unowned day still eases toward preset B.
-    const wantDir = sunDirectionB(camera, P);
+    // sun: a look target snaps to its elevation/azimuth (L23 is 24°) in WORLD space.
+    // Do not use sun.position.normalize() (that's the world point, ~57° from the origin on Act 3 maps).
+    // Unowned day still eases toward preset B. Direction never follows the camera yaw.
+    const wantDir = sunDirectionB(null, P);
     if (owned) dirB.copy(wantDir);
     else dirB.lerp(wantDir, 0.06).normalize();
     dirO.copy(sun.position).sub(sun.target.position);
     if (dirO.lengthSq() < 1e-8) dirO.copy(dirB); else dirO.normalize();
     if (owned) dirO.copy(dirB);
     else dirO.lerp(dirB, k).normalize();
-    const p = getPlayer && getPlayer(), tg = sun.target.position; if (p) tg.set(p.x, p.y, p.z); else tg.set(0, 0, 0);
-    sun.position.copy(tg).addScaledVector(dirO, P.sun.distance || B.sun.distance);
+    const p = getPlayer && getPlayer(), tg = sun.target.position, dist = P.sun.distance || B.sun.distance;
+    if (p) tg.set(p.x, p.y, p.z); else tg.set(0, 0, 0);
+    // Follow the player, but snap the focus in shadow-camera (light) space so moving does not shimmer.
+    // The shadow camera must not inherit the view rotation — only this world-fixed dirO.
+    if (wantSh) {
+      const sc = sun.shadow.camera, mapW = sun.shadow.mapSize.x || 1024, mapH = sun.shadow.mapSize.y || mapW;
+      const texX = (sc.right - sc.left) / mapW, texY = (sc.top - sc.bottom) / mapH;
+      sc.position.copy(tg).addScaledVector(dirO, dist);
+      sc.up.copy(snapUp); if (Math.abs(dirO.y) > 0.95) sc.up.set(0, 0, 1);
+      sc.lookAt(tg); sc.updateMatrixWorld();
+      snapLs.copy(tg).applyMatrix4(sc.matrixWorldInverse);
+      if (texX) snapLs.x = Math.round(snapLs.x / texX) * texX;
+      if (texY) snapLs.y = Math.round(snapLs.y / texY) * texY;
+      tg.copy(snapLs.applyMatrix4(sc.matrixWorld));
+    }
+    sun.position.copy(tg).addScaledVector(dirO, dist);
+    sun.target.updateMatrixWorld(); sun.updateMatrixWorld();
     skyU.sunDir.value.copy(dirO); skyU.sunC.value.copy(sun.color);
     skyU.night.value = owned ? 0 : Math.min(1, Math.max(n, md)); // look-target skies already encode night/dusk
     skyU.grey.value = owned ? 0 : Math.max(grey, mist * 0.8);
@@ -350,9 +367,9 @@ export function createLook({ renderer, scene, camera, hemi, sun, isMobile, getPl
     if (probeT0 && now - probeT0 > 3000) { probeT0 = 0; const s = perf.stats(); if (perf.getMode() === 'auto' && s.avgMs && (s.avgMs > 25 || s.p90Ms > 33)) perf.stepDown('boot-probe'); }
   }
   function start() { perf.resume(); probeT0 = performance.now(); }
-  function status() { const s = perf.stats(); return { ...s, look: tierName, preset: QMAP[tierName], post: !!composer, shadows: renderer.shadowMap.enabled, motes: motes.count }; }
+  function status() { const s = perf.stats(); return { ...s, look: tierName, preset: QMAP[tierName], post: !!composer, shadows: renderer.shadowMap.enabled, motes: motes.count, sunDir: dirO.toArray() }; }
   // Tier is applied last: applyLookBloom reads patchLook/qBucket declared above (TDZ crash on High/Ultra otherwise).
   perf.onTierChange(t => applyTier(t.name));
   applyTier(perf.getTier());
-  return { perf, tune, render, frame, start, resize, styleScene, status, setPatch, setMaster, disablePost, sky, motes, get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
+  return { perf, tune, render, frame, start, resize, styleScene, status, setPatch, setMaster, disablePost, sky, motes, sunDir: () => dirO.clone(), get tier() { return tierName; }, get look() { return L; }, get patch() { return patchLook && patchLook.recipeKey; } };
 }
