@@ -3315,19 +3315,32 @@ export function createZones(scene, host) {
   /** l20p Act 2 nook: three short h2.2 hedge walls round the pocket (kit pieces once loaded), the reward inside. Optional: no gating, no timer. */
   function buildNook(n) {
     const e = n.side === 'east' ? 1 : -1, [rx0, rx1, rz0, rz1] = n.rect, outer = n.wallX + e * 1.0, far = e > 0 ? rx1 : rx0, h = 2.2;
+    const n0 = solids.length;
     B.wall(far + e * 0.25, (rz0 + rz1) / 2, 0.5, rz1 - rz0 + 1, h, { look: 'hedge' });
     const xa = Math.min(outer, far + e * 0.5), xb = Math.max(outer, far + e * 0.5);
     for (const zz of [rz0 - 0.25, rz1 + 0.25]) B.wall((xa + xb) / 2, zz, xb - xa, 0.5, h, { look: 'hedge' });
+    for (let i = n0; i < solids.length; i++) solids[i]._nook = true;
     const px = (outer + far) / 2, pz = n.z;
     if (n.reward === 'bloom') B.pickup('petal', px, pz, 0.9, { value: 5 });
     else nookSpots.push({ kind: n.reward === 'snail' ? 'snail' : 'ladybug', x: A.x + px, z: A.z + pz });
     nookSpecs.push({ ...n, px, pz, hx: n.wallX + e * 0.5, e });
   }
+  /** l20p: which nooks have their lane approach or pocket blocked by another solid (probe / data check). */
+  function nookCheck() {
+    return nookSpecs.map(n => { const e = n.e, [rx0, rx1, rz0, rz1] = n.rect, hits = [];
+      const R = [[Math.min(n.wallX, n.wallX - e * 1.6), Math.max(n.wallX, n.wallX - e * 1.6), n.z - 0.9, n.z + 0.9, 'approach'], [Math.min(n.wallX + e, n.wallX + e * 2.4), Math.max(n.wallX + e, n.wallX + e * 2.4), rz0, rz1, 'pocket']];
+      for (const so of solids) { if (so.off || so.type !== 'box' || Math.max(so.hx, so.hz) > 15) continue; const lx = so.x - A.x, lz = so.z - A.z;
+        if (Math.abs(lx - n.hx) < 0.6 && Math.abs(so.hx - 0.5) < 0.05) continue; // the lane hedge itself
+        if (so._nook) continue;
+        const ca = Math.abs(Math.cos(so.yaw || 0)), sa = Math.abs(Math.sin(so.yaw || 0)), hx = so.hx * ca + so.hz * sa, hz = so.hx * sa + so.hz * ca;
+        for (const [x0, x1, z0, z1, tag] of R) if (lx + hx > x0 && lx - hx < x1 && lz + hz > z0 && lz - hz < z1 && so.top > baseY - 5) hits.push([tag, +lx.toFixed(1), +lz.toFixed(1), +(2 * hx).toFixed(1), +(2 * hz).toFixed(1)]); }
+      return { z: n.z, side: n.side, reward: n.reward, hits }; });
+  }
   function load(pid, anchor) {
     clear(); matLive = false; recipe = MAPS[pid]; if (!recipe) return; id = pid;
     { // l20p: Act 2 side nooks; pockets reach ~2.5 m past the lane, so those levels' bounds widen by 2.5 m each side (rim / camera / clamp)
       const NQ = typeof location !== 'undefined' ? location.search : '';
-      nooks = /[?&]fuller=(0\b|[^&]*nonook)/.test(NQ) ? [] : (NOOKS[pid] || []);
+      nooks = /[?&]fuller=(0\b|[^&]*nonook)/.test(NQ) ? [] : (NOOKS[pid] || []).filter(n => !n.skip); // skip = blocked approach (see fuller-nooks.json)
       if (nooks.length) { const b = recipe.bounds; recipe = Object.create(recipe); recipe.bounds = { ...b, x0: b.x0 - 2.5, x1: b.x1 + 2.5 }; } }
     setCaveLevel(!!(recipe.caveFloor || recipe.id === 'mirror_caves' || pid === 'mirror_caves'));
     setFullerLevel(recipe.id || pid);
@@ -4507,6 +4520,7 @@ export function createZones(scene, host) {
   return {
     outlineTargets,
     nookSpots: () => nookSpots.slice(),
+    nookCheck,
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, warmTick: cam => { try { if (recipe && recipe.kid) { if (!kid) kidInit(); if (kid.i < 0) kidCard(0, kidDom()); } /* tutorial: build trails + draw the step-0 card in the load hitch (UI only: no pickups, herding, signals or timers) */ /* build-only: hidden trail meshes + body class, no pickups/herding/timers */ if (a2 && a2.escorts.length) updEscort(0, cam, ctx.getP(), ctx.cur()); } catch (e) {} }, primeReadyVisuals, root: () => group, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, complete, tweening: () => !!tw, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
     camRoomAt: (x, z) => camRooms.find(r => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1) || null,
