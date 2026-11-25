@@ -195,6 +195,33 @@ SPEC.batw = { scale: 1.22, parts: [
 ] };
 const col = (hex) => new THREE.MeshLambertMaterial({ color: hex });
 
+// l20r: Squid's one-shot interaction clips (anims-main3, 24 fps, start/end on bind pose). One mixer per helper instance;
+// a one-shot fades in over 0.15 s and back out to the locomotion blend over the last 0.18 s.
+export const ONE_SHOTS = ['Interact', 'Bell', 'Pickup', 'BuzzBoost', 'CleverPaws', 'BigScoot', 'Celebrate'];
+export const SPECIAL_CLIP = { bee: 'BuzzBoost', raccoon: 'CleverPaws', bear: 'BigScoot' };
+const OS_IN = 0.15, OS_OUT = 0.18;
+export function addOneShots(u, mixer, clips) {
+  u.os = {}; for (const name of ONE_SHOTS) { const c = (clips || []).find(a => a.name === name || a.name.endsWith('|' + name)); if (!c) continue;
+    const a = mixer.clipAction(c); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.weight = 0; u.os[name] = a; }
+  return Object.keys(u.os).length;
+}
+/** Start a one-shot clip on a rider (crossfades in; animateGround / stepOneShot fade it back out). false if this rig has no such clip. */
+export function playOneShot(root, name) {
+  const u = root && root.userData; const a = u && u.os && u.os[name]; if (!a) return false;
+  if (u.osCur && u.osCur.a !== a) u.osCur.a.stop();
+  const w0 = u.osCur ? u.osCur.w : 0; a.reset(); a.weight = w0; a.play();
+  u.osCur = { a, name, t: 0, w: w0, dur: a.getClip().duration, w0 }; return true;
+}
+/** Advance the one-shot envelope (before mixer.update). Returns its weight 0..1. */
+export function stepOneShot(u, dt) {
+  const o = u && u.osCur; if (!o) return 0;
+  o.t += dt; if (o.t >= o.dur) { o.a.stop(); u.osCur = null; return 0; }
+  o.w = Math.max(0, Math.min(1, Math.max(o.w0, o.t / OS_IN), (o.dur - o.t) / OS_OUT)); o.a.weight = o.w;
+  if (o.onT && !o.fired && o.t >= o.onT.t) { o.fired = true; try { o.onT.fn(); } catch (e) {} }
+  return o.w;
+}
+export const oneShotPlaying = (root) => !!(root && root.userData && root.userData.osCur);
+
 /** Animated rig for the playable animal (feet at y=0, nose +Z). */
 export function makeGroundRider(kind, size) {
   const real = modelOf(kind);
@@ -233,7 +260,7 @@ function makeRealRider(kind, size, m) {
     const wrap = new THREE.Group(); wrap.add(inst); body.add(wrap); lodify(inst, m.key, { drop: true }); // polish4: skinned LODs from lod-map.json
     const mixer = new THREE.AnimationMixer(inst), acts = {};
     for (const [key, name] of Object.entries(CLIPS)) { const clip = gltf.animations.find(a => a.name.endsWith(name)); if (clip) { acts[key] = mixer.clipAction(clip); acts[key].play(); acts[key].weight = key === 'idle' ? 1 : 0; } }
-    u.mixer = mixer; u.acts = acts; u.cur = 'idle';
+    u.mixer = mixer; u.acts = acts; u.cur = 'idle'; u.bw = { idle: 1 }; addOneShots(u, mixer, gltf.animations); // l20r one-shots
   } else {
     const parts = realParts(kind) || [];
     let box = null;
@@ -256,9 +283,10 @@ export function animateGround(root, dt, t, speed, air, flap, dig) {
   const u = root.userData, rig = u.rig, body = u.body;
   if (u.mixer) { // real skinned model: blend between the Quaternius clips
     const want = air ? 'jump' : dig > 0.05 ? 'eat' : speed > 0.62 ? 'run' : speed > 0.06 ? 'walk' : 'idle';
-    for (const k in u.acts) { const a = u.acts[k], tw = k === want ? 1 : 0; a.weight += (tw - a.weight) * Math.min(1, dt * 10); }
+    const ow = stepOneShot(u, dt), bw = u.bw || (u.bw = {}); // l20r: a playing one-shot takes its weight out of the locomotion blend
+    for (const k in u.acts) { const a = u.acts[k], tw = k === want ? 1 : 0, b = bw[k] ?? a.weight; bw[k] = b + (tw - b) * Math.min(1, dt * 10); a.weight = bw[k] * (1 - ow); }
     if (u.acts.walk) u.acts.walk.timeScale = 0.6 + speed * 1.0; if (u.acts.run) u.acts.run.timeScale = 0.7 + speed * 0.5;
-    u.mixer.update(dt); u.phase += dt * (6 + speed * 8) * (speed > 0.05 ? 1 : 0);
+    if (root.visible) u.mixer.update(dt); // l20r: hidden helpers do not tick their mixer u.phase += dt * (6 + speed * 8) * (speed > 0.05 ? 1 : 0);
     body.rotation.x = (air ? -0.1 : 0) + dig * 0.25; body.position.y = 0; return;
   }
   u.phase += dt * (6 + speed * 8) * (speed > 0.05 ? 1 : 0);

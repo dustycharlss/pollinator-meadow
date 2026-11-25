@@ -1,11 +1,12 @@
 import { clipped } from './declutter.js';
 import * as THREE from 'three';
 import { SPECIES, AMBIENT, WORLD_R, POND } from './data.js';
-import { loadGLB, bakeParts, lambertFrom, makeFlapMaterial, updateFlaps } from './models.js';
+import { loadGLB, getGLB, toFloat, bakeParts, lambertFrom, makeFlapMaterial, updateFlaps } from './models.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { lodify, lodBakedMeshes, bakeLevels, stepLevel, lodCam, camBusy } from './lod.js';
 import { heightAt } from './world.js';
-import { makeGroundRider, BIRD_IDS, attachBirdWings } from './animals.js';
+import { makeGroundRider, BIRD_IDS, attachBirdWings, addOneShots } from './animals.js';
 export { BIRD_IDS, attachBirdWings, animateBirdWings, isBird } from './animals.js';
 export { updateFlaps };
 
@@ -54,6 +55,38 @@ function makeBatSkinned(gltf, size) {
   return { wrap, box, mixer, flyAct };
 }
 
+/** l20r: Squid's node-rigged bee (beeRig = models/anims/l20r/bee-anims.glb: RootNode > Bee x100 > Body > {BodyMesh, Head, WingL, WingR}).
+ * The pivot nodes stay as the clip targets; their meshes are merged per material into SkinnedMeshes bound to those nodes
+ * (rigid weights), so the bee draws as many meshes as the baked bee did. The buzz flap shader stays on (wingAmp fades it out
+ * while a clip plays). Fit = bakeParts 'max' mode (longest extent = size, centred). */
+function makeBeeRig(gltf, size, flap, tint) {
+  const inst = gltf.scene.clone(true); inst.updateMatrixWorld(true);
+  const box0 = new THREE.Box3().setFromObject(inst), sz = box0.getSize(new THREE.Vector3()), c = box0.getCenter(new THREE.Vector3());
+  const s = size / Math.max(sz.x, sz.y, sz.z, 1e-5); inst.scale.setScalar(s); inst.position.set(-c.x * s, -c.y * s, -c.z * s);
+  const wrap = new THREE.Group(); wrap.add(inst); wrap.updateMatrixWorld(true);
+  const toInst = inst.matrixWorld.clone().invert(), byMat = new Map(), bones = [], bi = new Map(), M = new THREE.Matrix4();
+  inst.traverse(o => { if (o.isMesh) { const k = o.material; if (!byMat.has(k)) byMat.set(k, []); byMat.get(k).push(o); } });
+  const out = [];
+  for (const [mat, meshes] of byMat) {
+    const geos = meshes.map(m => { const b = m.parent; if (!bi.has(b)) { bi.set(b, bones.length); bones.push(b); }
+      const g = toFloat(m.geometry.clone()); M.multiplyMatrices(toInst, m.matrixWorld); g.applyMatrix4(M);
+      const n = g.attributes.position.count, si = new Uint16Array(n * 4), sw = new Float32Array(n * 4), j = bi.get(b);
+      for (let i = 0; i < n; i++) { si[i * 4] = j; sw[i * 4] = 1; }
+      g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4)); g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4)); return g; });
+    const keep = Object.keys(geos[0].attributes).filter(a => geos.every(g => g.attributes[a])); for (const g of geos) for (const a of Object.keys(g.attributes)) if (!keep.includes(a)) g.deleteAttribute(a);
+    const g = geos.length > 1 ? mergeGeometries(geos.map(x => x.index ? x : x), false) : geos[0]; if (!g) continue;
+    out.push({ g, mat, meshes });
+  }
+  const box = new THREE.Box3(); for (const o of out) { o.g.computeBoundingBox(); box.union(o.g.boundingBox); }
+  const span = Math.max(box.max.x, -box.min.x) * 2, skel = new THREE.Skeleton(bones), flapMats = [], sms = [];
+  for (const o of out) { for (const m of o.meshes) m.removeFromParent();
+    const mat = flap ? flapMat(o.mat, flap, span, tint) : lambertFrom(o.mat); if (flap) flapMats.push(mat);
+    const sm = new THREE.SkinnedMesh(o.g, mat); sm.name = 'beeRig:' + (o.meshes.map(m => m.name).join('+')); sm.frustumCulled = false; inst.add(sm); sms.push(sm); }
+  wrap.updateMatrixWorld(true); for (const sm of sms) sm.bind(skel, sm.matrixWorld);
+  const mixer = new THREE.AnimationMixer(inst), u = {}; addOneShots(u, mixer, gltf.animations);
+  const wbox = new THREE.Box3().setFromObject(wrap);
+  return { wrap, box: wbox, mixer, os: u.os, flapMats, draws: sms.length };
+}
 const RMAT = {};
 /** One rideable creature. `look` = which animal's model/wings to wear (a class skin), `size` = visual size (class default). */
 async function buildRider(scene, id, look = id, size = null) {
@@ -69,6 +102,10 @@ async function buildRider(scene, id, look = id, size = null) {
       const sk = makeBatSkinned(gltf, sz);
       body.add(sk.wrap); body.userData.box = sk.box; root.userData.box = sk.box; lodify(sk.wrap, lk.model, { drop: true }); // polish4: skinned LODs from lod-map.json
       root.userData.mixer = sk.mixer; root.userData.flyAct = sk.flyAct;
+    } else if (look === 'bee' && getGLB('beeRig') && !/[?&]beerig=0/.test(location.search)) { // l20r: rigged bee rider with Squid's clips (?beerig=0 = baked l20q bee)
+      const rg = makeBeeRig(getGLB('beeRig'), sz, lk.flap || BAT_FLAP, TINT[lk.model]);
+      body.add(rg.wrap); body.userData.box = rg.box; root.userData.box = rg.box;
+      root.userData.flapMats = rg.flapMats; root.userData.mixer = rg.mixer; root.userData.os = rg.os; root.userData.beeRig = true;
     } else {
       const { parts, box, M } = bakeParts(gltf, { size: sz, mode: 'max', rot, ground: false });
       const bird = BIRD_IDS.has(look);
@@ -92,6 +129,7 @@ async function buildRider(scene, id, look = id, size = null) {
   const hat = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.45, 8), cap); hat.position.y = 1.35; hat.rotation.x = -0.25;
   person.add(torso, head, hat); person.scale.setScalar(k * 1.5); person.position.set(0, top * 0.55, -sz * 0.04);
   body.add(person); root.userData.person = person; root.visible = false; scene.add(root); root.userData.body = body;
+  if (root.userData.beeRig) { let bn = null; body.traverse(o => { if (!bn && o.name === 'Body' && !o.isMesh) bn = o; }); if (bn) { root.updateMatrixWorld(true); bn.attach(person); } } // l20r: the tiny rider rides the rig's Body node (moves with the clips)
   return root;
 }
 /** Build the rideable creature (with a tiny rider on its back). */

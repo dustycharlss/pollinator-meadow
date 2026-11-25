@@ -3493,6 +3493,7 @@ export function createZones(scene, host) {
     if (pr.cls && pr.cls !== c) { showWrongHint(pr); say(`${C.em} Only a ${C.name} can ${(ACTS[pr.act] || { verb: 'Act' }).verb.toLowerCase()} this — swap to your ${C.name}!`, 2400); ctx.audio?.sample?.('ui/error-bonk', 0.35); return true; }
     if (pr.need && !isOn(pr.need)) { say('🔒 ' + (pr.needWhy || 'Not yet — something else has to happen first'), 2600); return true; }
     const atB = pr._atB;
+    ctx.onAct?.(pr.act, ctx.cur()); // l20r: crew one-shot clip for the act
     if (a2 && a2Act(pr, p)) { if (pr.icon && pr.done && !pr.two) pr.icon.visible = false; return true; }
     if (a2 && (pr.act === 'shove' || pr.act === 'smash')) a2Burst(pr.x, pr.z, 8);
     if (a2 && pr.act === 'shove' && pr.ice && a2.season === 'winter') { pr.to = pr.ice; if (pr.iceSig) pr.sig = pr.iceSig; tst('⛸️ On the ice it slides a looong way!', 1800); }
