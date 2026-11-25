@@ -136,6 +136,7 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
     const B = tier() === 'low' ? BIOME_L20N : BIOME;
     const want = { ...(B[patchId] || DAY) }; if (deep.length && !B[patchId]) { want.frog = 2; want.dragonfly = 1; }
     if (!deep.length || waterY == null) delete want.fish;
+    { const cc = cutFor(patchId, tier()); if (cc.noCritters) for (const k of cc.noCritters) delete want[k]; } // l20q: CUTS noCritters (budget-logged, reversible with ?cuts=0)
     const cap = CAPS[tier()] || 12, tot = Object.values(want).reduce((a, b) => a + b, 0), f = Math.min(1, cap / Math.max(1, tot));
     const kinds = Object.entries(want).map(([k, n]) => [k, Math.max(f < 1 && n <= 1 ? 0 : 1, Math.round(n * f))]);
     let R = 1234 + patchId.length * 77; const rnd = () => (R = (R * 16807) % 2147483647) / 2147483647;

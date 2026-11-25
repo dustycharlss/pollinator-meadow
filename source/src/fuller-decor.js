@@ -40,6 +40,7 @@ export const CUTS = {
   mill_pond: { low: LITE, high: { clutterSets: 99, vignettes: true } }, // l20n 317/241; l20p c8 318/244
   frost_hollow: { all: { ...LITE, noNooks: true, keep: ['snowy-tree', 'snow-tuft'] } }, // l20q: restores snowy-tree + snow-tuft (Beans re-check)
   // l20n 283/232; l20p c8 290/240; LITE 282-287 (c10, final): + noNooks
+  grand_garden: { all: { noCritters: ['frog'] } }, // l20q: L23 landscape spawn 559 calls vs l20n 556 (pre-existing over 240); the fuller frog is 5 rig draws -> skip it (Low already uses the l20n mix)
   trailhead_trials: { low: { none: true }, all: { noFrog: true, trisCap: 30000 } }, // l20q H2 (Squid l20p re-check): High assist portrait 205.5k tris vs l20n 72.5k (budget 110k); fuller decor+clutter 131.6k -> trisCap 30k (thinned evenly, draws unchanged)
   // l20n Low 390; l20p c8 403. l20q: the shoreline frog fallback costs +4 draws (High mechanic-landscape 497 vs l20n 494) -> noFrog
 };
