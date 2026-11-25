@@ -127,7 +127,7 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
     }
     syncBatches();
   }
-  function clear() { token++; clearBatches(); for (const c of list) { c.mixer.stopAllAction(); c.obj.removeFromParent(); } list = []; }
+  function clear() { statics = []; token++; clearBatches(); for (const c of list) { c.mixer.stopAllAction(); c.obj.removeFromParent(); } list = []; }
   /** Spawn for a level. rect = world {x0,x1,z0,z1}; deep = water rects; avoid(x,z) true near the start / paths; waterY for fish. */
   async function spawn(patchId, { rect, deep = [], waterY = null, start = null } = {}) {
     clear(); const my = token; if (!rect) return;
@@ -180,8 +180,12 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
   }
   let acc = 0;
   // l20p: Critter Spotting. Stay within 4 m (6 m for flyers) of a visible critter for 0.8 s, or tap it. No fail states.
+  // l20p: static journal sightings (Act 2 nook vignettes: resting snail, ladybird picnic) — 0.8 s within 2.5 m
+  let statics = [];
+  function setStatic(l) { statics = (l || []).map(q => ({ ...q, dw: 0, spotted: false })); }
   function spot(c) { if (c.spotted) return; c.spotted = true; try { onSpot && onSpot(c.kind); } catch (e) {} }
   function update(dt, t, night, cam) {
+    if (statics.length && onSpot && getPlayer) { const p0 = getPlayer(); if (p0) for (const q of statics) { if (q.spotted) continue; if (Math.hypot(q.x - p0.x, q.z - p0.z) < 2.5) { q.dw += dt; if (q.dw >= 0.8) { q.spotted = true; try { onSpot(q.kind); } catch (e) {} } } else q.dw = 0; } }
     if (!list.length) return; acc += dt; if (acc < 1 / 30) return; const d = acc; acc = 0; // 30 Hz is plenty for slow background motion
     const pl = onSpot && getPlayer ? getPlayer() : null;
     for (const c of list) {
@@ -210,5 +214,5 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
       const px = (_v.x * 0.5 + 0.5) * w, py = (-_v.y * 0.5 + 0.5) * h, dd = Math.hypot(px - sx, py - sy); if (dd < bd) { bd = dd; best = c; } }
     if (best) spot(best); return best ? best.kind : null;
   }
-  return { spawn, clear, update, prefetch, pick, get list() { return list; }, group };
+  return { spawn, clear, update, setStatic, prefetch, pick, get list() { return list; }, group };
 }

@@ -1435,7 +1435,7 @@ function startValleyPatch(patchId, opts = {}) {
       }
       placeFollowers(true);
     }
-    if (critters) { const s0 = zones.status ? zones.status() : null; critters.spawn(patchId, { rect: zones.rect(), deep: zones.deepRects ? zones.deepRects() : [], waterY: s0 ? s0.baseY - 0.9 : null, start: P[cur] ? { x: P[cur].x, z: P[cur].z } : null }).catch(e => console.warn('critters', e)); }
+    if (critters) { const s0 = zones.status ? zones.status() : null; critters.spawn(patchId, { rect: zones.rect(), deep: zones.deepRects ? zones.deepRects() : [], waterY: s0 ? s0.baseY - 0.9 : null, start: P[cur] ? { x: P[cur].x, z: P[cur].z } : null }).catch(e => console.warn('critters', e)); critters.setStatic?.(zones.nookSpots ? zones.nookSpots() : []); }
     state.styT = 0.3; // art pass: pastel-style the new level soon after it is built
   }
   if (!onlineStart && lead0 !== members[0]) crew.swapById(lead0);

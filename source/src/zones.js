@@ -12,6 +12,7 @@ import { swatchUV, atlasMaterial, writeAtlasUV, mergeAtlasRig } from './act3-atl
 import { createIconSheet } from './act3-icons.js';
 import { setFullerLevel } from './fuller.js';
 import { fullerGeo, preloadFullerGeo } from './fuller-geo.js';
+import NOOKS from './fuller-nooks.json'; // l20p: Act 2 side nooks (spec §6)
 import { createFullerDecor } from './fuller-decor.js';
 preloadFullerGeo();
 import { setCaveLevel, installFallbackHooks, isShaderFallback, fallbackMaterial, applyGhostMaterial, refreshFallbackMaterials } from './l20-fallback.js';
@@ -546,7 +547,7 @@ export function createZones(scene, host) {
   // three-class puzzle state
   let kidObjs = [];
   let fades = [], hlT = 0, objCache = null, objEl = null, nearOwn = null;
-  const rimSpecs = [], hedgeRuns = [], wallSpecs = []; // l20p
+  const rimSpecs = [], hedgeRuns = [], wallSpecs = [], nookSpecs = [], nookSpots = []; let nooks = []; // l20p
   let sig = {}, props = [], gates = [], plates = [], puzzles = [], deep = [], crossings = [], steps = [], tw = null, lastProg = 0, hintT = 0, bearPad = null, windT = 0, introQ = [];
   let hintSt = null, hintCool = new Map(), hintSpr = {};
   function hintSprite(c) {
@@ -853,9 +854,14 @@ export function createZones(scene, host) {
       const look = o.look || 'hedge', h = o.h ?? 2.4, thick = o.w ?? 0.6, col = LOOK[look] ?? COL.hedge;
       const topC = look === 'leaf' ? 0x4f9a3e : look === 'snow' ? COL.snowTop : COL.hedgeTop;
       const boxes = [], caps = [], fadeEs = [];
+      // l20p: Act 2 nook openings (1.8 m) in this run: the collider is split around z ± 0.9 and no visuals are drawn there
+      const gaps = nooks.filter(n => Math.abs(x - (n.wallX + (n.side === 'east' ? 0.5 : -0.5))) < 0.3 && n.z > z0 && n.z < z1).map(n => [n.z - n.opening / 2, n.z + n.opening / 2]);
       // collision stays on 2 m segments so walk routes do not change; visuals use 0.5 m instances so terrace steps disappear
       for (let z = z0; z < z1 - 0.01; z += 2) {
         const L = Math.min(2, z1 - z), zc = z + L / 2, g = gy(x, zc), ww = thick, dd = L + 0.05;
+        if (gaps.length) { let pcs = [[z, z + L]]; for (const [g0, g1] of gaps) pcs = pcs.flatMap(([a, b]) => (g1 <= a || g0 >= b) ? [[a, b]] : [[a, g0], [g1, b]].filter(([p, q]) => q - p > 0.05));
+          for (const [a, b] of pcs) { const zc2 = (a + b) / 2, g2 = gy(x, zc2); addSolid({ type: 'box', x: A.x + x, z: A.z + zc2, hx: ww / 2, hz: (b - a + 0.05) / 2, yaw: 0, y0: g2 - 1.5, top: g2 + h, kind: 'zone' }).fadeM = true; }
+          const capS = addSolid({ type: 'box', x: A.x + x, z: A.z + zc, hx: ww / 2, hz: dd / 2, yaw: 0, y0: g + h - 0.1, top: g + 30, kind: 'zone' }); capS.off = false; continue; }
         const s = addSolid({ type: 'box', x: A.x + x, z: A.z + zc, hx: ww / 2, hz: dd / 2, yaw: 0, y0: g - 1.5, top: g + h, kind: 'zone' });
         const capS = addSolid({ type: 'box', x: A.x + x, z: A.z + zc, hx: ww / 2, hz: dd / 2, yaw: 0, y0: g + h - 0.1, top: g + 30, kind: 'zone' });
         capS.off = false;
@@ -864,6 +870,7 @@ export function createZones(scene, host) {
       const vis = 0.5;
       for (let z = z0; z < z1 - 0.01; z += vis) {
         const L = Math.min(vis, z1 - z), zc = z + L / 2, g = gy(x, zc), ww = thick, dd = L + 0.02, T = h + 1.5;
+        if (gaps.some(([g0, g1]) => zc > g0 && zc < g1)) continue; // l20p nook opening
         const hx = ww / 2, hz = dd / 2;
         boxes.push({ x: A.x + x, y: g - 1.5 + T / 2, z: A.z + zc, w: ww, T, d: dd });
         caps.push({ x: A.x + x, y: g + h + 0.08, z: A.z + zc, w: ww + 0.12, T: 0.25, d: dd + 0.12 });
@@ -882,7 +889,7 @@ export function createZones(scene, host) {
       };
       const imB = mk(boxes, col), imC = mk(caps, topC);
       fadeEs.forEach((e, i) => { e.ims = [imB, imC].filter(Boolean); e.bases = [boxes[i] && boxes[i].base, caps[i] && caps[i].base]; });
-      if (look === 'hedge') hedgeRuns.push({ x, z0, z1, h, fadeEs, ims: [imB, imC].filter(Boolean) }); // l20p: fuller-decor swaps the visuals for the hedge kit
+      if (look === 'hedge') hedgeRuns.push({ x, z0, z1, h, fadeEs, ims: [imB, imC].filter(Boolean), gaps }); // l20p: fuller-decor swaps the visuals for the hedge kit
     },
     cyl(x, z, r, h, c, base = 0) {
       const g = gy(x, z) + base, T = h + 1.5, m = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.94, r, T, 12), mat(c));
@@ -1387,7 +1394,7 @@ export function createZones(scene, host) {
   const sprite = (e, s) => emojiSprite(e, s);
   const bx = (w, h, d, c, x, y, z, e = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(c, e)); m.position.set(x, y, z); return m; };
   const L2W = (x, z, base = 0) => ({ x: A.x + x, y: gy(x, z) + base, z: A.z + z });
-  const fdecor = createFullerDecor({ group, L2W: (x, z, h) => L2W(x, z, h), rims: () => rimSpecs, runs: () => hedgeRuns, walls: () => wallSpecs, tier: () => (ctx.look && ctx.look.tier) || 'high', anchor: () => A }); // l20p
+  const fdecor = createFullerDecor({ group, L2W: (x, z, h) => L2W(x, z, h), rims: () => rimSpecs, runs: () => hedgeRuns, walls: () => wallSpecs, nooks: () => nookSpecs, tier: () => (ctx.look && ctx.look.tier) || 'high', anchor: () => A }); // l20p
   const posOfId = id => id === ctx.cur() ? ctx.getP() : ctx.parked(id);
   const idOfCls = c => ctx.crewIds().find(i => CLASS_OF[i] === c);
   function moveTween(q, to, dur, arc, done) { AA().movers.push({ q, a: { x: q.x, y: q.y, z: q.z }, b: to, t: 0, d: dur, arc, done }); }
@@ -2926,7 +2933,7 @@ export function createZones(scene, host) {
     for (const s of solids) s.off = true;
     solids = []; picks = []; hoops = []; nightDews = []; star = null;
     fades = []; objCache = null; nearOwn = null; hlT = 0; if (objEl) { objEl.T.style.display = 'none'; objEl.Ar.style.display = 'none'; objEl.key = ''; } document.body.classList.remove('intReady'); syncObjH();
-    rimSpecs.length = 0; hedgeRuns.length = 0; wallSpecs.length = 0; sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
+    rimSpecs.length = 0; hedgeRuns.length = 0; wallSpecs.length = 0; nookSpecs.length = 0; nookSpots.length = 0; sig = {}; props = []; gates = []; plates = []; puzzles = []; deep = []; crossings = []; steps = []; tw = null; bearPad = null; introQ = [];
     for (const n of nodes) n.label.remove(); nodes = [];
     instWalls = []; decoJobs = new Map(); camRooms = []; caveChunks = []; for (const rec of atlasInsts) { const im = rec.im || rec; if (im.parent) im.parent.remove(im); } atlasInsts = [];
     while (group.children.length) { const c = group.children.pop(); c.traverse?.(o => o.geometry?.dispose?.()); }
@@ -3305,8 +3312,23 @@ export function createZones(scene, host) {
     }
   }
 
+  /** l20p Act 2 nook: three short h2.2 hedge walls round the pocket (kit pieces once loaded), the reward inside. Optional: no gating, no timer. */
+  function buildNook(n) {
+    const e = n.side === 'east' ? 1 : -1, [rx0, rx1, rz0, rz1] = n.rect, outer = n.wallX + e * 1.0, far = e > 0 ? rx1 : rx0, h = 2.2;
+    B.wall(far + e * 0.25, (rz0 + rz1) / 2, 0.5, rz1 - rz0 + 1, h, { look: 'hedge' });
+    const xa = Math.min(outer, far + e * 0.5), xb = Math.max(outer, far + e * 0.5);
+    for (const zz of [rz0 - 0.25, rz1 + 0.25]) B.wall((xa + xb) / 2, zz, xb - xa, 0.5, h, { look: 'hedge' });
+    const px = (outer + far) / 2, pz = n.z;
+    if (n.reward === 'bloom') B.pickup('petal', px, pz, 0.9, { value: 5 });
+    else nookSpots.push({ kind: n.reward === 'snail' ? 'snail' : 'ladybug', x: A.x + px, z: A.z + pz });
+    nookSpecs.push({ ...n, px, pz, hx: n.wallX + e * 0.5, e });
+  }
   function load(pid, anchor) {
     clear(); matLive = false; recipe = MAPS[pid]; if (!recipe) return; id = pid;
+    { // l20p: Act 2 side nooks; pockets reach ~2.5 m past the lane, so those levels' bounds widen by 2.5 m each side (rim / camera / clamp)
+      const NQ = typeof location !== 'undefined' ? location.search : '';
+      nooks = /[?&]fuller=(0\b|[^&]*nonook)/.test(NQ) ? [] : (NOOKS[pid] || []);
+      if (nooks.length) { const b = recipe.bounds; recipe = Object.create(recipe); recipe.bounds = { ...b, x0: b.x0 - 2.5, x1: b.x1 + 2.5 }; } }
     setCaveLevel(!!(recipe.caveFloor || recipe.id === 'mirror_caves' || pid === 'mirror_caves'));
     setFullerLevel(recipe.id || pid);
     try { fdecor.build(pid); } catch (e) {}
@@ -3315,7 +3337,7 @@ export function createZones(scene, host) {
     A = { x: anchor.x, z: anchor.z };
     baseY = (ctx.meadowHeightAt || ctx.heightAt)(A.x, A.z);
     buildTerrainMesh(terrainFrom(recipe), recipe.bounds);
-    decoBatching = true; recipe.build(B); decoBatching = false;
+    decoBatching = true; recipe.build(B); for (const n of nooks) buildNook(n); decoBatching = false;
     const decoReady = flushDecos();
     mergeCaveStatics();
     refreshFallbackMaterials();
@@ -4484,6 +4506,7 @@ export function createZones(scene, host) {
   }
   return {
     outlineTargets,
+    nookSpots: () => nookSpots.slice(),
     homePos: () => homeAt || { x: A.x, z: A.z }, load: (a, b) => { keyDew = 0; homeAt = null; load(a, b); }, warmTick: cam => { try { if (recipe && recipe.kid) { if (!kid) kidInit(); if (kid.i < 0) kidCard(0, kidDom()); } /* tutorial: build trails + draw the step-0 card in the load hitch (UI only: no pickups, herding, signals or timers) */ /* build-only: hidden trail meshes + body class, no pickups/herding/timers */ if (a2 && a2.escorts.length) updEscort(0, cam, ctx.getP(), ctx.cur()); } catch (e) {} }, primeReadyVisuals, root: () => group, clear, update, updateWorld, updateBody, driven: () => ctx.driven(), netState, applyNetState, applyNetEvent, setSig, keyGoalMet, complete, tweening: () => !!tw, goal: () => recipe?.goal || '', active: () => !!recipe, refreshFriendsStation,
     crossAt: (x, z) => crossings.some(c => c.on && x > c.x0 - 0.6 && x < c.x1 + 0.6 && z > c.z0 - 0.6 && z < c.z1 + 0.6),
     camRoomAt: (x, z) => camRooms.find(r => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1) || null,
