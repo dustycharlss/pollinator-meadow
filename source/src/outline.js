@@ -8,7 +8,9 @@ import { skipCustomShaders } from './l20-fallback.js';
 
 export const OUTLINE_SELF = false;
 const CAP = { low: 4, med: 8, high: 12, ultra: 16 };
-const BUDGET = { low: 160 };
+const BUDGET = { low: 158 }; // l20p: hulls fill to 2 under the draw budget (Low 160 / other 240) so frame-to-frame drift (a critter or a
+// pickup entering view after the base was measured) cannot tip a full view to 241
+const BUDGET_OTHER = 238;
 const INK = 0x3b2614;
 const normCache = new Map(); // geometry uuid -> smoothed normal attribute
 
@@ -88,7 +90,7 @@ export function createOutlines(renderer) {
   function update(p, tier, cands, cam) {
     frameN++; lastCands = cands ? cands.length : -1;
     if (skipCustomShaders() || !p) { if (shown) { for (const e of byRoot.values()) for (const k of e.hulls) k.h.visible = false; shown = 0; } return; }
-    const cap = CAP[tier] ?? 8, budget = BUDGET[tier] ?? 240;
+    const cap = CAP[tier] ?? 8, budget = BUDGET[tier] ?? BUDGET_OTHER;
     // Budget base = last real frame's calls minus the hulls drawn in it. Only re-measured when a new frame was rendered
     // (sim steps without a render keep the old base), and after a jump of > 2 m since that frame (teleport / level
     // start / respawn) no hulls are shown until a fresh frame has been measured at the new spot, so a stale cheap
