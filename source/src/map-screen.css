@@ -52,11 +52,14 @@ body #valley.ov{padding:0;background:rgba(59,38,20,.45);backdrop-filter:blur(3px
   background:var(--ms-chip-1x) center/100% 100% no-repeat;background-image:var(--ms-chip)}
 #msPetals{grid-area:petals}#msStars{grid-area:stars}
 .msChipIc{width:20px;height:20px;object-fit:contain;flex:none}
-.msTabs{grid-area:tabs;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-.msTab{height:52px;border:0;padding:0 6px 4px;display:flex;align-items:center;justify-content:center;gap:4px;font:800 14px system-ui;
-  background:center/100% 100% no-repeat;background-image:var(--ms-tab)}
-.msTab.on{background-image:var(--ms-tab-selected)}
-.msTabIc{width:26px;height:26px}
+.msTabs{grid-area:tabs;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:100%;min-width:0;max-width:100%}
+.msTab{height:52px;border:0;padding:0 4px 4px;display:flex;align-items:center;justify-content:center;gap:3px;font:800 13px system-ui;
+  width:100%;min-width:0;max-width:100%;overflow:hidden;box-sizing:border-box;
+  background-color:transparent;background-position:center;background-size:100% 100%;background-repeat:no-repeat;background-origin:border-box;background-clip:padding-box;
+  background-image:var(--ms-tab)}
+.msTab.on{background-image:var(--ms-tab-selected);background-size:100% 100%;background-position:center;/* selected state must not change width */}
+.msTabIc{width:22px;height:22px;flex:none}
+.msTab span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .msArrow{display:none;width:52px;height:52px;border:0;padding:0;background:none}
 
 /* ---------- map well ---------- */
