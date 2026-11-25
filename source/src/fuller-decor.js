@@ -23,9 +23,11 @@ function partsOf(key) {
 const Q = typeof location !== 'undefined' ? location.search : '';
 /** ?cuts=0 previews every level with all budget cuts restored (see /workspace/boot-wip/l20p-decor-cuts.md). */
 const NOCUTS = /[?&]cuts=0\b/.test(Q);
+/** The CUTS entry for a level + tier ({} with ?cuts=0). zones.js reads noNooks from it. */
+export const cutFor = (levelId, tn) => NOCUTS ? {} : (CUTS[levelId] && (CUTS[levelId][tn] || CUTS[levelId].all)) || {};
 const OFF = k => new RegExp('[?&]fuller=(0|[^&]*no' + k + ')').test(Q);
 // Per-level cuts made to stay inside the draw budget (filled in from the per-level census; see l20b-notes ## l20p).
-// Keys: per tier ('low'/'med'/'high'/'ultra') or 'all'. { clutterSets: n (drop the last n sets), vignettes: true, decor: [keys], landmark: true, kit: true, shortKit: true, nooks: true (arch + vignettes only), none: true }
+// Keys: per tier ('low'/'med'/'high'/'ultra') or 'all'. { clutterSets: n (drop the last n sets), vignettes: true, decor: [keys], landmark: true, kit: true, shortKit: true, nooks: true (arch + vignettes only), noNooks: true (zones builds no nooks on that tier: closed hedges, l20n bounds), none: true }
 // l20p census 10:20 AM America/Chicago (l20n baseline vs l20p, Low max): training_garden 154 -> 162, log_jam 160 -> 172 (fuller pushed them over).
 // LITE = keep the wall kits + nooks (they replace boxes / colliders), drop all decor, clutter, vignettes and the landmark.
 const LITE = { clutterSets: 99, vignettes: true, decor: '*', landmark: true };
@@ -33,7 +35,7 @@ export const CUTS = {
   training_garden: { low: { none: true } }, // l20n Low 154; l20p 162-163 with the lighter cut (2 clutter sets + vignettes) -> none
   log_jam: { low: { none: true } }, // l20n Low 160 (at budget)
   festival_glade: { low: { none: true } }, // l20n Low 193 (over budget already); l20p 201-210 with decor; ?fuller=0 = 193
-  backyard_split: { low: LITE }, // l20n Low 203; l20p 218 (c8) with decor + nooks
+  backyard_split: { low: { ...LITE, noNooks: true } }, // l20n Low 203; l20p 218 (c8) with decor + nooks, 208 with LITE (c10), 230 with none (c11): Low builds no nooks (hedges stay closed, bounds unchanged)
   mill_pond: { low: LITE, high: { clutterSets: 99, vignettes: true } }, // l20n 317/241; l20p c8 318/244
   frost_hollow: { all: LITE }, // l20n 283/232; l20p c8 290/240
   trailhead_trials: { low: { none: true } }, // l20n Low 390; l20p c8 403

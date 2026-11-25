@@ -13,7 +13,7 @@ import { createIconSheet } from './act3-icons.js';
 import { setFullerLevel } from './fuller.js';
 import { fullerGeo, preloadFullerGeo } from './fuller-geo.js';
 import NOOKS from './fuller-nooks.json'; // l20p: Act 2 side nooks (spec §6)
-import { createFullerDecor } from './fuller-decor.js';
+import { createFullerDecor, cutFor } from './fuller-decor.js';
 preloadFullerGeo();
 import { setCaveLevel, installFallbackHooks, isShaderFallback, fallbackMaterial, applyGhostMaterial, refreshFallbackMaterials } from './l20-fallback.js';
 import { lodify, lodFor } from './lod.js';
@@ -3341,6 +3341,7 @@ export function createZones(scene, host) {
     { // l20p: Act 2 side nooks; pockets reach ~2.5 m past the lane, so those levels' bounds widen by 2.5 m each side (rim / camera / clamp)
       const NQ = typeof location !== 'undefined' ? location.search : '';
       nooks = /[?&]fuller=(0\b|[^&]*nonook)/.test(NQ) ? [] : (NOOKS[pid] || []).filter(n => !n.skip); // skip = blocked approach (see fuller-nooks.json)
+      if (nooks.length && cutFor(pid, (ctx.look && ctx.look.tier) || 'high').noNooks) nooks = []; // budget cut (CUTS noNooks)
       if (nooks.length) { const b = recipe.bounds; recipe = Object.create(recipe); recipe.bounds = { ...b, x0: b.x0 - 2.5, x1: b.x1 + 2.5 }; } }
     setCaveLevel(!!(recipe.caveFloor || recipe.id === 'mirror_caves' || pid === 'mirror_caves'));
     setFullerLevel(recipe.id || pid);
