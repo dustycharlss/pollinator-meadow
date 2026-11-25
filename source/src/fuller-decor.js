@@ -35,7 +35,7 @@ export const CUTS = {
   training_garden: { low: { none: true } }, // l20n Low 154; l20p 162-163 with the lighter cut (2 clutter sets + vignettes) -> none
   log_jam: { low: { none: true } }, // l20n Low 160 (at budget)
   festival_glade: { low: { none: true } }, // l20n Low 193 (over budget already); l20p 201-210 with decor; ?fuller=0 = 193
-  backyard_split: { low: { ...LITE, noNooks: true } }, // l20n Low 203; l20p 218 (c8) with decor + nooks, 208 with LITE (c10), 230 with none (c11): Low builds no nooks (hedges stay closed, bounds unchanged)
+  backyard_split: { low: { ...LITE, noNooks: true }, all: LITE }, // l20n Low 203; l20p 218 (c8) with decor + nooks, 208 with LITE (c10), 230 with none (c11): Low builds no nooks (hedges stay closed, bounds unchanged); other tiers LITE (High 297 vs l20n 281 on c12)
   mill_pond: { low: LITE, high: { clutterSets: 99, vignettes: true } }, // l20n 317/241; l20p c8 318/244
   frost_hollow: { all: LITE }, // l20n 283/232; l20p c8 290/240
   trailhead_trials: { low: { none: true } }, // l20n Low 390; l20p c8 403
