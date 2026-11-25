@@ -1008,7 +1008,8 @@ export function createZones(scene, host) {
       const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.6, 0.8, 8), mat(o.lantern ? 0xffe08a : COL.gold, o.lantern ? 0.2 : 0.35)); G.add(bell);
       const cap = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), mat(0x6b4a30)); cap.position.y = 0.5; G.add(cap);
       G.position.set(A.x + x, g + h, A.z + z); group.add(G);
-      props.push({ kind: 'bell', act: 'bell', cls: 'scout', sig: s, x: A.x + x, y: g + h, z: A.z + z, r: 3.2, touch: 5.0, need: o.need, needWhy: o.needWhy, label: o.label || 'Bell', G, bell, lantern: o.lantern, icon: badge('scout', A.x + x, g + h + 1.3, A.z + z) });
+      // l20m: any animal that can reach a bell can ring it (no class lock). No scout badge.
+      props.push({ kind: 'bell', act: 'bell', cls: null, sig: s, x: A.x + x, y: g + h, z: A.z + z, r: 3.2, touch: 5.0, need: o.need, needWhy: o.needWhy, label: o.label || 'Bell', G, bell, lantern: o.lantern, icon: null });
     },
     lever(s, x, z, o = {}) {
       const g = gy(x, z) + (o.base || 0), G = new THREE.Group();
@@ -1940,7 +1941,7 @@ export function createZones(scene, host) {
       props.push({ kind: 'shroom', act: 'stomp', cls: 'bruiser', sig: 'smoke:' + id, x: w.x, y: w.y, z: w.z, r: 2.4, re: true, label: o.label || 'Puff-mushroom', smokeR: o.r || 6, dur: o.dur || 6, G, icon: badge('bruiser', w.x, w.y + 2.0, w.z, 0.9) }); },
     // ---- M6 Day/Night + gear ----
     toggleBell(id, x, z, h, onRing, o = {}) { const g = gy(x, z), G = new THREE.Group(); const bl = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.7, 0.9, 8), mat(o.col || COL.gold, 0.4)); G.add(bl); G.add(bx(0.3, 0.3, 0.3, 0x6b4a30, 0, 0.55, 0)); if (o.em) { const sp = emojiSprite(o.em, 1.2); sp.position.y = 1.4; G.add(sp); } G.position.set(A.x + x, g + h, A.z + z); group.add(G);
-      props.push({ kind: 'tbell', act: 'bell', cls: 'scout', sig: id, x: A.x + x, y: g + h, z: A.z + z, r: 3.2, re: true, label: o.label || 'Bell', G, bell: bl, onRing, icon: badge('scout', A.x + x, g + h + (o.em ? 2.2 : 1.3), A.z + z, 0.9) }); },
+      props.push({ kind: 'tbell', act: 'bell', cls: null, sig: id, x: A.x + x, y: g + h, z: A.z + z, r: 3.2, re: true, label: o.label || 'Bell', G, bell: bl, onRing, icon: null }); },
     dayNightBell(x, z, h, o = {}) { this.toggleBell('dnBell', x, z, h, () => setNightA2(!AA().night), { label: o.label || 'Day/Night bell', em: '🌗', col: 0xc9b6ff }); },
     glowStep(x, z, w, d, top, o = {}) { const r = this.wall(x, z, w, d, top, { bot: top - 0.5, c: 0x9fe8ff }); r.m.material = new THREE.MeshLambertMaterial({ color: 0x9fe8ff, emissive: 0x3aa0e8, emissiveIntensity: 0.9, transparent: true, opacity: 0.0, depthWrite: false }); r.s.off = true; AA().glowSteps.push({ r, x: A.x + x, z: A.z + z, on: false }); },
     hiddenStep(x, z, w, d, top) { const r = this.wall(x, z, w, d, top, { bot: top - 0.4, c: 0xc9b6ff }); r.m.material = new THREE.MeshBasicMaterial({ color: 0xd9c6ff, transparent: true, opacity: 0, depthWrite: false, wireframe: false }); AA().hidden.push({ r, x: A.x + x, z: A.z + z, kind: 'step' }); },
