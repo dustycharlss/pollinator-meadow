@@ -31,7 +31,7 @@ export const PRESET_B = {
   // GLB material-name overrides used in the frame (treeA leaves/trunks = mat9/mat20, mossy rock = Stone/Moss)
   recolor: { mat9: '#6fd39a', mat20: '#a06a5a', Stone: '#c4b4d8', Moss: '#9fdc8c' },
   // shader colour lift applied to model materials (animals at strength 0.5, props at 1, terrain/water at 0)
-  materialAdjust: { saturation: 0.9, lighten: 0.12, pastel: 0.2, warm: 0.0, animalStrength: 0.5, roughness: 0.75, metalness: 0 },
+  materialAdjust: { saturation: 0.9, lighten: 0.12, pastel: 0.1, warm: 0.0, animalStrength: 0.5, roughness: 0.75, metalness: 0 },
   sun: { color: '#ffc39a', intensity: 3.0, azimuthDeg: 72, elevationDeg: 17,
          // azimuth/elevation are world-space: 0 = +Z (behind a camera looking down -Z), +90 = +X. worldDir matches az 72 / el 17.
          worldDir: [0.913, 0.292, 0.284], distance: 60 },
@@ -43,7 +43,8 @@ export const PRESET_B = {
             lengthPerMetre: 3.27 },   // 1 / tan(17 deg): a 1 m tall block casts a ~3.3 m shadow
   bloom: { strength: 0.45, radius: 0.7, threshold: 0.82 },
   // l20p: "Mint Meadow" grade (Beans, fuller/grade/mint-meadow.json presetB_dropIn). Was lift #1a0e28, gain #fff0dc, vignette 0.22 #c0708a, haze 0.035 #ffd9b0.
-  grade: { saturation: 1.04, contrast: 1.0, brightness: 0.0, lift: '#0f1a16', gain: '#fbfff2',
+  // l20q: Beans v2Suggestion (re-check: play view read milky): saturation 1.04 -> 1.20, contrast 1.0 -> 1.08, and materialAdjust.pastel 0.2 -> 0.1 (still milky after the first step: sunny_hollow play-view mean sat 0.27 -> 0.33 -> 0.36). Night LUT (lutNight 0.5) unchanged.
+  grade: { saturation: 1.20, contrast: 1.08, brightness: 0.0, lift: '#0f1a16', gain: '#fbfff2',
            vignette: 0.12, vignetteColor: '#5c7a68', haze: 0.018, hazeColor: '#ffe6c8', lut: 'grade/mint-meadow-32-strip.png', lutIntensity: 1.0, lutNight: 0.5 },
   skyGlow: { wide: 0.25, widePower: 6, core: 0.4, corePower: 60 },
   pollen: { count: 46, radius: 0.035, color: '#fff0c8', hdrBoost: 1.6, heightMin: 0.6, heightMax: 3.4,
