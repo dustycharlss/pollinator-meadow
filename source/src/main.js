@@ -37,7 +37,7 @@ import { createZones, hasLevel } from './zones.js';
 import { createMapScreen } from './map-screen.js';
 import { showIntroCard, dismissIntroCard, preloadIntroCard, hasIntroCard, introCardId } from './intro-card.js';
 import { bindVoice, presentLevelTips, preloadTips, fillHowTips, dismissLevelTips } from './tips-ui.js';
-import { noteInteractTip, resetInteractTips, TIP_MS, interactTipsState } from './interact-tips.js';
+import { noteInteractTip, seenInteractTip, markInteractTip, resetInteractTips, TIP_MS, interactTipsState } from './interact-tips.js';
 import { CLIP } from './declutter.js';
 import { createLook } from './look.js';
 import { createCritters } from './critters.js';
@@ -327,7 +327,8 @@ function layoutTip() {
   if (t && t.classList.contains('on') && getComputedStyle(t).display !== 'none') { const r = t.getBoundingClientRect(); if (r.height > 0) top = Math.round(r.bottom + 8); }
   b.style.top = top ? top + 'px' : '';
 }
-function dismissTip() {
+function dismissTip(byUser) {
+  if (byUser) commitTip(); else if (tipPend) { /* timed out after 10 s: already committed at 2 s */ commitTip(); }
   const b = $('tipBox'); if (b) { b.classList.remove('on'); b.replaceChildren(); b.style.top = ''; }
   if (tipT) { clearTimeout(tipT); tipT = 0; }
   if (toastDoc) { document.removeEventListener('pointerdown', toastDoc, true); toastDoc = null; }
@@ -357,7 +358,7 @@ function toastTip(msg, ms = TIP_MS) {
   const tx = document.createElement('span'); tx.className = 'tipTx'; tx.textContent = skinText(msg);
   const x = document.createElement('button'); x.type = 'button'; x.className = 'tipX'; x.setAttribute('aria-label', 'Close tip'); x.textContent = '×';
   b.append(tx, x); b.classList.add('on', 'tipBox');
-  const close = ev => { ev && ev.stopPropagation && ev.stopPropagation(); dismissTip(); };
+  const close = ev => { ev && ev.stopPropagation && ev.stopPropagation(); dismissTip(true); };
   x.addEventListener('click', close);
   toastDoc = ev => { if (b.contains(ev.target) && (ev.target === x || ev.target.closest('.tipX'))) return; close(ev); };
   document.addEventListener('pointerdown', toastDoc, true);
@@ -365,8 +366,12 @@ function toastTip(msg, ms = TIP_MS) {
   measure(); requestAnimationFrame(measure); if (tipT) clearTimeout(tipT); tipT = setTimeout(() => dismissTip(), ms);
 }
 let tipSparkles = 0;
+/* l20n: the kind is saved as seen only after its tip has been visible ~2 s, or the player closes it. */
+let tipPend = null;
+function commitTip() { if (tipPend) { markInteractTip(tipPend.kind); clearTimeout(tipPend.t); tipPend = null; } }
 function actTip(kind, msg, pos) {
-  if (noteInteractTip(kind)) toastTip(msg, TIP_MS);
+  if (tipPend && tipPend.kind === kind) return; // this tip is already up
+  if (!seenInteractTip(kind)) { if (tipPend) { clearTimeout(tipPend.t); tipPend = null; } toastTip(msg, TIP_MS); tipPend = { kind, t: setTimeout(commitTip, 2000) }; }
   else if (pos && fx) { tipSparkles++; fx.burst(pos.x, (pos.y || 0) + 0.8, pos.z, 16, 5); }
 }
 function setHint(s) { $('hint').textContent = s; }

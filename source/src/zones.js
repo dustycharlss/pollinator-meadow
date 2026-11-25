@@ -220,7 +220,7 @@ const MAPS = {
       [[0, 17.5], [2, 21], [8.5, 17]].forEach(([x, z]) => B.pickup('petal', x, z, 6.0));
       B.puzzle('plank', 'Plank Bridge', ['trickster'], ['plank'], { hint: '🐾 Swap to your Trickster and build the Plank Bridge at the narrow creek (west).' });
       B.puzzle('ford', 'Ford stones', ['scout', 'bruiser'], ['ford'], { hint: '🪽 Ring the blossom switch across the creek, then 🐻 shove the boulder into the ford.' });
-      B.puzzle('willow', 'Willow Lookout', ['trickster', 'bruiser', 'scout'], ['willow'], { hint: '🐾 Park your Trickster on the dam plate · 🐻 Bear hops up the steps and smashes the branches · 🪽 Scout rings the willow bell.' });
+      B.puzzle('willow', 'Willow Lookout', ['trickster', 'bruiser', 'scout'], ['willow'], { hint: '🐾 Park your Trickster on the dam plate · 🐻 Bear hops up the steps and smashes the branches · 🔔 then any animal rings the willow bell.' });
       B.puzzle('creekStar', 'Secret Starseed', ['bruiser', 'trickster'], ['creekStar'], { req: false, hint: '🐻 Park Bear by the tall east rock, then boost your Trickster up.' });
     },
   },
