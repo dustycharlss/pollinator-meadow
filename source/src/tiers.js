@@ -103,7 +103,7 @@ export function createTiers(scene, ctx) {
   // ---------- round lifecycle
   TI.reset = () => {
     for (const c of [...TI.clusters]) killCluster(c); for (const s of TI.seeds) root.remove(s.g); TI.seeds.length = 0; for (const n of TI.team) root.remove(n.g); TI.team.length = 0;
-    TI.carrying = false; carryObj.visible = false; TI.logs = 0; TI.cd = {}; TI.spawnT = 0; TI.said = {};
+    TI.carrying = false; carryObj.visible = false; TI.logs = 0; TI.cd = {}; TI.spawnT = 0; TI.said = {}; TI.hubKey = null; // l20j: a new round re-places the hub cluster
     // Adventure campaign has no meadow dew/seed economy. startNew() still calls reset()
     // when a valley patch loads; do not spawn clusters (a third one used to appear at 20 s
     // on layer 0, after declutter, and add ~15 Low landscape draws).
