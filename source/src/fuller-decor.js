@@ -36,6 +36,7 @@ export const CUTS = {
   backyard_split: { low: LITE }, // l20n Low 203; l20p 218 (c8) with decor + nooks
   mill_pond: { low: LITE, high: { clutterSets: 99, vignettes: true } }, // l20n 317/241; l20p c8 318/244
   frost_hollow: { all: LITE }, // l20n 283/232; l20p c8 290/240
+  trailhead_trials: { low: { none: true } }, // l20n Low 390; l20p c8 403
 };
 
 export function createFullerDecor({ group, L2W, rims = () => [], runs = () => [], walls = () => [], nooks = () => [], tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {
