@@ -25,7 +25,7 @@ const Q = typeof location !== 'undefined' ? location.search : '';
 const NOCUTS = /[?&]cuts=0\b/.test(Q);
 const OFF = k => new RegExp('[?&]fuller=(0|[^&]*no' + k + ')').test(Q);
 // Per-level cuts made to stay inside the draw budget (filled in from the per-level census; see l20b-notes ## l20p).
-// Keys: per tier ('low'/'med'/'high'/'ultra') or 'all'. { clutterSets: n (drop the last n sets), vignettes: true, decor: [keys], landmark: true, kit: true, none: true }
+// Keys: per tier ('low'/'med'/'high'/'ultra') or 'all'. { clutterSets: n (drop the last n sets), vignettes: true, decor: [keys], landmark: true, kit: true, shortKit: true, none: true }
 // l20p census 10:20 AM America/Chicago (l20n baseline vs l20p, Low max): training_garden 154 -> 162, log_jam 160 -> 172 (fuller pushed them over).
 export const CUTS = {
   training_garden: { low: { clutterSets: 2, vignettes: true } },
@@ -75,7 +75,7 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
         pcs.push({ key, z: zc, idx: add(key, r.x, zc, 1, Math.PI / 2, -0.1, sy) }); }
       runRecs.push({ r, pcs }); }
     // long boundary walls (>= 14 m, no camera fade): hedge or cliff kit, 2 m runs along the long axis, height variant nearest T, stacked past 7 m
-    const WL = OFF('kit') || cut.kit ? [] : walls(), wallRecs = [];
+    const WALL = OFF('kit') || cut.kit ? [] : walls(), WL = WALL.filter(w => !w.short), SW = OFF('shortkit') || cut.shortKit ? [] : WALL.filter(w => w.short), wallRecs = [], shortRecs = [];
     for (const wv of WL) { const hed = wv.look === 'hedge', V3 = hed ? [1.6, 2.2, 3.4] : [2, 4, 7], along = Math.max(wv.w, wv.d), xAxis = wv.w >= wv.d, depth = Math.min(wv.w, wv.d);
       const stack = Math.max(1, Math.ceil(wv.T / (V3[2] * 1.25))), hs = wv.T / stack, hv = V3.reduce((a, b) => Math.abs(b - hs) < Math.abs(a - hs) ? b : a), sy = hs / hv;
       const run = (hed ? 'fuller/walls/hedge-2m-h' : 'fuller/walls/cliff-2m-h') + hv, post = (hed ? 'fuller/walls/hedge-post-h' : 'fuller/walls/cliff-post-h') + hv;
@@ -85,6 +85,14 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
         for (let i = 0; i < n; i++) { const [px, pz] = at(c0 + 1 + i * 2); add(run, px, pz, 1, wv.yaw + (xAxis ? 0 : Math.PI / 2), yo, sy); keys0.add(run); }
         if (rem > 0.2) { const [px, pz] = at(c0 + n * 2 + rem / 2); add(post, px, pz, 1, wv.yaw, yo, sy); keys0.add(post); } }
       wallRecs.push({ wv, keys: [...keys0] }); }
+    // short faded walls: only kit keys already placed above (so 0 new draws); n pieces stretched to fit, stacked like long walls
+    for (const wv of SW) { const hed = wv.look === 'hedge', V3 = hed ? [1.6, 2.2, 3.4] : [2, 4, 7], pre = hed ? 'fuller/walls/hedge-2m-h' : 'fuller/walls/cliff-2m-h';
+      const have = V3.filter(h => byKey.has(pre + h)); if (!have.length) continue;
+      const along = Math.max(wv.w, wv.d), xAxis = wv.w >= wv.d, stack = Math.max(1, Math.ceil(wv.T / (have[have.length - 1] * 1.25))), hs = wv.T / stack;
+      const hv = have.reduce((a, b) => Math.abs(b - hs) < Math.abs(a - hs) ? b : a), sy = hs / hv, key = pre + hv, n = Math.max(1, Math.round(along / 2)), sc = along / (2 * n);
+      const cy = Math.cos(wv.yaw), sn = Math.sin(wv.yaw), at = c => { const lx = xAxis ? c : 0, lz = xAxis ? 0 : c; return [wv.x + lx * cy + lz * sn, wv.z - lx * sn + lz * cy]; }, pcs = [];
+      for (let k = 0; k < stack; k++) for (let i = 0; i < n; i++) { const [px, pz] = at(-along / 2 + sc * (1 + 2 * i)); pcs.push({ key, idx: add(key, px, pz, sc, wv.yaw + (xAxis ? 0 : Math.PI / 2), wv.bot + k * hs, sy) }); }
+      shortRecs.push({ wv, pcs }); }
     const lm = !OFF('lm') && !cut.landmark && L.landmark && L.landmark.key ? L.landmark : null;
     const keys = [...byKey.keys()]; if (lm) keys.push(lm.key);
     const P = await Promise.all(keys.map(partsOf)); if (my !== token) return null;
@@ -108,8 +116,10 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
       for (const e of r.fadeEs) { const zc = (e.z0 + e.z1) / 2 - A2.z; let best = pcs[0]; for (const p of pcs) if (Math.abs(p.z - zc) < Math.abs(best.z - zc)) best = p;
         e.kit = imsByKey.get(best.key).map(im => { const m = new THREE.Matrix4(); im.getMatrixAt(best.idx, m); return { im, i: best.idx, base: m }; }); } }
     for (const { wv, keys: ks } of wallRecs) if (ks.every(k => (imsByKey.get(k) || []).length)) wv.m.visible = false;
+    for (const { wv, pcs } of shortRecs) { if (!pcs.every(p => (imsByKey.get(p.key) || []).length)) continue; wv.m.visible = false; if (wv.cap) wv.cap.visible = false;
+      if (wv.fade) wv.fade.kit = pcs.flatMap(p => imsByKey.get(p.key).map(im => { const m = new THREE.Matrix4(); im.getMatrixAt(p.idx, m); return { im, i: p.idx, base: m }; })); }
     if (R.length && byKey.has('fuller/walls/hedge-2m-h1.6')) { const ok = P[keys.indexOf('fuller/walls/hedge-2m-h1.6')]; if (ok && ok.length) for (const r of R) r.m.visible = false; }
-    info = { levelId, keys: keys.length, draws, inst, tier: tn };
+    info = { levelId, keys: keys.length, draws, inst, tier: tn, shortWalls: shortRecs.length };
     if (typeof window !== 'undefined') window.__fullerDecor = info;
     return info;
   }

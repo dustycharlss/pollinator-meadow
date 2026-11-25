@@ -843,6 +843,8 @@ export function createZones(scene, host) {
         if (Math.max(w, d) < 14 && !(recipe && recipe.caveFloor)) { const e = { roots: [m], x0: A.x + x - hx, x1: A.x + x + hx, z0: A.z + z - hz, z1: A.z + z + hz, y0: g + bot, y1: g + top + 0.3, a: 1 }; fades.push(e); s.fadeM = e; } } // long boundary cliffs keep the camera pull-in; cave walls are merged instead
       // l20p: long, never-faded hedge/cliff/stone walls get the fuller wall kit (visual swap once loaded; collider unchanged)
       if (!o.hidden && Math.max(w, d) >= 14 && !(recipe && recipe.caveFloor) && (o.look === 'hedge' || o.look === 'cliff' || o.look === 'stone' || o.look == null) && o.c == null) wallSpecs.push({ m, x, z, w, d, T, bot, yaw: o.yaw || 0, look: o.look || 'stone' });
+      // l20p: short camera-faded walls (doors, cages, pockets) -> kit too, but only with kit pieces the level already draws (0 extra draws); the fade hides their instances
+      else if (!o.hidden && s.fadeM && T >= 1 && Math.max(w, d) >= 1.5 && (o.look === 'hedge' || o.look === 'cliff' || o.look === 'stone' || o.look == null) && o.c == null) wallSpecs.push({ m, x, z, w, d, T, bot, yaw: o.yaw || 0, look: o.look || 'stone', fade: s.fadeM, cap: (o.look === 'hedge' && group.children[group.children.length - 1] !== m) ? group.children[group.children.length - 1] : null, short: true });
       return { m, s, g };
     },
     /** one instanced hedge (or leaf) strip that follows the ground, plus 2 m collision segments and a fly cap.
@@ -3994,6 +3996,7 @@ export function createZones(scene, host) {
         if (e.kit) for (const q of e.kit) { q.im.setMatrixAt(q.i, hide ? Z : q.base); q.im.instanceMatrix.needsUpdate = true; } // l20p hedge kit
         continue;
       }
+      if (e.kit) { const hide = e.a < 0.6, Z = new THREE.Matrix4().makeScale(0, 0, 0); for (const q of e.kit) { q.im.setMatrixAt(q.i, hide ? Z : q.base); q.im.instanceMatrix.needsUpdate = true; } } // l20p short-wall kit
       if (!e.roots) continue;
       for (const r of e.roots) r.traverse(m => {
         if (!m.isMesh) return;
