@@ -76,14 +76,14 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
     // Act 2 lane hedges (hedgeRun): 2 m kit runs every 2 m along z, nearest height variant scaled to h; window pieces where the
     // level asks for them (visual only; lane colliders unchanged). Fades keep working: each 0.5 m fade entry also hides its kit piece.
     const HV = [1.6, 2.2, 3.4], RU = OFF('kit') || cut.kit ? [] : runs(), runRecs = [];
-    const wins = ((L.act2 && L.act2.windows) || []).filter(w => /hedge-window/.test(w.piece || ''));
+    const wins = ((L.act2 && L.act2.windows) || []).filter(w => /hedge-window/.test(w.piece || '')), winUsed = new Set();
     for (const r of RU) { const hv = HV.reduce((a, b) => Math.abs(b - r.h) < Math.abs(a - r.h) ? b : a), sy = r.h / hv, pcs = [];
       for (let z = r.z0; z < r.z1 - 0.01; z += 2) { const L2 = Math.min(2, r.z1 - z), zc = z + L2 / 2;
         const gp = (r.gaps || []).filter(([g0, g1]) => g1 > z && g0 < z + L2);
         if (gp.length) { let segs = [[z, z + L2]]; for (const [g0, g1] of gp) segs = segs.flatMap(([a, b]) => (g1 <= a || g0 >= b) ? [[a, b]] : [[a, g0], [g1, b]].filter(([p, q]) => q - p > 0.05)); // l20p nook opening: partial pieces either side
           for (const [a, b] of segs) { const key = 'fuller/walls/hedge-2m-h' + hv; pcs.push({ key, z: (a + b) / 2, idx: add(key, r.x, (a + b) / 2, 1, Math.PI / 2, -0.1, sy, (b - a) / 2) }); }
           continue; }
-        const win = hv === 2.2 && L2 > 1.9 && wins.find(w => Math.abs(w.x - r.x) < 0.8 && Math.abs(w.z - zc) <= 1.0);
+        const win = hv === 2.2 && L2 > 1.9 && wins.find(w => !winUsed.has(w) && Math.abs(w.x - r.x) < 0.8 && Math.abs(w.z - zc) <= 1.0); if (win) winUsed.add(win); // l20q: a design window is used once (29 designed, was 38 instances)
         const key = win ? 'fuller/walls/hedge-window-h2.2' : L2 > 1.9 ? 'fuller/walls/hedge-2m-h' + hv : 'fuller/walls/hedge-post-h' + hv;
         pcs.push({ key, z: zc, idx: add(key, r.x, zc, 1, Math.PI / 2, -0.1, sy) }); }
       runRecs.push({ r, pcs }); }
