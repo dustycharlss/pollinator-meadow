@@ -27,9 +27,15 @@ const OFF = k => new RegExp('[?&]fuller=(0|[^&]*no' + k + ')').test(Q);
 // Per-level cuts made to stay inside the draw budget (filled in from the per-level census; see l20b-notes ## l20p).
 // Keys: per tier ('low'/'med'/'high'/'ultra') or 'all'. { clutterSets: n (drop the last n sets), vignettes: true, decor: [keys], landmark: true, kit: true, shortKit: true, nooks: true (arch + vignettes only), none: true }
 // l20p census 10:20 AM America/Chicago (l20n baseline vs l20p, Low max): training_garden 154 -> 162, log_jam 160 -> 172 (fuller pushed them over).
+// LITE = keep the wall kits + nooks (they replace boxes / colliders), drop all decor, clutter, vignettes and the landmark.
+const LITE = { clutterSets: 99, vignettes: true, decor: '*', landmark: true };
 export const CUTS = {
-  training_garden: { low: { clutterSets: 2, vignettes: true } },
-  log_jam: { low: { none: true } },
+  training_garden: { low: { none: true } }, // l20n Low 154; l20p 162-163 with the lighter cut (2 clutter sets + vignettes) -> none
+  log_jam: { low: { none: true } }, // l20n Low 160 (at budget)
+  festival_glade: { low: { none: true } }, // l20n Low 193 (over budget already); l20p 201-210 with decor; ?fuller=0 = 193
+  backyard_split: { low: LITE }, // l20n Low 203; l20p 218 (c8) with decor + nooks
+  mill_pond: { low: LITE, high: { clutterSets: 99, vignettes: true } }, // l20n 317/241; l20p c8 318/244
+  frost_hollow: { all: LITE }, // l20n 283/232; l20p c8 290/240
 };
 
 export function createFullerDecor({ group, L2W, rims = () => [], runs = () => [], walls = () => [], nooks = () => [], tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {
@@ -48,7 +54,7 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
     setRouteClip({ route: (D.route || []).map(([x, z]) => [A.x + x, A.z + z]), half: D.routeHalfWidth || 2.5, lane: D.lane ? [A.x + D.lane[0], A.x + D.lane[1], A.z + D.lane[2], A.z + D.lane[3]] : null, keep: (D.keepClear || []).map(k => ({ x: A.x + (k.x ?? k[0]), z: A.z + (k.z ?? k[1]), r: k.r ?? k[2] ?? 1.5 })) });
     // collect placements per key: [x, z, scale, yaw, yOff]
     const byKey = new Map(); const add = (key, x, z, s, yaw, yo = 0, sy = 1, sl = 1) => { if (!byKey.has(key)) byKey.set(key, []); const l = byKey.get(key); l.push([x, z, s, yaw, yo, sy, sl]); return l.length - 1; };
-    if (!OFF('decor')) for (const d of L.decor || []) { if (cut.decor && cut.decor.includes(d.key)) continue; add(d.key, d.x, d.z, d.s ?? 1, d.yaw || 0); }
+    if (!OFF('decor')) for (const d of L.decor || []) { if (cut.decor && (cut.decor === '*' || cut.decor.includes(d.key))) continue; add(d.key, d.x, d.z, d.s ?? 1, d.yaw || 0); }
     if (!OFF('vig') && !cut.vignettes) for (const v of L.vignettes || []) add(v.key, v.x, v.z, v.s ?? 1, v.yaw || 0);
     if (!OFF('clutter')) {
       const route = D.route && D.route.length ? D.route : [[0, 0]];
