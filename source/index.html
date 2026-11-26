@@ -1206,7 +1206,7 @@ html.cbOn #btns #bAct[data-cls].cd{background:url(ui/fuller/hud/btn-action-neutr
 html.cbOn #btns #bAct[data-cls]{filter:brightness(var(--cbActDim,0.8))}
 </style>
 <style id="fullerJournal">/* l20p P5: Critters tab (ui/fuller/journal art) */
-#jCrit{max-height:min(60vh,520px);overflow:auto;-webkit-overflow-scrolling:touch}
+#jCrit{max-height:max(120px,min(60vh,520px,calc(94vh - 200px)));overflow:auto;-webkit-overflow-scrolling:touch} /* l20r F4: on short landscape screens the Critters grid used to push Close past the book's bottom edge (Pixel 7 915x412: Close 378-414, book 12-400), so a tap on Close hit the book instead */
 #jCrit .cGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 #jCrit .cCard{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 6px;min-height:104px;border:0;border-radius:14px;background:url(ui/fuller/journal/entry-card.png) center/100% 100% no-repeat;color:#3b2614;font-family:inherit;cursor:pointer}
 #jCrit .cCard .cIc{width:56px;height:56px}
