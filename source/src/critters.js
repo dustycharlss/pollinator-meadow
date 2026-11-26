@@ -37,6 +37,9 @@ const BIOME = {
 };
 const BIOME_L20N = { ...BIOME };
 Object.assign(BIOME, FULLER_MIX); // l20p: Beans's per-level critter mixes (14 levels; existing types only)
+// l20r F2: levels where a frog that finds no spot in 30 tries falls back to the nearest shoreline (l20q). Only trailhead_trials asked for it
+// (and its CUTS noFrog keeps it off under the budget; ?cuts=0 brings it back). Everywhere else keeps l20n's behaviour: no spot = no frog.
+const FROG_SHORE = new Set(['trailhead_trials']);
 export const CAPS = { low: 6, med: 12, high: 18, ultra: 26 };
 
 const tmpl = new Map();
@@ -159,7 +162,8 @@ export function createCritters(scene, { heightAt, tier = () => 'med', prep = nul
           if (start && Math.hypot(x - start.x, z - start.z) < 5) continue; // out of the player's path at the start
           ok = true;
         }
-        if (!ok && kind === 'frog' && deep.length && tier() !== 'low' && !cutFor(patchId, tier()).noFrog) { // l20q: no spot in 30 tries (trailhead_trials) -> nearest shoreline spot (1 m outside a water rect); Low keeps l20n (no frog)
+        if (!ok && kind === 'frog' && deep.length && tier() !== 'low' && FROG_SHORE.has(patchId) && !cutFor(patchId, tier()).noFrog) { // l20r F2: opt-in per level (flooded_mill got a frog l20n never placed: +5 draws at spawn)
+          // l20q: no spot in 30 tries (trailhead_trials) -> nearest shoreline spot (1 m outside a water rect); Low keeps l20n (no frog)
           let bd = 1e9;
           for (const r of deep) for (let k = 0; k < 64; k++) { const u = k / 64, e = k % 4, sx = e < 2 ? r.x0 + (r.x1 - r.x0) * u : (e === 2 ? r.x0 - 1 : r.x1 + 1), sz = e < 2 ? (e === 0 ? r.z0 - 1 : r.z1 + 1) : r.z0 + (r.z1 - r.z0) * u;
             if (sx < rect.x0 + 1 || sx > rect.x1 - 1 || sz < rect.z0 + 1 || sz > rect.z1 - 1 || inW(sx, sz)) continue;
