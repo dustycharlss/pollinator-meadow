@@ -27,7 +27,7 @@ const NOCUTS = /[?&]cuts=0\b/.test(Q);
 export const cutFor = (levelId, tn) => NOCUTS ? {} : (CUTS[levelId] && (CUTS[levelId][tn] || CUTS[levelId].all)) || {};
 const OFF = k => new RegExp('[?&]fuller=(0|[^&]*no' + k + ')').test(Q);
 // Per-level cuts made to stay inside the draw budget (filled in from the per-level census; see l20b-notes ## l20p).
-// Keys: per tier ('low'/'med'/'high'/'ultra') or 'all'. { clutterSets: n (drop the last n sets), vignettes: true, decor: [keys], landmark: true, kit: true, shortKit: true, nooks: true (arch + vignettes only), noNooks: true (zones builds no nooks on that tier: closed hedges, l20n bounds), none: true }
+// Keys: per tier ('low'/'med'/'high'/'ultra') or 'all'. { trisCap: n / trisCut: n (thin decor+clutter evenly to n tris / by n tris, draws unchanged), clutterSets: n (drop the last n sets), vignettes: true, decor: [keys], landmark: true, kit: true, shortKit: true, nooks: true (arch + vignettes only), noNooks: true (zones builds no nooks on that tier: closed hedges, l20n bounds), none: true }
 // l20p census 10:20 AM America/Chicago (l20n baseline vs l20p, Low max): training_garden 154 -> 162, log_jam 160 -> 172 (fuller pushed them over).
 // LITE = keep the wall kits + nooks (they replace boxes / colliders), drop all decor, clutter, vignettes and the landmark.
 const LITE = { clutterSets: 99, vignettes: true, decor: '*', landmark: true };
@@ -43,6 +43,7 @@ export const CUTS = {
   grand_garden: { all: { noCritters: ['frog'] } }, // l20q: L23 landscape spawn 559 calls vs l20n 556 (pre-existing over 240); the fuller frog is 5 rig draws -> skip it (Low already uses the l20n mix)
   trailhead_trials: { low: { none: true }, all: { noFrog: true, trisCap: 30000 } }, // l20q H2 (Squid l20p re-check): High assist portrait 205.5k tris vs l20n 72.5k (budget 110k); fuller decor+clutter 131.6k -> trisCap 30k (thinned evenly, draws unchanged)
   // l20n Low 390; l20p c8 403. l20q: the shoreline frog fallback costs +4 draws (High mechanic-landscape 497 vs l20n 494) -> noFrog
+  hornet_hedge: { all: { trisCut: 6200 } }, // l20r S1 (Squid l20q re-check): the l20q nook slide (z23 -> 20) lets the 3rd nook build (+4 hedge-2m-h3.4 alcove pieces, +1 arch, +1 snail vignette = +4,572 tris) and the l20r bee rig adds ~+1.3k (incl. shadow pass); decor+clutter thinned evenly by 6.2k tris (draws unchanged) so spawn tris <= l20p on High and Low. Reversible with ?cuts=0
 };
 
 export function createFullerDecor({ group, L2W, rims = () => [], runs = () => [], walls = () => [], nooks = () => [], tier = () => 'high', anchor = () => ({ x: 0, z: 0 }) }) {
@@ -120,10 +121,11 @@ export function createFullerDecor({ group, L2W, rims = () => [], runs = () => []
     // l20q H2: CUTS trisCap = thin decor + clutter placements evenly (stride sampling, >= 1 per key, so draws are unchanged) until the
     // fuller decor/clutter tris fit the cap. Instanced meshes draw every instance whenever the bounding sphere is in view, so this is the only lever.
     let thinned = null;
-    if (cut.trisCap) { const tpi = keys.map((k, ki) => P[ki].reduce((a, pt) => a + (pt.geo.index ? pt.geo.index.count : pt.geo.attributes.position.count) / 3, 0));
+    if (cut.trisCap || cut.trisCut) { const tpi = keys.map((k, ki) => P[ki].reduce((a, pt) => a + (pt.geo.index ? pt.geo.index.count : pt.geo.attributes.position.count) / 3, 0));
       const thin = k => /^fuller\/(clutter|decor)\//.test(k) && byKey.has(k);
       let tT = 0; keys.forEach((k, ki) => { if (thin(k)) tT += tpi[ki] * byKey.get(k).length; });
-      if (tT > cut.trisCap) { const f = cut.trisCap / tT; thinned = { before: Math.round(tT), f: +f.toFixed(3) };
+      const cap = cut.trisCap || Math.max(0, tT - cut.trisCut); // l20r: trisCut = take n tris off whatever this tier builds (Low/High differ)
+      if (tT > cap) { const f = cap / tT; thinned = { before: Math.round(tT), f: +f.toFixed(3) };
         keys.forEach(k => { if (!thin(k)) return; const pl = byKey.get(k), out = pl.filter((_, i) => Math.floor((i + 1) * f) > Math.floor(i * f)); byKey.set(k, out.length ? out : pl.slice(0, 1)); });
         let t2 = 0; keys.forEach((k, ki) => { if (thin(k)) t2 += tpi[ki] * byKey.get(k).length; }); thinned.after = Math.round(t2); } }
     root = new THREE.Group(); root.name = 'fullerDecor:' + levelId;
